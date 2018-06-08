@@ -1,5 +1,5 @@
 package com.gemalto.chaos.platform;
 
-interface Platform {
+public interface Platform {
 
 }
