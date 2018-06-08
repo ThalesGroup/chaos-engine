@@ -15,7 +15,6 @@ public class TaskScheduler {
 
     @Scheduled(cron = "0 0 * * * *")
     public void task() {
-        log.info("The time is now {}", dateFormat.format(new Date())
-        );
+        log.info("The time is now {}", dateFormat.format(new Date()));
     }
 }
