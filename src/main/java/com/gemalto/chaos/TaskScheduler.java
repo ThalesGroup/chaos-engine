@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.notification.NotificationMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,11 @@ public class TaskScheduler {
     @Autowired
     private List<Platform> platforms;
 
+    @Autowired
+    private List<NotificationMethods> notificationMethods;
 
-    @Scheduled(cron = "0 0 * * * *")
+
+    @Scheduled(cron = "* * * * * *")
     public void task() {
 
 
@@ -37,9 +41,16 @@ public class TaskScheduler {
             if (containers != null && ! containers.isEmpty()) {
                 for (Container container: containers) {
                     platform.destroy(container);
+                    sendNotification("Destroyed container " + container);
                 }
             }
 
+        }
+    }
+
+    private void sendNotification(String event) {
+        for (NotificationMethods notif : notificationMethods) {
+            notif.logEvent(event);
         }
     }
 }
