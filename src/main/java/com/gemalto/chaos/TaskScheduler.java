@@ -21,7 +21,7 @@ public class TaskScheduler {
     @Autowired(required = false)
     private List<Platform> platforms;
 
-    @Autowired
+    @Autowired(required = false)
     private List<NotificationMethods> notificationMethods;
 
 
