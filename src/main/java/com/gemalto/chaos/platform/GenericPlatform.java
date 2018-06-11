@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Random;
 
 @Component
 public class GenericPlatform implements Platform {
@@ -18,7 +17,7 @@ public class GenericPlatform implements Platform {
     }
 
     @Override
-    public void destroy (Container container) {
+    public void destroy(Container container) {
         log.warn("Cannot destroy a container, this is a generic platform.");
     }
 

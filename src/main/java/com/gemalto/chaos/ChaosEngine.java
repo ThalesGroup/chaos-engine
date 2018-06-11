@@ -10,14 +10,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class ChaosEngine
-{
+public class ChaosEngine {
     private static final Logger log = LoggerFactory.getLogger(ChaosEngine.class);
 
     private static SpringApplication app;
 
-    public static void main( String[] args )
-    {
+    public static void main(String[] args) {
         app = new SpringApplication(ChaosEngine.class);
         app.setBannerMode(Banner.Mode.OFF);
         ApplicationContext context = app.run();
