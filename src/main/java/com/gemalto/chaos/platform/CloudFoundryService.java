@@ -20,6 +20,7 @@ public class CloudFoundryService implements Platform {
 
     @Bean
     DefaultConnectionContext defaultConnectionContext(@Value("${cf.apihost}") String apiHost) {
+        log.info("Creating a connection context");
         return DefaultConnectionContext.builder()
                 .apiHost(apiHost)
                 .build();
@@ -28,13 +29,13 @@ public class CloudFoundryService implements Platform {
     @Bean
     PasswordGrantTokenProvider tokenProvider(@Value("${cf.username}") String username,
                                              @Value("${cf.password}") String password) {
+        log.info("Creating a token provider");
         return PasswordGrantTokenProvider.builder()
                 .password(password)
                 .username(username)
                 .build();
     }
 
-    @Autowired
     public CloudFoundryService() {
         log.info("Initialized!");
     }
