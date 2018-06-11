@@ -109,19 +109,17 @@ public class CloudFoundryService implements Platform {
     @Override
     public List<Container> getRoster() {
         List<Container> containers = new ArrayList<>();
-        Flux<ApplicationSummary> apps;
-        apps = cloudFoundryOperations.applications().list();
+        Flux<ApplicationSummary> apps = cloudFoundryOperations.applications().list();
         for (ApplicationSummary app : apps.toIterable()) {
             containers.add(
-                    CloudFoundryContainer
-                            .CloudFoundryContainerBuilder
+                    CloudFoundryContainer.CloudFoundryContainerBuilder
                             .aCloudFoundryContainer()
                             .withApplicationId(app.getId())
                             .withName(app.getName())
                             .build()
             );
         }
-        return null;
+        return containers;
     }
 
     @Override
