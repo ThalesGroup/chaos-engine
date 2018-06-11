@@ -1,6 +1,7 @@
 package com.gemalto.chaos;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
@@ -36,19 +37,13 @@ public class TaskScheduler {
                     if (containers != null && !containers.isEmpty()) {
                         for (Container container : containers) {
                             platform.destroy(container);
-                            sendNotification("Destroyed container " + container);
+                            NotificationManager.sendNotification("Destroyed container " + container);
                         }
                     }
                 } catch (Exception e) {
                     log.error("Execution failed while processing {}", platform);
                 }
             }
-        }
-    }
-
-    private void sendNotification(String event) {
-        for (NotificationMethods notif : notificationMethods) {
-            notif.logEvent(event);
         }
     }
 }
