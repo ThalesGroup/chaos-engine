@@ -113,9 +113,10 @@ public class CloudFoundryService implements Platform {
         for (ApplicationSummary app : apps.toIterable()) {
             containers.add(
                     CloudFoundryContainer.CloudFoundryContainerBuilder
-                            .aCloudFoundryContainer()
-                            .withApplicationId(app.getId())
-                            .withName(app.getName())
+                            .Builder()
+                            .applicationId(app.getId())
+                            .name(app.getName())
+                            .instances(app.getInstances())
                             .build()
             );
         }
@@ -127,6 +128,10 @@ public class CloudFoundryService implements Platform {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new RuntimeException("Expected to be passed a Cloud Foundry container");
         }
+
+        cloudFoundryOperations.applications().terminateTask(
+                ((CloudFoundryContainer) container).getTerminateApplicationTaskRequest());
+
 
     }
 

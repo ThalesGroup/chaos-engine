@@ -1,9 +1,21 @@
 package com.gemalto.chaos.container;
 
+import org.cloudfoundry.operations.applications.TerminateApplicationTaskRequest;
+
 public class CloudFoundryContainer implements Container {
 
     private String applicationId;
     private String name;
+    private Integer instances;
+
+
+    public TerminateApplicationTaskRequest getTerminateApplicationTaskRequest() {
+        return TerminateApplicationTaskRequest.builder()
+                .applicationName(name)
+                .sequenceId(instances)
+                .build();
+    }
+
 
     private CloudFoundryContainer() {
     }
@@ -14,30 +26,37 @@ public class CloudFoundryContainer implements Container {
     }
 
     public static final class CloudFoundryContainerBuilder {
-        private String applicationid;
+        private String applicationId;
         private String name;
+        private Integer instances;
 
         private CloudFoundryContainerBuilder() {
         }
 
-        public static CloudFoundryContainerBuilder aCloudFoundryContainer() {
+        public static CloudFoundryContainerBuilder Builder() {
             return new CloudFoundryContainerBuilder();
         }
 
-        public CloudFoundryContainerBuilder withApplicationId(String applicationid) {
-            this.applicationid = applicationid;
+        public CloudFoundryContainerBuilder applicationId(String applicationId) {
+            this.applicationId = applicationId;
             return this;
         }
 
-        public CloudFoundryContainerBuilder withName(String name) {
+        public CloudFoundryContainerBuilder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public CloudFoundryContainerBuilder instances(Integer instances) {
+            this.instances = instances;
             return this;
         }
 
         public CloudFoundryContainer build() {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
-            cloudFoundryContainer.applicationId = this.applicationid;
+            cloudFoundryContainer.instances = this.instances;
             cloudFoundryContainer.name = this.name;
+            cloudFoundryContainer.applicationId = this.applicationId;
             return cloudFoundryContainer;
         }
     }
