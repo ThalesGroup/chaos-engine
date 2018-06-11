@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -107,10 +108,18 @@ public class CloudFoundryService implements Platform {
 
     @Override
     public List<Container> getRoster() {
+        List<Container> containers = new ArrayList<>();
         Flux<ApplicationSummary> apps;
         apps = cloudFoundryOperations.applications().list();
         for (ApplicationSummary app : apps.toIterable()) {
-            log.info(app.toString());
+            containers.add(
+                    CloudFoundryContainer
+                            .CloudFoundryContainerBuilder
+                            .aCloudFoundryContainer()
+                            .withApplicationId(app.getId())
+                            .withName(app.getName())
+                            .build()
+            );
         }
         return null;
     }
