@@ -26,10 +26,16 @@ public class TaskScheduler {
     private List<NotificationMethods> notificationMethods;
 
 
+    /*
+    The chaos tools will regularly run on a one-hour schedule, on the hour.
+    A custom schedule can be put in place using the 'schedule' environment variable.
+     */
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     public void chaosSchedule() {
         log.info("The time is now {}", dateFormat.format(new Date()));
-        log.info("This is the list of platforms: {}", platforms);
+        // TODO: Add a check to see if today is a Holiday
+
+        log.debug("This is the list of platforms: {}", platforms);
         if (platforms != null && !platforms.isEmpty()) {
             for (Platform platform : platforms) {
                 try {
