@@ -3,11 +3,13 @@ package com.gemalto.chaos.platform;
 import com.gemalto.chaos.container.Container;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@ConditionalOnProperty("generic.platform")
 public class GenericPlatform implements Platform {
 
     private static final Logger log = LoggerFactory.getLogger(GenericPlatform.class);

@@ -18,7 +18,7 @@ public class TaskScheduler {
     private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-    @Autowired
+    @Autowired(required = false)
     private List<Platform> platforms;
 
     @Autowired
