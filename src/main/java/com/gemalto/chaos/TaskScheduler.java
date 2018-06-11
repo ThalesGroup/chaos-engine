@@ -29,10 +29,8 @@ public class TaskScheduler {
     private List<NotificationMethods> notificationMethods;
 
 
-    @Scheduled(cron = "* * * * * *")
-    public void task() {
-
-
+    @Scheduled(cron = "0 0 * * * *")
+    public void chaosSchedule() {
         log.info("The time is now {}", dateFormat.format(new Date()));
         log.info("This is the list of platforms: {}", platforms);
         for (Platform platform : platforms)
@@ -44,7 +42,6 @@ public class TaskScheduler {
                     sendNotification("Destroyed container " + container);
                 }
             }
-
         }
     }
 
