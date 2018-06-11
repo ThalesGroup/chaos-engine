@@ -7,13 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.gemalto.chaos.*;
-
-
-/**
- * Hello world!
- *
- */
 @SpringBootApplication
 @EnableScheduling
 public class ChaosEngine
