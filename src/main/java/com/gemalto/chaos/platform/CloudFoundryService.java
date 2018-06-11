@@ -1,5 +1,7 @@
 package com.gemalto.chaos.platform;
 
+import com.gemalto.chaos.container.CloudFoundryContainer;
+import com.gemalto.chaos.container.Container;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
 import org.slf4j.Logger;
@@ -10,6 +12,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+import static com.sun.javafx.fxml.expression.Expression.not;
 
 
 @Component
@@ -38,6 +44,30 @@ public class CloudFoundryService implements Platform {
 
     public CloudFoundryService() {
         log.info("Initialized!");
+    }
+
+
+    @Override
+    public void degrade(Container container) throws RuntimeException {
+        if (!(container instanceof CloudFoundryContainer)) {
+            throw new RuntimeException("Expected to be passed a Cloud Foundry container");
+        }
+        log.info("Attempting to degrade performance on {}", container);
+
+    }
+
+    @Override
+    public List<Container> getRoster() {
+        return null;
+
+    }
+
+    @Override
+    public void destroy(Container container) throws RuntimeException {
+        if (!(container instanceof CloudFoundryContainer)) {
+            throw new RuntimeException("Expected to be passed a Cloud Foundry container");
+        }
+
     }
 
 }
