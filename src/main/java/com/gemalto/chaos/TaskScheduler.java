@@ -29,17 +29,19 @@ public class TaskScheduler {
     public void chaosSchedule() {
         log.info("The time is now {}", dateFormat.format(new Date()));
         log.info("This is the list of platforms: {}", platforms);
-        for (Platform platform : platforms) {
-            try {
-                List<Container> containers = platform.getRoster();
-                if (containers != null && !containers.isEmpty()) {
-                    for (Container container : containers) {
-                        platform.destroy(container);
-                        sendNotification("Destroyed container " + container);
+        if (platforms != null && !platforms.isEmpty()) {
+            for (Platform platform : platforms) {
+                try {
+                    List<Container> containers = platform.getRoster();
+                    if (containers != null && !containers.isEmpty()) {
+                        for (Container container : containers) {
+                            platform.destroy(container);
+                            sendNotification("Destroyed container " + container);
+                        }
                     }
+                } catch (Exception e) {
+                    log.error("Execution failed while processing {}", platform);
                 }
-            } catch (Exception e) {
-                log.error("Execution failed while processing {}", platform);
             }
         }
     }
