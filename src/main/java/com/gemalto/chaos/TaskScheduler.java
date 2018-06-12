@@ -66,7 +66,7 @@ public class TaskScheduler {
     A custom schedule can be put in place using the 'schedule' environment variable.
      */
     @Scheduled(cron = "${schedule:0 0 * * * *}")
-    public void chaosSchedule() {
+    void chaosSchedule() {
         if (holidayManager.isHoliday()) {
             log.info("This is no time for chaos.");
 
