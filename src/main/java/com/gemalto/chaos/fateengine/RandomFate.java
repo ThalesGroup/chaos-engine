@@ -9,22 +9,19 @@ import java.util.Random;
 @Component
 public class RandomFate implements FateEngine {
 
-    private float destructionProbability;
-
-    @Value("${probability:0.2}")
-    public void setDestructionProbability(float probability) {
-        destructionProbability = probability;
+    RandomFate(@Value("${probability:0.2}") float destructionProbability) {
+        this.destructionProbability = destructionProbability;
     }
 
+    private float destructionProbability;
 
-    private static boolean canDestroy(float destructionProbability) {
-        Random r = new Random();
-        return r.nextFloat() < destructionProbability;
+    private static boolean canDestroy(float destructionProbability, Random random) {
+        return random.nextFloat() < destructionProbability;
     }
 
     @Override
     public boolean canDestroy(Container container) {
-        return canDestroy(destructionProbability);
+        return canDestroy(destructionProbability, new Random());
     }
 
 }
