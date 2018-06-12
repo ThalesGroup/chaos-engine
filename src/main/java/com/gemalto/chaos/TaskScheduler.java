@@ -5,7 +5,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
-import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +21,6 @@ public class TaskScheduler {
 
     @Autowired(required = false)
     private List<Platform> platforms;
-
-    @Autowired(required = false)
-    private List<NotificationMethods> notificationMethods;
 
     @Autowired
     private FateEngine fateEngine;
