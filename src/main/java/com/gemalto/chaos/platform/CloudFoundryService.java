@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.CloudFoundryContainer;
 import com.gemalto.chaos.container.Container;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -98,9 +99,9 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void degrade(Container container) {
+    public void degrade(Container container) throws ChaosException {
         if (!(container instanceof CloudFoundryContainer)) {
-            throw new RuntimeException("Expected to be passed a Cloud Foundry container");
+            throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
         log.info("Attempting to degrade performance on {}", container);
 
@@ -126,9 +127,9 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void destroy(Container container) {
+    public void destroy(Container container) throws ChaosException {
         if (!(container instanceof CloudFoundryContainer)) {
-            throw new RuntimeException("Expected to be passed a Cloud Foundry container");
+            throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
 
         cloudFoundryOperations.applications().terminateTask(
