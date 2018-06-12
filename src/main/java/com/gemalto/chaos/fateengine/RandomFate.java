@@ -9,9 +9,13 @@ import java.util.Random;
 @Component
 public class RandomFate implements FateEngine {
 
-
-    @Value("@{proability:0.2f")
     private static float destructionProbability;
+
+    @Value("@{probability:0.2f")
+    public void setDestructionProbability(float probability) {
+        destructionProbability = probability;
+    }
+
 
     private static boolean canDestroy(float destructionProbability) {
         Random r = new Random();
