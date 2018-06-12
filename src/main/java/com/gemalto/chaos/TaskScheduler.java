@@ -27,14 +27,14 @@ public class TaskScheduler {
     private List<NotificationMethods> notificationMethods;
 
     @Autowired
-    private FateEngine fateEngine;
+    private static FateEngine fateEngine;
 
-    private static void processPlatforms(List<Platform> platforms, FateEngine fateEngine) {
+    private static void processPlatformList(List<Platform> platforms) {
         if (platforms != null && !platforms.isEmpty()) {
             for (Platform platform : platforms) {
                 try {
                     List<Container> containers = platform.getRoster();
-                    processContainers(fateEngine, platform, containers);
+                    processContainerList(containers, platform);
                 } catch (Exception e) {
                     log.error("Execution failed while processing {}", platform);
                     log.debug("Details of failure for {}:", platform, e);
@@ -43,7 +43,7 @@ public class TaskScheduler {
         }
     }
 
-    private static void processContainers(FateEngine fateEngine, Platform platform, List<Container> containers) {
+    private static void processContainerList(List<Container> containers, Platform platform) {
         if (containers != null && !containers.isEmpty()) {
             for (Container container : containers) {
                 if (fateEngine.canDestroy(container)) {
@@ -65,6 +65,6 @@ public class TaskScheduler {
         // TODO: Add a check to see if today is a Holiday
 
         log.debug("This is the list of platforms: {}", platforms);
-        processPlatforms(platforms, fateEngine);
+        processPlatformList(platforms);
     }
 }
