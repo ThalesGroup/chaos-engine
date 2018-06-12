@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -24,13 +25,13 @@ public class GenericPlatform implements Platform {
     }
 
     @Override
-    public void degrade(Container container) throws RuntimeException {
+    public void degrade(Container container) {
         log.warn("Cannot degrade a container, this is a generic Platform.");
     }
 
     @Override
     public List<Container> getRoster() {
         log.warn("Cannot return a list of containers, this is a generic platform");
-        return null;
+        return new ArrayList<>();
     }
 }

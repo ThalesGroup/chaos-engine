@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface Platform {
 
-    void destroy(Container container) throws RuntimeException;
+    void destroy(Container container);
 
-    void degrade(Container container) throws RuntimeException;
+    void degrade(Container container);
 
     List<Container> getRoster();
 }

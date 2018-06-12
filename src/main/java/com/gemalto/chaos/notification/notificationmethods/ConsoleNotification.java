@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConsoleNotification implements NotificationMethods {
 
-    private final static Logger log = LoggerFactory.getLogger(ConsoleNotification.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsoleNotification.class);
 
     public ConsoleNotification() {
         log.info("Creating console logger");

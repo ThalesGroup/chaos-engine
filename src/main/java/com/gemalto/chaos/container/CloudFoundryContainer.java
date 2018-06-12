@@ -17,7 +17,7 @@ public class CloudFoundryContainer implements Container {
     }
 
     public static CloudFoundryContainerBuilder builder() {
-        return CloudFoundryContainerBuilder.Builder();
+        return CloudFoundryContainerBuilder.builder();
     }
 
     private CloudFoundryContainer() {
@@ -36,7 +36,7 @@ public class CloudFoundryContainer implements Container {
         private CloudFoundryContainerBuilder() {
         }
 
-        private static CloudFoundryContainerBuilder Builder() {
+        private static CloudFoundryContainerBuilder builder() {
             return new CloudFoundryContainerBuilder();
         }
 

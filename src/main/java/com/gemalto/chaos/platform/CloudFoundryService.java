@@ -98,7 +98,7 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void degrade(Container container) throws RuntimeException {
+    public void degrade(Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new RuntimeException("Expected to be passed a Cloud Foundry container");
         }
@@ -126,7 +126,7 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void destroy(Container container) throws RuntimeException {
+    public void destroy(Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new RuntimeException("Expected to be passed a Cloud Foundry container");
         }

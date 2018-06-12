@@ -12,7 +12,7 @@ public class RandomFate implements FateEngine {
     private static float destructionProbability;
 
     @Value("${probability:0.2}")
-    public void setDestructionProbability(float probability) {
+    public static void setDestructionProbability(float probability) {
         destructionProbability = probability;
     }
 

@@ -11,14 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 @Component
 public class TaskScheduler {
     private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
     @Autowired(required = false)
     private List<Platform> platforms;
@@ -60,7 +57,6 @@ public class TaskScheduler {
      */
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     public void chaosSchedule() {
-        log.info("The time is now {}", dateFormat.format(new Date()));
         log.info("Using {} to determine container fate", fateEngine.getClass().getSimpleName());
         // TODO: Add a check to see if today is a Holiday
 
