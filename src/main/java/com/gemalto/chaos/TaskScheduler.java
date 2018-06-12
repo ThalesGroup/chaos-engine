@@ -29,6 +29,31 @@ public class TaskScheduler {
     @Autowired
     private FateEngine fateEngine;
 
+    private static void processPlatforms(List<Platform> platforms, FateEngine fateEngine) {
+        if (platforms != null && !platforms.isEmpty()) {
+            for (Platform platform : platforms) {
+                try {
+                    List<Container> containers = platform.getRoster();
+                    processContainers(fateEngine, platform, containers);
+                } catch (Exception e) {
+                    log.error("Execution failed while processing {}", platform);
+                    log.debug("Details of failure for {}:", platform, e);
+                }
+            }
+        }
+    }
+
+    private static void processContainers(FateEngine fateEngine, Platform platform, List<Container> containers) {
+        if (containers != null && !containers.isEmpty()) {
+            for (Container container : containers) {
+                if (fateEngine.canDestroy(container)) {
+                    platform.destroy(container);
+                    NotificationManager.sendNotification("Destroyed container " + container);
+                }
+            }
+        }
+    }
+
     /*
     The chaos tools will regularly run on a one-hour schedule, on the hour.
     A custom schedule can be put in place using the 'schedule' environment variable.
@@ -40,23 +65,6 @@ public class TaskScheduler {
         // TODO: Add a check to see if today is a Holiday
 
         log.debug("This is the list of platforms: {}", platforms);
-        if (platforms != null && !platforms.isEmpty()) {
-            for (Platform platform : platforms) {
-                try {
-                    List<Container> containers = platform.getRoster();
-                    if (containers != null && !containers.isEmpty()) {
-                        for (Container container : containers) {
-                            if (fateEngine.canDestroy(container)) {
-                                platform.destroy(container);
-                                NotificationManager.sendNotification("Destroyed container " + container);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Execution failed while processing {}", platform);
-                    log.debug("Details of failure for {}:", platform, e);
-                }
-            }
-        }
+        processPlatforms(platforms, fateEngine);
     }
 }
