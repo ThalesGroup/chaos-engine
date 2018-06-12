@@ -5,7 +5,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
-import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +21,6 @@ public class TaskScheduler {
 
     @Autowired(required = false)
     private List<Platform> platforms;
-
-    @Autowired(required = false)
-    private List<NotificationMethods> notificationMethods;
 
     @Autowired
     private FateEngine fateEngine;
@@ -66,7 +62,7 @@ public class TaskScheduler {
     A custom schedule can be put in place using the 'schedule' environment variable.
      */
     @Scheduled(cron = "${schedule:0 0 * * * *}")
-    public void chaosSchedule() {
+    void chaosSchedule() {
         if (holidayManager.isHoliday()) {
             log.info("This is no time for chaos.");
 

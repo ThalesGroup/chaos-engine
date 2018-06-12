@@ -99,7 +99,7 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void degrade(Container container) throws ChaosException {
+    public void degrade(Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
@@ -119,6 +119,7 @@ public class CloudFoundryService implements Platform {
                                 .applicationId(app.getId())
                                 .name(app.getName())
                                 .instance(i)
+                                .maxInstances(instances)
                                 .build()
                 );
             }
@@ -127,7 +128,7 @@ public class CloudFoundryService implements Platform {
     }
 
     @Override
-    public void destroy(Container container) throws ChaosException {
+    public void destroy(Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }

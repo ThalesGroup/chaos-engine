@@ -7,6 +7,7 @@ public class CloudFoundryContainer implements Container {
     private String applicationId;
     private String name;
     private Integer instance;
+    private Integer maxInstances;
 
 
     public TerminateApplicationTaskRequest getTerminateApplicationTaskRequest() {
@@ -32,11 +33,12 @@ public class CloudFoundryContainer implements Container {
         private String applicationId;
         private String name;
         private Integer instance;
+        private Integer maxInstances;
 
         private CloudFoundryContainerBuilder() {
         }
 
-        private static CloudFoundryContainerBuilder builder() {
+        static CloudFoundryContainerBuilder builder() {
             return new CloudFoundryContainerBuilder();
         }
 
@@ -55,10 +57,16 @@ public class CloudFoundryContainer implements Container {
             return this;
         }
 
+        public CloudFoundryContainerBuilder maxInstances(Integer maxInstances) {
+            this.maxInstances = maxInstances;
+            return this;
+        }
+
         public CloudFoundryContainer build() {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
-            cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.name = this.name;
+            cloudFoundryContainer.maxInstances = this.maxInstances;
+            cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.applicationId = this.applicationId;
             return cloudFoundryContainer;
         }
