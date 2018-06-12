@@ -12,13 +12,11 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty({"datadog.apikey"})
 public class DataDogNotification implements NotificationMethods {
 
-    private String apikey;
-
     private static final Logger log = LoggerFactory.getLogger(DataDogNotification.class);
 
-    public DataDogNotification(@Value("datadog.apikey") String apikey) {
-        this.apikey = apikey;
-    }
+    @Value("${datadog.apikey")
+    private String apikey;
+
 
     @Override
     public void logEvent(String event) {
