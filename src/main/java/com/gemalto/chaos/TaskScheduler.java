@@ -1,5 +1,6 @@
 package com.gemalto.chaos;
 
+import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.notification.NotificationManager;
@@ -25,6 +26,9 @@ public class TaskScheduler {
 
     @Autowired
     private FateEngine fateEngine;
+
+    @Autowired
+    private HolidayManager holidayManager;
 
     private void processPlatformList(List<Platform> platforms) {
         if (platforms != null && !platforms.isEmpty()) {
@@ -57,8 +61,11 @@ public class TaskScheduler {
      */
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     public void chaosSchedule() {
+        if (holidayManager.isHoliday()) {
+            log.info("This is no time for chaos.");
+
+        }
         log.info("Using {} to determine container fate", fateEngine.getClass().getSimpleName());
-        // TODO: Add a check to see if today is a Holiday
 
         log.debug("This is the list of platforms: {}", platforms);
         processPlatformList(platforms);
