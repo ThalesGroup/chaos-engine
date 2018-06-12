@@ -6,13 +6,13 @@ public class CloudFoundryContainer implements Container {
 
     private String applicationId;
     private String name;
-    private Integer instances;
+    private Integer instance;
 
 
     public TerminateApplicationTaskRequest getTerminateApplicationTaskRequest() {
         return TerminateApplicationTaskRequest.builder()
                 .applicationName(name)
-                .sequenceId(instances)
+                .sequenceId(instance)
                 .build();
     }
 
@@ -31,7 +31,7 @@ public class CloudFoundryContainer implements Container {
     public static final class CloudFoundryContainerBuilder {
         private String applicationId;
         private String name;
-        private Integer instances;
+        private Integer instance;
 
         private CloudFoundryContainerBuilder() {
         }
@@ -50,14 +50,14 @@ public class CloudFoundryContainer implements Container {
             return this;
         }
 
-        public CloudFoundryContainerBuilder instances(Integer instances) {
-            this.instances = instances;
+        public CloudFoundryContainerBuilder instance(Integer instance) {
+            this.instance = instance;
             return this;
         }
 
         public CloudFoundryContainer build() {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
-            cloudFoundryContainer.instances = this.instances;
+            cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.name = this.name;
             cloudFoundryContainer.applicationId = this.applicationId;
             return cloudFoundryContainer;

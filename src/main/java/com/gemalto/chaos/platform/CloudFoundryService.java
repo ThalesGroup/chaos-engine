@@ -111,13 +111,16 @@ public class CloudFoundryService implements Platform {
         List<Container> containers = new ArrayList<>();
         Flux<ApplicationSummary> apps = cloudFoundryOperations.applications().list();
         for (ApplicationSummary app : apps.toIterable()) {
-            containers.add(
-                    CloudFoundryContainer.builder()
-                            .applicationId(app.getId())
-                            .name(app.getName())
-                            .instances(app.getInstances())
-                            .build()
-            );
+            Integer instances = app.getInstances();
+            for (Integer i = 0; i < instances; i++) {
+                containers.add(
+                        CloudFoundryContainer.builder()
+                                .applicationId(app.getId())
+                                .name(app.getName())
+                                .instance(i)
+                                .build()
+                );
+            }
         }
         return containers;
     }
