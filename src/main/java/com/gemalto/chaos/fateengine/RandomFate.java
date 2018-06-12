@@ -9,10 +9,10 @@ import java.util.Random;
 @Component
 public class RandomFate implements FateEngine {
 
-    private static float destructionProbability;
+    private float destructionProbability;
 
     @Value("${probability:0.2}")
-    public static void setDestructionProbability(float probability) {
+    public void setDestructionProbability(float probability) {
         destructionProbability = probability;
     }
 
