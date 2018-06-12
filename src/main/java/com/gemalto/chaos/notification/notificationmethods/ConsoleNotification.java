@@ -1,5 +1,6 @@
 package com.gemalto.chaos.notification.notificationmethods;
 
+import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,8 @@ public class ConsoleNotification implements NotificationMethods {
     }
 
     @Override
-    public void logEvent(String event) {
-        log.info(event);
+    public void logEvent(ChaosEvent event) {
+        log.info(event.toString());
 
     }
 }
