@@ -119,6 +119,7 @@ public class CloudFoundryService implements Platform {
                                 .applicationId(app.getId())
                                 .name(app.getName())
                                 .instance(i)
+                                .maxInstances(instances)
                                 .build()
                 );
             }
