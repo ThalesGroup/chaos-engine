@@ -1,6 +1,7 @@
 package com.gemalto.chaos;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.platform.Platform;
@@ -25,6 +26,8 @@ public class TaskScheduler {
     @Autowired(required = false)
     private List<NotificationMethods> notificationMethods;
 
+    @Autowired
+    private FateEngine fateEngine;
 
     /*
     The chaos tools will regularly run on a one-hour schedule, on the hour.
@@ -33,6 +36,7 @@ public class TaskScheduler {
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     public void chaosSchedule() {
         log.info("The time is now {}", dateFormat.format(new Date()));
+        log.info("Using {} to determine container fate", fateEngine.getClass().getSimpleName());
         // TODO: Add a check to see if today is a Holiday
 
         log.debug("This is the list of platforms: {}", platforms);
@@ -42,12 +46,15 @@ public class TaskScheduler {
                     List<Container> containers = platform.getRoster();
                     if (containers != null && !containers.isEmpty()) {
                         for (Container container : containers) {
-                            platform.destroy(container);
-                            NotificationManager.sendNotification("Destroyed container " + container);
+                            if (fateEngine.canDestroy(container)) {
+                                platform.destroy(container);
+                                NotificationManager.sendNotification("Destroyed container " + container);
+                            }
                         }
                     }
                 } catch (Exception e) {
                     log.error("Execution failed while processing {}", platform);
+                    log.debug("Details of failure for {}:", platform, e);
                 }
             }
         }
