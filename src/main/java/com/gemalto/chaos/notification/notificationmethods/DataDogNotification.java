@@ -1,6 +1,7 @@
-package com.gemalto.chaos.notification;
+package com.gemalto.chaos.notification.notificationmethods;
 
 
+import com.gemalto.chaos.notification.NotificationMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
