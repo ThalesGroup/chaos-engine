@@ -12,10 +12,10 @@ public class NotificationManager {
     private NotificationManager() {
     }
 
-    public static void sendNotification(String message) {
+    public static void sendNotification(ChaosEvent chaosEvent) {
         if (notificationMethods != null) {
             for (NotificationMethods notif : notificationMethods) {
-                notif.logEvent(message);
+                notif.logEvent(chaosEvent);
             }
         }
     }

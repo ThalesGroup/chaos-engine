@@ -3,6 +3,7 @@ package com.gemalto.chaos;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
+import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.platform.Platform;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -49,7 +51,11 @@ public class TaskScheduler {
             for (Container container : containers) {
                 if (fateEngine.canDestroy(container)) {
                     platform.destroy(container);
-                    NotificationManager.sendNotification("Destroyed container " + container);
+                    NotificationManager.sendNotification(ChaosEvent.builder()
+                            .withChaosTime(new Date())
+                            .withTargetContainer(container)
+                            .withMessage("Container terminated")
+                            .build());
                 }
             }
         }
