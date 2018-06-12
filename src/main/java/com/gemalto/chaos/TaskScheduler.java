@@ -27,9 +27,9 @@ public class TaskScheduler {
     private List<NotificationMethods> notificationMethods;
 
     @Autowired
-    private static FateEngine fateEngine;
+    private FateEngine fateEngine;
 
-    private static void processPlatformList(List<Platform> platforms) {
+    private void processPlatformList(List<Platform> platforms) {
         if (platforms != null && !platforms.isEmpty()) {
             for (Platform platform : platforms) {
                 try {
@@ -43,7 +43,7 @@ public class TaskScheduler {
         }
     }
 
-    private static void processContainerList(List<Container> containers, Platform platform) {
+    private void processContainerList(List<Container> containers, Platform platform) {
         if (containers != null && !containers.isEmpty()) {
             for (Container container : containers) {
                 if (fateEngine.canDestroy(container)) {
