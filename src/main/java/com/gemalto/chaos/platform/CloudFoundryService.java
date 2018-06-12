@@ -112,8 +112,7 @@ public class CloudFoundryService implements Platform {
         Flux<ApplicationSummary> apps = cloudFoundryOperations.applications().list();
         for (ApplicationSummary app : apps.toIterable()) {
             containers.add(
-                    CloudFoundryContainer.CloudFoundryContainerBuilder
-                            .Builder()
+                    CloudFoundryContainer.builder()
                             .applicationId(app.getId())
                             .name(app.getName())
                             .instances(app.getInstances())
