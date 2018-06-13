@@ -1,12 +1,44 @@
 package com.gemalto.chaos.calendar;
 
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TreeSet;
+import java.time.*;
+import java.util.*;
 
 public interface HolidayCalendar {
 
     boolean isHoliday(Calendar day);
+
+    int getStartOfDay();
+
+    int getEndOfDay();
+
+    default boolean isWorkingHours(Instant time) {
+        ZonedDateTime zdt = time.atZone(getTimeZoneId());
+        DayOfWeek dow = zdt.getDayOfWeek();
+
+        if (dow == DayOfWeek.SUNDAY || dow == DayOfWeek.SATURDAY) {
+            return false;
+        }
+
+        int hour = zdt.getHour();
+
+        return hour >= getStartOfDay() && hour < getEndOfDay();
+    }
+
+    default Instant getCurrentTime() {
+        return Instant.now(Clock.system(getTimeZoneId()));
+    }
+
+    default ZoneId getTimeZoneId() {
+        return ZoneId.of("GMT");
+    }
+
+    default TimeZone getTimeZone() {
+        return TimeZone.getTimeZone("GMT");
+    }
+
+    default Calendar getToday() {
+        return new GregorianCalendar(getTimeZone());
+    }
 
     default int getDate(int year, int month, int day) {
         Calendar c = Calendar.getInstance();
@@ -25,7 +57,7 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
-    default Set<Integer> getLinkedDays(Set<Integer> holidays, int year) {
+    default Set<Integer> getLinkedDays(Set<Integer> holidays) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {
             Calendar c = Calendar.getInstance();
@@ -46,7 +78,6 @@ public interface HolidayCalendar {
             }
 
         }
-
         return linkedDays;
     }
 

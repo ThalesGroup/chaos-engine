@@ -11,7 +11,7 @@ public class ChaosEvent {
     private String message;
 
     public static ChaosEventBuilder builder() {
-        return ChaosEventBuilder.Builder();
+        return ChaosEventBuilder.builder();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class ChaosEvent {
         private ChaosEventBuilder() {
         }
 
-        private static ChaosEventBuilder Builder() {
+        private static ChaosEventBuilder builder() {
             return new ChaosEventBuilder();
         }
 

@@ -17,7 +17,7 @@ public class ConsoleNotification implements NotificationMethods {
 
     @Override
     public void logEvent(ChaosEvent event) {
-        log.info(event.toString());
+        log.info("{}", event);
 
     }
 }

@@ -1,17 +1,21 @@
 package com.gemalto.chaos.calendar.holidaycalendar;
 
-
 import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Repository;
 
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
-
 
 @Repository("CAN")
 public class Canada implements HolidayCalendar {
 
+    private static final String TZ = "America/Toronto";
+    private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
+    private static final int START_OF_DAY = 9;
+    private static final int END_OF_DAY = 17;
     private final Set<Integer> holidays = new TreeSet<>();
 
     private static Integer getVictoriaDay(int year) {
@@ -26,12 +30,13 @@ public class Canada implements HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
+
     private void renderHolidays(int year) {
         holidays.clear();
 
         holidays.addAll(getStaticHolidays(year));
         holidays.addAll(getMovingHolidays(year));
-        holidays.addAll(getLinkedDays(holidays, year));
+        holidays.addAll(getLinkedDays(holidays));
 
         holidays.add(year);
     }
@@ -41,9 +46,12 @@ public class Canada implements HolidayCalendar {
 
         // New Years
         staticHolidays.add(getDate(year, Calendar.JANUARY, 1));
+
         // Canada Day
         staticHolidays.add(getDate(year, Calendar.JULY, 1));
-        // Christmas through New Years
+
+        // Christmas Eve through New Years
+        staticHolidays.add(getDate(year, Calendar.DECEMBER, 24));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 25));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 26));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 27));
@@ -87,5 +95,26 @@ public class Canada implements HolidayCalendar {
             renderHolidays(year);
         }
         return holidays.contains(day.get(Calendar.DAY_OF_YEAR));
+    }
+
+
+    @Override
+    public ZoneId getTimeZoneId() {
+        return TIME_ZONE_ID;
+    }
+
+    @Override
+    public TimeZone getTimeZone() {
+        return TimeZone.getTimeZone(TZ);
+    }
+
+    @Override
+    public int getStartOfDay() {
+        return START_OF_DAY;
+    }
+
+    @Override
+    public int getEndOfDay() {
+        return END_OF_DAY;
     }
 }

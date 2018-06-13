@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty({"cf.apihost", "cf.username", "cf.password", "cf.organization", "cf.space"})
+@ConditionalOnProperty({"cf_apihost", "cf_username", "cf_password", "cf_organization"})
 public class CloudFoundryService implements Platform {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
@@ -41,16 +41,18 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    DefaultConnectionContext defaultConnectionContext(@Value("${cf.apihost}") String apiHost) {
+    DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost,
+                                                      @Value("${cf_port:443}") int port) {
         log.info("Creating a connection context");
         return DefaultConnectionContext.builder()
                 .apiHost(apiHost)
+                .port(port)
                 .build();
     }
 
     @Bean
-    PasswordGrantTokenProvider tokenProvider(@Value("${cf.username}") String username,
-                                             @Value("${cf.password}") String password) {
+    PasswordGrantTokenProvider tokenProvider(@Value("${cf_username}") String username,
+                                             @Value("${cf_password}") String password) {
         log.info("Creating a token provider");
         return PasswordGrantTokenProvider.builder()
                 .password(password)
@@ -83,12 +85,12 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    @ConditionalOnProperty({"cf.organization", "cf.space"})
+    @ConditionalOnProperty({"cf_organization"})
     DefaultCloudFoundryOperations cloudFoundryOperations(CloudFoundryClient cloudFoundryClient,
                                                          DopplerClient dopplerClient,
                                                          UaaClient uaaClient,
-                                                         @Value("${cf.organization}") String organization,
-                                                         @Value("${cf.space}") String space) {
+                                                         @Value("${cf_organization}") String organization,
+                                                         @Value("${cf_space:default}") String space) {
         return DefaultCloudFoundryOperations.builder()
                 .cloudFoundryClient(cloudFoundryClient)
                 .dopplerClient(dopplerClient)
@@ -114,14 +116,16 @@ public class CloudFoundryService implements Platform {
         for (ApplicationSummary app : apps.toIterable()) {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
-                containers.add(
-                        CloudFoundryContainer.builder()
-                                .applicationId(app.getId())
-                                .name(app.getName())
-                                .instance(i)
-                                .maxInstances(instances)
-                                .build()
-                );
+                CloudFoundryContainer c = CloudFoundryContainer
+                        .builder()
+                        .applicationId(app.getId())
+                        .name(app.getName())
+                        .instance(i)
+                        .maxInstances(instances)
+                        .build();
+                containers.add(c);
+                log.info("Added container {}", c);
+
             }
         }
         return containers;

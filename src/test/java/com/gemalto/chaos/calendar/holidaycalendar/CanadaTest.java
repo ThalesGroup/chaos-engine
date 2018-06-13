@@ -4,6 +4,7 @@ import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Calendar;
 
 public class CanadaTest {
@@ -47,6 +48,27 @@ public class CanadaTest {
         Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 29)));
         Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 30)));
         Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 31)));
+
+
+    }
+
+    @Test
+    public void isWorkingHours() {
+        HolidayCalendar Canada = new Canada();
+
+        // 2018-06-13 13:45:49 GMT (True)
+        Assert.assertTrue(Canada.isWorkingHours(Instant.ofEpochSecond(1528897555)));
+
+        // 2018-06-13 20:59:59 GMT (True)
+        Assert.assertTrue(Canada.isWorkingHours(Instant.ofEpochSecond(1528923599)));
+        // 2018-06-13 21:00:00 GMT (False) (One second difference from above)
+        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528923600)));
+
+        // 2018-06-13 12:14:43 GMT (False)
+        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528892083)));
+
+        // 2018-06-10 12:00:00 Eastern (False)
+        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528646400)));
 
 
     }

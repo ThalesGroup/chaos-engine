@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({"slack.webhookuri"})
+@ConditionalOnProperty({"slack_webhookuri"})
 public class SlackNotifications implements NotificationMethods {
 
-    @Value("${slack.webhookuri}")
+    @Value("${slack_webhookuri}")
     private static String webhookUri;
 
     @Override
