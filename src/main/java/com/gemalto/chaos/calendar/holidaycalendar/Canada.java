@@ -41,9 +41,12 @@ public class Canada implements HolidayCalendar {
 
         // New Years
         staticHolidays.add(getDate(year, Calendar.JANUARY, 1));
+
         // Canada Day
         staticHolidays.add(getDate(year, Calendar.JULY, 1));
-        // Christmas through New Years
+
+        // Christmas Eve through New Years
+        staticHolidays.add(getDate(year, Calendar.DECEMBER, 24));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 25));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 26));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 27));
