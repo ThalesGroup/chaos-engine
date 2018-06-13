@@ -41,7 +41,7 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    DefaultConnectionContext defaultConnectionContext(@Value("${cf.apihost}") String apiHost) {
+    DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost) {
         log.info("Creating a connection context");
         return DefaultConnectionContext.builder()
                 .apiHost(apiHost)
@@ -49,8 +49,8 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    PasswordGrantTokenProvider tokenProvider(@Value("${cf.username}") String username,
-                                             @Value("${cf.password}") String password) {
+    PasswordGrantTokenProvider tokenProvider(@Value("${cf_username}") String username,
+                                             @Value("${cf_password}") String password) {
         log.info("Creating a token provider");
         return PasswordGrantTokenProvider.builder()
                 .password(password)
@@ -87,8 +87,8 @@ public class CloudFoundryService implements Platform {
     DefaultCloudFoundryOperations cloudFoundryOperations(CloudFoundryClient cloudFoundryClient,
                                                          DopplerClient dopplerClient,
                                                          UaaClient uaaClient,
-                                                         @Value("${cf.organization}") String organization,
-                                                         @Value("${cf.space:default}") String space) {
+                                                         @Value("${cf_organization}") String organization,
+                                                         @Value("${cf_space:default}") String space) {
         return DefaultCloudFoundryOperations.builder()
                 .cloudFoundryClient(cloudFoundryClient)
                 .dopplerClient(dopplerClient)

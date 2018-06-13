@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty({"datadog.apikey"})
 public class DataDogNotification implements NotificationMethods {
 
-    @Value("${datadog.apikey")
+    @Value("${datadog_apikey")
     private String apikey;
 
 

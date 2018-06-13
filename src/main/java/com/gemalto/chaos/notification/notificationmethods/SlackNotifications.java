@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty({"slack.webhookuri"})
 public class SlackNotifications implements NotificationMethods {
 
-    @Value("${slack.webhookuri}")
+    @Value("${slack_webhookuri}")
     private static String webhookUri;
 
     @Override

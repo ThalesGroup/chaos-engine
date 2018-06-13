@@ -18,11 +18,11 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 #### Variables
 | Variable | Description | Default |
 |---|---|---|
-| *`cf.apihost`* | Cloud Foundry API URI | \<None\> |
-| `cf.username` | Cloud Foundry Username | \<None\> |
-| `cf.password` | Cloud Foundry Password | \<None\> |
-| `cf.organization` | Cloud Foundry Organization | \<None\> |
-| `cf.space` | Cloud Foundry Space | `default` |
+| *`cf_apihost`* | Cloud Foundry API URI | \<None\> |
+| `cf_username` | Cloud Foundry Username | \<None\> |
+| `cf_password` | Cloud Foundry Password | \<None\> |
+| `cf_organization` | Cloud Foundry Organization | \<None\> |
+| `cf_space` | Cloud Foundry Space | `default` |
 
 ### All Chaos Types
 
@@ -62,13 +62,13 @@ Notifications can be sent out through various methods when Chaos Events occur.
 #### Variables
 | Variable | Effect | Default |
 |----------|--------|--------|
-| *`datadog.apikey`* | API Key for DataDog access. | \<None\> |
+| *`datadog_apikey`* | API Key for DataDog access. | \<None\> |
 
 ### Slack
 #### Variables
 | Variable | Effect | Default |
 |----------|--------|--------|
-| *`slack.webhookuri`* | Web Hook URI for pushing to Slack. | \<None\> |
+| *`slack_webhookuri`* | Web Hook URI for pushing to Slack. | \<None\> |
 
 
 
