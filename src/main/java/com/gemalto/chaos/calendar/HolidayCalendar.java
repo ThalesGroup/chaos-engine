@@ -1,5 +1,6 @@
 package com.gemalto.chaos.calendar;
 
+import java.time.*;
 import java.util.Calendar;
 import java.util.Set;
 import java.util.TreeSet;
@@ -7,6 +8,33 @@ import java.util.TreeSet;
 public interface HolidayCalendar {
 
     boolean isHoliday(Calendar day);
+
+    Calendar getToday();
+
+    int getStartOfDay();
+
+    int getEndOfDay();
+
+    default boolean isWorkingHours(Instant time) {
+        ZonedDateTime zdt = time.atZone(getTimeZoneId());
+        DayOfWeek dow = zdt.getDayOfWeek();
+
+        if (dow == DayOfWeek.SUNDAY || dow == DayOfWeek.SATURDAY) {
+            return false;
+        }
+
+        int hour = zdt.getHour();
+
+        return hour >= getStartOfDay() && hour < getEndOfDay();
+    }
+
+    default Instant getCurrentTime() {
+        return Instant.now(Clock.system(getTimeZoneId()));
+    }
+
+    default ZoneId getTimeZoneId() {
+        return ZoneId.of("GMT");
+    }
 
     default int getDate(int year, int month, int day) {
         Calendar c = Calendar.getInstance();
@@ -46,7 +74,6 @@ public interface HolidayCalendar {
             }
 
         }
-
         return linkedDays;
     }
 

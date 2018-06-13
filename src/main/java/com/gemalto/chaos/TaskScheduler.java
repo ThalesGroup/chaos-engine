@@ -64,8 +64,11 @@ public class TaskScheduler {
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void chaosSchedule() {
         if (holidayManager.isHoliday()) {
-            log.info("This is no time for chaos.");
-
+            log.debug("Dev is on holiday, this is no time for chaos.");
+            return;
+        } else if (!holidayManager.isWorkingHours()) {
+            log.debug("Dev is away, this is no time for chaos.");
+            return;
         }
         log.info("Using {} to determine container fate", fateEngine.getClass().getSimpleName());
 

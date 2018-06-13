@@ -4,14 +4,17 @@ package com.gemalto.chaos.calendar.holidaycalendar;
 import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Repository;
 
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TreeSet;
+import java.time.ZoneId;
+import java.util.*;
 
 
 @Repository("CAN")
 public class Canada implements HolidayCalendar {
 
+    private static final String TZ = "America/Toronto";
+    private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
+    private static final int START_OF_DAY = 9;
+    private static final int END_OF_DAY = 17;
     private final Set<Integer> holidays = new TreeSet<>();
 
     private static Integer getVictoriaDay(int year) {
@@ -25,6 +28,7 @@ public class Canada implements HolidayCalendar {
         }
         return c.get(Calendar.DAY_OF_YEAR);
     }
+
 
     private void renderHolidays(int year) {
         holidays.clear();
@@ -90,5 +94,26 @@ public class Canada implements HolidayCalendar {
             renderHolidays(year);
         }
         return holidays.contains(day.get(Calendar.DAY_OF_YEAR));
+    }
+
+
+    @Override
+    public Calendar getToday() {
+        return new GregorianCalendar(TimeZone.getTimeZone(TZ));
+    }
+
+    @Override
+    public ZoneId getTimeZoneId() {
+        return TIME_ZONE_ID;
+    }
+
+    @Override
+    public int getStartOfDay() {
+        return START_OF_DAY;
+    }
+
+    @Override
+    public int getEndOfDay() {
+        return END_OF_DAY;
     }
 }
