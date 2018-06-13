@@ -116,14 +116,16 @@ public class CloudFoundryService implements Platform {
         for (ApplicationSummary app : apps.toIterable()) {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
-                containers.add(
-                        CloudFoundryContainer.builder()
-                                .applicationId(app.getId())
-                                .name(app.getName())
-                                .instance(i)
-                                .maxInstances(instances)
-                                .build()
-                );
+                CloudFoundryContainer c = CloudFoundryContainer
+                        .builder()
+                        .applicationId(app.getId())
+                        .name(app.getName())
+                        .instance(i)
+                        .maxInstances(instances)
+                        .build();
+                containers.add(c);
+                log.info("Added container {}", c);
+
             }
         }
         return containers;

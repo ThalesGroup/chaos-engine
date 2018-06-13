@@ -36,7 +36,7 @@ public class TaskScheduler {
                     processContainerList(containers, platform);
                 } catch (Exception e) {
                     log.error("Execution failed while processing {}", platform);
-                    log.debug("Details of failure for {}:", platform, e);
+                    log.error("Details of failure for {}:", platform, e);
                 }
             }
         }
