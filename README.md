@@ -19,6 +19,7 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | Variable | Description | Default |
 |---|---|---|
 | *`cf_apihost`* | Cloud Foundry API URI | \<None\> |
+| `cf_port` | Cloud Foundry API Port | `443` |
 | `cf_username` | Cloud Foundry Username | \<None\> |
 | `cf_password` | Cloud Foundry Password | \<None\> |
 | `cf_organization` | Cloud Foundry Organization | \<None\> |

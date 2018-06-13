@@ -41,10 +41,12 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost) {
+    DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost,
+                                                      @Value("${cf_port:443}") int port) {
         log.info("Creating a connection context");
         return DefaultConnectionContext.builder()
                 .apiHost(apiHost)
+                .port(port)
                 .build();
     }
 
