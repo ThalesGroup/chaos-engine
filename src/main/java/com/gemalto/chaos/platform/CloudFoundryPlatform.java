@@ -29,14 +29,14 @@ import java.util.List;
 
 @Component
 @ConditionalOnProperty({"cf_apihost", "cf_username", "cf_password", "cf_organization"})
-public class CloudFoundryService implements Platform {
+public class CloudFoundryPlatform implements Platform {
 
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
+    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
 
     @Autowired
     private DefaultCloudFoundryOperations cloudFoundryOperations;
 
-    public CloudFoundryService() {
+    public CloudFoundryPlatform() {
         log.info("Initialized!");
     }
 
