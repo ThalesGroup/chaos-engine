@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({"datadog.apikey"})
+@ConditionalOnProperty({"datadog_apikey"})
 public class DataDogNotification implements NotificationMethods {
 
     @Value("${datadog_apikey")
