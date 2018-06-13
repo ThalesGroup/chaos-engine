@@ -4,8 +4,6 @@ The Chaos Engine is designed to intermittently destroy or degrade instances of a
 
 This is designed to simulate real cloud based outages that could occur. The code running on the cloud infrastructure should be robust enough to automatically recover. If it is, then the chaos event is a valid proof of concept. If it fails to, then it exposes an issue that could have happened at a less opportunistic time.
 
-{:toc}
-
 ## Chaos Types
 The following platforms act as entry points for the Chaos Engine. At least one needs to be configured.
 
