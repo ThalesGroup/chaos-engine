@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty({"cf.apihost", "cf.username", "cf.password", "cf.organization", "cf.space"})
+@ConditionalOnProperty({"cf.apihost", "cf.username", "cf.password", "cf.organization"})
 public class CloudFoundryService implements Platform {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
@@ -83,12 +83,12 @@ public class CloudFoundryService implements Platform {
     }
 
     @Bean
-    @ConditionalOnProperty({"cf.organization", "cf.space"})
+    @ConditionalOnProperty({"cf.organization"})
     DefaultCloudFoundryOperations cloudFoundryOperations(CloudFoundryClient cloudFoundryClient,
                                                          DopplerClient dopplerClient,
                                                          UaaClient uaaClient,
                                                          @Value("${cf.organization}") String organization,
-                                                         @Value("${cf.space}") String space) {
+                                                         @Value("${cf.space:default}") String space) {
         return DefaultCloudFoundryOperations.builder()
                 .cloudFoundryClient(cloudFoundryClient)
                 .dopplerClient(dopplerClient)

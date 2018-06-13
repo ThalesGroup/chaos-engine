@@ -22,7 +22,7 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | `cf.username` | Cloud Foundry Username | \<None\> |
 | `cf.password` | Cloud Foundry Password | \<None\> |
 | `cf.organization` | Cloud Foundry Organization | \<None\> |
-| `cf.space` | Cloud Foundry Space | \<None\> |
+| `cf.space` | Cloud Foundry Space | `default` |
 
 ### All Chaos Types
 
