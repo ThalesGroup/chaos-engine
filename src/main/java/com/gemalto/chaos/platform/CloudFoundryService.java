@@ -137,8 +137,8 @@ public class CloudFoundryService implements Platform {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
 
-        cloudFoundryOperations.applications().terminateTask(
-                ((CloudFoundryContainer) container).getTerminateApplicationTaskRequest());
+        cloudFoundryOperations.applications().restartInstance(
+                ((CloudFoundryContainer) container).getRestartApplicationInstanceRequest());
 
 
     }

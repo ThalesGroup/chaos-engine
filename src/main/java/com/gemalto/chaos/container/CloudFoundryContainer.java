@@ -1,6 +1,6 @@
 package com.gemalto.chaos.container;
 
-import org.cloudfoundry.operations.applications.TerminateApplicationTaskRequest;
+import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 public class CloudFoundryContainer implements Container {
 
@@ -9,11 +9,10 @@ public class CloudFoundryContainer implements Container {
     private Integer instance;
     private Integer maxInstances;
 
-
-    public TerminateApplicationTaskRequest getTerminateApplicationTaskRequest() {
-        return TerminateApplicationTaskRequest.builder()
-                .applicationName(name)
-                .sequenceId(instance)
+    public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
+        return RestartApplicationInstanceRequest.builder()
+                .name(name)
+                .instanceIndex(instance)
                 .build();
     }
 
