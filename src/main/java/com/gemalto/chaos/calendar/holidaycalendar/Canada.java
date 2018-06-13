@@ -1,12 +1,13 @@
 package com.gemalto.chaos.calendar.holidaycalendar;
 
-
 import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Repository;
 
 import java.time.ZoneId;
-import java.util.*;
-
+import java.util.Calendar;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeSet;
 
 @Repository("CAN")
 public class Canada implements HolidayCalendar {
@@ -98,13 +99,13 @@ public class Canada implements HolidayCalendar {
 
 
     @Override
-    public Calendar getToday() {
-        return new GregorianCalendar(TimeZone.getTimeZone(TZ));
+    public ZoneId getTimeZoneId() {
+        return TIME_ZONE_ID;
     }
 
     @Override
-    public ZoneId getTimeZoneId() {
-        return TIME_ZONE_ID;
+    public TimeZone getTimeZone() {
+        return TimeZone.getTimeZone(TZ);
     }
 
     @Override

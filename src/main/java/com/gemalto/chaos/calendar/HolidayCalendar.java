@@ -1,15 +1,11 @@
 package com.gemalto.chaos.calendar;
 
 import java.time.*;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public interface HolidayCalendar {
 
     boolean isHoliday(Calendar day);
-
-    Calendar getToday();
 
     int getStartOfDay();
 
@@ -34,6 +30,14 @@ public interface HolidayCalendar {
 
     default ZoneId getTimeZoneId() {
         return ZoneId.of("GMT");
+    }
+
+    default TimeZone getTimeZone() {
+        return TimeZone.getTimeZone("GMT");
+    }
+
+    default Calendar getToday() {
+        return new GregorianCalendar(getTimeZone());
     }
 
     default int getDate(int year, int month, int day) {
