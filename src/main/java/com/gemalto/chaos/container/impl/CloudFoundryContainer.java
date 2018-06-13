@@ -1,5 +1,6 @@
-package com.gemalto.chaos.container;
+package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.container.Container;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 public class CloudFoundryContainer implements Container {

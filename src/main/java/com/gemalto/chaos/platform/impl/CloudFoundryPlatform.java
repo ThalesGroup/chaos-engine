@@ -1,8 +1,9 @@
-package com.gemalto.chaos.platform;
+package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
-import com.gemalto.chaos.container.CloudFoundryContainer;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.platform.Platform;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;

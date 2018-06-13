@@ -1,4 +1,4 @@
-package com.gemalto.chaos.notification.notificationmethods;
+package com.gemalto.chaos.notification.impl;
 
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationMethods;

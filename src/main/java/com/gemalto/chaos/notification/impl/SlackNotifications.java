@@ -1,5 +1,4 @@
-package com.gemalto.chaos.notification.notificationmethods;
-
+package com.gemalto.chaos.notification.impl;
 
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationMethods;
@@ -8,16 +7,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({"datadog_apikey"})
-public class DataDogNotification implements NotificationMethods {
+@ConditionalOnProperty({"slack_webhookuri"})
+public class SlackNotifications implements NotificationMethods {
 
-    @Value("${datadog_apikey")
-    private String apikey;
-
+    @Value("${slack_webhookuri}")
+    private static String webhookUri;
 
     @Override
     public void logEvent(ChaosEvent event) {
-        // TODO: Implement Datadog logging
+        // TODO: Implement Slack logging.
 
     }
 }

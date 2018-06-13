@@ -1,4 +1,4 @@
-package com.gemalto.chaos.calendar.holidaycalendar;
+package com.gemalto.chaos.calendar.impl;
 
 import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Repository;
