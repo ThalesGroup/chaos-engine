@@ -31,7 +31,7 @@ public class Canada implements HolidayCalendar {
 
         holidays.addAll(getStaticHolidays(year));
         holidays.addAll(getMovingHolidays(year));
-        holidays.addAll(getLinkedDays(holidays, year));
+        holidays.addAll(getLinkedDays(holidays));
 
         holidays.add(year);
     }

@@ -25,7 +25,7 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
-    default Set<Integer> getLinkedDays(Set<Integer> holidays, int year) {
+    default Set<Integer> getLinkedDays(Set<Integer> holidays) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {
             Calendar c = Calendar.getInstance();
