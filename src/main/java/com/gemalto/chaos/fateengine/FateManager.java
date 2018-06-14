@@ -1,14 +1,10 @@
 package com.gemalto.chaos.fateengine;
 
 import com.gemalto.chaos.container.Container;
-import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Component
 public class FateManager {
@@ -16,7 +12,7 @@ public class FateManager {
     @Autowired
     private List<FateEngine> fateEngines;
 
-    private HashMap<Container, Pair<FateEngine, Integer>> fateEngineMap = new HashMap<>();
+    private HashMap<Container, AbstractMap.SimpleEntry<FateEngine, Integer>> fateEngineMap = new HashMap<>();
 
     FateEngine getFateEngineForContainer(Container container) {
         if (fateEngineMap.containsKey(container)) {
@@ -27,11 +23,11 @@ public class FateManager {
     }
 
     private FateEngine getAndDecrementTTL(Container container) {
-        Pair<FateEngine, Integer> fateEngineWithTTL = fateEngineMap.get(container);
+        AbstractMap.SimpleEntry<FateEngine, Integer> fateEngineWithTTL = fateEngineMap.get(container);
         Integer timeToLive = fateEngineWithTTL.getValue();
         if (timeToLive > 1) {
             fateEngineMap.put(container,
-                    new Pair<>(fateEngineWithTTL.getKey(), timeToLive - 1));
+                    new AbstractMap.SimpleEntry<>(fateEngineWithTTL.getKey(), timeToLive - 1));
         } else {
             fateEngineMap.remove(container);
         }
@@ -50,7 +46,7 @@ public class FateManager {
 
         fateEngineMap.put(
                 container,
-                new Pair<>(chosenFateEngine, timetoLive)
+                new AbstractMap.SimpleEntry<>(chosenFateEngine, timetoLive)
         );
 
         return chosenFateEngine;
