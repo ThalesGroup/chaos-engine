@@ -4,7 +4,6 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.AttackManager;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +19,6 @@ public class TaskScheduler {
 
     @Autowired(required = false)
     private List<Platform> platforms;
-
-    @Autowired
-    private FateEngine fateEngine;
 
     @Autowired
     private HolidayManager holidayManager;
@@ -49,7 +45,7 @@ public class TaskScheduler {
     private void processContainerList(List<Container> containers) {
         if (containers != null && !containers.isEmpty()) {
             for (Container container : containers) {
-                if (fateEngine.canDestroy(container)) {
+                if (container.canDestroy()) {
                     Attack newAttack = container.createAttack();
                     attackManager.addAttack(newAttack);
                 }
@@ -72,7 +68,6 @@ public class TaskScheduler {
             log.debug("Dev is away, this is no time for chaos.");
             return;
         }
-        log.info("Using {} to determine container fate", fateEngine.getClass().getSimpleName());
 
         log.debug("This is the list of platforms: {}", platforms);
         processPlatformList(platforms);

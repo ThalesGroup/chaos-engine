@@ -3,12 +3,17 @@ package com.gemalto.chaos.container;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.fateengine.FateEngine;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public abstract class Container {
+
+    @Autowired
+    private FateEngine fateEngine;
 
     protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected ContainerHealth containerHealth;
@@ -34,4 +39,8 @@ public abstract class Container {
     }
 
     public abstract Attack createAttack(AttackType attackType);
+
+    public boolean canDestroy() {
+        return fateEngine.canDestroy(this);
+    }
 }

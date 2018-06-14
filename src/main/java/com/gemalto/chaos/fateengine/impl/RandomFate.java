@@ -1,6 +1,7 @@
-package com.gemalto.chaos.fateengine;
+package com.gemalto.chaos.fateengine.impl;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.fateengine.FateEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

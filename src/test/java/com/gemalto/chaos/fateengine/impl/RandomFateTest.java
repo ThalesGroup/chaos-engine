@@ -1,5 +1,6 @@
-package com.gemalto.chaos.fateengine;
+package com.gemalto.chaos.fateengine.impl;
 
+import com.gemalto.chaos.fateengine.FateEngine;
 import org.junit.Assert;
 import org.junit.Test;
 
