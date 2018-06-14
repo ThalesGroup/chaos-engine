@@ -41,6 +41,8 @@ public class TaskScheduler {
                     log.error("Details of failure for {}:", platform, e);
                 }
             }
+        } else {
+            log.warn("There are no platforms configured! This really isn't doing anything");
         }
     }
 
@@ -52,6 +54,8 @@ public class TaskScheduler {
                     attackManager.addAttack(newAttack);
                 }
             }
+        } else {
+            log.warn("There seems to be no containers in this platform");
         }
     }
 
