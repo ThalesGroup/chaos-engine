@@ -7,10 +7,12 @@ import org.springframework.stereotype.Component;
 import java.util.Random;
 
 @Component
-public class RandomFate implements FateEngine {
+public class RandomFate extends FateEngine {
 
     RandomFate(@Value("${probability:0.2}") float destructionProbability) {
         this.destructionProbability = destructionProbability;
+        this.minTimeToLive = 2;
+        this.maxTimeToLive = 5;
     }
 
     private float destructionProbability;

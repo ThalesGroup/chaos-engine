@@ -35,21 +35,24 @@ public class FateManager {
     }
 
     private FateEngine generateFateEngineForContainer(Container container) {
-        return generateFateengineForContainerWithTTL(container, 1, 5);
-    }
-
-    private FateEngine generateFateengineForContainerWithTTL(Container container, Integer minTimetoLive, Integer maxTimeToLive) {
         Collections.shuffle(fateEngines);
         FateEngine chosenFateEngine = fateEngines.get(0);
 
-        Integer timetoLive = new Random().nextInt(maxTimeToLive - minTimetoLive) + minTimetoLive;
+        Integer timeToLive = generateTimeToLive(chosenFateEngine);
 
         fateEngineMap.put(
                 container,
-                new AbstractMap.SimpleEntry<>(chosenFateEngine, timetoLive)
+                new AbstractMap.SimpleEntry<>(chosenFateEngine, timeToLive)
         );
 
         return chosenFateEngine;
+    }
+
+    private Integer generateTimeToLive(FateEngine fateEngine) {
+        Integer maxTimeToLive = fateEngine.getMaxTimeToLive();
+        Integer minTimeToLive = fateEngine.getMinTimeToLive();
+
+        return new Random().nextInt(maxTimeToLive - minTimeToLive) + minTimeToLive;
     }
 
 }

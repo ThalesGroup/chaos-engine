@@ -1,8 +1,20 @@
 package com.gemalto.chaos.fateengine;
 
-public interface FateEngine {
+public abstract class FateEngine {
 
-    default boolean canDestroy() {
+
+    protected Integer minTimeToLive;
+    protected Integer maxTimeToLive;
+
+    Integer getMinTimeToLive() {
+        return minTimeToLive != null ? minTimeToLive : 1;
+    }
+
+    Integer getMaxTimeToLive() {
+        return maxTimeToLive != null ? minTimeToLive : 5;
+    }
+
+    public boolean canDestroy() {
         return false;
     }
 
