@@ -2,7 +2,7 @@ package com.gemalto.chaos.fateengine;
 
 public abstract class FateEngine {
 
-
+    protected Integer fateWeight;
     protected Integer minTimeToLive;
     protected Integer maxTimeToLive;
 
@@ -12,6 +12,10 @@ public abstract class FateEngine {
 
     Integer getMaxTimeToLive() {
         return maxTimeToLive != null ? minTimeToLive : 5;
+    }
+
+    Integer getFateWeight() {
+        return fateWeight == null ? 1 : fateWeight;
     }
 
     public boolean canDestroy() {

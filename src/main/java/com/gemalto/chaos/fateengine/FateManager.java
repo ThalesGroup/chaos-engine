@@ -12,6 +12,8 @@ public class FateManager {
     @Autowired
     private List<FateEngine> fateEngines;
 
+    private List<FateEngine> weightedFateEngines;
+
     private HashMap<Container, AbstractMap.SimpleEntry<FateEngine, Integer>> fateEngineMap = new HashMap<>();
 
     public FateEngine getFateEngineForContainer(Container container) {
@@ -35,8 +37,7 @@ public class FateManager {
     }
 
     private FateEngine generateFateEngineForContainer(Container container) {
-        Collections.shuffle(fateEngines);
-        FateEngine chosenFateEngine = fateEngines.get(0);
+        FateEngine chosenFateEngine = generateFateEngine();
 
         Integer timeToLive = generateTimeToLive(chosenFateEngine);
 
@@ -46,6 +47,21 @@ public class FateManager {
         );
 
         return chosenFateEngine;
+    }
+
+    private FateEngine generateFateEngine() {
+        // TODO : This can probably be improved upon into a more elegant solution.
+        if (weightedFateEngines == null) {
+            weightedFateEngines = new ArrayList<>();
+            for (FateEngine fateEngine : fateEngines) {
+                for (int i = 0; i < fateEngine.getFateWeight(); i++) {
+                    weightedFateEngines.add(fateEngine);
+                }
+            }
+        }
+        Collections.shuffle(weightedFateEngines);
+        return weightedFateEngines.get(0);
+
     }
 
     private Integer generateTimeToLive(FateEngine fateEngine) {
