@@ -1,6 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
+import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
@@ -26,6 +28,14 @@ public class CloudFoundryContainer extends Container {
     @Override
     public void updateContainerHealth() {
         // TODO: Need to calculate container health when needed.
+    }
+
+    @Override
+    public Attack createAttack(AttackType attackType) {
+        return CloudFoundryAttack.builder()
+                .container(this)
+                .attackType(attackType)
+                .build();
     }
 
     public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {

@@ -1,14 +1,16 @@
 package com.gemalto.chaos.container;
 
+import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public abstract class Container {
 
-    protected static Set<AttackType> supportedAttackTypes = new HashSet<>();
+    protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected ContainerHealth containerHealth;
 
     public boolean supportsAttackType(AttackType attackType) {
@@ -21,4 +23,15 @@ public abstract class Container {
         updateContainerHealth();
         return containerHealth;
     }
+
+    public Attack createAttack() {
+        return createAttack(
+                supportedAttackTypes
+                        .get(new Random()
+                                .nextInt(supportedAttackTypes.size())
+                        )
+        );
+    }
+
+    public abstract Attack createAttack(AttackType attackType);
 }

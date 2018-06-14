@@ -1,10 +1,10 @@
 package com.gemalto.chaos;
 
+import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.AttackManager;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
-import com.gemalto.chaos.notification.ChaosEvent;
-import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -28,12 +27,15 @@ public class TaskScheduler {
     @Autowired
     private HolidayManager holidayManager;
 
+    @Autowired
+    private AttackManager attackManager;
+
     private void processPlatformList(List<Platform> platforms) {
         if (platforms != null && !platforms.isEmpty()) {
             for (Platform platform : platforms) {
                 try {
                     List<Container> containers = platform.getRoster();
-                    processContainerList(containers, platform);
+                    processContainerList(containers);
                 } catch (Exception e) {
                     log.error("Execution failed while processing {}", platform);
                     log.error("Details of failure for {}:", platform, e);
@@ -42,16 +44,12 @@ public class TaskScheduler {
         }
     }
 
-    private void processContainerList(List<Container> containers, Platform platform) {
+    private void processContainerList(List<Container> containers) {
         if (containers != null && !containers.isEmpty()) {
             for (Container container : containers) {
                 if (fateEngine.canDestroy(container)) {
-                    platform.destroy(container);
-                    NotificationManager.sendNotification(ChaosEvent.builder()
-                            .withChaosTime(new Date())
-                            .withTargetContainer(container)
-                            .withMessage("Container terminated")
-                            .build());
+                    Attack newAttack = container.createAttack();
+                    attackManager.addAttack(newAttack);
                 }
             }
         }
