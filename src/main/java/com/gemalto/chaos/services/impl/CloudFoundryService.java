@@ -1,5 +1,8 @@
-package com.gemalto.chaos.services;
+package com.gemalto.chaos.services.impl;
 
+import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.services.CloudService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.doppler.DopplerClient;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
@@ -13,6 +16,7 @@ import org.cloudfoundry.reactor.uaa.ReactorUaaClient;
 import org.cloudfoundry.uaa.UaaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -20,9 +24,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty({"cf_apihost"})
-public class CloudFoundryService {
+public class CloudFoundryService implements CloudService {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
+
+    @Autowired
+    private DefaultCloudFoundryOperations cloudFoundryOperations;
 
     @Bean
     DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost,
@@ -83,4 +90,20 @@ public class CloudFoundryService {
                 .space(space)
                 .build();
     }
+
+    @Override
+    public void kill(Container container) {
+
+    }
+
+    @Override
+    public void degrade(Container container) {
+
+    }
+
+    @Override
+    public ContainerHealth checkHealth(Container container) {
+        return null;
+    }
+
 }
