@@ -1,10 +1,8 @@
 package com.gemalto.chaos.fateengine;
 
-import com.gemalto.chaos.container.Container;
-
 public interface FateEngine {
 
-    default boolean canDestroy(Container container) {
+    default boolean canDestroy() {
         return false;
     }
 

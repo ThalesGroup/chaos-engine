@@ -1,6 +1,5 @@
 package com.gemalto.chaos.fateengine.impl;
 
-import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.fateengine.FateEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,7 @@ public class RandomFate implements FateEngine {
     }
 
     @Override
-    public boolean canDestroy(Container container) {
+    public boolean canDestroy() {
         return canDestroy(destructionProbability, new Random());
     }
 

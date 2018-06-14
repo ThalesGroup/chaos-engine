@@ -14,7 +14,7 @@ public class FateManager {
 
     private HashMap<Container, AbstractMap.SimpleEntry<FateEngine, Integer>> fateEngineMap = new HashMap<>();
 
-    FateEngine getFateEngineForContainer(Container container) {
+    public FateEngine getFateEngineForContainer(Container container) {
         if (fateEngineMap.containsKey(container)) {
             return getAndDecrementTTL(container);
         } else {

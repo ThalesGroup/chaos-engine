@@ -11,9 +11,9 @@ public class RandomFateTest {
     @Test
     public void canDestroy() {
         fateEngine = new RandomFate(0);
-        boolean firstFate = fateEngine.canDestroy(null);
+        boolean firstFate = fateEngine.canDestroy();
         fateEngine = new RandomFate(1);
-        boolean secondFate = fateEngine.canDestroy(null);
+        boolean secondFate = fateEngine.canDestroy();
         Assert.assertNotEquals(firstFate, secondFate);
     }
 }
