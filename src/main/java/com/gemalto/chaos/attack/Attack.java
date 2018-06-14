@@ -12,7 +12,7 @@ import java.util.Date;
 public abstract class Attack {
     protected Container container;
     protected AttackType attackType;
-    private AttackState attackState = AttackState.NOT_YET_STARTED;
+    protected AttackState attackState = AttackState.NOT_YET_STARTED;
 
     public abstract CloudService getCloudService();
 
@@ -20,9 +20,9 @@ public abstract class Attack {
         getCloudService().kill(container);
     }
 
-    protected void startAttack() {
+    void startAttack() {
         if (container.supportsAttackType(attackType)) {
-            startAttack_impl(container, attackType);
+            startAttackImpl(container, attackType);
             attackState = AttackState.STARTED;
             NotificationManager.sendNotification(
                     ChaosEvent.builder()
@@ -34,6 +34,12 @@ public abstract class Attack {
 
     }
 
-    protected abstract void startAttack_impl(Container container, AttackType attackType);
+    protected abstract void startAttackImpl(Container container, AttackType attackType);
 
+    AttackState getAttackState() {
+        checkAttackState();
+        return attackState;
+    }
+
+    protected abstract void checkAttackState();
 }

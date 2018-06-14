@@ -22,8 +22,13 @@ public class CloudFoundryAttack extends Attack {
     }
 
     @Override
-    protected void startAttack_impl(Container container, AttackType attackType) {
+    protected void startAttackImpl(Container container, AttackType attackType) {
         getCloudService().kill(container);
+    }
+
+    @Override
+    protected void checkAttackState() {
+        // TODO: Use CF API to check if App Instance is well again.
     }
 
     public static final class CloudFoundryAttackBuilder {
@@ -33,7 +38,7 @@ public class CloudFoundryAttack extends Attack {
         private CloudFoundryAttackBuilder() {
         }
 
-        protected static CloudFoundryAttackBuilder builder() {
+        static CloudFoundryAttackBuilder builder() {
             return new CloudFoundryAttackBuilder();
         }
 
