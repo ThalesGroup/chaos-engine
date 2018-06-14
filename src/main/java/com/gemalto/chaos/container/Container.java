@@ -22,7 +22,7 @@ public abstract class Container {
         return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
     }
 
-    public abstract void updateContainerHealth();
+    protected abstract void updateContainerHealth();
 
     public ContainerHealth getContainerHealth() {
         updateContainerHealth();
@@ -42,5 +42,9 @@ public abstract class Container {
 
     public boolean canDestroy() {
         return fateManager.getFateEngineForContainer(this).canDestroy();
+    }
+
+    public void startAttack() {
+        containerHealth = ContainerHealth.UNDER_ATTACK;
     }
 }

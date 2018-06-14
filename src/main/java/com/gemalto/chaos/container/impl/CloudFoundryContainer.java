@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import java.util.Arrays;
@@ -26,8 +27,9 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
-    public void updateContainerHealth() {
-        // TODO: Need to calculate container health when needed.
+    protected void updateContainerHealth() {
+        // TODO : Actually calculate Container Health
+        containerHealth = ContainerHealth.NORMAL;
     }
 
     @Override

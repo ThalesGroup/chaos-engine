@@ -23,6 +23,7 @@ public class CloudFoundryAttack extends Attack {
 
     @Override
     protected void startAttackImpl(Container container, AttackType attackType) {
+        container.startAttack();
         getCloudService().kill(container);
     }
 
