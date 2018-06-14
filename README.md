@@ -10,10 +10,12 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 ### Cloud Foundry
 
 #### Supports
-| Chaos Type | Supported |
-| --- | --- |
-| Destruction | Yes |
-| Degradation | No  |
+| Chaos Type | Supported | Description |
+| :-: | :-: | --- |
+| STATE | Yes | Supports randomly stopping application instances. |
+| RESOURCE | No  | Does not support starving of CPU, Memory, or Disk Performance |
+| NETWORK | No  | Does not support interfering in network latency, corruption, or reliability |
+| PLATFORM | No  | Does not support interfering with the platform between containers (i.e., routes) |
 
 #### Variables
 | Variable | Description | Default |
