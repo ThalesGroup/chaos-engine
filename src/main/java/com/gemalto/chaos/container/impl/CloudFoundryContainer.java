@@ -1,27 +1,38 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
-public class CloudFoundryContainer implements Container {
+import java.util.Arrays;
+
+public class CloudFoundryContainer extends Container {
 
     private String applicationId;
     private String name;
     private Integer instance;
     private Integer maxInstances;
 
-    public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
-        return RestartApplicationInstanceRequest.builder()
-                .name(name)
-                .instanceIndex(instance)
-                .build();
+    private CloudFoundryContainer() {
+        supportedAttackTypes.addAll(
+                Arrays.asList(AttackType.STATE)
+        );
     }
 
     public static CloudFoundryContainerBuilder builder() {
         return CloudFoundryContainerBuilder.builder();
     }
 
-    private CloudFoundryContainer() {
+    @Override
+    public void updateContainerHealth() {
+        // TODO: Need to calculate container health when needed.
+    }
+
+    public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
+        return RestartApplicationInstanceRequest.builder()
+                .name(name)
+                .instanceIndex(instance)
+                .build();
     }
 
     @Override
@@ -71,4 +82,5 @@ public class CloudFoundryContainer implements Container {
             return cloudFoundryContainer;
         }
     }
+
 }
