@@ -89,4 +89,22 @@ public abstract class Container {
         return checksum.getValue();
 
     }
+
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+        output.append("Container type: ");
+        output.append(this.getClass().getSimpleName());
+        for (Field field : this.getClass().getDeclaredFields()) {
+            try {
+                output.append("\n\t");
+                output.append(field.getName());
+                output.append(":\t");
+                output.append(field.get(this));
+            } catch (IllegalAccessException e) {
+                log.error("Could not read from field {}", field.getName(), e);
+            }
+        }
+        return output.toString();
+    }
 }

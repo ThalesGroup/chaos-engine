@@ -46,10 +46,6 @@ public class CloudFoundryContainer extends Container {
                 .build();
     }
 
-    @Override
-    public String toString() {
-        return name + ": " + applicationId;
-    }
 
     public static final class CloudFoundryContainerBuilder {
         private String applicationId;
