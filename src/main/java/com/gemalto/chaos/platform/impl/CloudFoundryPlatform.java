@@ -46,7 +46,6 @@ public class CloudFoundryPlatform implements Platform {
                         .applicationId(app.getId())
                         .name(app.getName())
                         .instance(i)
-                        .maxInstances(instances)
                         .build();
                 containers.add(c);
                 log.info("Added container {}", c);
