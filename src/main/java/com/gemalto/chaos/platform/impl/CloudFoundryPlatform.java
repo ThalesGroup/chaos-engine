@@ -2,8 +2,10 @@ package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.services.impl.CloudFoundryService;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
@@ -17,13 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnBean(DefaultCloudFoundryOperations.class)
+@ConditionalOnBean(CloudFoundryService.class)
 public class CloudFoundryPlatform implements Platform {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
 
     @Autowired
     private DefaultCloudFoundryOperations cloudFoundryOperations;
+
+    @Autowired
+    private ContainerManager containerManager;
 
     @Override
     public void degrade(Container container) {
@@ -47,9 +52,13 @@ public class CloudFoundryPlatform implements Platform {
                         .name(app.getName())
                         .instance(i)
                         .build();
-                containers.add(c);
-                log.info("Added container {}", c);
-
+                Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
+                containers.add(persistentContainer);
+                if (persistentContainer == c) {
+                    log.info("Added container {}", persistentContainer);
+                } else {
+                    log.info("Existing container found: {}", persistentContainer);
+                }
             }
         }
         return containers;

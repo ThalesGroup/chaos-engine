@@ -16,7 +16,6 @@ import org.cloudfoundry.reactor.uaa.ReactorUaaClient;
 import org.cloudfoundry.uaa.UaaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,9 +26,6 @@ import org.springframework.stereotype.Component;
 public class CloudFoundryService implements CloudService {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
-
-    @Autowired
-    private DefaultCloudFoundryOperations cloudFoundryOperations;
 
     @Bean
     DefaultConnectionContext defaultConnectionContext(@Value("${cf_apihost}") String apiHost,
@@ -93,12 +89,12 @@ public class CloudFoundryService implements CloudService {
 
     @Override
     public void kill(Container container) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void degrade(Container container) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
