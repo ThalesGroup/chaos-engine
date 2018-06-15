@@ -5,7 +5,7 @@ import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
-import com.gemalto.chaos.services.CloudService;
+import com.gemalto.chaos.platform.Platform;
 
 import java.util.Date;
 
@@ -14,11 +14,7 @@ public abstract class Attack {
     protected AttackType attackType;
     protected AttackState attackState = AttackState.NOT_YET_STARTED;
 
-    public abstract CloudService getCloudService();
-
-    public void stopContainer() {
-        getCloudService().kill(container);
-    }
+    public abstract Platform getPlatform();
 
     void startAttack() {
         if (container.supportsAttackType(attackType)) {

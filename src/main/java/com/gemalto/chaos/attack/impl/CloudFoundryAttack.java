@@ -3,28 +3,28 @@ package com.gemalto.chaos.attack.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.services.CloudService;
-import com.gemalto.chaos.services.impl.CloudFoundryService;
+import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CloudFoundryAttack extends Attack {
 
     @Autowired
-    private CloudFoundryService cloudFoundryService;
+    private CloudFoundryPlatform cloudFoundryPlatform;
 
     public static CloudFoundryAttackBuilder builder() {
         return CloudFoundryAttackBuilder.builder();
     }
 
     @Override
-    public CloudService getCloudService() {
-        return cloudFoundryService;
+    public Platform getPlatform() {
+        return cloudFoundryPlatform;
     }
 
     @Override
     protected void startAttackImpl(Container container, AttackType attackType) {
         container.startAttack();
-        getCloudService().kill(container);
+        getPlatform().destroy(container);
     }
 
     @Override

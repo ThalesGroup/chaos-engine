@@ -1,7 +1,5 @@
 package com.gemalto.chaos.services.impl;
 
-import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.services.CloudService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.doppler.DopplerClient;
@@ -85,21 +83,6 @@ public class CloudFoundryService implements CloudService {
                 .organization(organization)
                 .space(space)
                 .build();
-    }
-
-    @Override
-    public void kill(Container container) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void degrade(Container container) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ContainerHealth checkHealth(Container container) {
-        return null;
     }
 
 }
