@@ -12,6 +12,14 @@ import org.springframework.stereotype.Component;
 @ConditionalOnBean(CloudFoundryService.class)
 public class CloudFoundryHealth extends SystemHealth {
 
+    @Autowired
+    CloudFoundryHealth() {
+    }
+
+    CloudFoundryHealth(CloudFoundryPlatform cloudFoundryPlatform) {
+        this.cloudFoundryPlatform = cloudFoundryPlatform;
+    }
+
     @Autowired(required = false)
     private CloudFoundryPlatform cloudFoundryPlatform;
 
