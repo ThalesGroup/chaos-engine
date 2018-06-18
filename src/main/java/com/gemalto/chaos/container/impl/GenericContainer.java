@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class GenericContainer extends Container {
 
     @Autowired
-    private GenericPlatform genericPlatform;
+    protected GenericPlatform genericPlatform;
 
 
     @Override
