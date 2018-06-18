@@ -1,8 +1,10 @@
 package com.gemalto.chaos.health;
 
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import com.gemalto.chaos.health.enums.SystemHealthState;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,14 +17,14 @@ public class HealthController {
     private HealthManager healthManager;
 
     @GetMapping
-    public HttpResponseStatus getHealth() {
+    public ResponseEntity<?> getHealth() {
         switch (healthManager.getHealth()) {
             case OK:
-                return HttpResponseStatus.OK;
+                return new ResponseEntity<>(SystemHealthState.OK, HttpStatus.OK);
             case UNKNOWN:
-                return HttpResponseStatus.SERVICE_UNAVAILABLE;
+                return new ResponseEntity<>(SystemHealthState.UNKNOWN, HttpStatus.SERVICE_UNAVAILABLE);
             default:
-                return HttpResponseStatus.SERVICE_UNAVAILABLE;
+                return new ResponseEntity<>(SystemHealthState.UNKNOWN, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
     }
