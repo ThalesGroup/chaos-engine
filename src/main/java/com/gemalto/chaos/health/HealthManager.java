@@ -9,6 +9,15 @@ import java.util.Set;
 @Component
 public class HealthManager {
 
+    @Autowired
+    HealthManager() {
+    }
+
+    HealthManager(Set<SystemHealth> systemHealth) {
+        this.systemHealth = systemHealth;
+    }
+
+
     @Autowired(required = false)
     private Set<SystemHealth> systemHealth;
 

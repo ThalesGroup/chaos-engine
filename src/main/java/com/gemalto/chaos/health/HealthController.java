@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
 
     @Autowired
+    HealthController() {
+    }
+
+    HealthController(HealthManager healthManager) {
+        this.healthManager = healthManager;
+    }
+
+    @Autowired
     private HealthManager healthManager;
 
     @GetMapping
