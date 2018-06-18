@@ -6,6 +6,7 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.services.impl.CloudFoundryService;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -80,5 +81,18 @@ public class CloudFoundryPlatform implements Platform {
 
         // TODO : Calculate health of a given container
         return ContainerHealth.NORMAL;
+    }
+
+    @Override
+    public ApiStatus getApiStatus() {
+        try {
+            cloudFoundryOperations.applications().list();
+            return ApiStatus.OK;
+
+        } catch (RuntimeException e) {
+            log.error("Failed to load application list", e);
+            return ApiStatus.ERROR;
+        }
+
     }
 }

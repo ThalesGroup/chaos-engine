@@ -3,6 +3,7 @@ package com.gemalto.chaos.platform.impl;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.enums.ApiStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,5 +41,10 @@ public class GenericPlatform implements Platform {
     public List<Container> getRoster() {
         log.warn("Cannot return a list of containers, this is a generic platform");
         return new ArrayList<>();
+    }
+
+    @Override
+    public ApiStatus getApiStatus() {
+        return ApiStatus.OK;
     }
 }

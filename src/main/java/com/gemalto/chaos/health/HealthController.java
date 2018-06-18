@@ -21,8 +21,9 @@ public class HealthController {
         switch (healthManager.getHealth()) {
             case OK:
                 return new ResponseEntity<>(SystemHealthState.OK, HttpStatus.OK);
+            case ERROR:
+                return new ResponseEntity<>(SystemHealthState.ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
             case UNKNOWN:
-                return new ResponseEntity<>(SystemHealthState.UNKNOWN, HttpStatus.SERVICE_UNAVAILABLE);
             default:
                 return new ResponseEntity<>(SystemHealthState.UNKNOWN, HttpStatus.SERVICE_UNAVAILABLE);
         }
