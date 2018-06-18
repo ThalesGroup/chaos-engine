@@ -1,9 +1,9 @@
 package com.gemalto.chaos.attack.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +23,9 @@ public class CloudFoundryAttack extends Attack {
     }
 
     @Override
-    protected void startAttackImpl(Container container, AttackType attackType) {
-        container.setContainerHealth(ContainerHealth.UNDER_ATTACK);
-        getPlatform().destroy(container);
-    }
-
-    @Override
-    protected void checkAttackState() {
+    protected AttackState checkAttackState() {
         // TODO: Use CF API to check if App Instance is well again.
+        return AttackState.FINISHED;
     }
 
     public static final class CloudFoundryAttackBuilder {

@@ -44,6 +44,22 @@ public class CloudFoundryContainer extends Container {
                 .build();
     }
 
+    @Override
+    public void attackContainerState() {
+        getPlatform().destroy(this);
+    }
+
+    @Override
+    public void attackContainerResources() {
+        getPlatform().degrade(this);
+
+    }
+
+    @Override
+    public void attackContainerNetwork() {
+        throw new UnsupportedOperationException();
+    }
+
     public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
         return RestartApplicationInstanceRequest.builder()
                 .name(name)

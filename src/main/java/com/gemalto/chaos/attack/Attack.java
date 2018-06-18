@@ -12,7 +12,7 @@ import java.util.Date;
 public abstract class Attack {
     protected Container container;
     protected AttackType attackType;
-    protected AttackState attackState = AttackState.NOT_YET_STARTED;
+    private AttackState attackState = AttackState.NOT_YET_STARTED;
 
     public abstract Platform getPlatform();
 
@@ -30,12 +30,14 @@ public abstract class Attack {
 
     }
 
-    protected abstract void startAttackImpl(Container container, AttackType attackType);
+    private void startAttackImpl(Container container, AttackType attackType) {
+        container.attackContainer(attackType);
+    }
 
     AttackState getAttackState() {
-        checkAttackState();
+        attackState = checkAttackState();
         return attackState;
     }
 
-    protected abstract void checkAttackState();
+    protected abstract AttackState checkAttackState();
 }

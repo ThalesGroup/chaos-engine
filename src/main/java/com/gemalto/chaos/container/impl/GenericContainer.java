@@ -7,6 +7,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.GenericPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 
+
 public class GenericContainer extends Container {
 
     @Autowired
@@ -26,5 +27,20 @@ public class GenericContainer extends Container {
     @Override
     protected Platform getPlatform() {
         return genericPlatform;
+    }
+
+    @Override
+    public void attackContainerState() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void attackContainerResources() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void attackContainerNetwork() {
+        throw new UnsupportedOperationException();
     }
 }

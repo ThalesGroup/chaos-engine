@@ -58,6 +58,27 @@ public abstract class Container {
         return fateManager.getFateEngineForContainer(this).canDestroy();
     }
 
+    public void attackContainer(AttackType attackType) {
+        setContainerHealth(ContainerHealth.UNDER_ATTACK);
+        log.info("Starting a {} attack against container {}", attackType, this);
+        switch (attackType) {
+            case STATE:
+                attackContainerState();
+                break;
+            case NETWORK:
+                attackContainerNetwork();
+                break;
+            case RESOURCE:
+                attackContainerResources();
+                break;
+        }
+    }
+
+    public abstract void attackContainerState();
+
+    public abstract void attackContainerResources();
+
+    public abstract void attackContainerNetwork();
 
     /**
      * Uses all the fields in the container implementation (but not the Container parent class)
