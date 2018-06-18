@@ -8,7 +8,7 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.services.impl.CloudFoundryService;
-import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
+import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +24,19 @@ import java.util.List;
 @ConditionalOnBean(CloudFoundryService.class)
 public class CloudFoundryPlatform implements Platform {
 
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
+    @Autowired
+    private CloudFoundryOperations cloudFoundryOperations;
 
     @Autowired
-    private DefaultCloudFoundryOperations cloudFoundryOperations;
+    CloudFoundryPlatform() {
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
+
+    CloudFoundryPlatform(CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+        this.cloudFoundryOperations = cloudFoundryOperations;
+        this.containerManager = containerManager;
+    }
 
     @Autowired
     private ContainerManager containerManager;

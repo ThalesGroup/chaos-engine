@@ -3,6 +3,7 @@ package com.gemalto.chaos.services.impl;
 import com.gemalto.chaos.services.CloudService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.doppler.DopplerClient;
+import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
@@ -71,11 +72,11 @@ public class CloudFoundryService implements CloudService {
 
     @Bean
     @ConditionalOnProperty({"cf_organization"})
-    DefaultCloudFoundryOperations cloudFoundryOperations(CloudFoundryClient cloudFoundryClient,
-                                                         DopplerClient dopplerClient,
-                                                         UaaClient uaaClient,
-                                                         @Value("${cf_organization}") String organization,
-                                                         @Value("${cf_space:default}") String space) {
+    CloudFoundryOperations cloudFoundryOperations(CloudFoundryClient cloudFoundryClient,
+                                                  DopplerClient dopplerClient,
+                                                  UaaClient uaaClient,
+                                                  @Value("${cf_organization}") String organization,
+                                                  @Value("${cf_space:default}") String space) {
         return DefaultCloudFoundryOperations.builder()
                 .cloudFoundryClient(cloudFoundryClient)
                 .dopplerClient(dopplerClient)
