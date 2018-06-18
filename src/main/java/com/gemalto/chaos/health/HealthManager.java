@@ -14,7 +14,7 @@ public class HealthManager {
         if (systemHealth != null) {
             return systemHealth.getHealth();
         }
-        return SystemHealthState.OK;
+        return SystemHealthState.UNKNOWN;
     }
 
 
