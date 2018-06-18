@@ -4,8 +4,10 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 
@@ -14,6 +16,14 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
+
+    @Autowired
+    private CloudFoundryPlatform cloudFoundryPlatform;
+
+    @Override
+    protected Platform getPlatform() {
+        return cloudFoundryPlatform;
+    }
 
     private CloudFoundryContainer() {
         supportedAttackTypes.addAll(
@@ -25,11 +35,6 @@ public class CloudFoundryContainer extends Container {
         return CloudFoundryContainerBuilder.builder();
     }
 
-    @Override
-    protected void updateContainerHealth() {
-        // TODO : Actually calculate Container Health
-        containerHealth = ContainerHealth.NORMAL;
-    }
 
     @Override
     public Attack createAttack(AttackType attackType) {

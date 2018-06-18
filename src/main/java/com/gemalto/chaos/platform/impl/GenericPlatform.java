@@ -1,6 +1,7 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,11 @@ public class GenericPlatform implements Platform {
     @Override
     public void degrade(Container container) {
         log.warn("Cannot degrade a container, this is a generic Platform.");
+    }
+
+    @Override
+    public ContainerHealth getHealth(Container container) {
+        return ContainerHealth.NORMAL;
     }
 
     @Override

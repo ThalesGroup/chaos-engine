@@ -3,6 +3,7 @@ package com.gemalto.chaos.platform.impl;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.services.impl.CloudFoundryService;
@@ -36,7 +37,7 @@ public class CloudFoundryPlatform implements Platform {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
         log.info("Attempting to degrade performance on {}", container);
-
+        // TODO : Implement container degradation
     }
 
     @Override
@@ -72,8 +73,12 @@ public class CloudFoundryPlatform implements Platform {
 
         cloudFoundryOperations.applications().restartInstance(
                 ((CloudFoundryContainer) container).getRestartApplicationInstanceRequest());
-
-
     }
 
+    @Override
+    public ContainerHealth getHealth(Container container) {
+
+        // TODO : Calculate health of a given container
+        return ContainerHealth.NORMAL;
+    }
 }

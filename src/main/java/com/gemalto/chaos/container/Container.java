@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
+import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,23 +18,29 @@ import java.util.zip.Checksum;
 
 public abstract class Container {
 
+    protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
-
+    private ContainerHealth containerHealth;
     @Autowired
     private FateManager fateManager;
 
-    protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
-    protected ContainerHealth containerHealth;
+    protected abstract Platform getPlatform();
 
     public boolean supportsAttackType(AttackType attackType) {
         return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
     }
 
-    protected abstract void updateContainerHealth();
+    protected void updateContainerHealth() {
+        containerHealth = getPlatform().getHealth(this);
+    }
 
     public ContainerHealth getContainerHealth() {
         updateContainerHealth();
         return containerHealth;
+    }
+
+    public void setContainerHealth(ContainerHealth containerHealth) {
+        this.containerHealth = containerHealth;
     }
 
     public Attack createAttack() {
@@ -49,10 +56,6 @@ public abstract class Container {
 
     public boolean canDestroy() {
         return fateManager.getFateEngineForContainer(this).canDestroy();
-    }
-
-    public void startAttack() {
-        containerHealth = ContainerHealth.UNDER_ATTACK;
     }
 
 
