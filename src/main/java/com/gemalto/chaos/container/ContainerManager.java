@@ -8,7 +8,7 @@ import java.util.HashMap;
 @Component
 public class ContainerManager {
 
-    private HashMap<Class<? extends Container>, HashMap<Long, Container>> containerMap;
+    private HashMap<Class<? extends Container>, HashMap<Long, Container>> containerMap = new HashMap<>();
 
     /**
      * Returns all containers for a specific container class.
