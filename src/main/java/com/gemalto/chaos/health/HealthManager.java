@@ -11,7 +11,10 @@ public class HealthManager {
     private Health systemHealth;
 
     SystemHealthState getHealth() {
-        return systemHealth.getHealth();
+        if (systemHealth != null) {
+            return systemHealth.getHealth();
+        }
+        return SystemHealthState.OK;
     }
 
 
