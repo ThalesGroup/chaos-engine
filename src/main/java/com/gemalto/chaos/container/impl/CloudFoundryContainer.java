@@ -13,12 +13,12 @@ import java.util.Arrays;
 
 public class CloudFoundryContainer extends Container {
 
-    protected String applicationId;
-    protected String name;
-    protected Integer instance;
+    String applicationId;
+    String name;
+    Integer instance;
 
     @Autowired
-    protected CloudFoundryPlatform cloudFoundryPlatform;
+    CloudFoundryPlatform cloudFoundryPlatform;
 
     @Override
     protected Platform getPlatform() {

@@ -8,13 +8,11 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import org.cloudfoundry.operations.CloudFoundryOperations;
-import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,25 +48,25 @@ public class CloudFoundryPlatform implements Platform {
     @Override
     public List<Container> getRoster() {
         List<Container> containers = new ArrayList<>();
-        Flux<ApplicationSummary> apps = cloudFoundryOperations.applications().list();
-        for (ApplicationSummary app : apps.toIterable()) {
-            Integer instances = app.getInstances();
-            for (Integer i = 0; i < instances; i++) {
-                CloudFoundryContainer c = CloudFoundryContainer
-                        .builder()
-                        .applicationId(app.getId())
-                        .name(app.getName())
-                        .instance(i)
-                        .build();
-                Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-                containers.add(persistentContainer);
-                if (persistentContainer == c) {
-                    log.info("Added container {}", persistentContainer);
-                } else {
-                    log.info("Existing container found: {}", persistentContainer);
-                }
-            }
-        }
+        cloudFoundryOperations.applications().list().toIterable().forEach(
+                app -> {
+                    Integer instances = app.getInstances();
+                    for (Integer i = 0; i < instances; i++) {
+                        CloudFoundryContainer c = CloudFoundryContainer
+                                .builder()
+                                .applicationId(app.getId())
+                                .name(app.getName())
+                                .instance(i)
+                                .build();
+                        Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
+                        containers.add(persistentContainer);
+                        if (persistentContainer == c) {
+                            log.info("Added container {}", persistentContainer);
+                        } else {
+                            log.info("Existing container found: {}", persistentContainer);
+                        }
+                    }
+                });
         return containers;
     }
 
