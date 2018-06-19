@@ -76,7 +76,7 @@ public class CloudFoundryPlatform implements Platform {
         return containers;
     }
 
-    public void destroy(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
+    public void restartInstance(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest);
     }
 

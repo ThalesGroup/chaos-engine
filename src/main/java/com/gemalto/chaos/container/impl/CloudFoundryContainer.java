@@ -51,7 +51,7 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     public void attackContainerState() {
-        cloudFoundryPlatform.destroy(getRestartApplicationInstanceRequest());
+        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
     }
 
     @Override
