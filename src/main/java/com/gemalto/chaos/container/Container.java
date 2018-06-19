@@ -93,6 +93,7 @@ public abstract class Container {
     long getIdentity() {
         ArrayList<Byte> byteArray = new ArrayList<>();
         for (Field field : this.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
             byte fieldByte = 0;
             try {
                 fieldByte = field.getByte(this);
@@ -122,6 +123,7 @@ public abstract class Container {
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());
         for (Field field : this.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
             try {
                 output.append("\n\t");
                 output.append(field.getName());
