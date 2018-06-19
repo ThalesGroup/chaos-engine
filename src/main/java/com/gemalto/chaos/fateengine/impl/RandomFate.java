@@ -10,7 +10,7 @@ import java.util.Random;
 @Component
 public class RandomFate extends FateEngine {
 
-    @Value("{probability:0.2}")
+    @Value("${probability:0.2}")
     private double destructionProbability;
     private Random random;
 
