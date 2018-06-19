@@ -22,13 +22,13 @@ public class RandomFateTest {
 
     @Test
     public void canDestroy() {
-        fateEngine = new RandomFate(0.2f, random);
-        Mockito.when(random.nextFloat())
-                .thenReturn(0.2f)
-                .thenReturn(0.1999f)
-                .thenReturn(0.0f)
-                .thenReturn(0.21f)
-                .thenReturn(1.0f);
+        fateEngine = new RandomFate(0.2, random);
+        Mockito.when(random.nextDouble())
+                .thenReturn(0.2)
+                .thenReturn(0.1999)
+                .thenReturn(0.0)
+                .thenReturn(0.21)
+                .thenReturn(1.0);
         assertFalse(fateEngine.canDestroy());
 
         assertTrue(fateEngine.canDestroy());

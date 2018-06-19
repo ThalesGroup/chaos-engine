@@ -11,7 +11,7 @@ import java.util.Random;
 public class RandomFate extends FateEngine {
 
     @Value("{probability:0.2}")
-    private float destructionProbability;
+    private double destructionProbability;
     private Random random;
 
     @Autowired
@@ -22,13 +22,13 @@ public class RandomFate extends FateEngine {
         random = new Random();
     }
 
-    RandomFate(float destructionProbability, Random random) {
+    RandomFate(double destructionProbability, Random random) {
         this.destructionProbability = destructionProbability;
         this.random = random;
     }
 
-    private static boolean canDestroy(float destructionProbability, Random random) {
-        return random.nextFloat() < destructionProbability;
+    private static boolean canDestroy(double destructionProbability, Random random) {
+        return random.nextDouble() < destructionProbability;
     }
 
     @Override
