@@ -2,8 +2,7 @@ package com.gemalto.chaos.container;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.*;
 
 @Component
 public class ContainerManager {
@@ -43,5 +42,19 @@ public class ContainerManager {
         HashMap<Long, Container> containerTypeMap = getContainerTypeMap(container.getClass());
         containerTypeMap.putIfAbsent(container.getIdentity(), container);
         return containerTypeMap.get(container.getIdentity());
+    }
+
+    public void removeOldContainers(Class<? extends Container> containerClass, List<Container> liveContainers) {
+        HashMap<Long, Container> containerTypeMap = getContainerTypeMap(containerClass);
+        Set<Container> toRemove = new HashSet<>();
+        containerTypeMap.forEach((containerId, container) -> {
+            if (!liveContainers.contains(container)) {
+                toRemove.add(container);
+            }
+        });
+        for (Container container : toRemove) {
+            containerTypeMap.remove(container.getIdentity());
+        }
+
     }
 }

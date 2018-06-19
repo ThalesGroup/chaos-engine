@@ -73,6 +73,8 @@ public class CloudFoundryPlatform implements Platform {
                         }
                     }
                 });
+        containerManager.removeOldContainers(CloudFoundryContainer.class, containers);
+
         return containers;
     }
 
