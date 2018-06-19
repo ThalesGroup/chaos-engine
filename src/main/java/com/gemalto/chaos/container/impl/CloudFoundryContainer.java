@@ -20,21 +20,27 @@ public class CloudFoundryContainer extends Container {
     @Autowired
     CloudFoundryPlatform cloudFoundryPlatform;
 
-    @Override
-    protected Platform getPlatform() {
-        return cloudFoundryPlatform;
-    }
-
+    @Autowired
     private CloudFoundryContainer() {
         supportedAttackTypes.addAll(
                 Arrays.asList(AttackType.STATE)
         );
     }
 
+    public CloudFoundryContainer(String applicationId, String name, Integer instance) {
+        this.applicationId = applicationId;
+        this.name = name;
+        this.instance = instance;
+    }
+
     public static CloudFoundryContainerBuilder builder() {
         return CloudFoundryContainerBuilder.builder();
     }
 
+    @Override
+    protected Platform getPlatform() {
+        return cloudFoundryPlatform;
+    }
 
     @Override
     public Attack createAttack(AttackType attackType) {

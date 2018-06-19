@@ -90,18 +90,21 @@ public abstract class Container {
      *
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
-    long getIdentity() {
+    public long getIdentity() {
         StringBuilder identity = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
-            if (identity.length() > 1) {
-                identity.append("$$$$$");
-            }
             try {
-                identity.append(field.get(this).toString());
+                if (field.get(this) != null) {
+                    if (identity.length() > 1) {
+                        identity.append("$$$$$");
+                    }
+                    identity.append(field.get(this).toString());
+                }
             } catch (IllegalAccessException e) {
-                log.error("Error trying to view field: ", e);
+                log.error("Caught IllegalAccessException ", e);
             }
+
         }
         byte[] primitiveByteArray = identity.toString().getBytes();
         Checksum checksum = new CRC32();
