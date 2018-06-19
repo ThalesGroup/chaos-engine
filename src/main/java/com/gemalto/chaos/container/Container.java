@@ -3,6 +3,7 @@ package com.gemalto.chaos.container;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.fateengine.FateEngine;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
@@ -57,7 +58,9 @@ public abstract class Container {
     public abstract Attack createAttack(AttackType attackType);
 
     public boolean canDestroy() {
-        return fateManager.getFateEngineForContainer(this).canDestroy();
+        FateEngine fateEngine = fateManager.getFateEngineForContainer(this);
+
+        return fateEngine.canDestroy();
     }
 
     public void attackContainer(AttackType attackType) {
