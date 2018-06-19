@@ -7,7 +7,6 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
-import com.gemalto.chaos.services.impl.CloudFoundryService;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
@@ -21,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnBean(CloudFoundryService.class)
+@ConditionalOnBean(CloudFoundryOperations.class)
 public class CloudFoundryPlatform implements Platform {
 
     @Autowired
