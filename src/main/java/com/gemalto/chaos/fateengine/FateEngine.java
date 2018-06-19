@@ -11,7 +11,7 @@ public abstract class FateEngine {
     }
 
     Integer getMaxTimeToLive() {
-        return maxTimeToLive != null ? minTimeToLive : 5;
+        return maxTimeToLive != null ? maxTimeToLive : 5;
     }
 
     Integer getFateWeight() {
