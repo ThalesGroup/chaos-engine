@@ -69,7 +69,7 @@ public class CloudFoundryPlatform implements Platform {
                         if (persistentContainer == c) {
                             log.info("Added container {}", persistentContainer);
                         } else {
-                            log.info("Existing container found: {}", persistentContainer);
+                            log.debug("Existing container found: {}", persistentContainer);
                         }
                     }
                 });
