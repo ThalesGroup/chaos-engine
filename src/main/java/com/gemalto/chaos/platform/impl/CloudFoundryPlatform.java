@@ -9,6 +9,7 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import org.cloudfoundry.operations.CloudFoundryOperations;
+import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,6 @@ public class CloudFoundryPlatform implements Platform {
         this.containerManager = containerManager;
     }
 
-    @Override
     public void degrade(Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
@@ -76,14 +76,8 @@ public class CloudFoundryPlatform implements Platform {
         return containers;
     }
 
-    @Override
-    public void destroy(Container container) {
-        if (!(container instanceof CloudFoundryContainer)) {
-            throw new ChaosException("Expected to be passed a Cloud Foundry container");
-        }
-        log.info("Destroy container {}", container);
-        cloudFoundryOperations.applications().restartInstance(
-                ((CloudFoundryContainer) container).getRestartApplicationInstanceRequest());
+    public void destroy(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
+        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest);
     }
 
     @Override

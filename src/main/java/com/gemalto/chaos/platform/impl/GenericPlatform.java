@@ -22,13 +22,11 @@ public class GenericPlatform implements Platform {
         log.info("Created a Generic Platform. This platform acts as a placeholder to ensure a minimum of one autowired platform.");
     }
 
-    @Override
-    public void destroy(Container container) {
+    public void destroy() {
         log.warn("Cannot destroy a container, this is a generic platform.");
     }
 
-    @Override
-    public void degrade(Container container) {
+    public void degrade() {
         log.warn("Cannot degrade a container, this is a generic Platform.");
     }
 

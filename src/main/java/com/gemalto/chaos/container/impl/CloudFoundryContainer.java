@@ -14,10 +14,10 @@ import java.util.Arrays;
 
 public class CloudFoundryContainer extends Container {
 
-    String applicationId;
-    String name;
-    Integer instance;
-    CloudFoundryPlatform cloudFoundryPlatform;
+    private String applicationId;
+    private String name;
+    private Integer instance;
+    private CloudFoundryPlatform cloudFoundryPlatform;
 
     @Autowired
     private CloudFoundryContainer() {
@@ -26,7 +26,7 @@ public class CloudFoundryContainer extends Container {
         );
     }
 
-    public CloudFoundryContainer(String applicationId, String name, Integer instance) {
+    CloudFoundryContainer(String applicationId, String name, Integer instance) {
         this.applicationId = applicationId;
         this.name = name;
         this.instance = instance;
@@ -51,12 +51,12 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     public void attackContainerState() {
-        getPlatform().destroy(this);
+        cloudFoundryPlatform.destroy(getRestartApplicationInstanceRequest());
     }
 
     @Override
     public void attackContainerResources() {
-        getPlatform().degrade(this);
+        cloudFoundryPlatform.degrade(this);
 
     }
 
@@ -65,7 +65,7 @@ public class CloudFoundryContainer extends Container {
         throw new UnsupportedOperationException();
     }
 
-    public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
+    private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
         RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
                 .name(name)
                 .instanceIndex(instance)

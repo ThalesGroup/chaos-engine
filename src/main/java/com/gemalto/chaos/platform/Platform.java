@@ -8,10 +8,6 @@ import java.util.List;
 
 public interface Platform {
 
-    void destroy(Container container);
-
-    void degrade(Container container);
-
     ContainerHealth getHealth(Container container);
 
     List<Container> getRoster();
