@@ -5,6 +5,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -26,6 +27,9 @@ public class CloudFoundryPlatform implements Platform {
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
     private ContainerManager containerManager;
+
+    @Autowired
+    private FateManager fateManager;
 
     @Autowired
     CloudFoundryPlatform() {
@@ -58,6 +62,7 @@ public class CloudFoundryPlatform implements Platform {
                                 .name(app.getName())
                                 .instance(i)
                                 .platform(this)
+                                .fateManager(fateManager)
                                 .build();
                         Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
                         containers.add(persistentContainer);

@@ -8,7 +8,6 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
@@ -24,8 +23,7 @@ public abstract class Container {
     protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
     private ContainerHealth containerHealth;
-    @Autowired
-    private FateManager fateManager;
+    protected FateManager fateManager;
 
     protected abstract Platform getPlatform();
 

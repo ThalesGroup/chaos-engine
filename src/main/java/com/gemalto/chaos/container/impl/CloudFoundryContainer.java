@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
@@ -77,6 +78,7 @@ public class CloudFoundryContainer extends Container {
         private String name;
         private Integer instance;
         private CloudFoundryPlatform cloudFoundryPlatform;
+        private FateManager fateManager;
 
         private CloudFoundryContainerBuilder() {
         }
@@ -105,12 +107,20 @@ public class CloudFoundryContainer extends Container {
             return this;
         }
 
+        public CloudFoundryContainerBuilder fateManager(FateManager fateManager) {
+            this.fateManager = fateManager;
+            return this;
+        }
+
+
+
         public CloudFoundryContainer build() {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
             cloudFoundryContainer.name = this.name;
             cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.applicationId = this.applicationId;
             cloudFoundryContainer.cloudFoundryPlatform = this.cloudFoundryPlatform;
+            cloudFoundryContainer.fateManager = this.fateManager;
             return cloudFoundryContainer;
         }
     }
