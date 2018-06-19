@@ -23,22 +23,20 @@ import java.util.List;
 @ConditionalOnBean(CloudFoundryOperations.class)
 public class CloudFoundryPlatform implements Platform {
 
+    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
+    @Autowired
+    private ContainerManager containerManager;
 
     @Autowired
     CloudFoundryPlatform() {
     }
 
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
-
     CloudFoundryPlatform(CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.containerManager = containerManager;
     }
-
-    @Autowired
-    private ContainerManager containerManager;
 
     @Override
     public void degrade(Container container) {
