@@ -81,9 +81,9 @@ public class CloudFoundryPlatform implements Platform {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
-
-        log.info("{}", cloudFoundryOperations.applications().restartInstance(
-                ((CloudFoundryContainer) container).getRestartApplicationInstanceRequest()));
+        log.info("Destroy container {}", container);
+        cloudFoundryOperations.applications().restartInstance(
+                ((CloudFoundryContainer) container).getRestartApplicationInstanceRequest());
     }
 
     @Override
