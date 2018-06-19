@@ -12,7 +12,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnBean(CloudFoundryOperations.class)
+@ConditionalOnProperty({"cf_organization"})
 public class CloudFoundryPlatform implements Platform {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
