@@ -27,8 +27,8 @@ public class TaskScheduler {
     private AttackManager attackManager;
 
     private void processPlatformList(List<Platform> platforms) {
-        if (platforms != null && !platforms.isEmpty()) {
-            for (Platform platform : platforms) {
+        if (platforms != null) {
+            platforms.forEach(platform -> {
                 try {
                     List<Container> containers = platform.getRoster();
                     processContainerList(containers);
@@ -36,20 +36,20 @@ public class TaskScheduler {
                     log.error("Execution failed while processing {}", platform);
                     log.error("Details of failure for {}:", platform, e);
                 }
-            }
+            });
         } else {
             log.warn("There are no platforms configured! This really isn't doing anything");
         }
     }
 
     private void processContainerList(List<Container> containers) {
-        if (containers != null && !containers.isEmpty()) {
-            for (Container container : containers) {
+        if (containers != null) {
+            containers.forEach(container -> {
                 if (container.canDestroy()) {
                     Attack newAttack = container.createAttack();
                     attackManager.addAttack(newAttack);
                 }
-            }
+            });
         } else {
             log.warn("There seems to be no containers in this platform");
         }
