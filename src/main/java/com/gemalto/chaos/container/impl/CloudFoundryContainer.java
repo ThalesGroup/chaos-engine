@@ -66,10 +66,12 @@ public class CloudFoundryContainer extends Container {
     }
 
     public RestartApplicationInstanceRequest getRestartApplicationInstanceRequest() {
-        return RestartApplicationInstanceRequest.builder()
+        RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
                 .name(name)
                 .instanceIndex(instance)
                 .build();
+        log.info("{}", restartApplicationInstanceRequest);
+        return restartApplicationInstanceRequest;
     }
 
 
