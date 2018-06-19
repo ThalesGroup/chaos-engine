@@ -23,6 +23,7 @@ public class RandomFate extends FateEngine {
     }
 
     RandomFate(double destructionProbability, Random random) {
+        super();
         this.destructionProbability = destructionProbability;
         this.random = random;
     }

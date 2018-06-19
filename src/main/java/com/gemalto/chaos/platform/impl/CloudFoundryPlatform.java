@@ -57,6 +57,7 @@ public class CloudFoundryPlatform implements Platform {
                                 .applicationId(app.getId())
                                 .name(app.getName())
                                 .instance(i)
+                                .platform(this)
                                 .build();
                         Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
                         containers.add(persistentContainer);

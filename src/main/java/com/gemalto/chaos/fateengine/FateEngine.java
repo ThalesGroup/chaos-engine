@@ -15,7 +15,7 @@ public abstract class FateEngine {
     }
 
     Integer getFateWeight() {
-        return fateWeight == null ? 1 : fateWeight;
+        return fateWeight != null ? fateWeight : 1;
     }
 
     public boolean canDestroy() {

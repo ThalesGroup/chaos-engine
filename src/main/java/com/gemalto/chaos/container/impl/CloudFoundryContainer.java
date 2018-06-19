@@ -16,8 +16,6 @@ public class CloudFoundryContainer extends Container {
     String applicationId;
     String name;
     Integer instance;
-
-    @Autowired
     CloudFoundryPlatform cloudFoundryPlatform;
 
     @Autowired
@@ -78,6 +76,7 @@ public class CloudFoundryContainer extends Container {
         private String applicationId;
         private String name;
         private Integer instance;
+        private CloudFoundryPlatform cloudFoundryPlatform;
 
         private CloudFoundryContainerBuilder() {
         }
@@ -101,11 +100,17 @@ public class CloudFoundryContainer extends Container {
             return this;
         }
 
+        public CloudFoundryContainerBuilder platform(CloudFoundryPlatform cloudFoundryPlatform) {
+            this.cloudFoundryPlatform = cloudFoundryPlatform;
+            return this;
+        }
+
         public CloudFoundryContainer build() {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
             cloudFoundryContainer.name = this.name;
             cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.applicationId = this.applicationId;
+            cloudFoundryContainer.cloudFoundryPlatform = this.cloudFoundryPlatform;
             return cloudFoundryContainer;
         }
     }
