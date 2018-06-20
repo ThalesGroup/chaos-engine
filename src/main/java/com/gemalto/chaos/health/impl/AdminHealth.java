@@ -4,13 +4,27 @@ import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.admin.enums.AdminState;
 import com.gemalto.chaos.health.SystemHealth;
 import com.gemalto.chaos.health.enums.SystemHealthState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
 
-public class AdminHealth extends SystemHealth {
+@Component
+@ConditionalOnClass(AdminManager.class)
+public class AdminHealth implements SystemHealth {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminHealth.class);
+
+    @Autowired
+    AdminHealth() {
+        log.debug("Using Administrative State for health check");
+    }
 
     @Override
     public SystemHealthState getHealth() {
         boolean healthyState = AdminState.getHealthyStates().contains(AdminManager.getAdminState());
-        boolean longTimeInState = AdminManager.getTimeInState().getSeconds() > 60 * 60 * 24;
+        boolean longTimeInState = AdminManager.getTimeInState().getSeconds() > 60 * 5;
 
 
         return (!healthyState) && longTimeInState ? SystemHealthState.ERROR : SystemHealthState.OK;
