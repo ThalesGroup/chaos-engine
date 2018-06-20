@@ -39,10 +39,10 @@ public class HealthController {
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    private class HealthErrorException extends RuntimeException {
+    class HealthErrorException extends RuntimeException {
     }
 
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    private class HealthUnknownException extends RuntimeException {
+    class HealthUnknownException extends RuntimeException {
     }
 }
