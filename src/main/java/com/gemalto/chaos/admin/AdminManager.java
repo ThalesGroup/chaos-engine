@@ -1,5 +1,6 @@
 package com.gemalto.chaos.admin;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.enums.AdminState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,11 @@ public class AdminManager {
     }
 
     public static void setAdminState(AdminState newAdminState) {
-        // TODO: Should control the flow of Admin States (i.e., cannot go from PAUSED to STARTING
+
+        if (AdminState.getInvalidTransitions(newAdminState).contains(adminState)) {
+            throw new ChaosException("Cannot transition from " + adminState + " to " + newAdminState + ".");
+        }
+
         setAdminStateInner(newAdminState);
     }
 
