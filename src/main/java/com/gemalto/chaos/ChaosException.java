@@ -1,5 +1,9 @@
 package com.gemalto.chaos;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 public class ChaosException extends RuntimeException {
     /**
      * Constructs a new runtime exception with {@code null} as its
