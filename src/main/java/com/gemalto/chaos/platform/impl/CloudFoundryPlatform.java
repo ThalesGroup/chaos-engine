@@ -79,7 +79,7 @@ public class CloudFoundryPlatform implements Platform {
     }
 
     public void restartInstance(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
-        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest);
+        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).subscribe().dispose();
     }
 
     @Override
