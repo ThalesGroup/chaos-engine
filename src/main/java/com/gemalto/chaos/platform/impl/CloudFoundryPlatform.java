@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,9 +79,7 @@ public class CloudFoundryPlatform implements Platform {
     }
 
     public void restartInstance(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
-        Mono<Void> restartInstance = cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest);
-        log.info("{}", restartInstance);
-
+        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
     @Override
