@@ -26,6 +26,7 @@ public abstract class Attack {
     void startAttack () {
         if (!AdminManager.canRunAttacks()) {
             log.info("Cannot start attacks right now, system is {}", AdminManager.getAdminState());
+            return;
         }
         if (container.supportsAttackType(attackType)) {
             startAttackImpl(container, attackType);
@@ -43,6 +44,7 @@ public abstract class Attack {
     }
 
     protected void resumeAttack () {
+        if (!AdminManager.canRunAttacks()) return;
         startAttackImpl(container, attackType);
         NotificationManager.sendNotification(ChaosEvent.builder()
                                                        .withTargetContainer(container)
