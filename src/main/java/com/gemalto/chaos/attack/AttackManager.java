@@ -19,13 +19,13 @@ public class AttackManager {
         attack.startAttack();
     }
 
-    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
     public void updateAttackStatus () {
-        log.info("Checking on existing attacks");
+        log.debug("Checking on existing attacks");
         if (activeAttacks != null && !activeAttacks.isEmpty()) {
             updateAttackStatusImpl();
         } else {
-            log.info("No attacks are currently active.");
+            log.debug("No attacks are currently active.");
         }
     }
 
