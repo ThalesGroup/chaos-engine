@@ -45,6 +45,17 @@ The Chaos Engine is designed to run persistently, but only perform events on a c
 |----------|-------|---------|
 | `schedule` | A cron string which controls how frequently Chaos is run | `0 0 * * * *` |
 
+### Pausing Chaos
+
+The Chaos Engine can be paused and prevented from generating more attacks. This is useful if a major demonstration is in order and the usual risk associated with chaos is temporarily unacceptable.
+
+To pause and resume Chaos, use the following REST endpoint.
+
+| Method | URI | Parameters |
+| --- | --- | --- |
+| POST | /admin/state | state=PAUSED |
+| POST | /admin/state | state=STARTED |
+
 ### Holiday Calendar
 
 The Chaos Engine will not run when the development team is not in the office. This includes Weekends, After Hours, and Holidays.
