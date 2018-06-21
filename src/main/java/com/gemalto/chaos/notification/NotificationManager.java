@@ -10,7 +10,12 @@ public class NotificationManager {
     @Autowired(required = false)
     private List<NotificationMethods> notificationMethods;
 
+    @Autowired
     private NotificationManager () {
+    }
+
+    NotificationManager (List<NotificationMethods> notificationMethods) {
+        this.notificationMethods = notificationMethods;
     }
 
     public void sendNotification (ChaosEvent chaosEvent) {
