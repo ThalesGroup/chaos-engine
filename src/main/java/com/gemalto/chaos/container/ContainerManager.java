@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -8,13 +9,20 @@ import java.util.*;
 public class ContainerManager {
     private HashMap<Class<? extends Container>, HashMap<Long, Container>> containerMap = new HashMap<>();
 
+    @Autowired
+    ContainerManager () {
+    }
+
+    ContainerManager (HashMap<Class<? extends Container>, HashMap<Long, Container>> containerMap) {
+        this.containerMap = containerMap;
+    }
     /**
      * Returns all containers for a specific container class.
      *
      * @param containerType A class that extends the Container class.
      * @return A Collection of Container objects from the given class.
      */
-    public Collection<Container> getRoster (Class<Container> containerType) {
+    Collection<Container> getRoster (Class<? extends Container> containerType) {
         return getContainerTypeMap(containerType).values();
     }
 
