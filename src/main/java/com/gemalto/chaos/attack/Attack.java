@@ -11,10 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Attack {
     protected Container container;
     protected AttackType attackType;
+    protected Integer timeToLive;
+    private AtomicInteger timeToLiveCounter = new AtomicInteger(0);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
 
     private static final Logger log = LoggerFactory.getLogger(Attack.class);
@@ -29,13 +32,20 @@ public abstract class Attack {
             startAttackImpl(container, attackType);
             attackState = AttackState.STARTED;
             NotificationManager.sendNotification(
-                    ChaosEvent.builder()
-                            .withTargetContainer(container)
-                            .withChaosTime(new Date())
+                    ChaosEvent.builder().withTargetContainer(container).withChaosTime(new Date()).withMessage("This is a new attack, with " + timeToLive + " total attacks.")
                             .build()
             );
         }
 
+    }
+
+    protected void resumeAttack () {
+        startAttackImpl(container, attackType);
+        NotificationManager.sendNotification(ChaosEvent.builder().withTargetContainer(container).withChaosTime(new Date()).withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive).build());
+    }
+
+    protected boolean checkTimeToLive () {
+        return timeToLiveCounter.getAndIncrement() < timeToLive;
     }
 
     private void startAttackImpl(Container container, AttackType attackType) {

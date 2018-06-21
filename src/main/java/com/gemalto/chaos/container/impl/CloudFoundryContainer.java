@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
@@ -11,6 +12,7 @@ import org.cloudfoundry.operations.applications.RestartApplicationInstanceReques
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class CloudFoundryContainer extends Container {
 
@@ -42,10 +44,13 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
+    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+        return cloudFoundryPlatform.checkHealth(applicationId, attackType);
+    }
+
+    @Override
     public Attack createAttack(AttackType attackType) {
-        return CloudFoundryAttack.builder()
-                .container(this)
-                .attackType(attackType)
+        return CloudFoundryAttack.builder().container(this).attackType(attackType).timeToLive(new Random().nextInt(5))
                 .build();
     }
 
@@ -57,8 +62,9 @@ public class CloudFoundryContainer extends Container {
     @Override
     public void attackContainerResources() {
         cloudFoundryPlatform.degrade(this);
-
     }
+
+
 
     @Override
     public void attackContainerNetwork() {

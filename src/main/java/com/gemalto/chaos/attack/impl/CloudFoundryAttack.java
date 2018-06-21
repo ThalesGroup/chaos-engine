@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +25,20 @@ public class CloudFoundryAttack extends Attack {
 
     @Override
     protected AttackState checkAttackState() {
-        // TODO: Use CF API to check if App Instance is well again.
-        return AttackState.FINISHED;
+        if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
+            if (checkTimeToLive()) {
+                return AttackState.FINISHED;
+            } else {
+                resumeAttack();
+            }
+        }
+        return AttackState.STARTED;
     }
 
     public static final class CloudFoundryAttackBuilder {
         private Container container;
         private AttackType attackType;
+        private Integer timeToLive;
 
         private CloudFoundryAttackBuilder() {
         }
@@ -49,10 +57,16 @@ public class CloudFoundryAttack extends Attack {
             return this;
         }
 
+        public CloudFoundryAttackBuilder timeToLive (Integer timeToLive) {
+            this.timeToLive = timeToLive;
+            return this;
+        }
+
         public CloudFoundryAttack build() {
             CloudFoundryAttack cloudFoundryAttack = new CloudFoundryAttack();
             cloudFoundryAttack.attackType = this.attackType;
             cloudFoundryAttack.container = this.container;
+            cloudFoundryAttack.timeToLive = this.timeToLive;
             return cloudFoundryAttack;
         }
     }

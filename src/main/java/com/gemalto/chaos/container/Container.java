@@ -31,18 +31,16 @@ public abstract class Container {
         return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
     }
 
-    protected void updateContainerHealth() {
-        containerHealth = getPlatform().getHealth(this);
-    }
-
-    public ContainerHealth getContainerHealth() {
-        updateContainerHealth();
+    public ContainerHealth getContainerHealth (AttackType attackType) {
+        updateContainerHealth(attackType);
         return containerHealth;
     }
 
-    public void setContainerHealth(ContainerHealth containerHealth) {
-        this.containerHealth = containerHealth;
+    private void updateContainerHealth (AttackType attackType) {
+        containerHealth = updateContainerHealthImpl(attackType);
     }
+
+    protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
 
     public Attack createAttack() {
         return createAttack(
@@ -62,7 +60,7 @@ public abstract class Container {
     }
 
     public void attackContainer(AttackType attackType) {
-        setContainerHealth(ContainerHealth.UNDER_ATTACK);
+        containerHealth = ContainerHealth.UNDER_ATTACK;
         log.info("Starting a {} attack against container {}", attackType, this);
         switch (attackType) {
             case STATE:

@@ -1,6 +1,7 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -78,27 +79,31 @@ public class CloudFoundryPlatform implements Platform {
         return containers;
     }
 
-    public void restartInstance(RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
-        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
-    }
-
-    @Override
-    public ContainerHealth getHealth(Container container) {
-
-        // TODO : Calculate health of a given container
-        return ContainerHealth.NORMAL;
-    }
-
     @Override
     public ApiStatus getApiStatus() {
         try {
             cloudFoundryOperations.applications().list();
             return ApiStatus.OK;
-
         } catch (RuntimeException e) {
             log.error("Failed to load application list", e);
             return ApiStatus.ERROR;
         }
+    }
 
+    public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
+        cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
+    }
+
+    public ContainerHealth checkHealth (String applicationId, AttackType attackType) {
+        if (attackType == AttackType.STATE) {
+            /*
+             * TODO : This is actually only checking of the given application is at Max Instances.
+             * It does not involve testing the individual instances.
+             */
+            return cloudFoundryOperations.applications().list().filter(app -> app.getId().equals(applicationId)).filter(app -> app.getInstances().equals(app.getRunningInstances())).hasElements().block() ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+        } else {
+            // TODO: Implement Health Checks for other attack types.
+            return ContainerHealth.NORMAL;
+        }
     }
 }
