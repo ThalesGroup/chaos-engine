@@ -12,6 +12,10 @@ buildNumber.properties
 !/.mvn/wrapper/maven-wrapper.jar
 
 
-.idea/
+!.idea/
+
+.idea/*
+!/.idea/codeStyles/
+
 *.iml
 *.iws
