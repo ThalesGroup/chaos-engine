@@ -6,7 +6,7 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import java.util.List;
 
 public interface Platform {
-    List<Container> getRoster();
+    List<Container> getRoster ();
 
-    ApiStatus getApiStatus();
+    ApiStatus getApiStatus ();
 }

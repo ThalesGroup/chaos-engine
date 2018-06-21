@@ -21,28 +21,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty({"cf_organization"})
+@ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform implements Platform {
-
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
     private ContainerManager containerManager;
-
     @Autowired
     private FateManager fateManager;
 
     @Autowired
-    CloudFoundryPlatform() {
+    CloudFoundryPlatform () {
     }
 
-    CloudFoundryPlatform(CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+    CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.containerManager = containerManager;
     }
 
-    public void degrade(Container container) {
+    public void degrade (Container container) {
         if (!(container instanceof CloudFoundryContainer)) {
             throw new ChaosException("Expected to be passed a Cloud Foundry container");
         }
@@ -51,36 +49,33 @@ public class CloudFoundryPlatform implements Platform {
     }
 
     @Override
-    public List<Container> getRoster() {
+    public List<Container> getRoster () {
         List<Container> containers = new ArrayList<>();
-        cloudFoundryOperations.applications().list().toIterable().forEach(
-                app -> {
-                    Integer instances = app.getInstances();
-                    for (Integer i = 0; i < instances; i++) {
-                        CloudFoundryContainer c = CloudFoundryContainer
-                                .builder()
-                                .applicationId(app.getId())
-                                .name(app.getName())
-                                .instance(i)
-                                .platform(this)
-                                .fateManager(fateManager)
-                                .build();
-                        Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-                        containers.add(persistentContainer);
-                        if (persistentContainer == c) {
-                            log.info("Added container {}", persistentContainer);
-                        } else {
-                            log.debug("Existing container found: {}", persistentContainer);
-                        }
-                    }
-                });
+        cloudFoundryOperations.applications().list().toIterable().forEach(app -> {
+            Integer instances = app.getInstances();
+            for (Integer i = 0; i < instances; i++) {
+                CloudFoundryContainer c = CloudFoundryContainer.builder()
+                                                               .applicationId(app.getId())
+                                                               .name(app.getName())
+                                                               .instance(i)
+                                                               .platform(this)
+                                                               .fateManager(fateManager)
+                                                               .build();
+                Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
+                containers.add(persistentContainer);
+                if (persistentContainer == c) {
+                    log.info("Added container {}", persistentContainer);
+                } else {
+                    log.debug("Existing container found: {}", persistentContainer);
+                }
+            }
+        });
         containerManager.removeOldContainers(CloudFoundryContainer.class, containers);
-
         return containers;
     }
 
     @Override
-    public ApiStatus getApiStatus() {
+    public ApiStatus getApiStatus () {
         try {
             cloudFoundryOperations.applications().list();
             return ApiStatus.OK;
@@ -100,7 +95,12 @@ public class CloudFoundryPlatform implements Platform {
              * TODO : This is actually only checking of the given application is at Max Instances.
              * It does not involve testing the individual instances.
              */
-            return cloudFoundryOperations.applications().list().filter(app -> app.getId().equals(applicationId)).filter(app -> app.getInstances().equals(app.getRunningInstances())).hasElements().block() ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+            return cloudFoundryOperations.applications()
+                                         .list()
+                                         .filter(app -> app.getId().equals(applicationId))
+                                         .filter(app -> app.getInstances().equals(app.getRunningInstances()))
+                                         .hasElements()
+                                         .block() ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
         } else {
             // TODO: Implement Health Checks for other attack types.
             return ContainerHealth.NORMAL;

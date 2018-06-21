@@ -9,32 +9,30 @@ import java.util.Random;
 
 @Component
 public class RandomFate extends FateEngine {
-
     @Value("${probability:0.2}")
     private double destructionProbability;
     private Random random;
 
     @Autowired
-    RandomFate() {
+    RandomFate () {
         minTimeToLive = 3;
         maxTimeToLive = 10;
         fateWeight = 10;
         random = new Random();
     }
 
-    RandomFate(double destructionProbability, Random random) {
+    RandomFate (double destructionProbability, Random random) {
         super();
         this.destructionProbability = destructionProbability;
         this.random = random;
     }
 
-    private static boolean canDestroy(double destructionProbability, Random random) {
-        return random.nextDouble() < destructionProbability;
-    }
-
     @Override
-    public boolean canDestroy() {
+    public boolean canDestroy () {
         return canDestroy(destructionProbability, random);
     }
 
+    private static boolean canDestroy (double destructionProbability, Random random) {
+        return random.nextDouble() < destructionProbability;
+    }
 }

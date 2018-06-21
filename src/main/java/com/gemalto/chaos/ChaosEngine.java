@@ -10,19 +10,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 public class ChaosEngine {
-
-
-    public static void main(String[] args) {
+    public static void main (String[] args) {
         SpringApplication app;
         app = new SpringApplication(ChaosEngine.class);
         app.setBannerMode(Banner.Mode.OFF);
         app.run();
-
         startupComplete();
     }
 
-
-    private static void startupComplete() {
+    private static void startupComplete () {
         AdminManager.setAdminState(AdminState.STARTED);
     }
 }

@@ -9,16 +9,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
-
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     @GetMapping("/state")
-    public AdminState getAdminState() {
+    public AdminState getAdminState () {
         return AdminManager.getAdminState();
     }
 
     @PostMapping("/state")
-    public void setAdminState(@RequestParam("state") String newAdminStateString) {
+    public void setAdminState (@RequestParam("state") String newAdminStateString) {
         AdminState newAdminState;
         log.info("Setting admin state to {}", newAdminStateString);
         try {

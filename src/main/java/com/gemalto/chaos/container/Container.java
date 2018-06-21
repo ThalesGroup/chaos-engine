@@ -19,15 +19,14 @@ import java.util.zip.Checksum;
 
 @Component
 public abstract class Container {
-
     protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private ContainerHealth containerHealth;
     protected FateManager fateManager;
+    private ContainerHealth containerHealth;
 
-    protected abstract Platform getPlatform();
+    protected abstract Platform getPlatform ();
 
-    public boolean supportsAttackType(AttackType attackType) {
+    public boolean supportsAttackType (AttackType attackType) {
         return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
     }
 
@@ -42,24 +41,18 @@ public abstract class Container {
 
     protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
 
-    public Attack createAttack() {
-        return createAttack(
-                supportedAttackTypes
-                        .get(new Random()
-                                .nextInt(supportedAttackTypes.size())
-                        )
-        );
+    public Attack createAttack () {
+        return createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
     }
 
-    public abstract Attack createAttack(AttackType attackType);
+    public abstract Attack createAttack (AttackType attackType);
 
-    public boolean canDestroy() {
+    public boolean canDestroy () {
         FateEngine fateEngine = fateManager.getFateEngineForContainer(this);
-
         return fateEngine.canDestroy();
     }
 
-    public void attackContainer(AttackType attackType) {
+    public void attackContainer (AttackType attackType) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
         log.info("Starting a {} attack against container {}", attackType, this);
         switch (attackType) {
@@ -75,11 +68,11 @@ public abstract class Container {
         }
     }
 
-    public abstract void attackContainerState();
+    public abstract void attackContainerState ();
 
-    public abstract void attackContainerResources();
+    public abstract void attackContainerNetwork ();
 
-    public abstract void attackContainerNetwork();
+    public abstract void attackContainerResources ();
 
     /**
      * Uses all the fields in the container implementation (but not the Container parent class)
@@ -89,7 +82,7 @@ public abstract class Container {
      *
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
-    public long getIdentity() {
+    public long getIdentity () {
         StringBuilder identity = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
@@ -103,19 +96,15 @@ public abstract class Container {
             } catch (IllegalAccessException e) {
                 log.error("Caught IllegalAccessException ", e);
             }
-
         }
         byte[] primitiveByteArray = identity.toString().getBytes();
         Checksum checksum = new CRC32();
         ((CRC32) checksum).update(primitiveByteArray);
-
-
         return checksum.getValue();
-
     }
 
     @Override
-    public String toString() {
+    public String toString () {
         StringBuilder output = new StringBuilder();
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());

@@ -10,21 +10,20 @@ import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CloudFoundryAttack extends Attack {
-
     @Autowired
     private CloudFoundryPlatform cloudFoundryPlatform;
 
-    public static CloudFoundryAttackBuilder builder() {
+    public static CloudFoundryAttackBuilder builder () {
         return CloudFoundryAttackBuilder.builder();
     }
 
     @Override
-    public Platform getPlatform() {
+    public Platform getPlatform () {
         return cloudFoundryPlatform;
     }
 
     @Override
-    protected AttackState checkAttackState() {
+    protected AttackState checkAttackState () {
         if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
             if (checkTimeToLive()) {
                 return AttackState.FINISHED;
@@ -40,19 +39,19 @@ public class CloudFoundryAttack extends Attack {
         private AttackType attackType;
         private Integer timeToLive;
 
-        private CloudFoundryAttackBuilder() {
+        private CloudFoundryAttackBuilder () {
         }
 
-        static CloudFoundryAttackBuilder builder() {
+        static CloudFoundryAttackBuilder builder () {
             return new CloudFoundryAttackBuilder();
         }
 
-        public CloudFoundryAttackBuilder container(Container container) {
+        public CloudFoundryAttackBuilder container (Container container) {
             this.container = container;
             return this;
         }
 
-        public CloudFoundryAttackBuilder attackType(AttackType attackType) {
+        public CloudFoundryAttackBuilder attackType (AttackType attackType) {
             this.attackType = attackType;
             return this;
         }
@@ -62,7 +61,7 @@ public class CloudFoundryAttack extends Attack {
             return this;
         }
 
-        public CloudFoundryAttack build() {
+        public CloudFoundryAttack build () {
             CloudFoundryAttack cloudFoundryAttack = new CloudFoundryAttack();
             cloudFoundryAttack.attackType = this.attackType;
             cloudFoundryAttack.container = this.container;

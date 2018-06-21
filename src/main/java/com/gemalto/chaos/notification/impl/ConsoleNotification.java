@@ -8,16 +8,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ConsoleNotification implements NotificationMethods {
-
     private static final Logger log = LoggerFactory.getLogger(ConsoleNotification.class);
 
-    public ConsoleNotification() {
+    public ConsoleNotification () {
         log.info("Creating console logger");
     }
 
     @Override
-    public void logEvent(ChaosEvent event) {
+    public void logEvent (ChaosEvent event) {
         log.info("{}", event);
-
     }
 }

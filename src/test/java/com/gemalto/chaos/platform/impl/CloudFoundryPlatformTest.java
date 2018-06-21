@@ -13,35 +13,31 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryPlatformTest {
-
     @Mock
     private CloudFoundryOperations cloudFoundryOperations;
-
     @Mock
     private ContainerManager containerManager;
 
     @Test
-    public void degrade() {
+    public void degrade () {
     }
 
     @Test
-    public void getRoster() {
+    public void getRoster () {
     }
 
     @Test
-    public void destroy() {
+    public void destroy () {
     }
 
     @Test
-    public void getHealth() {
+    public void getHealth () {
     }
 
     @Test
-    public void getApiStatus() {
+    public void getApiStatus () {
         CloudFoundryPlatform cfp = new CloudFoundryPlatform(cloudFoundryOperations, containerManager);
-
         Mockito.when(cloudFoundryOperations.applications()).thenThrow(Mockito.mock(RuntimeException.class));
         assertEquals(ApiStatus.ERROR, cfp.getApiStatus());
-
     }
 }

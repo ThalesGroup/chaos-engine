@@ -16,17 +16,31 @@ import java.util.List;
 @Component
 public class TaskScheduler {
     private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);
-
     @Autowired(required = false)
     private List<Platform> platforms;
-
     @Autowired
     private HolidayManager holidayManager;
-
     @Autowired
     private AttackManager attackManager;
 
-    private void processPlatformList(List<Platform> platforms) {
+    /*
+    The chaos tools will regularly run on a one-hour schedule, on the hour.
+    A custom schedule can be put in place using the 'schedule' environment variable.
+     */
+    @Scheduled(cron = "${schedule:0 0 * * * *}")
+    synchronized void chaosSchedule () {
+        if (holidayManager.isHoliday()) {
+            log.debug("Dev is on holiday, this is no time for chaos.");
+            return;
+        } else if (!holidayManager.isWorkingHours()) {
+            log.debug("Dev is away, this is no time for chaos.");
+            return;
+        }
+        log.debug("This is the list of platforms: {}", platforms);
+        processPlatformList(platforms);
+    }
+
+    private void processPlatformList (List<Platform> platforms) {
         if (platforms != null) {
             platforms.forEach(platform -> {
                 try {
@@ -42,7 +56,7 @@ public class TaskScheduler {
         }
     }
 
-    private void processContainerList(List<Container> containers) {
+    private void processContainerList (List<Container> containers) {
         if (containers != null) {
             containers.forEach(container -> {
                 if (container.canDestroy()) {
@@ -53,23 +67,5 @@ public class TaskScheduler {
         } else {
             log.warn("There seems to be no containers in this platform");
         }
-    }
-
-    /*
-    The chaos tools will regularly run on a one-hour schedule, on the hour.
-    A custom schedule can be put in place using the 'schedule' environment variable.
-     */
-    @Scheduled(cron = "${schedule:0 0 * * * *}")
-    synchronized void chaosSchedule() {
-        if (holidayManager.isHoliday()) {
-            log.debug("Dev is on holiday, this is no time for chaos.");
-            return;
-        } else if (!holidayManager.isWorkingHours()) {
-            log.debug("Dev is away, this is no time for chaos.");
-            return;
-        }
-
-        log.debug("This is the list of platforms: {}", platforms);
-        processPlatformList(platforms);
     }
 }

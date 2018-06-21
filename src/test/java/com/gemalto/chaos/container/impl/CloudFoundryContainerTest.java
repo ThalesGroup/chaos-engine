@@ -12,23 +12,14 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryContainerTest {
-
     @Mock
     private CloudFoundryContainer cloudFoundryContainer;
 
     @Test
-    public void getIdentity() {
-        cloudFoundryContainer = new CloudFoundryContainer(
-                "AppID",
-                "ApplicationEngine",
-                1
-        );
-
+    public void getIdentity () {
+        cloudFoundryContainer = new CloudFoundryContainer("AppID", "ApplicationEngine", 1);
         Checksum checksum = new CRC32();
         ((CRC32) checksum).update("AppID$$$$$ApplicationEngine$$$$$1".getBytes());
-
-
         assertEquals(checksum.getValue(), cloudFoundryContainer.getIdentity());
-
     }
 }

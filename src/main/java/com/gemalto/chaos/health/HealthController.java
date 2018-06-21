@@ -1,6 +1,5 @@
 package com.gemalto.chaos.health;
 
-
 import com.gemalto.chaos.health.enums.SystemHealthState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,20 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/health")
 public class HealthController {
-
-    @Autowired
-    HealthController() {
-    }
-
-    HealthController(HealthManager healthManager) {
-        this.healthManager = healthManager;
-    }
-
     @Autowired
     private HealthManager healthManager;
 
+    @Autowired
+    HealthController () {
+    }
+
+    HealthController (HealthManager healthManager) {
+        this.healthManager = healthManager;
+    }
+
     @GetMapping
-    public SystemHealthState getHealth() {
+    public SystemHealthState getHealth () {
         switch (healthManager.getHealth()) {
             case OK:
                 return SystemHealthState.OK;
@@ -35,7 +33,6 @@ public class HealthController {
             default:
                 throw new HealthUnknownException();
         }
-
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

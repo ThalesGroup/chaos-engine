@@ -13,27 +13,21 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HealthControllerTest {
-
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
     @Mock
     private HealthManager healthManager;
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void getHealth() {
+    public void getHealth () {
         HealthController hc = new HealthController(healthManager);
-
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.OK);
         assertEquals(SystemHealthState.OK, hc.getHealth());
-
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.UNKNOWN);
         expectedException.expect(HealthController.HealthUnknownException.class);
         hc.getHealth();
-
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.ERROR);
         expectedException.expect(HealthController.HealthErrorException.class);
         hc.getHealth();
-
     }
 }

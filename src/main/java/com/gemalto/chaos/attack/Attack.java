@@ -14,48 +14,51 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Attack {
+    private static final Logger log = LoggerFactory.getLogger(Attack.class);
     protected Container container;
     protected AttackType attackType;
     protected Integer timeToLive;
     private AtomicInteger timeToLiveCounter = new AtomicInteger(0);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
 
-    private static final Logger log = LoggerFactory.getLogger(Attack.class);
+    public abstract Platform getPlatform ();
 
-    public abstract Platform getPlatform();
-
-    void startAttack() {
+    void startAttack () {
         if (!AdminManager.canRunAttacks()) {
             log.info("Cannot start attacks right now, system is {}", AdminManager.getAdminState());
         }
         if (container.supportsAttackType(attackType)) {
             startAttackImpl(container, attackType);
             attackState = AttackState.STARTED;
-            NotificationManager.sendNotification(
-                    ChaosEvent.builder().withTargetContainer(container).withChaosTime(new Date()).withMessage("This is a new attack, with " + timeToLive + " total attacks.")
-                            .build()
-            );
+            NotificationManager.sendNotification(ChaosEvent.builder()
+                                                           .withTargetContainer(container)
+                                                           .withChaosTime(new Date())
+                                                           .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
+                                                           .build());
         }
+    }
 
+    private void startAttackImpl (Container container, AttackType attackType) {
+        container.attackContainer(attackType);
     }
 
     protected void resumeAttack () {
         startAttackImpl(container, attackType);
-        NotificationManager.sendNotification(ChaosEvent.builder().withTargetContainer(container).withChaosTime(new Date()).withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive).build());
+        NotificationManager.sendNotification(ChaosEvent.builder()
+                                                       .withTargetContainer(container)
+                                                       .withChaosTime(new Date())
+                                                       .withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive)
+                                                       .build());
     }
 
     protected boolean checkTimeToLive () {
         return timeToLiveCounter.getAndIncrement() < timeToLive;
     }
 
-    private void startAttackImpl(Container container, AttackType attackType) {
-        container.attackContainer(attackType);
-    }
-
-    AttackState getAttackState() {
+    AttackState getAttackState () {
         attackState = checkAttackState();
         return attackState;
     }
 
-    protected abstract AttackState checkAttackState();
+    protected abstract AttackState checkAttackState ();
 }

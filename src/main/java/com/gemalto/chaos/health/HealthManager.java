@@ -10,22 +10,19 @@ import java.util.Set;
 
 @Component
 public class HealthManager {
-
     public static final Logger log = LoggerFactory.getLogger(HealthManager.class);
-
-    @Autowired
-    HealthManager() {
-    }
-
-    HealthManager(Set<SystemHealth> systemHealth) {
-        this.systemHealth = systemHealth;
-    }
-
-
     @Autowired(required = false)
     private Set<SystemHealth> systemHealth;
 
-    SystemHealthState getHealth() {
+    @Autowired
+    HealthManager () {
+    }
+
+    HealthManager (Set<SystemHealth> systemHealth) {
+        this.systemHealth = systemHealth;
+    }
+
+    SystemHealthState getHealth () {
         if (systemHealth != null) {
             for (SystemHealth health : systemHealth) {
                 SystemHealthState healthCheck = health.getHealth();
@@ -33,7 +30,6 @@ public class HealthManager {
                     log.debug("{} : {}", health.getClass().getSimpleName(), healthCheck);
                     continue;
                 }
-
                 log.error("{} : {}", health.getClass().getSimpleName(), healthCheck);
                 return SystemHealthState.ERROR;
             }
@@ -41,6 +37,4 @@ public class HealthManager {
         }
         return SystemHealthState.UNKNOWN;
     }
-
-
 }

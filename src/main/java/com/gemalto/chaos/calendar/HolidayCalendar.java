@@ -4,43 +4,39 @@ import java.time.*;
 import java.util.*;
 
 public interface HolidayCalendar {
+    boolean isHoliday (Calendar day);
 
-    boolean isHoliday(Calendar day);
-
-    int getStartOfDay();
-
-    int getEndOfDay();
-
-    default boolean isWorkingHours(Instant time) {
+    default boolean isWorkingHours (Instant time) {
         ZonedDateTime zdt = time.atZone(getTimeZoneId());
         DayOfWeek dow = zdt.getDayOfWeek();
-
         if (dow == DayOfWeek.SUNDAY || dow == DayOfWeek.SATURDAY) {
             return false;
         }
-
         int hour = zdt.getHour();
-
         return hour >= getStartOfDay() && hour < getEndOfDay();
     }
 
-    default Instant getCurrentTime() {
-        return Instant.now(Clock.system(getTimeZoneId()));
-    }
-
-    default ZoneId getTimeZoneId() {
+    default ZoneId getTimeZoneId () {
         return ZoneId.of("GMT");
     }
 
-    default TimeZone getTimeZone() {
-        return TimeZone.getTimeZone("GMT");
+    int getStartOfDay ();
+
+    int getEndOfDay ();
+
+    default Instant getCurrentTime () {
+        return Instant.now(Clock.system(getTimeZoneId()));
     }
 
-    default Calendar getToday() {
+    default Calendar getToday () {
         return new GregorianCalendar(getTimeZone());
     }
 
-    default int getDate(int year, int month, int day) {
+    default TimeZone getTimeZone () {
+        return TimeZone.getTimeZone("GMT");
+    }
+
+    default int getDate (int year, int month, int day) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.YEAR, year);
         c.set(Calendar.MONTH, month);
@@ -48,7 +44,7 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
-    default int getDate(int year, int month, int weekOfmonth, int dayOfWeek) {
+    default int getDate (int year, int month, int weekOfmonth, int dayOfWeek) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.DAY_OF_WEEK, dayOfWeek);
         c.set(Calendar.DAY_OF_WEEK_IN_MONTH, weekOfmonth);
@@ -57,7 +53,7 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
-    default Set<Integer> getLinkedDays(Set<Integer> holidays) {
+    default Set<Integer> getLinkedDays (Set<Integer> holidays) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {
             Calendar c = Calendar.getInstance();
@@ -76,12 +72,11 @@ public interface HolidayCalendar {
             } else if (c.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY) {
                 linkedDays.add(c.get(Calendar.DAY_OF_YEAR) + 1);
             }
-
         }
         return linkedDays;
     }
 
-    default Integer getEaster(int year) {
+    default Integer getEaster (int year) {
         // Computus calculation from https://en.wikipedia.org/wiki/Computus
         int a = year % 19;
         int b = year / 100;
@@ -99,8 +94,6 @@ public interface HolidayCalendar {
         int p = (h + l - 7 * m + 114) % 31;
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
-
-
         calendar.set(year, n - 1, p + 1);
         return calendar.get(Calendar.DAY_OF_YEAR);
     }

@@ -11,30 +11,25 @@ import java.util.Set;
 
 @Component
 public class AttackManager {
-
     private static final Logger log = LoggerFactory.getLogger(AttackManager.class);
-
     private Set<Attack> activeAttacks = new HashSet<>();
 
-    public void addAttack(Attack attack) {
+    public void addAttack (Attack attack) {
         activeAttacks.add(attack);
         attack.startAttack();
     }
 
-
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 60 * 1000)
-    public void updateAttackStatus() {
+    public void updateAttackStatus () {
         log.info("Checking on existing attacks");
-
         if (activeAttacks != null && !activeAttacks.isEmpty()) {
             updateAttackStatusImpl();
         } else {
             log.info("No attacks are currently active.");
         }
-
     }
 
-    private void updateAttackStatusImpl() {
+    private void updateAttackStatusImpl () {
         log.info("Updating status on active attacks");
         Set<Attack> finishedAttacks = new HashSet<>();
         for (Attack attack : activeAttacks) {

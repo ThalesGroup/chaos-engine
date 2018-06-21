@@ -13,24 +13,20 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryHealthTest {
-
     @Mock
     private CloudFoundryPlatform cloudFoundryPlatform;
 
     @Test
-    public void getHealth() {
+    public void getHealth () {
         CloudFoundryHealth cfh = new CloudFoundryHealth(cloudFoundryPlatform);
-
         Mockito.when(cloudFoundryPlatform.getApiStatus())
-                .thenReturn(ApiStatus.OK)
-                .thenReturn(ApiStatus.ERROR)
-                .thenReturn(null)
-                .thenThrow(new RuntimeException());
-
+               .thenReturn(ApiStatus.OK)
+               .thenReturn(ApiStatus.ERROR)
+               .thenReturn(null)
+               .thenThrow(new RuntimeException());
         assertEquals(SystemHealthState.OK, cfh.getHealth());
         assertEquals(SystemHealthState.ERROR, cfh.getHealth());
         assertEquals(SystemHealthState.UNKNOWN, cfh.getHealth());
         assertEquals(SystemHealthState.UNKNOWN, cfh.getHealth());
-
     }
 }

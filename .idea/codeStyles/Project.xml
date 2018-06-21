@@ -12,6 +12,7 @@
       <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
       <option name="SPACE_BEFORE_METHOD_PARENTHESES" value="true" />
       <option name="METHOD_CALL_CHAIN_WRAP" value="5" />
+      <option name="ENUM_CONSTANTS_WRAP" value="2" />
       <arrangement>
         <groups>
           <group>

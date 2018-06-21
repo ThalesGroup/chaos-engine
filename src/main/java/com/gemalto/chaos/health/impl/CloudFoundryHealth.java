@@ -13,24 +13,21 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnBean(CloudFoundryService.class)
 public class CloudFoundryHealth implements SystemHealth {
-
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryHealth.class);
-
-    @Autowired
-    CloudFoundryHealth() {
-        log.debug("Using CloudFoundry API check for health check.");
-    }
-
-    CloudFoundryHealth(CloudFoundryPlatform cloudFoundryPlatform) {
-        this.cloudFoundryPlatform = cloudFoundryPlatform;
-    }
-
     @Autowired(required = false)
     private CloudFoundryPlatform cloudFoundryPlatform;
 
+    @Autowired
+    CloudFoundryHealth () {
+        log.debug("Using CloudFoundry API check for health check.");
+    }
+
+    CloudFoundryHealth (CloudFoundryPlatform cloudFoundryPlatform) {
+        this.cloudFoundryPlatform = cloudFoundryPlatform;
+    }
 
     @Override
-    public SystemHealthState getHealth() {
+    public SystemHealthState getHealth () {
         try {
             switch (cloudFoundryPlatform.getApiStatus()) {
                 case OK:
