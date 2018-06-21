@@ -1,8 +1,10 @@
 package com.gemalto.chaos.attack;
 
 import com.gemalto.chaos.attack.enums.AttackState;
+import com.gemalto.chaos.notification.NotificationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +15,12 @@ import java.util.Set;
 public class AttackManager {
     private static final Logger log = LoggerFactory.getLogger(AttackManager.class);
     private Set<Attack> activeAttacks = new HashSet<>();
+    @Autowired
+    private NotificationManager notificationManager;
 
     public void addAttack (Attack attack) {
         activeAttacks.add(attack);
-        attack.startAttack();
+        attack.startAttack(notificationManager);
     }
 
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)

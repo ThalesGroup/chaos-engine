@@ -20,10 +20,12 @@ public abstract class Attack {
     protected Integer timeToLive;
     private AtomicInteger timeToLiveCounter = new AtomicInteger(0);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
+    private NotificationManager notificationManager;
 
     public abstract Platform getPlatform ();
 
-    void startAttack () {
+    void startAttack (NotificationManager notificationManager) {
+        this.notificationManager = notificationManager;
         if (!AdminManager.canRunAttacks()) {
             log.info("Cannot start attacks right now, system is {}", AdminManager.getAdminState());
             return;
@@ -31,7 +33,7 @@ public abstract class Attack {
         if (container.supportsAttackType(attackType)) {
             startAttackImpl(container, attackType);
             attackState = AttackState.STARTED;
-            NotificationManager.sendNotification(ChaosEvent.builder()
+            notificationManager.sendNotification(ChaosEvent.builder()
                                                            .withTargetContainer(container)
                                                            .withChaosTime(new Date())
                                                            .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
@@ -46,7 +48,7 @@ public abstract class Attack {
     protected void resumeAttack () {
         if (!AdminManager.canRunAttacks()) return;
         startAttackImpl(container, attackType);
-        NotificationManager.sendNotification(ChaosEvent.builder()
+        notificationManager.sendNotification(ChaosEvent.builder()
                                                        .withTargetContainer(container)
                                                        .withChaosTime(new Date())
                                                        .withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive)
