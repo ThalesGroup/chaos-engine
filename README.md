@@ -63,9 +63,9 @@ The Chaos Engine will not run when the development team is not in the office. Th
 Determining when to consider a day a holiday, or when to consider a time after hours depends on where in the world the development team is.
 
 #### Variables
-| Variable | Effect | Default |
-|----------|--------|--------|
-| `holidays` | Controls which country to load holidays from. Uses the ISO-3166-Alpha-3 Country Codes. | **CAN** |
+| Variable | Effect | Default |Available Options
+|----------|--------|--------|--------|
+| `holidays` | Controls which country to load holidays from. Uses the ISO-3166-Alpha-3 Country Codes. | **CAN** |CAN, CZE
 
 ## Notifications
 
