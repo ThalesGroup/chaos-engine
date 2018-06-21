@@ -7,68 +7,47 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Calendar;
 
-public class CanadaTest {
+public class CzechiaTest {
 
     @Test
     public void isHoliday() {
-        HolidayCalendar Canada = new Canada();
+        HolidayCalendar czechia = new Czechia();
 
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.JANUARY, 1)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.FEBRUARY, 19)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.MARCH, 30)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.MAY, 21)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.JULY, 1)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.JULY, 2)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.AUGUST, 6)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.SEPTEMBER, 3)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.OCTOBER, 8)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 24)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 25)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 26)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 27)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 28)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 29)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 30)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2018, Calendar.DECEMBER, 31)));
-
-
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.JANUARY, 1)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.FEBRUARY, 18)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.APRIL, 19)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.MAY, 20)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.JULY, 1)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.AUGUST, 5)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.SEPTEMBER, 2)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.OCTOBER, 14)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 24)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 25)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 26)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 27)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 28)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 29)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 30)));
-        Assert.assertTrue(Canada.isHoliday(getDate(2019, Calendar.DECEMBER, 31)));
-
-
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.JANUARY, 1)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.MAY, 1)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.MAY, 8)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.JULY, 5)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.JULY, 6)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.SEPTEMBER, 28)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.OCTOBER, 28)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.NOVEMBER, 17)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.DECEMBER, 24)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.DECEMBER, 25)));
+        Assert.assertTrue(czechia.isHoliday(getDate(2018, Calendar.DECEMBER, 26)));
     }
 
     @Test
     public void isWorkingHours() {
-        HolidayCalendar Canada = new Canada();
+        HolidayCalendar czechia = new Czechia();
 
-        // 2018-06-13 13:45:49 GMT (True)
-        Assert.assertTrue(Canada.isWorkingHours(Instant.ofEpochSecond(1528897555)));
+        // June 21, 2018 10:26:45 AM GMT (True)
+        Assert.assertTrue(czechia.isWorkingHours(Instant.ofEpochSecond(1529569605)));
 
-        // 2018-06-13 20:59:59 GMT (True)
-        Assert.assertTrue(Canada.isWorkingHours(Instant.ofEpochSecond(1528923599)));
-        // 2018-06-13 21:00:00 GMT (False) (One second difference from above)
-        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528923600)));
+        // June 21, 2018 11:13:18 AM (True)
+        Assert.assertTrue(czechia.isWorkingHours(Instant.ofEpochSecond(1529579598)));
 
-        // 2018-06-13 12:14:43 GMT (False)
-        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528892083)));
+        //June 21, 2018 4:59:59 PM GMT(True)
+        Assert.assertTrue(czechia.isWorkingHours(Instant.ofEpochSecond(1529593199)));
 
-        // 2018-06-10 12:00:00 Eastern (False)
-        Assert.assertTrue(!Canada.isWorkingHours(Instant.ofEpochSecond(1528646400)));
+
+        //  June 21, 2018 5:00:00 PM GMT (False) (One second difference from above)
+        Assert.assertTrue(!czechia.isWorkingHours(Instant.ofEpochSecond(1529593200)));
+
+        //  June 21, 2018 6:00:00 AM GMT (False)
+        Assert.assertTrue(!czechia.isWorkingHours(Instant.ofEpochSecond(1529553600)));
+
+        //  June 21, 2018 6:00:00 PM GMT (False)
+        Assert.assertTrue(!czechia.isWorkingHours(Instant.ofEpochSecond(1529596800)));
 
 
     }
