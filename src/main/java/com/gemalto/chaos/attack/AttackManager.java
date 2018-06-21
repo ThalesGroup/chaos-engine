@@ -24,7 +24,7 @@ public class AttackManager {
     }
 
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
-    public void updateAttackStatus () {
+    public synchronized void updateAttackStatus () {
         log.debug("Checking on existing attacks");
         if (activeAttacks != null && !activeAttacks.isEmpty()) {
             updateAttackStatusImpl();
