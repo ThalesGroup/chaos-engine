@@ -20,7 +20,7 @@ public class ChaosEvent {
     @Override
     public String toString () {
         StringBuilder sb = new StringBuilder("Chaos Event: ");
-        for (Field field : ChaosEvent.class.getFields()) {
+        for (Field field : ChaosEvent.class.getDeclaredFields()) {
             field.setAccessible(true);
             sb.append("[");
             sb.append(field.getName());
