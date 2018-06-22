@@ -11,17 +11,16 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty("CF_INSTANCE_GUID")
 public class CloudFoundrySelfAwareness {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundrySelfAwareness.class);
-    private String applicationId;
+    private String applicationName;
     private Integer applicationInstanceIndex;
 
     @Autowired
-    CloudFoundrySelfAwareness (@Value("${vcap.application.id}") String applicationId, @Value("${CF_INSTANCE_INDEX}") Integer applicationInstanceIndex) {
-        this.applicationId = applicationId;
-        this.applicationInstanceIndex = applicationInstanceIndex;
+    CloudFoundrySelfAwareness (@Value("${vcap.application.name}") String applicationName, @Value("${CF_INSTANCE_INDEX}") Integer applicationInstanceIndex) {
         log.info("Detected running in Cloud Foundry");
+        log.info("Application name: {}", applicationName);
     }
 
-    public boolean isMe (String applicationId, Integer applicationInstanceIndex) {
-        return applicationId.equals(this.applicationId) && applicationInstanceIndex.equals(this.applicationInstanceIndex);
+    public boolean isMe (String applicationName, Integer applicationInstanceIndex) {
+        return applicationName.equals(this.applicationName) && applicationInstanceIndex.equals(this.applicationInstanceIndex);
     }
 }

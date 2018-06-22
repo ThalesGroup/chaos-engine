@@ -9,6 +9,7 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.slf4j.Logger;
@@ -30,6 +31,8 @@ public class CloudFoundryPlatform implements Platform {
     private ContainerManager containerManager;
     @Autowired
     private FateManager fateManager;
+    @Autowired(required = false)
+    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     @Autowired
     CloudFoundryPlatform () {
@@ -54,6 +57,9 @@ public class CloudFoundryPlatform implements Platform {
         cloudFoundryOperations.applications().list().toIterable().forEach(app -> {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
+                if (isMe(app.getName(), i)) {
+                    continue;
+                }
                 CloudFoundryContainer c = CloudFoundryContainer.builder()
                                                                .applicationId(app.getId())
                                                                .name(app.getName())
@@ -105,5 +111,9 @@ public class CloudFoundryPlatform implements Platform {
             // TODO: Implement Health Checks for other attack types.
             return ContainerHealth.NORMAL;
         }
+    }
+
+    private boolean isMe (String applicationName, Integer instanceId) {
+        return cloudFoundrySelfAwareness != null && cloudFoundrySelfAwareness.isMe(applicationName, instanceId);
     }
 }
