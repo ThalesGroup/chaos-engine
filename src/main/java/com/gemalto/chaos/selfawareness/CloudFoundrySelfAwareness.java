@@ -18,6 +18,9 @@ public class CloudFoundrySelfAwareness {
     CloudFoundrySelfAwareness (@Value("${vcap.application.name}") String applicationName, @Value("${CF_INSTANCE_INDEX}") Integer applicationInstanceIndex) {
         log.info("Detected running in Cloud Foundry");
         log.info("Application name: {}", applicationName);
+        log.info("Application Index: {}", applicationInstanceIndex);
+        this.applicationName = applicationName;
+        this.applicationInstanceIndex = applicationInstanceIndex;
     }
 
     public boolean isMe (String applicationName, Integer applicationInstanceIndex) {
