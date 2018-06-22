@@ -29,7 +29,7 @@ public class Czechia implements HolidayCalendar {
     private void renderHolidays (int year) {
         holidays.clear();
         holidays.addAll(getStaticHolidays(year));
-        holidays.addAll(getLinkedDays(holidays));
+        holidays.addAll(getLinkedDays(holidays, year));
         holidays.add(year);
     }
 

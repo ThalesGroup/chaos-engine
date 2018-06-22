@@ -4,14 +4,11 @@ import com.gemalto.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Repository;
 
 import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeSet;
+import java.util.*;
 
-@Repository("CAN")
-public class Canada implements HolidayCalendar {
-    private static final String TZ = "America/Toronto";
+@Repository("FRA")
+public class France implements HolidayCalendar {
+    private static final String TZ = "Europe/Paris";
     private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
     private static final int START_OF_DAY = 9;
     private static final int END_OF_DAY = 17;
@@ -34,12 +31,22 @@ public class Canada implements HolidayCalendar {
         holidays.add(year);
     }
 
-    private Set<Integer> getStaticHolidays (int year) {
+    private Collection<? extends Integer> getStaticHolidays (int year) {
         Set<Integer> staticHolidays = new TreeSet<>();
         // New Years
         staticHolidays.add(getDate(year, Calendar.JANUARY, 1));
-        // Canada Day
-        staticHolidays.add(getDate(year, Calendar.JULY, 1));
+        // May Day / Labour Day, 1 May
+        staticHolidays.add(getDate(year, Calendar.MAY, 1));
+        // Victory in Europe Day, 8 May
+        staticHolidays.add(getDate(year, Calendar.MAY, 8));
+        // Bastille Day, 14 July
+        staticHolidays.add(getDate(year, Calendar.JULY, 14));
+        // Assumption of Mary to Heaven, 15 August
+        staticHolidays.add(getDate(year, Calendar.AUGUST, 15));
+        // All Saint's Day, 1 November
+        staticHolidays.add(getDate(year, Calendar.NOVEMBER, 1));
+        // Armistice Day, 11 November
+        staticHolidays.add(getDate(year, Calendar.NOVEMBER, 11));
         // Christmas Eve through New Years
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 24));
         staticHolidays.add(getDate(year, Calendar.DECEMBER, 25));
@@ -52,33 +59,18 @@ public class Canada implements HolidayCalendar {
         return staticHolidays;
     }
 
-    private Set<Integer> getMovingHolidays (int year) {
+    private Collection<? extends Integer> getMovingHolidays (int year) {
         Set<Integer> movingHolidays = new TreeSet<>();
-        // Family Day, third Monday of February
-        movingHolidays.add(getDate(year, Calendar.FEBRUARY, 3, Calendar.MONDAY));
+        Integer easter = getEaster(year);
         // Good Friday, 2 days before Easter
-        movingHolidays.add(getEaster(year) - 2);
-        // Victoria Day
-        movingHolidays.add(getVictoriaDay(year));
-        // Civic Holiday, first Monday of August.
-        movingHolidays.add(getDate(year, Calendar.AUGUST, 1, Calendar.MONDAY));
-        // Labour Day, first Monday of September.
-        movingHolidays.add(getDate(year, Calendar.SEPTEMBER, 1, Calendar.MONDAY));
-        // Thanksgiving, second Monday of October
-        movingHolidays.add(getDate(year, Calendar.OCTOBER, 2, Calendar.MONDAY));
+        movingHolidays.add(easter - 2);
+        // Easter Monday, 1 day after Easter
+        movingHolidays.add(easter + 1);
+        // Ascension Day, 39 days after Easter
+        movingHolidays.add(easter + 39);
+        // Whit Monday, 50 days after Easter
+        movingHolidays.add(easter + 50);
         return movingHolidays;
-    }
-
-    private static Integer getVictoriaDay (int year) {
-        // Victoria is the Monday before May 25th
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.YEAR, year);
-        c.set(Calendar.MONTH, Calendar.MAY);
-        c.set(Calendar.DAY_OF_MONTH, 25);
-        while (c.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
-            c.add(Calendar.DATE, -1);
-        }
-        return c.get(Calendar.DAY_OF_YEAR);
     }
 
     @Override

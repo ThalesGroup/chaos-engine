@@ -53,10 +53,11 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
-    default Set<Integer> getLinkedDays (Set<Integer> holidays) {
+    default Set<Integer> getLinkedDays (Set<Integer> holidays, int year) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {
             Calendar c = Calendar.getInstance();
+            c.set(Calendar.YEAR, year);
             c.set(Calendar.DAY_OF_YEAR, holiday);
             if (c.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
                 linkedDays.add(c.get(Calendar.DAY_OF_YEAR) + 1);
