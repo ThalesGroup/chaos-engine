@@ -43,6 +43,7 @@ public class AttackManager {
         for (Attack attack : activeAttacks) {
             AttackState attackState = attack.getAttackState();
             if (attackState == AttackState.FINISHED) {
+                log.info("Removing attack from active attack roster");
                 finishedAttacks.add(attack);
             }
         }

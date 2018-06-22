@@ -4,6 +4,7 @@ import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
@@ -17,7 +18,7 @@ public abstract class Attack {
     private static final Logger log = LoggerFactory.getLogger(Attack.class);
     protected Container container;
     protected AttackType attackType;
-    protected Integer timeToLive;
+    protected Integer timeToLive = 1;
     private AtomicInteger timeToLiveCounter = new AtomicInteger(0);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private NotificationManager notificationManager;
@@ -45,7 +46,28 @@ public abstract class Attack {
         container.attackContainer(attackType);
     }
 
-    protected void resumeAttack () {
+    private AttackState checkAttackState () {
+        if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
+            if (checkTimeToLive()) {
+                log.info("Attack {} complete", this);
+                return AttackState.FINISHED;
+            } else {
+                resumeAttack();
+            }
+        }
+        return AttackState.STARTED;
+    }
+
+    private boolean checkTimeToLive () {
+        return timeToLiveCounter.getAndIncrement() < timeToLive;
+    }
+
+    AttackState getAttackState () {
+        attackState = checkAttackState();
+        return attackState;
+    }
+
+    private void resumeAttack () {
         if (!AdminManager.canRunAttacks()) return;
         startAttackImpl(container, attackType);
         notificationManager.sendNotification(ChaosEvent.builder()
@@ -55,14 +77,4 @@ public abstract class Attack {
                                                        .build());
     }
 
-    protected boolean checkTimeToLive () {
-        return timeToLiveCounter.getAndIncrement() < timeToLive;
-    }
-
-    AttackState getAttackState () {
-        attackState = checkAttackState();
-        return attackState;
-    }
-
-    protected abstract AttackState checkAttackState ();
 }

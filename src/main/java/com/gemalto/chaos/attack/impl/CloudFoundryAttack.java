@@ -1,10 +1,8 @@
 package com.gemalto.chaos.attack.impl;
 
 import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +18,6 @@ public class CloudFoundryAttack extends Attack {
     @Override
     public Platform getPlatform () {
         return cloudFoundryPlatform;
-    }
-
-    @Override
-    protected AttackState checkAttackState () {
-        if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
-            if (checkTimeToLive()) {
-                return AttackState.FINISHED;
-            } else {
-                resumeAttack();
-            }
-        }
-        return AttackState.STARTED;
     }
 
     public static final class CloudFoundryAttackBuilder {
@@ -65,7 +51,7 @@ public class CloudFoundryAttack extends Attack {
             CloudFoundryAttack cloudFoundryAttack = new CloudFoundryAttack();
             cloudFoundryAttack.attackType = this.attackType;
             cloudFoundryAttack.container = this.container;
-            cloudFoundryAttack.timeToLive = this.timeToLive;
+            cloudFoundryAttack.timeToLive += this.timeToLive;
             return cloudFoundryAttack;
         }
     }
