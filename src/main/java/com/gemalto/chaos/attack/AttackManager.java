@@ -14,22 +14,26 @@ import java.util.Set;
 @Component
 public class AttackManager {
     private static final Logger log = LoggerFactory.getLogger(AttackManager.class);
-    private Set<Attack> activeAttacks = new HashSet<>();
+    private final Set<Attack> activeAttacks = new HashSet<>();
     @Autowired
     private NotificationManager notificationManager;
 
     public void addAttack (Attack attack) {
-        activeAttacks.add(attack);
+        synchronized (activeAttacks) {
+            activeAttacks.add(attack);
+        }
         attack.startAttack(notificationManager);
     }
 
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
     public synchronized void updateAttackStatus () {
-        log.debug("Checking on existing attacks");
-        if (activeAttacks != null && !activeAttacks.isEmpty()) {
-            updateAttackStatusImpl();
-        } else {
-            log.debug("No attacks are currently active.");
+        synchronized (activeAttacks) {
+            log.debug("Checking on existing attacks");
+            if (activeAttacks.isEmpty()) {
+                log.debug("No attacks are currently active.");
+            } else {
+                updateAttackStatusImpl();
+            }
         }
     }
 
