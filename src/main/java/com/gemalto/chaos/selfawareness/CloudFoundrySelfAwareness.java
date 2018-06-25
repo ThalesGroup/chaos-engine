@@ -22,6 +22,7 @@ public class CloudFoundrySelfAwareness {
         log.info("Detected running in Cloud Foundry");
         log.info("Application name: {}", applicationName);
         log.info("Application Index: {}", applicationInstanceIndex);
+        log.info("Linked applications: {}", linkedApplicationNames);
         this.applicationName = applicationName;
         this.applicationInstanceIndex = applicationInstanceIndex;
         this.linkedApplicationNames = linkedApplicationNames;
