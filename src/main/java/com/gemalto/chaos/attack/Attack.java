@@ -59,7 +59,7 @@ public abstract class Attack {
     }
 
     private boolean checkTimeToLive () {
-        return timeToLiveCounter.getAndIncrement() < timeToLive;
+        return timeToLiveCounter.getAndIncrement() > timeToLive;
     }
 
     AttackState getAttackState () {
