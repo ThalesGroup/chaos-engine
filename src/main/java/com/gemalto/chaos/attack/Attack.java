@@ -19,7 +19,7 @@ public abstract class Attack {
     protected Container container;
     protected AttackType attackType;
     protected Integer timeToLive = 1;
-    private AtomicInteger timeToLiveCounter = new AtomicInteger(0);
+    private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private NotificationManager notificationManager;
 
@@ -59,7 +59,7 @@ public abstract class Attack {
     }
 
     private boolean checkTimeToLive () {
-        return timeToLiveCounter.incrementAndGet() > timeToLive + 1;
+        return timeToLiveCounter.incrementAndGet() > timeToLive;
     }
 
     AttackState getAttackState () {
