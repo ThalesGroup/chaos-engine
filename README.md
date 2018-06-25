@@ -34,8 +34,6 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 |----------|-------|---------|
 | `probability` | A float value that controls how likely a container is to experience a chaos event | `0.2` |
 
-
-
 ## Scheduling
 
 The Chaos Engine is designed to run persistently, but only perform events on a certain schedule, and with exceptions. Here is how to control when chaos will occur.
@@ -65,7 +63,7 @@ Determining when to consider a day a holiday, or when to consider a time after h
 #### Variables
 | Variable | Effect | Default |Available Options
 |----------|--------|--------|--------|
-| `holidays` | Controls which country to load holidays from. Uses the ISO-3166-Alpha-3 Country Codes. | **CAN** |CAN, CZE
+| `holidays` | Controls which country to load holidays from. Uses the ISO-3166-Alpha-3 Country Codes. | **CAN** |CAN, CZE, FRA |
 
 ## Notifications
 
