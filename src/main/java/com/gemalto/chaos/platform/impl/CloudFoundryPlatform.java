@@ -57,7 +57,7 @@ public class CloudFoundryPlatform implements Platform {
         cloudFoundryOperations.applications().list().toIterable().forEach(app -> {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
-                if (isMe(app.getName(), i)) {
+                if (isChaosEngine(app.getName(), i)) {
                     log.debug("Skipping what appears to be me.");
                     continue;
                 }
@@ -114,7 +114,8 @@ public class CloudFoundryPlatform implements Platform {
         }
     }
 
-    private boolean isMe (String applicationName, Integer instanceId) {
-        return cloudFoundrySelfAwareness != null && cloudFoundrySelfAwareness.isMe(applicationName, instanceId);
+    private boolean isChaosEngine (String applicationName, Integer instanceId) {
+        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
+                .isFriendly(applicationName));
     }
 }

@@ -26,6 +26,7 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | `cf_password` | Cloud Foundry Password | \<None\> |
 | `cf_organization` | Cloud Foundry Organization | \<None\> |
 | `cf_space` | Cloud Foundry Space | `default` |
+| `cf_linked_applications` | Dependent Cloud Foundry applications. These are ignored entirely from Chaos, so as to prevent accidentally killing a dependent service | \<None\> |
 
 ### All Chaos Types
 
@@ -86,5 +87,9 @@ Notifications can be sent out through various methods when Chaos Events occur.
 
 ## Misc
 
+### Self preservation
+The Chaos Engine will try to identify if it is running in the same environment that it is destroying. It will then try and prevent itself from matching itself as a chaos target. However, linked applications will need to be manually specified through environment variables. Specifics are listed with each Chaos target type.
+
+### Notes
 *`variables`* listed in italics are used to control if a feature is enabled. If those variables are specified, other dependant variables may also be logically required, but not programmatically required. This may cause run time errors.
 
