@@ -21,6 +21,7 @@ public class ChaosEvent {
     public String toString () {
         StringBuilder sb = new StringBuilder("Chaos Event: ");
         for (Field field : ChaosEvent.class.getDeclaredFields()) {
+            if (field.isSynthetic()) continue;
             field.setAccessible(true);
             sb.append("[");
             sb.append(field.getName());

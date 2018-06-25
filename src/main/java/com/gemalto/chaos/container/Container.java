@@ -85,6 +85,7 @@ public abstract class Container {
     public long getIdentity () {
         StringBuilder identity = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
+            if (field.isSynthetic()) continue;
             field.setAccessible(true);
             try {
                 if (field.get(this) != null) {
