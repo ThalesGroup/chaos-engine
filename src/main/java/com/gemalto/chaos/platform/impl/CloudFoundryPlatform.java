@@ -58,6 +58,7 @@ public class CloudFoundryPlatform implements Platform {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
                 if (isMe(app.getName(), i)) {
+                    log.debug("Skipping what appears to be me.");
                     continue;
                 }
                 CloudFoundryContainer c = CloudFoundryContainer.builder()
