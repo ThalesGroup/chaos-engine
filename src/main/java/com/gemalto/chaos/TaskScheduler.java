@@ -23,6 +23,16 @@ public class TaskScheduler {
     @Autowired
     private AttackManager attackManager;
 
+    @Autowired
+    TaskScheduler () {
+    }
+
+    TaskScheduler (List<Platform> platforms, HolidayManager holidayManager, AttackManager attackManager) {
+        this.platforms = platforms;
+        this.holidayManager = holidayManager;
+        this.attackManager = attackManager;
+    }
+
     /*
     The chaos tools will regularly run on a one-hour schedule, on the hour.
     A custom schedule can be put in place using the 'schedule' environment variable.
