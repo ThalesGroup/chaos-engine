@@ -51,11 +51,13 @@ public class SlackNotifications extends BufferedNotificationMethod {
             URL url = new URL(webhookUri);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoInput(true);
             connection.setDoOutput(true);
             OutputStream outputStream = connection.getOutputStream();
             try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"))) {
                 bufferedWriter.write(payload);
+                bufferedWriter.flush();
             } catch (Exception e) {
                 log.error("Unknown exception sending payload " + payload, e);
             }
