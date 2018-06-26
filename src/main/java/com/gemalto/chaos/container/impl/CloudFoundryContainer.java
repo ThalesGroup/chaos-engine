@@ -18,7 +18,7 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryPlatform cloudFoundryPlatform;
 
     @Autowired
     private CloudFoundryContainer () {
