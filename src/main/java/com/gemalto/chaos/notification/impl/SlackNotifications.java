@@ -69,6 +69,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
 }
 
 @SuppressWarnings("unused")
+        // Variables are used as part of Gson, despite appearing unused.
 class SlackMessage {
     private String text;
     private List<SlackAttachment> attachments;
@@ -107,6 +108,7 @@ class SlackMessage {
 }
 
 @SuppressWarnings("unused")
+        // Variables are used as part of Gson, despite appearing unused.
 class SlackAttachment {
     private String title;
     private String title_link;
