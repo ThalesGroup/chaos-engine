@@ -69,6 +69,11 @@ public class CloudFoundryContainer extends Container {
         cloudFoundryPlatform.degrade(this);
     }
 
+    @Override
+    public String getSimpleName () {
+        return name + " - (" + instance + ")";
+    }
+
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
         RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
                                                                                                                .name(name)

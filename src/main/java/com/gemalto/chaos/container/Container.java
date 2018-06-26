@@ -122,4 +122,6 @@ public abstract class Container {
         }
         return output.toString();
     }
+
+    public abstract String getSimpleName ();
 }

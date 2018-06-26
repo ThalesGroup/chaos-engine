@@ -34,12 +34,12 @@ public class SlackNotifications extends BufferedNotificationMethod {
     @Override
     protected void sendNotification (ChaosEvent chaosEvent) throws IOException {
         SlackMessage slackMessage = SlackMessage.builder()
-                                                .withText("Slack message")
                                                 .withAttachment(SlackAttachment.builder()
                                                                                .withFallback(chaosEvent.toString())
                                                                                .withFooter("Chaos Engine")
                                                                                .withTitle("Chaos Event against " + chaosEvent
-                                                                                       .getTargetContainer())
+                                                                                       .getTargetContainer()
+                                                                                       .getSimpleName())
                                                                                .withColor("good")
                                                                                .withText(chaosEvent.toString())
                                                                                .withTs(chaosEvent.getChaosTime()
