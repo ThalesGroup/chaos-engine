@@ -52,7 +52,6 @@ public class SlackNotifications extends BufferedNotificationMethod {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoInput(true);
             connection.setDoOutput(true);
             OutputStream outputStream = connection.getOutputStream();
             try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"))) {
@@ -160,7 +159,7 @@ class SlackAttachment {
         }
 
         SlackAttachmentBuilder withTs (Instant timestamp) {
-            this.ts = timestamp.toEpochMilli();
+            this.ts = timestamp.getEpochSecond();
             return this;
         }
 
