@@ -9,10 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.Instant;
@@ -52,6 +49,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoInput(true);
             connection.setDoOutput(true);
             OutputStream outputStream = connection.getOutputStream();
             try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"))) {
@@ -59,6 +57,10 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 bufferedWriter.flush();
             } catch (Exception e) {
                 log.error("Unknown exception sending payload " + payload, e);
+            }
+            Reader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
+                throw new IOException("Unexpected response from server");
             }
         } catch (IOException e) {
             log.debug("Failed to send payload: " + payload, e);
