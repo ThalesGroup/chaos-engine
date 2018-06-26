@@ -58,7 +58,8 @@ public class SlackNotifications extends BufferedNotificationMethod {
             } catch (Exception e) {
                 log.error("Unknown exception sending payload " + payload, e);
             }
-            Reader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            log.debug(response.readLine());
             if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
                 throw new IOException("Unexpected response from server");
             }
