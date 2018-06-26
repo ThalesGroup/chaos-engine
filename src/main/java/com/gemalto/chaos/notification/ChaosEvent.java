@@ -17,6 +17,18 @@ public class ChaosEvent {
         return ChaosEventBuilder.builder();
     }
 
+    public Container getTargetContainer () {
+        return targetContainer;
+    }
+
+    public Date getChaosTime () {
+        return chaosTime;
+    }
+
+    public String getMessage () {
+        return message;
+    }
+
     @Override
     public String toString () {
         StringBuilder sb = new StringBuilder("Chaos Event: ");

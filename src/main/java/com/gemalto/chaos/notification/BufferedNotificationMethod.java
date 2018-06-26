@@ -51,7 +51,7 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
         }
     }
 
-    private void flushBufferInternal (ChaosEvent chaosEvent) throws InterruptedException {
+    private synchronized void flushBufferInternal (ChaosEvent chaosEvent) throws InterruptedException {
         long waitTime;
         while (true) {
             try {
