@@ -12,7 +12,7 @@ public class CloudFoundryPlatformInfo implements PlatformInfo {
     private String sshCode;
     private String applicationSshEndpoint;
     private String applicationSshHostKeyFingerprint;
-    private int applicationSshPort;
+    private String applicationSshPort;
     private String platformVersion;
     private Mono<String> sshCodeResponse;
     private Mono<GetInfoResponse> infoResponse;
@@ -24,9 +24,10 @@ public class CloudFoundryPlatformInfo implements PlatformInfo {
     public void fetchInfo () {
         GetInfoResponse response = infoResponse.block();
         log.debug("Fetching Cloud Foundry Info : {}", response);
-        this.applicationSshEndpoint = response.getApplicationSshEndpoint();
+        String sshEndpoint[] = response.getApplicationSshEndpoint().split(":");
+        this.applicationSshEndpoint = sshEndpoint[0];
+        this.applicationSshPort = sshEndpoint[1];
         this.applicationSshHostKeyFingerprint = response.getApplicationSshHostKeyFingerprint();
-        this.applicationSshPort = Integer.valueOf(response.getApplicationSshEndpoint().split(":")[1]);
         this.platformVersion = response.getApiVersion();
         this.sshCode = sshCodeResponse.block();
     }
@@ -43,7 +44,7 @@ public class CloudFoundryPlatformInfo implements PlatformInfo {
         return applicationSshHostKeyFingerprint;
     }
 
-    public int getApplicationSshPort () {
+    public String getApplicationSshPort () {
         return applicationSshPort;
     }
 
