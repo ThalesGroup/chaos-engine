@@ -1,79 +1,84 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.platform.PlatformInfo;
-import com.gemalto.chaos.services.impl.CloudFoundryService;
-import org.cloudfoundry.client.v2.info.GetInfoRequest;
 import org.cloudfoundry.client.v2.info.GetInfoResponse;
-import org.cloudfoundry.operations.CloudFoundryOperations;
-import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-@Component
-@ConditionalOnBean(CloudFoundryService.class)
+//@Component
 public class CloudFoundryPlatformInfo implements PlatformInfo {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatformInfo.class);
-    @Autowired
-    private ReactorCloudFoundryClient cloudFoundryClient;
-    @Autowired
-    private CloudFoundryOperations cloudFoundryOperations;
-    private GetInfoResponse info;
+    private String sshCode;
+    private String applicationSshEndpoint;
+    private String applicationSshHostKeyFingerprint;
+    private int applicationSshPort;
+    private String platformVersion;
+    private Mono<String> sshCodeResponse;
+    private Mono<GetInfoResponse> infoResponse;
 
-    public CloudFoundryPlatformInfo (ReactorCloudFoundryClient cloudFoundryClient, CloudFoundryOperations cloudFoundryOperations) {
-        this.cloudFoundryClient = cloudFoundryClient;
-        this.cloudFoundryOperations = cloudFoundryOperations;
-        log.info("Gathering platform info.");
+    public static CloudFoundryPlatformInfoBuilder builder () {
+        return CloudFoundryPlatformInfoBuilder.builder();
+    }
+
+    public void fetchInfo () {
+        GetInfoResponse response = infoResponse.block();
+        log.debug("Fetching Cloud Foundry Info : {}", response);
+        this.applicationSshEndpoint = response.getApplicationSshEndpoint();
+        this.applicationSshHostKeyFingerprint = response.getApplicationSshHostKeyFingerprint();
+        this.applicationSshPort = Integer.valueOf(response.getApplicationSshEndpoint().split(":")[1]);
+        this.platformVersion = response.getApiVersion();
+        this.sshCode = sshCodeResponse.block();
+    }
+
+    public String getApplicationSshEndpoint () {
+        return applicationSshEndpoint;
+    }
+
+    public String getSshCode () {
+        return sshCode;
+    }
+
+    public String getApplicationSshHostKeyFingerprint () {
+        return applicationSshHostKeyFingerprint;
+    }
+
+    public int getApplicationSshPort () {
+        return applicationSshPort;
+    }
+
+    public String getPlatformVersion () {
+        return platformVersion;
     }
 
     @Override
     public String platformVersion () {
-        return getInfo().getApiVersion();
+        return platformVersion;
     }
 
-    private GetInfoResponse getInfo () {
-        if (info == null) {
-            info = cloudFoundryClient.info().get(getInfoRequest()).block();
+    public static final class CloudFoundryPlatformInfoBuilder {
+        private Mono<String> sshCodeResponse;
+        private Mono<GetInfoResponse> infoResponse;
+
+        static CloudFoundryPlatformInfoBuilder builder () {
+            return new CloudFoundryPlatformInfoBuilder();
         }
-        return info;
-    }
 
-    private GetInfoRequest getInfoRequest () {
-        return GetInfoRequest.builder().build();
-    }
-
-    public String applicationSshEndpoint () {
-        String endpoint = getInfo().getApplicationSshEndpoint();
-        try {
-            URL url = new URL(endpoint);
-            return url.getHost();
-        } catch (MalformedURLException e) {
-            log.error("Cannot get application SSH endpoint {}", e);
+        public CloudFoundryPlatformInfoBuilder setInfoResponse (Mono<GetInfoResponse> infoResponse) {
+            this.infoResponse = infoResponse;
+            return this;
         }
-        return null;
-    }
 
-    public int applicationSshPort () {
-        String endpoint = getInfo().getApplicationSshEndpoint();
-        try {
-            URL url = new URL(endpoint);
-            return url.getPort();
-        } catch (MalformedURLException e) {
-            log.error("Cannot get application SSH port {}", e);
+        public CloudFoundryPlatformInfoBuilder setSshCodeResponse (Mono<String> sshCodeResponse) {
+            this.sshCodeResponse = sshCodeResponse;
+            return this;
         }
-        return 0;
-    }
 
-    public String getSshCode () {
-        return cloudFoundryOperations.advanced().sshCode().block();
-    }
-
-    public String applicationSshHostKeyFingerprint () {
-        return getInfo().getApplicationSshHostKeyFingerprint();
+        public CloudFoundryPlatformInfo build () {
+            CloudFoundryPlatformInfo cloudFoundryPlatformInfo = new CloudFoundryPlatformInfo();
+            cloudFoundryPlatformInfo.infoResponse = this.infoResponse;
+            cloudFoundryPlatformInfo.sshCodeResponse = this.sshCodeResponse;
+            return cloudFoundryPlatformInfo;
+        }
     }
 }
