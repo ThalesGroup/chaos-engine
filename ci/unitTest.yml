@@ -11,8 +11,8 @@ inputs:
 - name: chaos-engine
 
 caches:
-- path: maven/
-- path: .m2/
+- path: ~/maven/
+- path: ~/.m2/
 
 run:
   path: chaos-engine/ci/unitTest.sh
