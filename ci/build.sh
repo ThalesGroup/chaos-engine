@@ -9,4 +9,4 @@ M2_CACHE="${ROOT_FOLDER}/maven"
 
 set -e -u
 cd chaos-engine/
-mvn test
+mvn -q build
