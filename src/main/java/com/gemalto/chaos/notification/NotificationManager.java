@@ -29,7 +29,7 @@ public class NotificationManager {
         }
     }
 
-    @Scheduled(initialDelay = 1000 * 60, fixedDelay = 1000 * 30)
+    @Scheduled(initialDelay = 1000 * 60, fixedDelay = 1000 * 5)
     public void flushBuffers () {
         if (bufferedNotificationMethods != null) {
             bufferedNotificationMethods.forEach(BufferedNotificationMethod::flushBuffer);
