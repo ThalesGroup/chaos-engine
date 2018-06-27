@@ -40,6 +40,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- SSH Client Library-->
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+            <version>0.24.0</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-client-lib -->
         <dependency>
             <groupId>org.cloudfoundry</groupId>
