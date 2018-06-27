@@ -4,4 +4,10 @@
     <logger name="org.springframework" level="INFO"/>
     <logger name="com.gemalto" level="DEBUG"/>
     <logger name="org.apache" level="WARN"/>
+
+    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+        <Name>ALWAYS</Name>
+        <Marker>ALWAYS</Marker>
+        <OnMatch>ACCEPT</OnMatch>
+    </turboFilter>
 </configuration>
