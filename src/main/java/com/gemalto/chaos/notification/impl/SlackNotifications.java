@@ -1,5 +1,6 @@
 package com.gemalto.chaos.notification.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
@@ -16,11 +17,15 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
+    private static final Integer MAXIMUM_ATTACHMENTS = 20;
     private String webhookUri;
+    private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -30,21 +35,50 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     @Override
+    public void logEvent (ChaosEvent event) {
+        attachmentQueue.offer(createAttachmentFromChaosEvent(event));
+        if (attachmentQueue.size() >= MAXIMUM_ATTACHMENTS) {
+            flushBuffer();
+        }
+    }
+
+    @Override
+    protected void flushBuffer () {
+        SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
+        SlackAttachment attachment;
+        while ((attachment = attachmentQueue.poll()) != null) {
+            slackMessageBuilder.withAttachment(attachment);
+        }
+        SlackMessage slackMessage = slackMessageBuilder.build();
+        try {
+            sendSlackMessage(slackMessage);
+        } catch (Exception e) {
+            throw new ChaosException(e);
+        }
+    }
+
+    @Override
     protected void sendNotification (ChaosEvent chaosEvent) throws IOException {
         SlackMessage slackMessage = SlackMessage.builder()
-                                                .withAttachment(SlackAttachment.builder()
-                                                                               .withFallback(chaosEvent.toString())
-                                                                               .withFooter("Chaos Engine")
-                                                                               .withTitle(chaosEvent.getAttackType() + " against " + chaosEvent
-                                                                                       .getTargetContainer()
-                                                                                       .getSimpleName())
-                                                                               .withColor(chaosEvent.getNotificationLevel() == NotificationLevel.GOOD ? "good" : chaosEvent
-                                                                                       .getNotificationLevel() == NotificationLevel.WARN ? "warning" : "danger")
-                                                                               .withText(chaosEvent.toString())
-                                                                               .withTs(chaosEvent.getChaosTime()
-                                                                                                 .toInstant())
-                                                                               .build())
+                                                .withAttachment(createAttachmentFromChaosEvent(chaosEvent))
                                                 .build();
+        sendSlackMessage(slackMessage);
+    }
+
+    private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
+        return SlackAttachment.builder()
+                              .withFallback(chaosEvent.toString())
+                              .withFooter("Chaos Engine")
+                              .withTitle(chaosEvent.getAttackType() + " against " + chaosEvent.getTargetContainer()
+                                                                                              .getSimpleName())
+                              .withColor(chaosEvent.getNotificationLevel() == NotificationLevel.GOOD ? "good" : chaosEvent
+                                      .getNotificationLevel() == NotificationLevel.WARN ? "warning" : "danger")
+                              .withText(chaosEvent.toString())
+                              .withTs(chaosEvent.getChaosTime().toInstant())
+                              .build();
+    }
+
+    private void sendSlackMessage (SlackMessage slackMessage) throws IOException {
         String payload = new Gson().toJson(slackMessage);
         try {
             URL url = new URL(webhookUri);
@@ -82,7 +116,7 @@ class SlackMessage {
         return new SlackMessageBuilder();
     }
 
-    public static final class SlackMessageBuilder {
+    static final class SlackMessageBuilder {
         private String text;
         private List<SlackAttachment> attachments;
 

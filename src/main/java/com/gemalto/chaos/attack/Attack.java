@@ -39,7 +39,7 @@ public abstract class Attack {
                                                            .withTargetContainer(container)
                                                            .withAttackType(attackType)
                                                            .withChaosTime(new Date())
-                                                           .withNotificationLevel(NotificationLevel.ERROR)
+                                                           .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
                                                            .build());
         }
@@ -65,6 +65,13 @@ public abstract class Attack {
                 resumeAttack();
             }
         }
+        notificationManager.sendNotification(ChaosEvent.builder()
+                                                       .withTargetContainer(container)
+                                                       .withAttackType(attackType)
+                                                       .withChaosTime(new Date())
+                                                       .withNotificationLevel(NotificationLevel.ERROR)
+                                                       .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
+                                                       .build());
         return AttackState.STARTED;
     }
 
@@ -80,12 +87,5 @@ public abstract class Attack {
     private void resumeAttack () {
         if (!AdminManager.canRunAttacks()) return;
         startAttackImpl(container, attackType);
-        notificationManager.sendNotification(ChaosEvent.builder()
-                                                       .withTargetContainer(container)
-                                                       .withAttackType(attackType)
-                                                       .withChaosTime(new Date())
-                                                       .withNotificationLevel(NotificationLevel.WARN)
-                                                       .withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive)
-                                                       .build());
     }
 }

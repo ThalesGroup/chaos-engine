@@ -37,7 +37,7 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
         return notificationBuffer;
     }
 
-    void flushBuffer () {
+    protected void flushBuffer () {
         while (!getQueue().isEmpty()) {
             backOffExecution = exponentialBackOff.start();
             ChaosEvent chaosEvent = getQueue().poll();
