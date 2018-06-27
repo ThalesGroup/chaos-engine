@@ -2,6 +2,7 @@ package com.gemalto.chaos.notification.impl;
 
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
+import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,10 +35,11 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                                 .withAttachment(SlackAttachment.builder()
                                                                                .withFallback(chaosEvent.toString())
                                                                                .withFooter("Chaos Engine")
-                                                                               .withTitle("Chaos Event against " + chaosEvent
+                                                                               .withTitle(chaosEvent.getAttackType() + " against " + chaosEvent
                                                                                        .getTargetContainer()
                                                                                        .getSimpleName())
-                                                                               .withColor("good")
+                                                                               .withColor(chaosEvent.getNotificationLevel() == NotificationLevel.GOOD ? "good" : chaosEvent
+                                                                                       .getNotificationLevel() == NotificationLevel.WARN ? "warning" : "danger")
                                                                                .withText(chaosEvent.toString())
                                                                                .withTs(chaosEvent.getChaosTime()
                                                                                                  .toInstant())

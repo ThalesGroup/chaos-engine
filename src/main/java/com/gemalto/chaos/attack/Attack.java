@@ -7,6 +7,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
+import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,9 @@ public abstract class Attack {
             attackState = AttackState.STARTED;
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .withTargetContainer(container)
+                                                           .withAttackType(attackType)
                                                            .withChaosTime(new Date())
+                                                           .withNotificationLevel(NotificationLevel.ERROR)
                                                            .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
                                                            .build());
         }
@@ -50,6 +53,13 @@ public abstract class Attack {
         if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
             if (checkTimeToLive()) {
                 log.info("Attack {} complete", this);
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .withTargetContainer(container)
+                                                               .withAttackType(attackType)
+                                                               .withChaosTime(new Date())
+                                                               .withNotificationLevel(NotificationLevel.GOOD)
+                                                               .withMessage("Container recovered from final attack")
+                                                               .build());
                 return AttackState.FINISHED;
             } else {
                 resumeAttack();
@@ -72,9 +82,10 @@ public abstract class Attack {
         startAttackImpl(container, attackType);
         notificationManager.sendNotification(ChaosEvent.builder()
                                                        .withTargetContainer(container)
+                                                       .withAttackType(attackType)
                                                        .withChaosTime(new Date())
+                                                       .withNotificationLevel(NotificationLevel.WARN)
                                                        .withMessage("This is attack " + timeToLiveCounter.get() + " of " + timeToLive)
                                                        .build());
     }
-
 }
