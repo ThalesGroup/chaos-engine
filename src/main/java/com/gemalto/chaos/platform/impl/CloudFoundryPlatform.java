@@ -28,6 +28,8 @@ public class CloudFoundryPlatform implements Platform {
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
+    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+    @Autowired
     private ContainerManager containerManager;
     @Autowired
     private FateManager fateManager;
@@ -38,9 +40,15 @@ public class CloudFoundryPlatform implements Platform {
     CloudFoundryPlatform () {
     }
 
-    CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+    CloudFoundryPlatform (CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.containerManager = containerManager;
+    }
+
+    public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
+        cloudFoundryPlatformInfo.fetchInfo();
+        return cloudFoundryPlatformInfo;
     }
 
     public void degrade (Container container) {
