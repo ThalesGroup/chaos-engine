@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -85,6 +86,7 @@ public abstract class Container {
     public long getIdentity () {
         StringBuilder identity = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
             if (field.isSynthetic()) continue;
             field.setAccessible(true);
             try {
@@ -110,6 +112,8 @@ public abstract class Container {
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());
         for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
+            if (field.isSynthetic()) continue;
             field.setAccessible(true);
             try {
                 output.append("\n\t");
@@ -122,4 +126,6 @@ public abstract class Container {
         }
         return output.toString();
     }
+
+    public abstract String getSimpleName ();
 }

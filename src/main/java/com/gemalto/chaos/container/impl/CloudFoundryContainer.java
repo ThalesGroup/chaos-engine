@@ -18,7 +18,7 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryPlatform cloudFoundryPlatform;
 
     @Autowired
     private CloudFoundryContainer () {
@@ -67,6 +67,11 @@ public class CloudFoundryContainer extends Container {
     @Override
     public void attackContainerResources () {
         cloudFoundryPlatform.degrade(this);
+    }
+
+    @Override
+    public String getSimpleName () {
+        return name + " - (" + instance + ")";
     }
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {

@@ -14,4 +14,8 @@ caches:
   - path: maven
 
 run:
-  path: chaos-engine/ci/unitTest.sh
+  path: chaos-engine/ci/build.sh
+
+outputs:
+  - name: chaos-engine-target
+    path: target
