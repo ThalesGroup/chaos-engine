@@ -78,6 +78,18 @@ public class CloudFoundryContainer extends Container {
         return restartApplicationInstanceRequest;
     }
 
+    public String getApplicationId () {
+        return applicationId;
+    }
+
+    public String getName () {
+        return name;
+    }
+
+    public Integer getInstance () {
+        return instance;
+    }
+
     public static final class CloudFoundryContainerBuilder {
         private String applicationId;
         private String name;
