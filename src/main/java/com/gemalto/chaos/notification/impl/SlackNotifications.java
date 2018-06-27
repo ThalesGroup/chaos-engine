@@ -44,6 +44,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
 
     @Override
     protected void flushBuffer () {
+        if (attachmentQueue.isEmpty()) return;
         SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
         SlackAttachment attachment;
         while ((attachment = attachmentQueue.poll()) != null) {
