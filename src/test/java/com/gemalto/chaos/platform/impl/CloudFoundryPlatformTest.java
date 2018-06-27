@@ -18,6 +18,8 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryPlatformTest {
     @Mock
+    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+    @Mock
     private CloudFoundryOperations cloudFoundryOperations;
     @Mock
     private ContainerManager containerManager;
@@ -27,7 +29,7 @@ public class CloudFoundryPlatformTest {
 
     @Before
     public void setUp () {
-        cfp = new CloudFoundryPlatform(cloudFoundryOperations, containerManager);
+        cfp = new CloudFoundryPlatform(cloudFoundryPlatformInfo, cloudFoundryOperations, containerManager);
     }
 
     @Test

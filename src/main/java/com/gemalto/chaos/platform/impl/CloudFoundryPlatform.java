@@ -16,17 +16,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Configuration
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform implements Platform {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
+    @Autowired
+    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     @Autowired
     private ContainerManager containerManager;
     @Autowired
@@ -38,9 +40,15 @@ public class CloudFoundryPlatform implements Platform {
     CloudFoundryPlatform () {
     }
 
-    CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+    CloudFoundryPlatform (CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
+        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.containerManager = containerManager;
+    }
+
+    public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
+        cloudFoundryPlatformInfo.fetchInfo();
+        return cloudFoundryPlatformInfo;
     }
 
     public void degrade (Container container) {
