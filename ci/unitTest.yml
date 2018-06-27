@@ -8,11 +8,10 @@ image_resource:
     tags: 3.5.3-jdk-8
 
 inputs:
-- name: chaos-engine
+  - name: chaos-engine
 
 caches:
-- path: ~/maven/
-- path: ~/.m2/
+  - path: maven
 
 run:
   path: chaos-engine/ci/unitTest.sh
