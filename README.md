@@ -87,6 +87,11 @@ Notifications can be sent out through various methods when Chaos Events occur.
 
 ## Misc
 
+### Logging
+The Chaos Engine log level can be dynamically changed during runtime using a REST method located at `/logging`. A POST request with the new log level (of `ERROR`, `WARN`, `INFO`, `DEBUG`, or `TRACE`) will set the log level.
+
+A path variable of the class to specify can also be used. (i.e., `/logging/org.springframework`, or `/logging/com.gemalto.notification`) to control specific elements. If no classpath is specified, `com.gemalto` is defaulted.
+
 ### Self preservation
 The Chaos Engine will try to identify if it is running in the same environment that it is destroying. It will then try and prevent itself from matching itself as a chaos target. However, linked applications will need to be manually specified through environment variables. Specifics are listed with each Chaos target type.
 
