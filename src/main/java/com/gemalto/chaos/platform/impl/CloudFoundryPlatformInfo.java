@@ -47,12 +47,8 @@ public class CloudFoundryPlatformInfo implements PlatformInfo {
         return applicationSshPort;
     }
 
-    public String getPlatformVersion () {
-        return platformVersion;
-    }
-
     @Override
-    public String platformVersion () {
+    public String getPlatformVersion () {
         return platformVersion;
     }
 
