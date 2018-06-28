@@ -126,7 +126,6 @@ public class CloudFoundryPlatform implements Platform {
             } catch (NullPointerException e) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
-            // TODO : Add a try/catch on the GET to deal with an application being scaled down while the attack was going on.
             return (status.equals(CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
 
         } else {
