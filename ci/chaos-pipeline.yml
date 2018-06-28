@@ -28,4 +28,4 @@ jobs:
       params:
         build: chaos-engine/
         build_args:
-          JAR_FILE: target/chaosengine.jar
+          JAR_FILE: chaos-engine/target/chaosengine.jar
