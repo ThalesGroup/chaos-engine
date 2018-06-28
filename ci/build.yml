@@ -15,7 +15,3 @@ caches:
 
 run:
   path: chaos-engine/ci/build.sh
-
-outputs:
-  - name: chaos-engine-target
-    path: target

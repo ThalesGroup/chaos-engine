@@ -1,0 +1,24 @@
+resources:
+  - name: chaos-engine
+    type: git
+    source:
+      uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+      branch: develop
+      private_key: ((ssh_key))
+
+  - name: chaosengine
+    type: docker-image
+
+jobs:
+  - name: chaos-engine-test
+    public: true
+    plan:
+    - get: chaos-engine
+      trigger: true
+    - task: Unit Test
+      file: chaos-engine/ci/unitTest.yml
+      on_success:
+        task: Build
+        file: chaos-engine/ci/build.yml
+        - put: chaosengine
+

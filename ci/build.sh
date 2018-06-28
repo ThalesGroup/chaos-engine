@@ -9,4 +9,4 @@ M2_CACHE="${ROOT_FOLDER}/maven"
 
 set -e -u
 cd chaos-engine/
-mvn package -DskipTests=true
+mvn install -DskipTests=true
