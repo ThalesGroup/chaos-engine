@@ -17,3 +17,5 @@ params:
 
 run:
   path: chaos-engine/ci/build.sh
+
+outputs: chaos-engine/target
