@@ -1,7 +1,6 @@
 package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.common.SSHException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
@@ -11,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public abstract class SshManager {
+public class SshManager {
     private static final Logger log = LoggerFactory.getLogger(SshManager.class);
     private SSHClient ssh = new SSHClient();
     private Session session;
@@ -27,10 +26,15 @@ public abstract class SshManager {
     public Session connect (String userName, String password) {
         try {
             log.debug("Connecting to {}", hostname);
+
             ssh.connect(hostname, Integer.valueOf(port));
             ssh.authPassword(userName, password);
-            session = ssh.startSession();
-            log.debug("Connection to {} succeeded.", hostname);
+            if (ssh.isConnected() && ssh.isAuthenticated()) {
+                session = ssh.startSession();
+                log.debug("Connection to {} succeeded.", hostname);
+            } else {
+                log.error("SSH Authentication failed.");
+            }
             return session;
         } catch (IOException e) {
             log.error("Unable to connect to {}: {}", hostname, e.getMessage());
@@ -38,22 +42,29 @@ public abstract class SshManager {
         return null;
     }
 
-    public void executeCommand (String command) {
+    public SshCommandResult executeCommand (String command) {
         try {
             Command cmd = session.exec(command);
-            String cmdoutput = IOUtils.readFully(cmd.getInputStream()).toString();
+            return new SshCommandResult(cmd);
         } catch (SSHException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
-        } catch (IOException e) {
-            log.error("Unable to read command output '{}' output, host: {} problem: {}", command, hostname, e.getMessage());
         }
+        return new SshCommandResult(null, -1);
     }
 
     public void disconnect () {
         try {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
             ssh.disconnect();
         } catch (IOException e) {
             log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
         }
+    }
+
+    public ShellSessionCapabilities getShellCapabilities () {
+        ShellSessionCapabilities capabilities = new ShellSessionCapabilities(this);
+        return capabilities;
     }
 }
