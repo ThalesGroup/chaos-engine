@@ -42,7 +42,7 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryPlatform.checkHealth(applicationId, attackType);
+        return cloudFoundryPlatform.checkHealth(applicationId, attackType, instance);
     }
 
     @Override

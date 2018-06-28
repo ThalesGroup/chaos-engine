@@ -10,6 +10,8 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
+import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.slf4j.Logger;
@@ -25,10 +27,13 @@ import java.util.List;
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform implements Platform {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
+    private static final String CLOUDFOUNDRY_RUNNING_STATE = "RUNNING";
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+    @Autowired
+    private CloudFoundryClient cloudFoundryClient;
     @Autowired
     private ContainerManager containerManager;
     @Autowired
@@ -104,18 +109,19 @@ public class CloudFoundryPlatform implements Platform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public ContainerHealth checkHealth (String applicationId, AttackType attackType) {
+    public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
         if (attackType == AttackType.STATE) {
-            /*
-             * TODO : This is actually only checking of the given application is at Max Instances.
-             * It does not involve testing the individual instances.
-             */
-            return cloudFoundryOperations.applications()
-                                         .list()
-                                         .filter(app -> app.getId().equals(applicationId))
-                                         .filter(app -> app.getInstances().equals(app.getRunningInstances()))
-                                         .hasElements()
-                                         .block() ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+            String status = cloudFoundryClient.applicationsV2()
+                                              .instances(ApplicationInstancesRequest.builder()
+                                                                                    .applicationId(applicationId)
+                                                                                    .build())
+                                              .block()
+                                              .getInstances()
+                                              .get(instanceId.toString())
+                                              .getState();
+            // TODO : Add a try/catch on the GET to deal with an application being scaled down while the attack was going on.
+            return (status.equals(CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
+
         } else {
             // TODO: Implement Health Checks for other attack types.
             return ContainerHealth.NORMAL;
