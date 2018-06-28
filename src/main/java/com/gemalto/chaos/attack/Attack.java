@@ -21,7 +21,7 @@ public abstract class Attack {
     protected Integer timeToLive = 1;
     private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
-    private NotificationManager notificationManager;
+    private transient NotificationManager notificationManager;
 
     public abstract Platform getPlatform ();
 

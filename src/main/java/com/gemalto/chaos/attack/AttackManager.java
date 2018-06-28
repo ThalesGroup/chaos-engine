@@ -49,4 +49,8 @@ public class AttackManager {
         }
         activeAttacks.removeAll(finishedAttacks);
     }
+
+    Set<Attack> getActiveAttacks () {
+        return activeAttacks;
+    }
 }

@@ -21,8 +21,8 @@ import java.util.zip.Checksum;
 @Component
 public abstract class Container {
     protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-    protected FateManager fateManager;
+    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
 
     protected abstract Platform getPlatform ();

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class CloudFoundryAttack extends Attack {
     @Autowired
-    private CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryPlatform cloudFoundryPlatform;
 
     public static CloudFoundryAttackBuilder builder () {
         return CloudFoundryAttackBuilder.builder();
