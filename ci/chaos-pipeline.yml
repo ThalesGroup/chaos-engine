@@ -21,10 +21,11 @@ jobs:
     trigger: true
   - task: Build
     file: chaos-engine/ci/build.yml
-  - put: chaosengine
 
 - name: chaos-docker-build
   public: true
+  inputs:
+    - name: jarfile
   plan:
     - put: chaosengine
       params:
