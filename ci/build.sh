@@ -10,3 +10,4 @@ M2_CACHE="${ROOT_FOLDER}/maven"
 set -e -u
 cd chaos-engine/
 mvn package
+mv chaos-engine/target/chaosengine.jar /tmp

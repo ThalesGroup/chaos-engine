@@ -13,5 +13,7 @@ inputs:
 caches:
   - path: maven
 
+params:
+
 run:
   path: chaos-engine/ci/build.sh

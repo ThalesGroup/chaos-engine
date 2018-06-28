@@ -19,10 +19,11 @@ jobs:
     plan:
     - get: chaos-engine
       trigger: true
-    - task: Unit Test
+    - task: Build
       file: chaos-engine/ci/build.yml
     - put: chaosengine
       params:
         build: chaos-engine/
         build_args:
-          JAR_FILE: chaos-engine/target/chaosengine.jar
+          cache: true
+          JAR_FILE: /tmp/chaosengine.jar
