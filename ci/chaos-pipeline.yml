@@ -20,10 +20,7 @@ jobs:
     - get: chaos-engine
       trigger: true
     - task: Unit Test
-      file: chaos-engine/ci/unitTest.yml
-      on_success:
-        task: Build
-        file: chaos-engine/ci/build.yml
+      file: chaos-engine/ci/build.yml
     - put: chaosengine
       params:
         build: chaos-engine/
