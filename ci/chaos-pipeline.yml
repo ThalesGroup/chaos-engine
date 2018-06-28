@@ -26,6 +26,6 @@ jobs:
         file: chaos-engine/ci/build.yml
     - put: chaosengine
       params:
-        build: chaosengine/
+        build: chaos-engine/
         build_args:
           JAR_FILE: target/chaosengine.jar
