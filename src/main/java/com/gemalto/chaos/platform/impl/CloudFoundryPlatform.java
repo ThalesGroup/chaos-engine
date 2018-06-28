@@ -11,6 +11,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @ConditionalOnProperty({ "cf_organization" })
@@ -111,14 +113,19 @@ public class CloudFoundryPlatform implements Platform {
 
     public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
         if (attackType == AttackType.STATE) {
-            String status = cloudFoundryClient.applicationsV2()
-                                              .instances(ApplicationInstancesRequest.builder()
-                                                                                    .applicationId(applicationId)
-                                                                                    .build())
-                                              .block()
-                                              .getInstances()
-                                              .get(instanceId.toString())
-                                              .getState();
+            Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
+            applicationInstanceResponse = cloudFoundryClient.applicationsV2()
+                                                            .instances(ApplicationInstancesRequest.builder()
+                                                                                                  .applicationId(applicationId)
+                                                                                                  .build())
+                                                            .block()
+                                                            .getInstances();
+            String status;
+            try {
+                status = applicationInstanceResponse.get(instanceId.toString()).getState();
+            } catch (NullPointerException e) {
+                return ContainerHealth.DOES_NOT_EXIST;
+            }
             // TODO : Add a try/catch on the GET to deal with an application being scaled down while the attack was going on.
             return (status.equals(CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
 

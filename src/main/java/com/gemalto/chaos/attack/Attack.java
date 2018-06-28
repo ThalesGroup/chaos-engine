@@ -4,7 +4,6 @@ import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
@@ -50,20 +49,32 @@ public abstract class Attack {
     }
 
     private AttackState checkAttackState () {
-        if (container.getContainerHealth(attackType) == ContainerHealth.NORMAL) {
-            if (checkTimeToLive()) {
-                log.info("Attack {} complete", this);
+        switch (container.getContainerHealth(attackType)) {
+            case NORMAL:
+                if (checkTimeToLive()) {
+                    log.info("Attack {} complete", this);
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .withTargetContainer(container)
+                                                                   .withAttackType(attackType)
+                                                                   .withChaosTime(new Date())
+                                                                   .withNotificationLevel(NotificationLevel.GOOD)
+                                                                   .withMessage("Container recovered from final attack")
+                                                                   .build());
+                    return AttackState.FINISHED;
+                } else {
+                    resumeAttack();
+                }
+                break;
+            case DOES_NOT_EXIST:
+                log.info("Attack {} no longer maps to existing container", this);
                 notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .withTargetContainer(container)
-                                                               .withAttackType(attackType)
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withChaosTime(new Date())
-                                                               .withNotificationLevel(NotificationLevel.GOOD)
-                                                               .withMessage("Container recovered from final attack")
+                                                               .withAttackType(attackType)
+                                                               .withTargetContainer(container)
+                                                               .withMessage("Container no longer exists.")
                                                                .build());
                 return AttackState.FINISHED;
-            } else {
-                resumeAttack();
-            }
         }
         notificationManager.sendNotification(ChaosEvent.builder()
                                                        .withTargetContainer(container)
