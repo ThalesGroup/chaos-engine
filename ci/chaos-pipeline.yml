@@ -14,16 +14,21 @@ resources:
       aws_secret_access_key: ((aws_secret_access_key))
 
 jobs:
-  - name: chaos-engine-test
-    public: true
-    plan:
-    - get: chaos-engine
-      trigger: true
-    - task: Build
-      file: chaos-engine/ci/build.yml
+- name: chaos-engine-test
+  public: true
+  plan:
+  - get: chaos-engine
+    trigger: true
+  - task: Build
+    file: chaos-engine/ci/build.yml
+  - put: chaosengine
+
+- name: chaos-docker-build
+  public: true
+  plan:
     - put: chaosengine
       params:
-        build: chaos-engine/
+        build: jarfile/
         build_args:
           cache: true
           JAR_FILE: /tmp/chaosengine.jar
