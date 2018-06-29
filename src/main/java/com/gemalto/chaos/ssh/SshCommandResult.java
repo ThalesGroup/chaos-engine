@@ -20,6 +20,11 @@ public class SshCommandResult {
         processCommandOutput();
     }
 
+    @Override
+    public String toString () {
+        return "Command exit status: " + command.getExitStatus() + ", command output: " + commandOutput;
+    }
+
     private void processCommandOutput () {
         try {
             InputStream inputStream = command.getInputStream();

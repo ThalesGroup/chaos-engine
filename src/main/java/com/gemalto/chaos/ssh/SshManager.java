@@ -9,11 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class SshManager {
     private static final Logger log = LoggerFactory.getLogger(SshManager.class);
     private SSHClient ssh = new SSHClient();
-    private Session session;
     private String hostname;
     private String port;
 
@@ -23,29 +23,35 @@ public class SshManager {
         ssh.addHostKeyVerifier(new PromiscuousVerifier());
     }
 
-    public Session connect (String userName, String password) {
+    public boolean connect (String userName, String password) {
         try {
             log.debug("Connecting to {}", hostname);
 
             ssh.connect(hostname, Integer.valueOf(port));
             ssh.authPassword(userName, password);
             if (ssh.isConnected() && ssh.isAuthenticated()) {
-                session = ssh.startSession();
                 log.debug("Connection to {} succeeded.", hostname);
+                return true;
             } else {
                 log.error("SSH Authentication failed.");
             }
-            return session;
+
         } catch (IOException e) {
             log.error("Unable to connect to {}: {}", hostname, e.getMessage());
         }
-        return null;
+        return false;
     }
 
     public SshCommandResult executeCommand (String command) {
         try {
+            Session session = ssh.startSession();
+            log.debug("Going to execute command: {}", command);
             Command cmd = session.exec(command);
-            return new SshCommandResult(cmd);
+            cmd.join(60, TimeUnit.SECONDS);
+            SshCommandResult result = new SshCommandResult(cmd);
+            log.debug("Command execution finished with exit code: {}", cmd.getExitStatus());
+            session.close();
+            return result;
         } catch (SSHException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
         }
@@ -54,17 +60,15 @@ public class SshManager {
 
     public void disconnect () {
         try {
-            if (session != null && session.isOpen()) {
-                session.close();
-            }
             ssh.disconnect();
         } catch (IOException e) {
             log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
         }
     }
 
-    public ShellSessionCapabilities getShellCapabilities () {
-        ShellSessionCapabilities capabilities = new ShellSessionCapabilities(this);
+    public ShellSessionCapabilityProvider getShellCapabilities () {
+        ShellSessionCapabilityProvider capabilities = new ShellSessionCapabilityProvider(this);
+        capabilities.build();
         return capabilities;
     }
 }
