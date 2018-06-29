@@ -11,6 +11,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -114,12 +115,17 @@ public class CloudFoundryPlatform implements Platform {
     public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
         if (attackType == AttackType.STATE) {
             Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
-            applicationInstanceResponse = cloudFoundryClient.applicationsV2()
-                                                            .instances(ApplicationInstancesRequest.builder()
-                                                                                                  .applicationId(applicationId)
-                                                                                                  .build())
-                                                            .block()
-                                                            .getInstances();
+            try {
+                applicationInstanceResponse = cloudFoundryClient.applicationsV2()
+                                                                .instances(ApplicationInstancesRequest.builder()
+                                                                                                      .applicationId
+                                                                                                              (applicationId)
+                                                                                                      .build())
+                                                                .block()
+                                                                .getInstances();
+            } catch (ClientV2Exception e) {
+                return ContainerHealth.DOES_NOT_EXIST;
+            }
             String status;
             try {
                 status = applicationInstanceResponse.get(instanceId.toString()).getState();
