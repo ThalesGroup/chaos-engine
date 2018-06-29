@@ -10,6 +10,7 @@ resources:
     type: docker-image
     source:
       repository: 333400148126.dkr.ecr.us-east-2.amazonaws.com/gemalto/chaos
+      username: ((docker_repo_username))
       aws_access_key_id: ((aws_access_key_id))
       aws_secret_access_key: ((aws_secret_access_key))
 
@@ -21,15 +22,8 @@ jobs:
     trigger: true
   - task: Build
     file: chaos-engine/ci/build.yml
-
-- name: chaos-docker-build
-  public: true
-  inputs:
-    - name: jarfile
-  plan:
-    - put: chaosengine
-      params:
-        build: jarfile/
-        build_args:
-          cache: true
-          JAR_FILE: /tmp/chaosengine.jar
+  - put: chaosengine
+    params:
+      build: jarfile
+      build_args:
+        JAR_FILE: chaosengine.jar
