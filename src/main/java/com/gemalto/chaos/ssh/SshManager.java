@@ -2,13 +2,17 @@ package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.SSHException;
+import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
+import org.bouncycastle.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 public class SshManager {
@@ -42,15 +46,47 @@ public class SshManager {
         return false;
     }
 
+    public void executeCommandInAsyncShell (String command) {
+        try {
+            Session session = ssh.startSession();
+            session.allocateDefaultPTY();
+            log.debug("Going to execute command in interactive shell session: {}", command);
+            Session.Shell shell = session.startShell();
+            shell.setAutoExpand(true);
+            OutputStream outputStream = shell.getOutputStream();
+            outputStream.write(Strings.toUTF8ByteArray(command + "\n"));
+            outputStream.flush();
+            InputStream stream = shell.getInputStream();
+            // ssh.isConnected()
+            try {
+                shell.join(30, TimeUnit.SECONDS);
+            } catch (ConnectionException ex) {
+                log.debug("Async session has expired. Closing the shell.");
+            }
+            if (shell.isOpen()) {
+                shell.close();
+            }
+            if (session.isOpen()) {
+                session.close();
+            }
+            log.debug("Interactive shell session ended.");
+        } catch (IOException e) {
+            log.error("Unable to execute command '{}' on {}: {}, {}", command, hostname, e.getMessage(), e.getCause()
+                                                                                                          .getStackTrace());
+            e.printStackTrace();
+        }
+    }
+
     public SshCommandResult executeCommand (String command) {
         try {
             Session session = ssh.startSession();
+            session.allocateDefaultPTY();
             log.debug("Going to execute command: {}", command);
             Command cmd = session.exec(command);
-            cmd.join(60, TimeUnit.SECONDS);
+            cmd.join(120, TimeUnit.SECONDS);
             SshCommandResult result = new SshCommandResult(cmd);
-            log.debug("Command execution finished with exit code: {}", cmd.getExitStatus());
             session.close();
+            log.debug("Command execution finished with exit code: {}", cmd.getExitStatus());
             return result;
         } catch (SSHException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());

@@ -22,7 +22,10 @@ public class SshCommandResult {
 
     @Override
     public String toString () {
-        return "Command exit status: " + command.getExitStatus() + ", command output: " + commandOutput;
+        if (exitStatus == -1) {
+            return "Command execution failed or execution has been interrupted, exit status: " + exitStatus;
+        }
+        return "Command exit status: " + exitStatus + ", command output: " + commandOutput;
     }
 
     private void processCommandOutput () {

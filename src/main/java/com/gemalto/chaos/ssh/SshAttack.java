@@ -18,14 +18,19 @@ public abstract class SshAttack {
 
     protected abstract void buildRequiredCapabilities ();
 
-    public SshCommandResult attack () {
+    public boolean attack () {
         if (shellHasRequiredCapabilities()) {
-            return sshManager.executeCommand(getAttackCommand());
+            log.debug("Starting {} attack.", getAttackName());
+            sshManager.executeCommandInAsyncShell(getAttackCommand());
+            log.debug("Attack {} deployed.", getAttackName());
+            return true;
         } else {
-            log.debug("Cannot execute SSH attack. Current shell session does not have all required capabilities: {}", requiredCapabilities);
+            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}", getAttackName(), requiredCapabilities);
         }
-        return new SshCommandResult(null, -1);
+        return false;
     }
+
+    protected abstract String getAttackName ();
 
     public boolean shellHasRequiredCapabilities () {
         if (requiredCapabilities.isEmpty()) {
