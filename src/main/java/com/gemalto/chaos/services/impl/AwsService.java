@@ -2,7 +2,6 @@ package com.gemalto.chaos.services.impl;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.gemalto.chaos.services.CloudService;
@@ -21,8 +20,8 @@ public class AwsService implements CloudService {
     }
 
     @Bean
-    AmazonEC2 amazonEC2 (@Value("aws_region:us-east-2") String awsRegion, AWSStaticCredentialsProvider
+    AmazonEC2 amazonEC2 (@Value("${AWS_REGION:us-east-2}") String awsRegion, AWSStaticCredentialsProvider
             awsStaticCredentialsProvider) {
-        return AmazonEC2ClientBuilder.standard().withRegion(Regions.US_EAST_2).build();
+        return AmazonEC2ClientBuilder.standard().withRegion(awsRegion).build();
     }
 }
