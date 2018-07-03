@@ -80,21 +80,7 @@ public abstract class Container {
     public void attackContainer (AttackType attackType) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
         log.info("Starting a {} attack against container {}", attackType, this);
-        switch (attackType) {
-            case STATE:
-                attackContainerState();
-                break;
-            case NETWORK:
-                attackContainerNetwork();
-                break;
-            case RESOURCE:
-                attackContainerResources();
-                break;
-        }
-    }
-
-    private void attackContainerState () {
-        attackWithAnnotation(StateAttack.class);
+        attackWithAnnotation(attackType.getAnnotation());
     }
 
     private void attackWithAnnotation (Class<? extends Annotation> annotation) {
@@ -109,14 +95,6 @@ public abstract class Container {
             log.error("Failed to run attack on container {}", this, e);
             throw new ChaosException(e);
         }
-    }
-
-    private void attackContainerNetwork () {
-        attackWithAnnotation(NetworkAttack.class);
-    }
-
-    private void attackContainerResources () {
-        attackWithAnnotation(ResourceAttack.class);
     }
 
     /**
