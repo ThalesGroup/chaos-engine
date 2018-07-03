@@ -59,7 +59,6 @@ public class AwsPlatform implements Platform {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : describeInstancesResult.getReservations()) {
                 for (Instance instance : reservation.getInstances()) {
-                    log.debug("{}", instance);
                     String name;
                     Optional<Tag> nameTag = instance.getTags()
                                                     .stream()
