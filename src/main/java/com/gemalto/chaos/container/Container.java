@@ -1,6 +1,10 @@
 package com.gemalto.chaos.container;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
+import com.gemalto.chaos.attack.annotations.ResourceAttack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateEngine;
@@ -8,22 +12,42 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
+
 @Component
 public abstract class Container {
-    protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
+    private static List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
+
+    @Autowired
+    protected Container () {
+        if (!getMethodsWithAnnotation(this.getClass(), StateAttack.class).isEmpty()) {
+            supportedAttackTypes.add(AttackType.STATE);
+        }
+        if (!getMethodsWithAnnotation(this.getClass(), NetworkAttack.class).isEmpty()) {
+            supportedAttackTypes.add(AttackType.NETWORK);
+        }
+        if (!getMethodsWithAnnotation(this.getClass(), ResourceAttack.class).isEmpty()) {
+            supportedAttackTypes.add(AttackType.RESOURCE);
+        }
+    }
 
     protected abstract Platform getPlatform ();
 
@@ -69,11 +93,31 @@ public abstract class Container {
         }
     }
 
-    public abstract void attackContainerState ();
+    private void attackContainerState () {
+        attackWithAnnotation(StateAttack.class);
+    }
 
-    public abstract void attackContainerNetwork ();
+    private void attackWithAnnotation (Class<? extends Annotation> annotation) {
+        List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), annotation);
+        if (attackMethods.isEmpty()) {
+            throw new ChaosException("Could not find an attack vector");
+        }
+        Integer index = ThreadLocalRandom.current().nextInt(attackMethods.size());
+        try {
+            attackMethods.get(index).invoke(this);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            log.error("Failed to run attack on container {}", this, e);
+            throw new ChaosException(e);
+        }
+    }
 
-    public abstract void attackContainerResources ();
+    private void attackContainerNetwork () {
+        attackWithAnnotation(NetworkAttack.class);
+    }
+
+    private void attackContainerResources () {
+        attackWithAnnotation(ResourceAttack.class);
+    }
 
     /**
      * Uses all the fields in the container implementation (but not the Container parent class)

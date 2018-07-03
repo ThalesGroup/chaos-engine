@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
 import com.gemalto.chaos.container.Container;
@@ -9,9 +10,7 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Arrays;
 import java.util.Random;
 
 public class CloudFoundryContainer extends Container {
@@ -20,12 +19,12 @@ public class CloudFoundryContainer extends Container {
     private Integer instance;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
 
-    @Autowired
     private CloudFoundryContainer () {
-        supportedAttackTypes.addAll(Arrays.asList(AttackType.STATE));
+        super();
     }
 
     CloudFoundryContainer (String applicationId, String name, Integer instance) {
+        super();
         this.applicationId = applicationId;
         this.name = name;
         this.instance = instance;
@@ -54,19 +53,9 @@ public class CloudFoundryContainer extends Container {
                                  .build();
     }
 
-    @Override
-    public void attackContainerState () {
+    @StateAttack
+    public void restartContainer () {
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
-    }
-
-    @Override
-    public void attackContainerNetwork () {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void attackContainerResources () {
-        cloudFoundryPlatform.degrade(this);
     }
 
     @Override

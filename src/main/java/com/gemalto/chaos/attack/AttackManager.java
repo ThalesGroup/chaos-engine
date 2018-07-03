@@ -19,10 +19,11 @@ public class AttackManager {
     private NotificationManager notificationManager;
 
     public void addAttack (Attack attack) {
-        synchronized (activeAttacks) {
-            activeAttacks.add(attack);
+        if (attack.startAttack(notificationManager)) {
+            synchronized (activeAttacks) {
+                activeAttacks.add(attack);
+            }
         }
-        attack.startAttack(notificationManager);
     }
 
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
