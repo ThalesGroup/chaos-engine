@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.enums.AttackType;
+import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -30,7 +31,6 @@ import java.util.Map;
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform implements Platform {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
-    private static final String CLOUDFOUNDRY_RUNNING_STATE = "RUNNING";
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
@@ -70,7 +70,12 @@ public class CloudFoundryPlatform implements Platform {
     @Override
     public List<Container> getRoster () {
         List<Container> containers = new ArrayList<>();
-        cloudFoundryOperations.applications().list().toIterable().forEach(app -> {
+        cloudFoundryOperations.applications()
+                              .list()
+                              .filter(app -> app.getRequestedState()
+                                                .equals(CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED))
+                              .toIterable()
+                              .forEach(app -> {
             Integer instances = app.getInstances();
             for (Integer i = 0; i < instances; i++) {
                 if (isChaosEngine(app.getName(), i)) {
@@ -132,7 +137,7 @@ public class CloudFoundryPlatform implements Platform {
             } catch (NullPointerException e) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
-            return (status.equals(CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
+            return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
 
         } else {
             // TODO: Implement Health Checks for other attack types.
