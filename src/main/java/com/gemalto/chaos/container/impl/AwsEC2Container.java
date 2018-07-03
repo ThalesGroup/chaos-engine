@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.AwsEC2Attack;
 import com.gemalto.chaos.container.Container;
@@ -9,8 +10,6 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 
-import java.util.Arrays;
-
 public class AwsEC2Container extends Container {
     private String instanceId;
     private String keyName;
@@ -18,7 +17,7 @@ public class AwsEC2Container extends Container {
     private transient AwsPlatform awsPlatform;
 
     private AwsEC2Container () {
-        supportedAttackTypes.addAll(Arrays.asList(AttackType.STATE));
+        super();
     }
 
     @Override
@@ -36,17 +35,9 @@ public class AwsEC2Container extends Container {
         return AwsEC2Attack.builder().withAttackType(attackType).withContainer(this).withTimeToLive(1).build();
     }
 
-    @Override
-    public void attackContainerState () {
+    @StateAttack
+    public void stopContainer () {
         awsPlatform.stopInstance(instanceId);
-    }
-
-    @Override
-    public void attackContainerNetwork () {
-    }
-
-    @Override
-    public void attackContainerResources () {
     }
 
     @Override
