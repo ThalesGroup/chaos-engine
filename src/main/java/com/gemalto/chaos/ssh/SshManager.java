@@ -2,7 +2,6 @@ package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.SSHException;
-import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
@@ -46,7 +45,7 @@ public class SshManager {
         return false;
     }
 
-    public void executeCommandInAsyncShell (String command) {
+    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) {
         try {
             Session session = ssh.startSession();
             session.allocateDefaultPTY();
@@ -54,25 +53,32 @@ public class SshManager {
             Session.Shell shell = session.startShell();
             shell.setAutoExpand(true);
             OutputStream outputStream = shell.getOutputStream();
+            //Interactive command must be ended by new line
             outputStream.write(Strings.toUTF8ByteArray(command + "\n"));
             outputStream.flush();
             InputStream stream = shell.getInputStream();
-            // ssh.isConnected()
-            try {
-                shell.join(30, TimeUnit.SECONDS);
-            } catch (ConnectionException ex) {
-                log.debug("Async session has expired. Closing the shell.");
+            //Interactive session must be ended by exit command or ssh connection drop
+            //ttl is there for security reasons when the library don't recognize disconnected channel
+            //can happen when aggressive attacks are performed
+            int ttl = 0;
+            while (ssh.isConnected() && !shell.isEOF() && !session.isEOF() && ttl > maxSessionDuration) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                log.debug("Interactive SSH session {} is still active", shellName);
+            }
+            log.debug("Interactive SSH session {} has ended. Closing the shell", shellName);
+            if (session.isOpen()) {
+                session.close();
             }
             if (shell.isOpen()) {
                 shell.close();
             }
-            if (session.isOpen()) {
-                session.close();
-            }
             log.debug("Interactive shell session ended.");
         } catch (IOException e) {
-            log.error("Unable to execute command '{}' on {}: {}, {}", command, hostname, e.getMessage(), e.getCause()
-                                                                                                          .getStackTrace());
+            log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
             e.printStackTrace();
         }
     }

@@ -11,9 +11,10 @@ public abstract class SshAttack {
     protected ArrayList<ShellSessionCapability> actualCapabilities;
     protected SshManager sshManager;
 
-    public SshAttack (ArrayList<ShellSessionCapability> actualCapabilities, SshManager sshManager) {
-        this.actualCapabilities = actualCapabilities;
+    public SshAttack (SshManager sshManager) {
         this.sshManager = sshManager;
+        ShellSessionCapabilityProvider cappProvider = sshManager.getShellCapabilities();
+        actualCapabilities = cappProvider.getCapabilities();
     }
 
     protected abstract void buildRequiredCapabilities ();
@@ -21,7 +22,7 @@ public abstract class SshAttack {
     public boolean attack () {
         if (shellHasRequiredCapabilities()) {
             log.debug("Starting {} attack.", getAttackName());
-            sshManager.executeCommandInAsyncShell(getAttackCommand());
+            sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
             log.debug("Attack {} deployed.", getAttackName());
             return true;
         } else {
@@ -30,12 +31,8 @@ public abstract class SshAttack {
         return false;
     }
 
-    protected abstract String getAttackName ();
-
     public boolean shellHasRequiredCapabilities () {
-        if (requiredCapabilities.isEmpty()) {
-            return false;
-        }
+        log.debug("Checking SSH attack required capabilities");
         for (ShellSessionCapability required : requiredCapabilities) {
             if (!requiredCapabilityMet(required)) {
                 return false;
@@ -43,6 +40,10 @@ public abstract class SshAttack {
         }
         return true;
     }
+
+    protected abstract String getAttackName ();
+
+    protected abstract int getSshSessionMaxDuration ();
 
     protected abstract String getAttackCommand ();
 

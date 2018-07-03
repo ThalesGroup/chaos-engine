@@ -8,6 +8,8 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
+import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -56,7 +58,8 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     public void attackContainerState () {
-        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        //  cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        executeSshAttack();
     }
 
     @Override
@@ -67,6 +70,13 @@ public class CloudFoundryContainer extends Container {
     @Override
     public void attackContainerResources () {
         cloudFoundryPlatform.degrade(this);
+    }
+
+    private void executeSshAttack () {
+        CloudFoundrySshManager manager = new CloudFoundrySshManager(cloudFoundryPlatform.getCloudFoundryPlatformInfo());
+        manager.connect(this);
+        ForkBomb bomb = new ForkBomb(manager);
+        bomb.attack();
     }
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {

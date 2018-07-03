@@ -8,13 +8,11 @@ import com.gemalto.chaos.ssh.enums.ShellType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-
 public class ForkBomb extends SshAttack {
     private static final Logger log = LoggerFactory.getLogger(ForkBomb.class);
 
-    public ForkBomb (ArrayList<ShellSessionCapability> actualCapabilities, SshManager sshManager) {
-        super(actualCapabilities, sshManager);
+    public ForkBomb (SshManager sshManager) {
+        super(sshManager);
         buildRequiredCapabilities();
     }
 
@@ -28,12 +26,17 @@ public class ForkBomb extends SshAttack {
     }
 
     @Override
+    protected int getSshSessionMaxDuration () {
+        return 60;
+    }
+
+    @Override
     protected String getAttackName () {
         return "Fork Bomb";
     }
 
     @Override
     protected String getAttackCommand () {
-        return "bomb() { bomb | bomb & }; bomb;";
+        return "bomb() { bomb | bomb & }; bomb; sleep 60; exit;";
     }
 }
