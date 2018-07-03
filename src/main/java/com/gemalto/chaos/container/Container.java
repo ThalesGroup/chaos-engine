@@ -2,9 +2,6 @@ package com.gemalto.chaos.container;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.NetworkAttack;
-import com.gemalto.chaos.attack.annotations.ResourceAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateEngine;
@@ -31,28 +28,24 @@ import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
 @Component
 public abstract class Container {
-    private static List<AttackType> supportedAttackTypes = new ArrayList<>();
+    private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
 
     @Autowired
     protected Container () {
-        if (!getMethodsWithAnnotation(this.getClass(), StateAttack.class).isEmpty()) {
-            supportedAttackTypes.add(AttackType.STATE);
-        }
-        if (!getMethodsWithAnnotation(this.getClass(), NetworkAttack.class).isEmpty()) {
-            supportedAttackTypes.add(AttackType.NETWORK);
-        }
-        if (!getMethodsWithAnnotation(this.getClass(), ResourceAttack.class).isEmpty()) {
-            supportedAttackTypes.add(AttackType.RESOURCE);
+        for (AttackType attackType : AttackType.values()) {
+            if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
+                supportedAttackTypes.add(attackType);
+            }
         }
     }
 
     protected abstract Platform getPlatform ();
 
     public boolean supportsAttackType (AttackType attackType) {
-        return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
+        return supportedAttackTypes.contains(attackType);
     }
 
     public ContainerHealth getContainerHealth (AttackType attackType) {
