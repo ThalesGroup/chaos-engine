@@ -4,10 +4,10 @@ import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
-import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +23,15 @@ public abstract class Attack {
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
 
-    public abstract Platform getPlatform ();
-
-    void startAttack (NotificationManager notificationManager) {
+    boolean startAttack (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
         if (!AdminManager.canRunAttacks()) {
             log.info("Cannot start attacks right now, system is {}", AdminManager.getAdminState());
-            return;
+            return false;
+        }
+        if (container.getContainerHealth(attackType) != ContainerHealth.NORMAL) {
+            log.info("Failed to start an attack as this container is already in an abnormal state\n{}", container);
+            return false;
         }
         if (container.supportsAttackType(attackType)) {
             startAttackImpl(container, attackType);
@@ -42,6 +44,7 @@ public abstract class Attack {
                                                            .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
                                                            .build());
         }
+        return true;
     }
 
     private void startAttackImpl (Container container, AttackType attackType) {
@@ -64,7 +67,7 @@ public abstract class Attack {
                 } else {
                     resumeAttack();
                 }
-                break;
+                return AttackState.STARTED;
             case DOES_NOT_EXIST:
                 log.info("Attack {} no longer maps to existing container", this);
                 notificationManager.sendNotification(ChaosEvent.builder()
@@ -75,15 +78,17 @@ public abstract class Attack {
                                                                .withMessage("Container no longer exists.")
                                                                .build());
                 return AttackState.FINISHED;
+            case UNDER_ATTACK:
+            default:
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .withTargetContainer(container)
+                                                               .withAttackType(attackType)
+                                                               .withChaosTime(new Date())
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
+                                                               .build());
+                return AttackState.STARTED;
         }
-        notificationManager.sendNotification(ChaosEvent.builder()
-                                                       .withTargetContainer(container)
-                                                       .withAttackType(attackType)
-                                                       .withChaosTime(new Date())
-                                                       .withNotificationLevel(NotificationLevel.ERROR)
-                                                       .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
-                                                       .build());
-        return AttackState.STARTED;
     }
 
     private boolean checkTimeToLive () {

@@ -3,7 +3,6 @@ package com.gemalto.chaos.attack.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,11 +12,6 @@ public class CloudFoundryAttack extends Attack {
 
     public static CloudFoundryAttackBuilder builder () {
         return CloudFoundryAttackBuilder.builder();
-    }
-
-    @Override
-    public Platform getPlatform () {
-        return cloudFoundryPlatform;
     }
 
     public static final class CloudFoundryAttackBuilder {
