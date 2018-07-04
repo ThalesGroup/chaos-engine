@@ -113,4 +113,14 @@ public class AwsPlatform implements Platform {
         log.info("Requesting a stop of instances {}", (Object[]) instanceIds);
         amazonEC2.stopInstances(new StopInstancesRequest().withForce(true).withInstanceIds(instanceIds));
     }
+
+    public void terminateInstance (String... instanceIds) {
+        log.info("Requesting a Terminate of instances {}", (Object[]) instanceIds);
+        amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(instanceIds));
+    }
+
+    public void startInstance (String... instanceIds) {
+        log.info("Requesting a start of instances {}", (Object[]) instanceIds);
+        amazonEC2.startInstances(new StartInstancesRequest().withInstanceIds(instanceIds));
+    }
 }

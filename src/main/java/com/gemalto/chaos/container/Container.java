@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -32,6 +33,7 @@ public abstract class Container {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
+    private Method lastAttackMethod;
 
     @Autowired
     protected Container () {
@@ -70,22 +72,36 @@ public abstract class Container {
         return fateEngine.canDestroy();
     }
 
-    public void attackContainer (AttackType attackType) {
+    public Callable<Void> attackContainer (AttackType attackType) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
         log.info("Starting a {} attack against container {}", attackType, this);
-        attackWithAnnotation(attackType.getAnnotation());
+        return attackWithAnnotation(attackType.getAnnotation());
     }
 
-    private void attackWithAnnotation (Class<? extends Annotation> annotation) {
+    @SuppressWarnings("unchecked")
+    private Callable<Void> attackWithAnnotation (Class<? extends Annotation> annotation) {
         List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), annotation);
         if (attackMethods.isEmpty()) {
             throw new ChaosException("Could not find an attack vector");
         }
         Integer index = ThreadLocalRandom.current().nextInt(attackMethods.size());
         try {
-            attackMethods.get(index).invoke(this);
+            lastAttackMethod = attackMethods.get(index);
+            return (Callable<Void>) lastAttackMethod.invoke(this);
         } catch (IllegalAccessException | InvocationTargetException e) {
             log.error("Failed to run attack on container {}", this, e);
+            throw new ChaosException(e);
+        }
+    }
+
+    public void repeatAttack () {
+        if (lastAttackMethod == null) {
+            throw new ChaosException("Trying to repeat an attack without having a prior one");
+        }
+        containerHealth = ContainerHealth.UNDER_ATTACK;
+        try {
+            lastAttackMethod.invoke(this);
+        } catch (InvocationTargetException | IllegalAccessException e) {
             throw new ChaosException(e);
         }
     }
