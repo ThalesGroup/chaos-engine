@@ -31,7 +31,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
         this.webhookUri = webhookUri;
-        log.info("Created Slack notification manager against " + this.webhookUri);
+        log.info("Created Slack notification manager against {}", this.webhookUri);
     }
 
     @Override
@@ -72,11 +72,21 @@ public class SlackNotifications extends BufferedNotificationMethod {
                               .withFooter("Chaos Engine")
                               .withTitle(chaosEvent.getAttackType() + " against " + chaosEvent.getTargetContainer()
                                                                                               .getSimpleName())
-                              .withColor(chaosEvent.getNotificationLevel() == NotificationLevel.GOOD ? "good" : chaosEvent
-                                      .getNotificationLevel() == NotificationLevel.WARN ? "warning" : "danger")
+                              .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
                               .withText(chaosEvent.toString())
                               .withTs(chaosEvent.getChaosTime().toInstant())
                               .build();
+    }
+
+    private String getSlackNotificationColor (NotificationLevel notificationLevel) {
+        switch (notificationLevel) {
+            case GOOD:
+                return "good";
+            case WARN:
+                return "warning";
+            default:
+                return "danger";
+        }
     }
 
     private void sendSlackMessage (SlackMessage slackMessage) throws IOException {
@@ -96,7 +106,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 log.error("Unknown exception sending payload " + payload, e);
             }
             BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            log.debug(response.readLine());
+            log.debug("{}", response.readLine());
             if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
                 throw new IOException("Unexpected response from server");
             }
