@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
@@ -16,6 +15,7 @@ import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
+import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +59,6 @@ public class CloudFoundryPlatform implements Platform {
         return cloudFoundryPlatformInfo;
     }
 
-    public void degrade (Container container) {
-        if (!(container instanceof CloudFoundryContainer)) {
-            throw new ChaosException("Expected to be passed a Cloud Foundry container");
-        }
-        log.info("Attempting to degrade performance on {}", container);
-        // TODO : Implement container degradation
-    }
-
     @Override
     public List<Container> getRoster () {
         List<Container> containers = new ArrayList<>();
@@ -76,28 +68,28 @@ public class CloudFoundryPlatform implements Platform {
                                                 .equals(CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED))
                               .toIterable()
                               .forEach(app -> {
-            Integer instances = app.getInstances();
-            for (Integer i = 0; i < instances; i++) {
-                if (isChaosEngine(app.getName(), i)) {
-                    log.debug("Skipping what appears to be me.");
-                    continue;
-                }
-                CloudFoundryContainer c = CloudFoundryContainer.builder()
-                                                               .applicationId(app.getId())
-                                                               .name(app.getName())
-                                                               .instance(i)
-                                                               .platform(this)
-                                                               .fateManager(fateManager)
-                                                               .build();
-                Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-                containers.add(persistentContainer);
-                if (persistentContainer == c) {
-                    log.info("Added container {}", persistentContainer);
-                } else {
-                    log.debug("Existing container found: {}", persistentContainer);
-                }
-            }
-        });
+                                  Integer instances = app.getInstances();
+                                  for (Integer i = 0; i < instances; i++) {
+                                      if (isChaosEngine(app.getName(), i)) {
+                                          log.debug("Skipping what appears to be me.");
+                                          continue;
+                                      }
+                                      CloudFoundryContainer c = CloudFoundryContainer.builder()
+                                                                                     .applicationId(app.getId())
+                                                                                     .name(app.getName())
+                                                                                     .instance(i)
+                                                                                     .platform(this)
+                                                                                     .fateManager(fateManager)
+                                                                                     .build();
+                                      Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
+                                      containers.add(persistentContainer);
+                                      if (persistentContainer == c) {
+                                          log.info("Added container {}", persistentContainer);
+                                      } else {
+                                          log.debug("Existing container found: {}", persistentContainer);
+                                      }
+                                  }
+                              });
         containerManager.removeOldContainers(CloudFoundryContainer.class, containers);
         return containers;
     }
@@ -123,8 +115,7 @@ public class CloudFoundryPlatform implements Platform {
             try {
                 applicationInstanceResponse = cloudFoundryClient.applicationsV2()
                                                                 .instances(ApplicationInstancesRequest.builder()
-                                                                                                      .applicationId
-                                                                                                              (applicationId)
+                                                                                                      .applicationId(applicationId)
                                                                                                       .build())
                                                                 .block()
                                                                 .getInstances();
@@ -138,7 +129,6 @@ public class CloudFoundryPlatform implements Platform {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
             return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
-
         } else {
             // TODO: Implement Health Checks for other attack types.
             return ContainerHealth.NORMAL;
@@ -148,5 +138,9 @@ public class CloudFoundryPlatform implements Platform {
     private boolean isChaosEngine (String applicationName, Integer instanceId) {
         return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
                 .isFriendly(applicationName));
+    }
+
+    public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
+        cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
     }
 }

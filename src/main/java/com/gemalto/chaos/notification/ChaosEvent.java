@@ -1,5 +1,6 @@
 package com.gemalto.chaos.notification;
 
+import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
@@ -77,6 +78,13 @@ public class ChaosEvent {
 
         private static ChaosEventBuilder builder () {
             return new ChaosEventBuilder();
+        }
+
+        public ChaosEventBuilder fromAttack (Attack attack) {
+            this.chaosTime = Date.from(attack.getStartTime());
+            this.targetContainer = attack.getContainer();
+            this.attackType = attack.getAttackType();
+            return this;
         }
 
         public ChaosEventBuilder withTargetContainer (Container targetContainer) {

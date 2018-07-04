@@ -3,13 +3,12 @@ package com.gemalto.chaos.attack.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.Duration;
+
+import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES;
 
 public class CloudFoundryAttack extends Attack {
-    @Autowired
-    private transient CloudFoundryPlatform cloudFoundryPlatform;
-
     public static CloudFoundryAttackBuilder builder () {
         return CloudFoundryAttackBuilder.builder();
     }
@@ -18,6 +17,7 @@ public class CloudFoundryAttack extends Attack {
         private Container container;
         private AttackType attackType;
         private Integer timeToLive;
+        private Duration duration = Duration.ofMinutes(DEFAULT_ATTACK_DURATION_MINUTES);
 
         private CloudFoundryAttackBuilder () {
         }
@@ -41,11 +41,17 @@ public class CloudFoundryAttack extends Attack {
             return this;
         }
 
+        public CloudFoundryAttackBuilder duration (Duration duration) {
+            this.duration = duration;
+            return this;
+        }
+
         public CloudFoundryAttack build () {
             CloudFoundryAttack cloudFoundryAttack = new CloudFoundryAttack();
             cloudFoundryAttack.attackType = this.attackType;
             cloudFoundryAttack.container = this.container;
             cloudFoundryAttack.timeToLive += this.timeToLive;
+            cloudFoundryAttack.duration = this.duration;
             return cloudFoundryAttack;
         }
     }

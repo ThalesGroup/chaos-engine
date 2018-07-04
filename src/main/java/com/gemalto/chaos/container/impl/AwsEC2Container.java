@@ -10,6 +10,9 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 
+import java.util.concurrent.Callable;
+
+
 public class AwsEC2Container extends Container {
     private String instanceId;
     private String keyName;
@@ -35,9 +38,15 @@ public class AwsEC2Container extends Container {
         return AwsEC2Attack.builder().withAttackType(attackType).withContainer(this).withTimeToLive(1).build();
     }
 
+    private Callable<Void> startContainerMethod = () -> {
+        awsPlatform.startInstance(instanceId);
+        return null;
+    };
+
     @StateAttack
-    public void stopContainer () {
+    public Callable<Void> stopContainer () {
         awsPlatform.stopInstance(instanceId);
+        return startContainerMethod;
     }
 
     @Override

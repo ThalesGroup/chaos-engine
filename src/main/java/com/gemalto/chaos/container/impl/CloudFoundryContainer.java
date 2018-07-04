@@ -9,15 +9,21 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
+    private transient Callable<Void> restageApplication = () -> {
+        cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
+        return null;
+    };
 
     private CloudFoundryContainer () {
         super();
@@ -53,14 +59,15 @@ public class CloudFoundryContainer extends Container {
                                  .build();
     }
 
-    @StateAttack
-    public void restartContainer () {
-        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
-    }
-
     @Override
     public String getSimpleName () {
         return name + " - (" + instance + ")";
+    }
+
+    @StateAttack
+    public Callable<Void> restartContainer () {
+        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        return restageApplication;
     }
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
@@ -70,6 +77,12 @@ public class CloudFoundryContainer extends Container {
                                                                                                                .build();
         log.info("{}", restartApplicationInstanceRequest);
         return restartApplicationInstanceRequest;
+    }
+
+    private RestageApplicationRequest getRestageApplicationRequest () {
+        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
+        log.info("{}", restageApplicationRequest);
+        return restageApplicationRequest;
     }
 
     public String getApplicationId () {
