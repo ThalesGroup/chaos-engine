@@ -104,4 +104,15 @@ public class CloudFoundryPlatformTest {
         verify(applications, times(1)).restartInstance(null);
         verify(monoVoid, times(1)).block();
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void restageApplicationTest () {
+        Mono<Void> monoVoid = mock(Mono.class);
+        doReturn(applications).when(cloudFoundryOperations).applications();
+        doReturn(monoVoid).when(applications).restage(null);
+        cfp.restageApplication(null);
+        verify(applications, times(1)).restage(null);
+        verify(monoVoid, times(1)).block();
+    }
 }
