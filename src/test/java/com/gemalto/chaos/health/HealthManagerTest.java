@@ -4,50 +4,64 @@ import com.gemalto.chaos.health.enums.SystemHealthState;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HealthManagerTest {
     @Mock
-    private Set<SystemHealth> systemHealthSet;
+    private Collection<SystemHealth> systemHealthSet;
     @Mock
     private Iterator<SystemHealth> systemHealthIterator;
     @Mock
     private SystemHealth systemHealth;
+    private HealthManager hm;
 
     @Test
     public void getHealth () {
-        HealthManager hm = new HealthManager(systemHealthSet);
+        hm = new HealthManager(Collections.singleton(systemHealth));
         // One health class that returns OK
-        Mockito.when(systemHealthSet.iterator()).thenReturn(systemHealthIterator);
-        Mockito.when(systemHealthIterator.hasNext()).thenReturn(true).thenReturn(false);
-        Mockito.when(systemHealthIterator.next()).thenReturn(systemHealth);
-        Mockito.when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK);
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK);
         assertEquals(SystemHealthState.OK, hm.getHealth());
-        // Two health classes, both return OK
-        Mockito.when(systemHealthSet.iterator()).thenReturn(systemHealthIterator);
-        Mockito.when(systemHealthIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        Mockito.when(systemHealthIterator.next()).thenReturn(systemHealth).thenReturn(systemHealth);
-        Mockito.when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.OK);
-        assertEquals(SystemHealthState.OK, hm.getHealth());
-        // Two health classes, second returns ERROR
-        Mockito.when(systemHealthSet.iterator()).thenReturn(systemHealthIterator);
-        Mockito.when(systemHealthIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        Mockito.when(systemHealthIterator.next()).thenReturn(systemHealth).thenReturn(systemHealth);
-        Mockito.when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.ERROR);
-        assertEquals(SystemHealthState.ERROR, hm.getHealth());
-        // Two health classes, first returns ERROR
-        Mockito.when(systemHealthSet.iterator()).thenReturn(systemHealthIterator);
-        Mockito.when(systemHealthIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        Mockito.when(systemHealthIterator.next()).thenReturn(systemHealth).thenReturn(systemHealth);
-        Mockito.when(systemHealth.getHealth()).thenReturn(SystemHealthState.ERROR).thenReturn(SystemHealthState.OK);
-        assertEquals(SystemHealthState.ERROR, hm.getHealth());
-        // TODO : Test null SystemHealthSet, should return SystemHealthState.UNKNOWN
     }
+
+    @Test
+    public void getHealth2 () {
+        hm = new HealthManager(Arrays.asList(systemHealth, systemHealth));
+        // Two health classes, both return OK
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.OK);
+        assertEquals(SystemHealthState.OK, hm.getHealth());
+    }
+
+    @Test
+    public void getHealth3 () {
+        hm = new HealthManager(Arrays.asList(systemHealth, systemHealth));
+        // Two health classes, second returns ERROR
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.ERROR);
+        assertEquals(SystemHealthState.ERROR, hm.getHealth());
+    }
+
+    @Test
+    public void getHealth4 () {
+        hm = new HealthManager(Arrays.asList(systemHealth, systemHealth));
+        // Two health classes, first returns ERROR
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.ERROR).thenReturn(SystemHealthState.OK);
+        assertEquals(SystemHealthState.ERROR, hm.getHealth());
+        verify(systemHealth, times(1)).getHealth();
+    }
+
+    @Test
+    public void getHealth5 () {
+        hm = new HealthManager(null);
+        // No health classes
+        assertEquals(SystemHealthState.UNKNOWN, hm.getHealth());
+    }
+
 }
