@@ -82,6 +82,7 @@ public class AwsPlatform implements Platform {
                                                                   .fateManager(fateManager)
                                                                   .name(name)
                                                                   .build();
+                    // TODO : Implement use of ContainerManager to prevent creating duplicates (like PCF platform)
                     containerList.add(newContainer);
                     log.debug("{}", newContainer);
                 }
