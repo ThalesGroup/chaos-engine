@@ -2,7 +2,7 @@ package com.gemalto.chaos.health.impl;
 
 import com.gemalto.chaos.health.enums.SystemHealthState;
 import com.gemalto.chaos.platform.enums.ApiStatus;
-import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.platform.impl.AwsPlatform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,14 +13,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CloudFoundryHealthTest {
+public class AwsHealthTest {
     @Mock
-    private CloudFoundryPlatform platform;
-    private CloudFoundryHealth health;
+    private AwsPlatform platform;
+    private AwsHealth health;
 
     @Before
     public void setUp () {
-        health = new CloudFoundryHealth(platform);
+        health = new AwsHealth(platform);
     }
 
     @Test
