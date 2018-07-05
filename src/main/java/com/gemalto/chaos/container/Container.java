@@ -29,6 +29,15 @@ import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
 @Component
 public abstract class Container {
+    @Override
+    public boolean equals (Object o) {
+        if (o == null || o.getClass() != this.getClass()) {
+            return false;
+        }
+        Container other = (Container) o;
+        return this.getIdentity() == other.getIdentity();
+    }
+
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     protected transient FateManager fateManager;

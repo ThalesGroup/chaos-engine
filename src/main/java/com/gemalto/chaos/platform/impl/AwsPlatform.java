@@ -29,9 +29,15 @@ public class AwsPlatform implements Platform {
     private FateManager fateManager;
     private Map<String, String> filter = new HashMap<>();
 
+    AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager) {
+        this(filterKeys, filterValues);
+        this.amazonEC2 = amazonEC2;
+        this.fateManager = fateManager;
+    }
+
     @Autowired
     AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues) {
-        log.info("AWS Platform created");
+        this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
                 throw new ChaosException("Cannot start with an unequal amount of Filter Keys and Values");
@@ -40,6 +46,10 @@ public class AwsPlatform implements Platform {
                 filter.putIfAbsent(filterKeys[i], filterValues[i]);
             }
         }
+    }
+
+    private AwsPlatform () {
+        log.info("AWS Platform created");
     }
 
     @Override
@@ -65,13 +75,13 @@ public class AwsPlatform implements Platform {
                                                     .filter(tag -> tag.getKey().equals("Name"))
                                                     .findFirst();
                     name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
-                    AwsEC2Container newContainer = AwsEC2Container.AwsEC2ContainerBuilder.anAwsEC2Container()
-                                                                                         .awsPlatform(this)
-                                                                                         .instanceId(instance.getInstanceId())
-                                                                                         .keyName(instance.getKeyName())
-                                                                                         .fateManager(fateManager)
-                                                                                         .name(name)
-                                                                                         .build();
+                    AwsEC2Container newContainer = AwsEC2Container.builder()
+                                                                  .awsPlatform(this)
+                                                                  .instanceId(instance.getInstanceId())
+                                                                  .keyName(instance.getKeyName())
+                                                                  .fateManager(fateManager)
+                                                                  .name(name)
+                                                                  .build();
                     containerList.add(newContainer);
                     log.debug("{}", newContainer);
                 }
@@ -89,7 +99,7 @@ public class AwsPlatform implements Platform {
         try {
             amazonEC2.describeInstances();
             return ApiStatus.OK;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ApiStatus.ERROR;
         }
     }
@@ -102,7 +112,7 @@ public class AwsPlatform implements Platform {
         try {
             instance = result.getReservations().get(0).getInstances().get(0);
             state = instance.getState();
-        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException | NullPointerException e) {
             log.error("Instance {} doesn't seem to exist anymore", instanceId, e);
             return ContainerHealth.DOES_NOT_EXIST;
         }

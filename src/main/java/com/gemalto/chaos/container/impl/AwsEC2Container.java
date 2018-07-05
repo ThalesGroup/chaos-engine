@@ -18,6 +18,10 @@ public class AwsEC2Container extends Container {
     private String keyName;
     private String name;
     private transient AwsPlatform awsPlatform;
+    private final transient Callable<Void> startContainerMethod = () -> {
+        awsPlatform.startInstance(instanceId);
+        return null;
+    };
 
     private AwsEC2Container () {
         super();
@@ -38,10 +42,9 @@ public class AwsEC2Container extends Container {
         return AwsEC2Attack.builder().withAttackType(attackType).withContainer(this).withTimeToLive(1).build();
     }
 
-    private Callable<Void> startContainerMethod = () -> {
-        awsPlatform.startInstance(instanceId);
-        return null;
-    };
+    public static AwsEC2ContainerBuilder builder () {
+        return AwsEC2ContainerBuilder.anAwsEC2Container();
+    }
 
     @StateAttack
     public Callable<Void> stopContainer () {
@@ -64,7 +67,7 @@ public class AwsEC2Container extends Container {
         private AwsEC2ContainerBuilder () {
         }
 
-        public static AwsEC2ContainerBuilder anAwsEC2Container () {
+        static AwsEC2ContainerBuilder anAwsEC2Container () {
             return new AwsEC2ContainerBuilder();
         }
 
