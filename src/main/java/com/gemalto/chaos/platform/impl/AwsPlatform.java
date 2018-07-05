@@ -5,6 +5,7 @@ import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.fateengine.FateManager;
@@ -27,12 +28,15 @@ public class AwsPlatform implements Platform {
     private AmazonEC2 amazonEC2;
     @Autowired
     private FateManager fateManager;
+    @Autowired
+    private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
 
-    AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager) {
+    AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
         this(filterKeys, filterValues);
         this.amazonEC2 = amazonEC2;
         this.fateManager = fateManager;
+        this.containerManager = containerManager;
     }
 
     @Autowired
@@ -69,21 +73,14 @@ public class AwsPlatform implements Platform {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : describeInstancesResult.getReservations()) {
                 for (Instance instance : reservation.getInstances()) {
-                    String name;
-                    Optional<Tag> nameTag = instance.getTags()
-                                                    .stream()
-                                                    .filter(tag -> tag.getKey().equals("Name"))
-                                                    .findFirst();
-                    name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
-                    AwsEC2Container newContainer = AwsEC2Container.builder()
-                                                                  .awsPlatform(this)
-                                                                  .instanceId(instance.getInstanceId())
-                                                                  .keyName(instance.getKeyName())
-                                                                  .fateManager(fateManager)
-                                                                  .name(name)
-                                                                  .build();
-                    // TODO : Implement use of ContainerManager to prevent creating duplicates (like PCF platform)
-                    containerList.add(newContainer);
+                    Container newContainer = createContainerFromInstance(instance);
+                    Container container = containerManager.getOrCreatePersistentContainer(newContainer);
+                    if (container == newContainer) {
+                        log.debug("Found existing container {}", container);
+                    } else {
+                        log.info("Found new container {}", container);
+                    }
+                    containerList.add(container);
                     log.debug("{}", newContainer);
                 }
             }
@@ -93,6 +90,19 @@ public class AwsPlatform implements Platform {
             }
         }
         return containerList;
+    }
+
+    private Container createContainerFromInstance (Instance instance) {
+        String name;
+        Optional<Tag> nameTag = instance.getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
+        name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
+        return AwsEC2Container.builder()
+                              .awsPlatform(this)
+                              .instanceId(instance.getInstanceId())
+                              .keyName(instance.getKeyName())
+                              .fateManager(fateManager)
+                              .name(name)
+                              .build();
     }
 
     @Override

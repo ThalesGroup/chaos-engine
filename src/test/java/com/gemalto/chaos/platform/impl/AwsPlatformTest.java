@@ -2,6 +2,8 @@ package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.fateengine.FateManager;
@@ -12,6 +14,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,11 +38,14 @@ public class AwsPlatformTest {
     private Reservation reservation;
     @Mock
     private Instance instance;
+    @Mock
+    private ContainerManager containerManager;
+
     private AwsPlatform awsPlatform;
 
     @Before
     public void setUp () {
-        awsPlatform = new AwsPlatform(null, null, amazonEC2, fateManager);
+        awsPlatform = new AwsPlatform(null, null, amazonEC2, fateManager, containerManager);
     }
 
     @Test
@@ -69,6 +75,8 @@ public class AwsPlatformTest {
         when(describeInstancesResult.getNextToken()).thenReturn(null);
         when(instance.getInstanceId()).thenReturn(INSTANCE_ID_1, INSTANCE_ID_2);
         when(instance.getKeyName()).thenReturn(INSTANCE_KEYNAME_1, INSTANCE_KEYNAME_2);
+        when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
+                .getArguments()[0]);
         assertThat(awsPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
 
