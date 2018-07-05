@@ -48,12 +48,6 @@ public class CloudFoundryPlatform implements Platform {
     CloudFoundryPlatform () {
     }
 
-    CloudFoundryPlatform (CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryOperations cloudFoundryOperations, ContainerManager containerManager) {
-        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
-        this.cloudFoundryOperations = cloudFoundryOperations;
-        this.containerManager = containerManager;
-    }
-
     public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
         cloudFoundryPlatformInfo.fetchInfo();
         return cloudFoundryPlatformInfo;
@@ -142,5 +136,66 @@ public class CloudFoundryPlatform implements Platform {
 
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
+    }
+
+    public static CloudFoundryPlatformBuilder builder () {
+        return CloudFoundryPlatformBuilder.builder();
+    }
+
+    public static final class CloudFoundryPlatformBuilder {
+        private CloudFoundryOperations cloudFoundryOperations;
+        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+        private CloudFoundryClient cloudFoundryClient;
+        private ContainerManager containerManager;
+        private FateManager fateManager;
+        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
+        private CloudFoundryPlatformBuilder () {
+        }
+
+        private static CloudFoundryPlatformBuilder builder () {
+            return new CloudFoundryPlatformBuilder();
+        }
+
+        CloudFoundryPlatformBuilder withCloudFoundryOperations (CloudFoundryOperations cloudFoundryOperations) {
+            this.cloudFoundryOperations = cloudFoundryOperations;
+            return this;
+        }
+
+        CloudFoundryPlatformBuilder withCloudFoundryPlatformInfo (CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
+            this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
+            return this;
+        }
+
+        CloudFoundryPlatformBuilder withCloudFoundryClient (CloudFoundryClient cloudFoundryClient) {
+            this.cloudFoundryClient = cloudFoundryClient;
+            return this;
+        }
+
+        CloudFoundryPlatformBuilder withContainerManager (ContainerManager containerManager) {
+            this.containerManager = containerManager;
+            return this;
+        }
+
+        CloudFoundryPlatformBuilder withFateManager (FateManager fateManager) {
+            this.fateManager = fateManager;
+            return this;
+        }
+
+        CloudFoundryPlatformBuilder withCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
+            this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
+            return this;
+        }
+
+        public CloudFoundryPlatform build () {
+            CloudFoundryPlatform cloudFoundryPlatform = new CloudFoundryPlatform();
+            cloudFoundryPlatform.cloudFoundrySelfAwareness = this.cloudFoundrySelfAwareness;
+            cloudFoundryPlatform.cloudFoundryClient = this.cloudFoundryClient;
+            cloudFoundryPlatform.cloudFoundryOperations = this.cloudFoundryOperations;
+            cloudFoundryPlatform.containerManager = this.containerManager;
+            cloudFoundryPlatform.fateManager = this.fateManager;
+            cloudFoundryPlatform.cloudFoundryPlatformInfo = this.cloudFoundryPlatformInfo;
+            return cloudFoundryPlatform;
+        }
     }
 }

@@ -1,9 +1,18 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
+import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
+import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
+import org.cloudfoundry.client.v2.applications.ApplicationInstancesResponse;
+import org.cloudfoundry.client.v2.applications.ApplicationsV2;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
@@ -19,8 +28,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
-import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
-import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STOPPED;
+import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -36,11 +44,25 @@ public class CloudFoundryPlatformTest {
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
+    @Mock
+    private FateManager fateManager;
+    @Mock
+    private CloudFoundryClient cloudFoundryClient;
+    @Mock
+    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
     private CloudFoundryPlatform cfp;
 
     @Before
     public void setUp () {
-        cfp = new CloudFoundryPlatform(cloudFoundryPlatformInfo, cloudFoundryOperations, containerManager);
+        cfp = CloudFoundryPlatform.builder()
+                                  .withCloudFoundryClient(cloudFoundryClient)
+                                  .withCloudFoundryOperations(cloudFoundryOperations)
+                                  .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
+                                  .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
+                                  .withFateManager(fateManager)
+                                  .withContainerManager(containerManager)
+                                  .build();
     }
 
     @Test
@@ -114,5 +136,71 @@ public class CloudFoundryPlatformTest {
         cfp.restageApplication(null);
         verify(applications, times(1)).restage(null);
         verify(monoVoid, times(1)).block();
+    }
+
+    @Test
+    public void checkHealthDoesNotExist () {
+        Integer INSTANCE_ID = 0;
+        String APPLICATION_ID = randomUUID().toString();
+        AttackType ATTACK_TYPE = AttackType.STATE;
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder().build();
+        Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(applicationInstancesResponseMono).when(applicationsV2)
+                                                  .instances(any(ApplicationInstancesRequest.class));
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
+    }
+
+    @Test
+    public void checkHealthUnderAttack () {
+        Integer INSTANCE_ID = 0;
+        String APPLICATION_ID = randomUUID().toString();
+        AttackType ATTACK_TYPE = AttackType.STATE;
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder()
+                                                                                                .instance(INSTANCE_ID.toString(), ApplicationInstanceInfo
+                                                                                                        .builder()
+                                                                                                        .consoleIp("")
+                                                                                                        .consolePort(22)
+                                                                                                        .debugIp("")
+                                                                                                        .debugPort(8888)
+                                                                                                        .details("")
+                                                                                                        .since(0D)
+                                                                                                        .state(CLOUDFOUNDRY_STARTING_STATE)
+                                                                                                        .uptime(0L)
+                                                                                                        .build())
+                                                                                                .build();
+        Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(applicationInstancesResponseMono).when(applicationsV2)
+                                                  .instances(any(ApplicationInstancesRequest.class));
+        assertEquals(ContainerHealth.UNDER_ATTACK, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
+    }
+
+    @Test
+    public void checkHealthNormal () {
+        Integer INSTANCE_ID = 0;
+        String APPLICATION_ID = randomUUID().toString();
+        AttackType ATTACK_TYPE = AttackType.STATE;
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder()
+                                                                                                .instance(INSTANCE_ID.toString(), ApplicationInstanceInfo
+                                                                                                        .builder()
+                                                                                                        .consoleIp("")
+                                                                                                        .consolePort(22)
+                                                                                                        .debugIp("")
+                                                                                                        .debugPort(8888)
+                                                                                                        .details("")
+                                                                                                        .since(0D)
+                                                                                                        .state(CLOUDFOUNDRY_RUNNING_STATE)
+                                                                                                        .uptime(0L)
+                                                                                                        .build())
+                                                                                                .build();
+        Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(applicationInstancesResponseMono).when(applicationsV2)
+                                                  .instances(any(ApplicationInstancesRequest.class));
+        assertEquals(ContainerHealth.NORMAL, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
     }
 }
