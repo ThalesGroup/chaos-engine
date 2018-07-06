@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
-public class AwsHealth extends PlatformHealth {
+public class AwsHealth extends AbstractPlatformHealth {
     @Autowired
     private AwsPlatform awsPlatform;
 

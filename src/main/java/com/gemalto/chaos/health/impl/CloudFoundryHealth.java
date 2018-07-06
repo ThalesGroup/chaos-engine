@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty({ "cf_organization" })
-public class CloudFoundryHealth extends PlatformHealth {
+public class CloudFoundryHealth extends AbstractPlatformHealth {
     @Autowired
     private CloudFoundryPlatform cloudFoundryPlatform;
 

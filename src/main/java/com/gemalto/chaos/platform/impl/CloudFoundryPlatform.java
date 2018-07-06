@@ -9,12 +9,15 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.platform.enums.PlatformHealth;
+import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.slf4j.Logger;
@@ -22,10 +25,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
 @Component
 @ConditionalOnProperty({ "cf_organization" })
@@ -48,6 +54,10 @@ public class CloudFoundryPlatform implements Platform {
     CloudFoundryPlatform () {
     }
 
+    public static CloudFoundryPlatformBuilder builder () {
+        return CloudFoundryPlatformBuilder.builder();
+    }
+
     public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
         cloudFoundryPlatformInfo.fetchInfo();
         return cloudFoundryPlatformInfo;
@@ -58,8 +68,7 @@ public class CloudFoundryPlatform implements Platform {
         List<Container> containers = new ArrayList<>();
         cloudFoundryOperations.applications()
                               .list()
-                              .filter(app -> app.getRequestedState()
-                                                .equals(CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED))
+                              .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
                               .toIterable()
                               .forEach(app -> {
                                   Integer instances = app.getInstances();
@@ -99,6 +108,36 @@ public class CloudFoundryPlatform implements Platform {
         }
     }
 
+    @Override
+    public PlatformLevel getPlatformLevel () {
+        return PlatformLevel.PAAS;
+    }
+
+    @Override
+    public PlatformHealth getPlatformHealth () {
+        Flux<ApplicationSummary> runningInstances = cloudFoundryOperations.applications()
+                                                                          .list()
+                                                                          .filter(a -> a.getRequestedState()
+                                                                                        .equals(CLOUDFOUNDRY_APPLICATION_STARTED));
+        if (runningInstances.filter(a -> a.getInstances() > 0)
+                            .filter(a -> a.getRunningInstances() == 0)
+                            .hasElements()
+                            .block()) {
+            return PlatformHealth.FAILED;
+        } else if (runningInstances.filter(a -> a.getInstances() > 0)
+                                   .filter(a -> a.getRunningInstances() < a.getInstances())
+                                   .hasElements()
+                                   .block()) {
+            return PlatformHealth.DEGRADED;
+        }
+        return PlatformHealth.OK;
+    }
+
+    private boolean isChaosEngine (String applicationName, Integer instanceId) {
+        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
+                .isFriendly(applicationName));
+    }
+
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
@@ -129,17 +168,8 @@ public class CloudFoundryPlatform implements Platform {
         }
     }
 
-    private boolean isChaosEngine (String applicationName, Integer instanceId) {
-        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
-                .isFriendly(applicationName));
-    }
-
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
-    }
-
-    public static CloudFoundryPlatformBuilder builder () {
-        return CloudFoundryPlatformBuilder.builder();
     }
 
     public static final class CloudFoundryPlatformBuilder {
