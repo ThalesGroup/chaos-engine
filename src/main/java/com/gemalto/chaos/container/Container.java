@@ -78,7 +78,7 @@ public abstract class Container {
 
     public boolean canDestroy () {
         FateEngine fateEngine = fateManager.getFateEngineForContainer(this);
-        return fateEngine.canDestroy();
+        return this.containerHealth != ContainerHealth.UNDER_ATTACK && fateEngine.canDestroy();
     }
 
     public Callable<Void> attackContainer (AttackType attackType) {
