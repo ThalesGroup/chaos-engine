@@ -75,13 +75,12 @@ public class AwsPlatform implements Platform {
                 for (Instance instance : reservation.getInstances()) {
                     Container newContainer = createContainerFromInstance(instance);
                     Container container = containerManager.getOrCreatePersistentContainer(newContainer);
-                    if (container == newContainer) {
+                    if (container != newContainer) {
                         log.debug("Found existing container {}", container);
                     } else {
                         log.info("Found new container {}", container);
                     }
                     containerList.add(container);
-                    log.debug("{}", newContainer);
                 }
             }
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
@@ -111,6 +110,7 @@ public class AwsPlatform implements Platform {
             amazonEC2.describeInstances();
             return ApiStatus.OK;
         } catch (RuntimeException e) {
+            log.error("API for AWS failed to resolve.", e);
             return ApiStatus.ERROR;
         }
     }
