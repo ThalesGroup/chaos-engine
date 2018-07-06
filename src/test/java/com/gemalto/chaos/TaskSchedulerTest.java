@@ -11,7 +11,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -22,27 +23,25 @@ import static org.mockito.Mockito.*;
 public class TaskSchedulerTest {
     private TaskScheduler taskScheduler;
     @Mock
-    private List<Platform> platformList;
-    @Mock
     private Platform platform;
-    @Mock
-    private Iterator<Platform> platformIterator;
+    private List<Platform> platformList;
+
     @Mock
     private HolidayManager holidayManager;
     @Mock
     private AttackManager attackManager;
-    @Mock
-    private List<Container> containerList;
-    @Mock
-    private Iterator<Container> containerIterator;
+
     @Mock
     private Container container;
+    private List<Container> containerList;
     @Mock
     private Attack attack;
 
     @Before
     public void setUp () {
         taskScheduler = new TaskScheduler(platformList, holidayManager, attackManager);
+        platformList = Collections.singletonList(platform);
+        containerList = Collections.singletonList(container);
     }
 
     @Test
@@ -55,7 +54,8 @@ public class TaskSchedulerTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void skipAfterhours () {
+    public void skipAfterHours () {
+        platformList = mock(List.class);
         taskScheduler = new TaskScheduler(platformList, holidayManager, attackManager);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isWorkingHours()).thenReturn(false);
@@ -64,32 +64,22 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void MultiplePlatforms () {
+        platformList = Arrays.asList(platform, platform);
+        taskScheduler = new TaskScheduler(platformList, holidayManager, attackManager);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isWorkingHours()).thenReturn(true);
-        doCallRealMethod().when(platformList).forEach(any(Consumer.class));
-        when(platformList.iterator()).thenReturn(platformIterator);
-        when(platformIterator.hasNext()).thenReturn(true, true, false);
-        when(platformIterator.next()).thenReturn(platform, platform);
         taskScheduler.chaosSchedule();
         verify(platform, times(2)).getRoster();
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void MultipleContainers () {
+        containerList = Arrays.asList(container, container, container);
+        taskScheduler = new TaskScheduler(platformList, holidayManager, attackManager);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isWorkingHours()).thenReturn(true);
-        doCallRealMethod().when(platformList).forEach(any(Consumer.class));
-        when(platformList.iterator()).thenReturn(platformIterator);
-        when(platformIterator.hasNext()).thenReturn(true, false);
-        when(platformIterator.next()).thenReturn(platform);
         when(platform.getRoster()).thenReturn(containerList);
-        doCallRealMethod().when(containerList).forEach(any(Consumer.class));
-        when(containerList.iterator()).thenReturn(containerIterator);
-        when(containerIterator.hasNext()).thenReturn(true, true, true, false);
-        when(containerIterator.next()).thenReturn(container, container, container);
         when(container.canDestroy()).thenReturn(true, false, true);
         when(container.createAttack()).thenReturn(attack, attack);
         taskScheduler.chaosSchedule();
