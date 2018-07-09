@@ -23,7 +23,7 @@ public class CloudFoundryPlatformInfo implements PlatformInfo {
 
     public void fetchInfo () {
         GetInfoResponse response = infoResponse.block();
-        log.debug("Fetching Cloud Foundry Info : {}", response);
+        log.debug("Fetching Cloud Foundry Info");
         String sshEndpoint[] = response.getApplicationSshEndpoint().split(":");
         this.applicationSshEndpoint = sshEndpoint[0];
         this.applicationSshPort = sshEndpoint[1];

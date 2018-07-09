@@ -70,6 +70,7 @@ public class CloudFoundryContainer extends Container {
         return restageApplication;
     }
 
+
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
         RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
                                                                                                                .name(name)
