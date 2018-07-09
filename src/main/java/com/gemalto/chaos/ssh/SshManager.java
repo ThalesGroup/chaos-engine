@@ -49,7 +49,7 @@ public class SshManager {
         try {
             Session session = ssh.startSession();
             session.allocateDefaultPTY();
-            log.debug("Going to execute command in interactive shell session: {}", command);
+            log.debug("Going to execute command {} in interactive shell session {}", command, shellName);
             Session.Shell shell = session.startShell();
             shell.setAutoExpand(true);
             OutputStream outputStream = shell.getOutputStream();
