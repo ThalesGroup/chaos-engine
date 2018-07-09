@@ -77,6 +77,7 @@ public class AwsPlatform implements Platform {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : describeInstancesResult.getReservations()) {
                 for (Instance instance : reservation.getInstances()) {
+                    if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) continue;
                     Container newContainer = createContainerFromInstance(instance);
                     Container container = containerManager.getOrCreatePersistentContainer(newContainer);
                     if (container != newContainer) {
@@ -131,7 +132,7 @@ public class AwsPlatform implements Platform {
         Set<Integer> instanceStateCodes = instanceStates.stream()
                                                         .map(InstanceState::getCode)
                                                         .collect(Collectors.toSet());
-        for (int state : AwsEC2Constants.AWS_UNHEALTHY_CODES) {
+        for (int state : AwsEC2Constants.getAwsUnhealthyCodes()) {
             if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;
