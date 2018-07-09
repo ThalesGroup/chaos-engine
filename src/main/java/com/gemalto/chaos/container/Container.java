@@ -2,6 +2,7 @@ package com.gemalto.chaos.container;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateEngine;
@@ -28,7 +29,12 @@ import java.util.zip.Checksum;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
 @Component
-public abstract class Container {
+public abstract class Container implements AttackableObject {
+    @Override
+    public boolean canAttack () {
+        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+    }
+
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected transient FateManager fateManager;

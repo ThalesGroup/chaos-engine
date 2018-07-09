@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
-public class AwsPlatform implements Platform {
+public class AwsPlatform extends Platform {
     private static final Logger log = LoggerFactory.getLogger(AwsPlatform.class);
     @Autowired
     private AmazonEC2 amazonEC2;
@@ -170,7 +170,7 @@ public class AwsPlatform implements Platform {
         amazonEC2.stopInstances(new StopInstancesRequest().withForce(true).withInstanceIds(instanceIds));
     }
 
-    public void terminateInstance (String... instanceIds) {
+    void terminateInstance (String... instanceIds) {
         log.info("Requesting a Terminate of instances {}", (Object[]) instanceIds);
         amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(instanceIds));
     }

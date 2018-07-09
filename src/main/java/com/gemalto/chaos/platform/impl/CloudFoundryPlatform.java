@@ -35,7 +35,7 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 
 @Component
 @ConditionalOnProperty({ "cf_organization" })
-public class CloudFoundryPlatform implements Platform {
+public class CloudFoundryPlatform extends Platform {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
