@@ -27,13 +27,11 @@ public class CloudFoundryService implements CloudService {
 
     @Bean
     DefaultConnectionContext defaultConnectionContext (@Value("${cf_apihost}") String apiHost, @Value("${cf_port:443}") int port) {
-        log.info("Creating a connection context");
         return DefaultConnectionContext.builder().apiHost(apiHost).port(port).build();
     }
 
     @Bean
     PasswordGrantTokenProvider tokenProvider (@Value("${cf_username}") String username, @Value("${cf_password}") String password) {
-        log.info("Creating a token provider");
         return PasswordGrantTokenProvider.builder().password(password).username(username).build();
     }
 

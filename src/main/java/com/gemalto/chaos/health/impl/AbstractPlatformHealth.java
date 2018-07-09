@@ -6,7 +6,7 @@ import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class PlatformHealth implements SystemHealth {
+public abstract class AbstractPlatformHealth implements SystemHealth {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Override

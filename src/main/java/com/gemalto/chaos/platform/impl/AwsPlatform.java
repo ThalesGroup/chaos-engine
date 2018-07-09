@@ -11,6 +11,8 @@ import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.platform.enums.PlatformHealth;
+import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
@@ -31,14 +35,12 @@ public class AwsPlatform implements Platform {
     @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
-
     AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
         this(filterKeys, filterValues);
         this.amazonEC2 = amazonEC2;
         this.fateManager = fateManager;
         this.containerManager = containerManager;
     }
-
     @Autowired
     AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues) {
         this();
@@ -51,7 +53,6 @@ public class AwsPlatform implements Platform {
             }
         }
     }
-
     private AwsPlatform () {
         log.info("AWS Platform created");
     }
@@ -113,6 +114,36 @@ public class AwsPlatform implements Platform {
             log.error("API for AWS failed to resolve.", e);
             return ApiStatus.ERROR;
         }
+    }
+
+    @Override
+    public PlatformLevel getPlatformLevel () {
+        return PlatformLevel.IAAS;
+    }
+
+    @Override
+    public PlatformHealth getPlatformHealth () {
+        Stream<Instance> instances = getInstanceStream();
+        Set<InstanceState> instanceStates = instances.map(Instance::getState).distinct().collect(Collectors.toSet());
+        Set<Integer> instanceStateCodes = instanceStates.stream()
+                                                        .map(InstanceState::getCode)
+                                                        .collect(Collectors.toSet());
+        for (int state : AwsEC2Constants.AWS_UNHEALTHY_CODES) {
+            if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
+        }
+        return PlatformHealth.OK;
+    }
+
+    private Stream<Instance> getInstanceStream () {
+        return getInstanceStream(new DescribeInstancesRequest());
+    }
+
+    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
+        return amazonEC2.describeInstances(describeInstancesRequest)
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(List::stream);
     }
 
     public ContainerHealth checkHealth (String instanceId) {
