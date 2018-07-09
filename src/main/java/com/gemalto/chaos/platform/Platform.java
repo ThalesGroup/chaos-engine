@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 public abstract class Platform implements AttackableObject {
+    private static final double DEFAULT_PROBABILITY = 0.2D;
     Integer averageAttackFrequencyDays = 7;
     Duration averageAttackDuration = Duration.ofHours(12);
     Instant previousAttackTime = Instant.now();
@@ -30,7 +31,7 @@ public abstract class Platform implements AttackableObject {
     }
 
     public double getDestructionProbability () {
-        return 0.2D;
+        return DEFAULT_PROBABILITY;
     }
 
     public String getPlatformType () {
