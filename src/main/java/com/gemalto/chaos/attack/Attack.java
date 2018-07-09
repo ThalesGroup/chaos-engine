@@ -18,8 +18,11 @@ import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.UUID.randomUUID;
+
 public abstract class Attack {
     private static final Logger log = LoggerFactory.getLogger(Attack.class);
+    private final String id = randomUUID().toString();
     protected Container container;
     protected AttackType attackType;
     protected Integer timeToLive = 1;
@@ -29,6 +32,10 @@ public abstract class Attack {
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
     private Instant startTime = Instant.now();
+
+    String getId () {
+        return id;
+    }
 
     public Instant getStartTime () {
         return startTime;

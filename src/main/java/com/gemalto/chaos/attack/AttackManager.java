@@ -117,4 +117,8 @@ public class AttackManager {
     Queue<Attack> getNewAttackQueue () {
         return newAttackQueue;
     }
+
+    Attack getAttackByUUID (String uuid) {
+        return activeAttacks.stream().filter(attack -> attack.getId().equals(uuid)).findFirst().orElse(null);
+    }
 }

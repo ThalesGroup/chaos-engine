@@ -17,6 +17,11 @@ public class AttackController {
         return attackManager.getActiveAttacks();
     }
 
+    @GetMapping("/{uuid}")
+    public Attack getAttackById (@PathVariable String uuid) {
+        return attackManager.getAttackByUUID(uuid);
+    }
+
     @GetMapping("/queue")
     public Queue<Attack> getAttackQueue () {
         return attackManager.getNewAttackQueue();
