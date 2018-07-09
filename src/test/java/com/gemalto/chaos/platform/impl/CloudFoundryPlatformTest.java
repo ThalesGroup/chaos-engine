@@ -50,7 +50,6 @@ public class CloudFoundryPlatformTest {
     private CloudFoundryClient cloudFoundryClient;
     @Mock
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
-
     private CloudFoundryPlatform cfp;
 
     @Before

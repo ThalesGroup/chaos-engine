@@ -12,7 +12,6 @@ import com.gemalto.chaos.platform.impl.AwsPlatform;
 
 import java.util.concurrent.Callable;
 
-
 public class AwsEC2Container extends Container {
     private String instanceId;
     private String keyName;
@@ -25,6 +24,10 @@ public class AwsEC2Container extends Container {
 
     private AwsEC2Container () {
         super();
+    }
+
+    public static AwsEC2ContainerBuilder builder () {
+        return AwsEC2ContainerBuilder.anAwsEC2Container();
     }
 
     @Override
@@ -42,19 +45,15 @@ public class AwsEC2Container extends Container {
         return AwsEC2Attack.builder().withAttackType(attackType).withContainer(this).withTimeToLive(1).build();
     }
 
-    public static AwsEC2ContainerBuilder builder () {
-        return AwsEC2ContainerBuilder.anAwsEC2Container();
+    @Override
+    public String getSimpleName () {
+        return String.format("%s (%s) [%s]", name, keyName, instanceId);
     }
 
     @StateAttack
     public Callable<Void> stopContainer () {
         awsPlatform.stopInstance(instanceId);
         return startContainerMethod;
-    }
-
-    @Override
-    public String getSimpleName () {
-        return String.format("%s (%s) [%s]", name, keyName, instanceId);
     }
 
     public static final class AwsEC2ContainerBuilder {

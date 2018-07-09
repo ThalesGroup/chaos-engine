@@ -29,7 +29,6 @@ public class SshManager {
     public boolean connect (String userName, String password) {
         try {
             log.debug("Connecting to {}", hostname);
-
             ssh.connect(hostname, Integer.valueOf(port));
             ssh.authPassword(userName, password);
             if (ssh.isConnected() && ssh.isAuthenticated()) {
@@ -38,7 +37,6 @@ public class SshManager {
             } else {
                 log.error("SSH Authentication failed.");
             }
-
         } catch (IOException e) {
             log.error("Unable to connect to {}: {}", hostname, e.getMessage());
         }

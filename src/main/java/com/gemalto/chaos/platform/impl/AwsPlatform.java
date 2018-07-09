@@ -35,12 +35,14 @@ public class AwsPlatform implements Platform {
     @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
+
     AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
         this(filterKeys, filterValues);
         this.amazonEC2 = amazonEC2;
         this.fateManager = fateManager;
         this.containerManager = containerManager;
     }
+
     @Autowired
     AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues) {
         this();
@@ -53,6 +55,7 @@ public class AwsPlatform implements Platform {
             }
         }
     }
+
     private AwsPlatform () {
         log.info("AWS Platform created");
     }

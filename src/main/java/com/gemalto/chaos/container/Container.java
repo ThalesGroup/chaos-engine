@@ -29,6 +29,20 @@ import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
 @Component
 public abstract class Container {
+    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    private final List<AttackType> supportedAttackTypes = new ArrayList<>();
+    protected transient FateManager fateManager;
+    private ContainerHealth containerHealth;
+    private Method lastAttackMethod;
+    @Autowired
+    protected Container () {
+        for (AttackType attackType : AttackType.values()) {
+            if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
+                supportedAttackTypes.add(attackType);
+            }
+        }
+    }
+
     @Override
     public boolean equals (Object o) {
         if (o == null || o.getClass() != this.getClass()) {
@@ -38,19 +52,56 @@ public abstract class Container {
         return this.getIdentity() == other.getIdentity();
     }
 
-    private final List<AttackType> supportedAttackTypes = new ArrayList<>();
-    protected final transient Logger log = LoggerFactory.getLogger(getClass());
-    protected transient FateManager fateManager;
-    private ContainerHealth containerHealth;
-    private Method lastAttackMethod;
-
-    @Autowired
-    protected Container () {
-        for (AttackType attackType : AttackType.values()) {
-            if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
-                supportedAttackTypes.add(attackType);
+    /**
+     * Uses all the fields in the container implementation (but not the Container parent class)
+     * to create a checksum of the container. This checksum should be immutable and can be used
+     * to recognize when building a roster if the container already exists, and can reference
+     * the same object.
+     *
+     * @return A checksum (format long) of the class based on the implementation specific fields
+     */
+    public long getIdentity () {
+        StringBuilder identity = new StringBuilder();
+        for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
+            if (field.isSynthetic()) continue;
+            field.setAccessible(true);
+            try {
+                if (field.get(this) != null) {
+                    if (identity.length() > 1) {
+                        identity.append("$$$$$");
+                    }
+                    identity.append(field.get(this).toString());
+                }
+            } catch (IllegalAccessException e) {
+                log.error("Caught IllegalAccessException ", e);
             }
         }
+        byte[] primitiveByteArray = identity.toString().getBytes();
+        Checksum checksum = new CRC32();
+        ((CRC32) checksum).update(primitiveByteArray);
+        return checksum.getValue();
+    }
+
+    @Override
+    public String toString () {
+        StringBuilder output = new StringBuilder();
+        output.append("Container type: ");
+        output.append(this.getClass().getSimpleName());
+        for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
+            if (field.isSynthetic()) continue;
+            field.setAccessible(true);
+            try {
+                output.append("\n\t");
+                output.append(field.getName());
+                output.append(":\t");
+                output.append(field.get(this));
+            } catch (IllegalAccessException e) {
+                log.error("Could not read from field {}", field.getName(), e);
+            }
+        }
+        return output.toString();
     }
 
     protected abstract Platform getPlatform ();
@@ -113,58 +164,6 @@ public abstract class Container {
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new ChaosException(e);
         }
-    }
-
-    /**
-     * Uses all the fields in the container implementation (but not the Container parent class)
-     * to create a checksum of the container. This checksum should be immutable and can be used
-     * to recognize when building a roster if the container already exists, and can reference
-     * the same object.
-     *
-     * @return A checksum (format long) of the class based on the implementation specific fields
-     */
-    public long getIdentity () {
-        StringBuilder identity = new StringBuilder();
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
-            try {
-                if (field.get(this) != null) {
-                    if (identity.length() > 1) {
-                        identity.append("$$$$$");
-                    }
-                    identity.append(field.get(this).toString());
-                }
-            } catch (IllegalAccessException e) {
-                log.error("Caught IllegalAccessException ", e);
-            }
-        }
-        byte[] primitiveByteArray = identity.toString().getBytes();
-        Checksum checksum = new CRC32();
-        ((CRC32) checksum).update(primitiveByteArray);
-        return checksum.getValue();
-    }
-
-    @Override
-    public String toString () {
-        StringBuilder output = new StringBuilder();
-        output.append("Container type: ");
-        output.append(this.getClass().getSimpleName());
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
-            try {
-                output.append("\n\t");
-                output.append(field.getName());
-                output.append(":\t");
-                output.append(field.get(this));
-            } catch (IllegalAccessException e) {
-                log.error("Could not read from field {}", field.getName(), e);
-            }
-        }
-        return output.toString();
     }
 
     public abstract String getSimpleName ();

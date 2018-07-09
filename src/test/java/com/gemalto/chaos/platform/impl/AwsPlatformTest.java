@@ -40,7 +40,6 @@ public class AwsPlatformTest {
     private Instance instance;
     @Mock
     private ContainerManager containerManager;
-
     private AwsPlatform awsPlatform;
 
     @Before

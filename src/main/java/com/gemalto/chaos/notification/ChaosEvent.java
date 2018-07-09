@@ -17,16 +17,16 @@ public class ChaosEvent {
     private AttackType attackType;
     private NotificationLevel notificationLevel;
 
+    public static ChaosEventBuilder builder () {
+        return ChaosEventBuilder.builder();
+    }
+
     public AttackType getAttackType () {
         return attackType;
     }
 
     public NotificationLevel getNotificationLevel () {
         return notificationLevel;
-    }
-
-    public static ChaosEventBuilder builder () {
-        return ChaosEventBuilder.builder();
     }
 
     public Container getTargetContainer () {

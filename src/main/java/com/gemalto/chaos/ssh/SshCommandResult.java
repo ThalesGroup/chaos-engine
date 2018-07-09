@@ -20,14 +20,6 @@ public class SshCommandResult {
         processCommandOutput();
     }
 
-    @Override
-    public String toString () {
-        if (exitStatus == -1) {
-            return "Command execution failed or execution has been interrupted, exit status: " + exitStatus;
-        }
-        return "Command exit status: " + exitStatus + ", command output: " + commandOutput;
-    }
-
     private void processCommandOutput () {
         try {
             InputStream inputStream = command.getInputStream();
@@ -40,6 +32,14 @@ public class SshCommandResult {
     public SshCommandResult (Session.Command command, int exitStatus) {
         this.command = command;
         this.exitStatus = exitStatus;
+    }
+
+    @Override
+    public String toString () {
+        if (exitStatus == -1) {
+            return "Command execution failed or execution has been interrupted, exit status: " + exitStatus;
+        }
+        return "Command exit status: " + exitStatus + ", command output: " + commandOutput;
     }
 
     public int getExitStatus () {

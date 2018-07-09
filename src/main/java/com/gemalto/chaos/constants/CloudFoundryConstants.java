@@ -6,7 +6,6 @@ public class CloudFoundryConstants {
     public static final String CLOUDFOUNDRY_APPLICATION_STARTED = "STARTED";
     public static final String CLOUDFOUNDRY_APPLICATION_STOPPED = "STOPPED";
 
-
     private CloudFoundryConstants () {
     }
 }

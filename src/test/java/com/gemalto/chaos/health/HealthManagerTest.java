@@ -63,5 +63,4 @@ public class HealthManagerTest {
         // No health classes
         assertEquals(SystemHealthState.UNKNOWN, hm.getHealth());
     }
-
 }

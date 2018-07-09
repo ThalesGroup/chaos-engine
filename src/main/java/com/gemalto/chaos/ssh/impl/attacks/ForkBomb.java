@@ -26,11 +26,6 @@ public class ForkBomb extends SshAttack {
     }
 
     @Override
-    protected int getSshSessionMaxDuration () {
-        return 60;
-    }
-
-    @Override
     protected String getAttackName () {
         return "Fork Bomb";
     }
@@ -38,5 +33,10 @@ public class ForkBomb extends SshAttack {
     @Override
     protected String getAttackCommand () {
         return "bomb() { bomb | bomb & }; bomb; sleep 60; exit;";
+    }
+
+    @Override
+    protected int getSshSessionMaxDuration () {
+        return 60;
     }
 }

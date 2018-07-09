@@ -12,14 +12,14 @@ public class CloudFoundryHealth extends AbstractPlatformHealth {
     @Autowired
     private CloudFoundryPlatform cloudFoundryPlatform;
 
-    @Autowired
-    CloudFoundryHealth () {
-        log.debug("Using CloudFoundry API check for health check.");
-    }
-
     CloudFoundryHealth (CloudFoundryPlatform cloudFoundryPlatform) {
         this();
         this.cloudFoundryPlatform = cloudFoundryPlatform;
+    }
+
+    @Autowired
+    CloudFoundryHealth () {
+        log.debug("Using CloudFoundry API check for health check.");
     }
 
     @Override

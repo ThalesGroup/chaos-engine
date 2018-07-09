@@ -43,9 +43,9 @@ public abstract class SshAttack {
 
     protected abstract String getAttackName ();
 
-    protected abstract int getSshSessionMaxDuration ();
-
     protected abstract String getAttackCommand ();
+
+    protected abstract int getSshSessionMaxDuration ();
 
     private boolean requiredCapabilityMet (ShellSessionCapability required) {
         for (ShellSessionCapability actual : actualCapabilities) {

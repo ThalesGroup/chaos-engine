@@ -14,14 +14,12 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
 public class AwsService implements CloudService {
     @Bean
-    AWSStaticCredentialsProvider awsStaticCredentialsProvider (@Value("AWS_ACCESS_KEY_ID") String accessKey, @Value
-            ("AWS_SECRET_ACCESS_KEY") String secretKey) {
+    AWSStaticCredentialsProvider awsStaticCredentialsProvider (@Value("AWS_ACCESS_KEY_ID") String accessKey, @Value("AWS_SECRET_ACCESS_KEY") String secretKey) {
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
     }
 
     @Bean
-    AmazonEC2 amazonEC2 (@Value("${AWS_REGION:us-east-2}") String awsRegion, AWSStaticCredentialsProvider
-            awsStaticCredentialsProvider) {
+    AmazonEC2 amazonEC2 (@Value("${AWS_REGION:us-east-2}") String awsRegion, AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
         return AmazonEC2ClientBuilder.standard().withRegion(awsRegion).build();
     }
 }

@@ -25,12 +25,10 @@ public class TaskSchedulerTest {
     @Mock
     private Platform platform;
     private List<Platform> platformList;
-
     @Mock
     private HolidayManager holidayManager;
     @Mock
     private AttackManager attackManager;
-
     @Mock
     private Container container;
     private List<Container> containerList;

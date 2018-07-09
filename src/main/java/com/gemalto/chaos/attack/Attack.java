@@ -23,10 +23,10 @@ public abstract class Attack {
     protected Container container;
     protected AttackType attackType;
     protected Integer timeToLive = 1;
+    protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
     private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
-    protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
     private Callable<Void> selfHealingMethod;
     private Instant startTime = Instant.now();
 
@@ -55,7 +55,8 @@ public abstract class Attack {
         if (container.supportsAttackType(attackType)) {
             startAttackImpl(attackType);
             attackState = AttackState.STARTED;
-            notificationManager.sendNotification(ChaosEvent.builder().fromAttack(this)
+            notificationManager.sendNotification(ChaosEvent.builder()
+                                                           .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
                                                            .build());
@@ -85,7 +86,8 @@ public abstract class Attack {
             case NORMAL:
                 if (checkTimeToLive()) {
                     log.info("Attack {} complete", this);
-                    notificationManager.sendNotification(ChaosEvent.builder().fromAttack(this)
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .fromAttack(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
                                                                    .withMessage("Container recovered from final attack")
                                                                    .build());
@@ -96,14 +98,16 @@ public abstract class Attack {
                 return AttackState.STARTED;
             case DOES_NOT_EXIST:
                 log.info("Attack {} no longer maps to existing container", this);
-                notificationManager.sendNotification(ChaosEvent.builder().fromAttack(this)
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("Container no longer exists.")
                                                                .build());
                 return AttackState.FINISHED;
             case UNDER_ATTACK:
             default:
-                notificationManager.sendNotification(ChaosEvent.builder().fromAttack(this)
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
                                                                .build());
@@ -111,12 +115,12 @@ public abstract class Attack {
         }
     }
 
-    private boolean checkTimeToLive () {
-        return timeToLiveCounter.incrementAndGet() > timeToLive;
-    }
-
     private boolean isOverDuration () {
         return Instant.now().isAfter(startTime.plus(duration));
+    }
+
+    private boolean checkTimeToLive () {
+        return timeToLiveCounter.incrementAndGet() > timeToLive;
     }
 
     private void resumeAttack () {
