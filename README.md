@@ -28,13 +28,6 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | `cf_space` | Cloud Foundry Space | `default` |
 | `cf_linked_applications` | Dependent Cloud Foundry applications. These are ignored entirely from Chaos, so as to prevent accidentally killing a dependent service | \<None\> |
 
-### All Chaos Types
-
-#### Variables
-| Variable | Description | Default |
-|----------|-------|---------|
-| `probability` | A float value that controls how likely a container is to experience a chaos event | `0.2` |
-
 ## Scheduling
 
 The Chaos Engine is designed to run persistently, but only perform events on a certain schedule, and with exceptions. Here is how to control when chaos will occur.
@@ -42,7 +35,7 @@ The Chaos Engine is designed to run persistently, but only perform events on a c
 #### Variables
 | Variable | Description | Default |
 |----------|-------|---------|
-| `schedule` | A cron string which controls how frequently Chaos is run | `0 0 * * * *` |
+| `schedule` | A cron string which controls how frequently new attacks are created | `0 0 * * * *` |
 
 ### Pausing Chaos
 
