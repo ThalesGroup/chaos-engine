@@ -25,13 +25,17 @@ import java.util.stream.Collectors;
 public class AttackManager {
     private static final Logger log = LoggerFactory.getLogger(AttackManager.class);
     private final Set<Attack> activeAttacks = new HashSet<>();
-    private Queue<Attack> newAttackQueue = new LinkedBlockingDeque<>();
-    @Autowired
+    private final Queue<Attack> newAttackQueue = new LinkedBlockingDeque<>();
     private NotificationManager notificationManager;
-    @Autowired
     private PlatformManager platformManager;
-    @Autowired
     private HolidayManager holidayManager;
+
+    @Autowired
+    public AttackManager (NotificationManager notificationManager, PlatformManager platformManager, HolidayManager holidayManager) {
+        this.notificationManager = notificationManager;
+        this.platformManager = platformManager;
+        this.holidayManager = holidayManager;
+    }
 
     private Attack addAttack (Attack attack) {
         newAttackQueue.offer(attack);
@@ -39,7 +43,7 @@ public class AttackManager {
     }
 
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
-    public synchronized void updateAttackStatus () {
+    private synchronized void updateAttackStatus () {
         synchronized (activeAttacks) {
             startNewAttacks();
             log.debug("Checking on existing attacks");
@@ -94,12 +98,12 @@ public class AttackManager {
         }
     }
 
-    Set<Attack> getActiveAttacks () {
-        return activeAttacks;
-    }
-
     private boolean attackAlreadyExists (Container newContainer) {
         return activeAttacks.stream().map(Attack::getContainer).anyMatch(container -> container.equals(newContainer));
+    }
+
+    Set<Attack> getActiveAttacks () {
+        return activeAttacks;
     }
 
     Set<Attack> attackContainerId (Long containerIdentity) {

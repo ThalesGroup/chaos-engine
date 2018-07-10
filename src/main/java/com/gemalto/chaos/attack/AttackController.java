@@ -9,8 +9,12 @@ import java.util.Set;
 @RestController
 @RequestMapping(value = "/attack", produces = "application/json; charset=utf-8")
 public class AttackController {
-    @Autowired
     private AttackManager attackManager;
+
+    @Autowired
+    public AttackController (AttackManager attackManager) {
+        this.attackManager = attackManager;
+    }
 
     @GetMapping
     public Set<Attack> getAttacks () {
