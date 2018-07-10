@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public abstract class Platform implements AttackableObject {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private static final double DEFAULT_PROBABILITY = 0.2D;
+    private List<AttackType> supportedAttackTypes;
 
     public abstract List<Container> getRoster ();
 
@@ -33,10 +34,13 @@ public abstract class Platform implements AttackableObject {
     }
 
     List<AttackType> getSupportedAttackTypes () {
-        return getRoster().stream()
-                          .map(Container::getSupportedAttackTypes)
-                          .flatMap(List::stream)
-                          .distinct()
-                          .collect(Collectors.toList());
+        if (supportedAttackTypes == null) {
+            supportedAttackTypes = getRoster().stream()
+                                              .map(Container::getSupportedAttackTypes)
+                                              .flatMap(List::stream)
+                                              .distinct()
+                                              .collect(Collectors.toList());
+        }
+        return supportedAttackTypes;
     }
 }

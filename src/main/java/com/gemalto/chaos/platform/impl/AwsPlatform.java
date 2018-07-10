@@ -13,8 +13,6 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,24 +25,13 @@ import java.util.stream.Stream;
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
 public class AwsPlatform extends Platform {
-    private static final Logger log = LoggerFactory.getLogger(AwsPlatform.class);
-    @Autowired
     private AmazonEC2 amazonEC2;
-    @Autowired
     private FateManager fateManager;
-    @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
 
-    AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
-        this(filterKeys, filterValues);
-        this.amazonEC2 = amazonEC2;
-        this.fateManager = fateManager;
-        this.containerManager = containerManager;
-    }
-
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues) {
+    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -54,6 +41,9 @@ public class AwsPlatform extends Platform {
                 filter.putIfAbsent(filterKeys[i], filterValues[i]);
             }
         }
+        this.amazonEC2 = amazonEC2;
+        this.fateManager = fateManager;
+        this.containerManager = containerManager;
     }
 
     private AwsPlatform () {
