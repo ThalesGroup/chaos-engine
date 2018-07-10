@@ -1,12 +1,13 @@
 package com.gemalto.chaos.attack;
 
 import com.gemalto.chaos.attack.enums.AttackState;
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
-import com.gemalto.chaos.platform.enums.PlatformLevel;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,19 +80,17 @@ public class AttackManager {
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void startAttacks () {
         if (activeAttacks.isEmpty()) {
-            PlatformLevel attackLevel = platformManager.getAttackableLevel();
-            platformManager.getPlatforms()
-                           .stream()
-                           .filter(platform -> platform.getPlatformLevel() == attackLevel)
-                           .filter(platformManager::otherPlatformsHealthy)
-                           .filter(AttackableObject::canAttack)
-                           .map(Platform::getRoster)
-                           .flatMap(Collection::stream)
-                           .filter(container -> !this.attackAlreadyExists(container))
-                           .filter(Container::canDestroy)
-                           .map(Container::createAttack)
-                           .map(this::addAttack)
-                           .forEach(attack -> log.info("{}", attack));
+            Pair<Platform, AttackType> platformAttackTypePair = platformManager.getAttackPlatformAndType();
+            AttackType attackType = platformAttackTypePair.getValue1();
+            platformAttackTypePair.getValue0()
+                                  .getRoster()
+                                  .stream()
+                                  .filter(container -> container.supportsAttackType(attackType))
+                                  .filter(container -> !this.attackAlreadyExists(container))
+                                  .filter(Container::canDestroy)
+                                  .map(container1 -> container1.createAttack(attackType))
+                                  .map(this::addAttack)
+                                  .forEach(attack -> log.info("{}", attack));
         }
     }
 

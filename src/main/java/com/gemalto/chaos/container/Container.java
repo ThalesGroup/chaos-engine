@@ -30,11 +30,6 @@ import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
 @Component
 public abstract class Container implements AttackableObject {
-    @Override
-    public boolean canAttack () {
-        return new Random().nextDouble() < getPlatform().getDestructionProbability();
-    }
-
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected transient FateManager fateManager;
@@ -47,6 +42,17 @@ public abstract class Container implements AttackableObject {
                 supportedAttackTypes.add(attackType);
             }
         }
+    }
+
+    @Override
+    public boolean canAttack () {
+        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+    }
+
+    protected abstract Platform getPlatform ();
+
+    public List<AttackType> getSupportedAttackTypes () {
+        return supportedAttackTypes;
     }
 
     @Override
@@ -109,8 +115,6 @@ public abstract class Container implements AttackableObject {
         }
         return output.toString();
     }
-
-    protected abstract Platform getPlatform ();
 
     public boolean supportsAttackType (AttackType attackType) {
         return supportedAttackTypes.contains(attackType);

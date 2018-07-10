@@ -1,21 +1,20 @@
 package com.gemalto.chaos.platform;
 
 import com.gemalto.chaos.attack.AttackableObject;
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class Platform implements AttackableObject {
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private static final double DEFAULT_PROBABILITY = 0.2D;
-    Integer averageAttackFrequencyDays = 7;
-    Duration averageAttackDuration = Duration.ofHours(12);
-    Instant previousAttackTime = Instant.now();
-    private boolean canAttackNow = false;
 
     public abstract List<Container> getRoster ();
 
@@ -25,16 +24,19 @@ public abstract class Platform implements AttackableObject {
 
     public abstract PlatformHealth getPlatformHealth ();
 
-    @Override
-    public boolean canAttack () {
-        return true;
-    }
-
     public double getDestructionProbability () {
         return DEFAULT_PROBABILITY;
     }
 
     public String getPlatformType () {
         return this.getClass().getSimpleName();
+    }
+
+    List<AttackType> getSupportedAttackTypes () {
+        return getRoster().stream()
+                          .map(Container::getSupportedAttackTypes)
+                          .flatMap(List::stream)
+                          .distinct()
+                          .collect(Collectors.toList());
     }
 }
