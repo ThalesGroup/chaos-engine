@@ -2,6 +2,7 @@ package com.gemalto.chaos.container;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateEngine;
@@ -9,8 +10,6 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -27,20 +26,30 @@ import java.util.zip.Checksum;
 
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
-@Component
-public abstract class Container {
+public abstract class Container implements AttackableObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
     private Method lastAttackMethod;
-    @Autowired
+
     protected Container () {
         for (AttackType attackType : AttackType.values()) {
             if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
                 supportedAttackTypes.add(attackType);
             }
         }
+    }
+
+    @Override
+    public boolean canAttack () {
+        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+    }
+
+    protected abstract Platform getPlatform ();
+
+    public List<AttackType> getSupportedAttackTypes () {
+        return supportedAttackTypes;
     }
 
     @Override
@@ -103,8 +112,6 @@ public abstract class Container {
         }
         return output.toString();
     }
-
-    protected abstract Platform getPlatform ();
 
     public boolean supportsAttackType (AttackType attackType) {
         return supportedAttackTypes.contains(attackType);

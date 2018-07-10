@@ -4,6 +4,7 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +40,10 @@ public class PlatformController {
         }
         returnValue.put(PlatformLevel.OVERALL, platformManager.getOverallHealth());
         return returnValue;
+    }
+
+    @PostMapping("/refresh")
+    public void expirePlatformRosterCache () {
+        platformManager.expirePlatformCachedRosters();
     }
 }

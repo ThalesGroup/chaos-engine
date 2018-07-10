@@ -13,8 +13,6 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,25 +24,14 @@ import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
-public class AwsPlatform implements Platform {
-    private static final Logger log = LoggerFactory.getLogger(AwsPlatform.class);
-    @Autowired
+public class AwsPlatform extends Platform {
     private AmazonEC2 amazonEC2;
-    @Autowired
     private FateManager fateManager;
-    @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
 
-    AwsPlatform (String[] filterKeys, String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
-        this(filterKeys, filterValues);
-        this.amazonEC2 = amazonEC2;
-        this.fateManager = fateManager;
-        this.containerManager = containerManager;
-    }
-
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues) {
+    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -54,6 +41,9 @@ public class AwsPlatform implements Platform {
                 filter.putIfAbsent(filterKeys[i], filterValues[i]);
             }
         }
+        this.amazonEC2 = amazonEC2;
+        this.fateManager = fateManager;
+        this.containerManager = containerManager;
     }
 
     private AwsPlatform () {
@@ -61,11 +51,11 @@ public class AwsPlatform implements Platform {
     }
 
     @Override
-    public List<Container> getRoster () {
-        return getRoster(filter);
+    public List<Container> generateRoster () {
+        return generateRosterImpl(filter);
     }
 
-    private List<Container> getRoster (Map<String, String> filterValues) {
+    private List<Container> generateRosterImpl (Map<String, String> filterValues) {
         List<Container> containerList = new ArrayList<>();
         Collection<Filter> filters = new HashSet<>();
         if (filterValues != null) {
@@ -77,6 +67,7 @@ public class AwsPlatform implements Platform {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : describeInstancesResult.getReservations()) {
                 for (Instance instance : reservation.getInstances()) {
+                    if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) continue;
                     Container newContainer = createContainerFromInstance(instance);
                     Container container = containerManager.getOrCreatePersistentContainer(newContainer);
                     if (container != newContainer) {
@@ -131,7 +122,7 @@ public class AwsPlatform implements Platform {
         Set<Integer> instanceStateCodes = instanceStates.stream()
                                                         .map(InstanceState::getCode)
                                                         .collect(Collectors.toSet());
-        for (int state : AwsEC2Constants.AWS_UNHEALTHY_CODES) {
+        for (int state : AwsEC2Constants.getAwsUnhealthyCodes()) {
             if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;
@@ -169,7 +160,7 @@ public class AwsPlatform implements Platform {
         amazonEC2.stopInstances(new StopInstancesRequest().withForce(true).withInstanceIds(instanceIds));
     }
 
-    public void terminateInstance (String... instanceIds) {
+    void terminateInstance (String... instanceIds) {
         log.info("Requesting a Terminate of instances {}", (Object[]) instanceIds);
         amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(instanceIds));
     }

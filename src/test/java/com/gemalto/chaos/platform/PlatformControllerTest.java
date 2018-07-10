@@ -15,7 +15,7 @@ import java.util.Map;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PlatformControllerTest {
@@ -39,5 +39,17 @@ public class PlatformControllerTest {
         assertThat(returnValue, IsMapContaining.hasEntry(PlatformLevel.PAAS, PlatformHealth.DEGRADED));
         assertThat(returnValue, IsMapContaining.hasEntry(PlatformLevel.OVERALL, PlatformHealth.DEGRADED));
         assertThat(returnValue, not(hasKey(PlatformLevel.SAAS)));
+    }
+
+    @Test
+    public void getPlatforms () {
+        platformController.getPlatforms();
+        verify(platformManager, times(1)).getPlatforms();
+    }
+
+    @Test
+    public void expirePlatformRosterCache () {
+        platformController.expirePlatformRosterCache();
+        verify(platformManager, times(1)).expirePlatformCachedRosters();
     }
 }

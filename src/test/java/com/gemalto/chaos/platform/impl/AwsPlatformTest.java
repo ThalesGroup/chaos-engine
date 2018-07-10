@@ -2,12 +2,15 @@ package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.platform.enums.PlatformHealth;
+import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +60,7 @@ public class AwsPlatformTest {
         final List<Reservation> reservationList = Collections.singletonList(reservation);
         final List<Instance> instanceList = Arrays.asList(instance, instance);
         final Tag namedTag = new Tag("Name", INSTANCE_NAME_1);
+        final InstanceState instanceState = new InstanceState().withCode(AwsEC2Constants.AWS_RUNNING_CODE);
         final AwsEC2Container CONTAINER_1 = AwsEC2Container.builder()
                                                            .instanceId(INSTANCE_ID_1)
                                                            .keyName(INSTANCE_KEYNAME_1)
@@ -74,6 +78,7 @@ public class AwsPlatformTest {
         when(describeInstancesResult.getNextToken()).thenReturn(null);
         when(instance.getInstanceId()).thenReturn(INSTANCE_ID_1, INSTANCE_ID_2);
         when(instance.getKeyName()).thenReturn(INSTANCE_KEYNAME_1, INSTANCE_KEYNAME_2);
+        when(instance.getState()).thenReturn(instanceState);
         when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
                 .getArguments()[0]);
         assertThat(awsPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
@@ -128,4 +133,23 @@ public class AwsPlatformTest {
         awsPlatform.startInstance("123", "abc", "xyz");
         verify(amazonEC2, times(1)).startInstances(any(StartInstancesRequest.class));
     }
+
+    @Test
+    public void getPlatformLevel () {
+        assertEquals(PlatformLevel.IAAS, awsPlatform.getPlatformLevel());
+    }
+
+    @Test
+    public void getPlatformHealth () {
+        List<Instance> instanceList = Collections.singletonList(instance);
+        List<Reservation> reservationList = Collections.singletonList(reservation);
+        when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
+        when(describeInstancesResult.getReservations()).thenReturn(reservationList);
+        when(reservation.getInstances()).thenReturn(instanceList);
+        when(instance.getState()).thenReturn(new InstanceState().withCode(0));
+        assertEquals(PlatformHealth.DEGRADED, awsPlatform.getPlatformHealth());
+        when(instance.getState()).thenReturn(new InstanceState().withCode(16));
+        assertEquals(PlatformHealth.OK, awsPlatform.getPlatformHealth());
+    }
+
 }
