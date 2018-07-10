@@ -33,4 +33,11 @@ public class ExpiringTest {
         assertTrue(expiringObject.isExpired());
         assertNull(expiringObject.value());
     }
+
+    @Test
+    public void expire () {
+        expiringObject = new Expiring<>(object, Duration.ofDays(1));
+        expiringObject.expire();
+        assertNull(expiringObject.value());
+    }
 }

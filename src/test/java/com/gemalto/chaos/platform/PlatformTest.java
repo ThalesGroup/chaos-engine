@@ -11,26 +11,27 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PlatformTest {
     @Mock
     private Container container;
+    @Spy
     private Platform platform;
 
     @Before
     public void setUp () {
-        platform = new Platform() {
+        platform = Mockito.spy(new Platform() {
             @Override
-            public List<Container> getRoster () {
+            public List<Container> generateRoster () {
                 return Collections.singletonList(container);
             }
 
@@ -48,7 +49,7 @@ public class PlatformTest {
             public PlatformHealth getPlatformHealth () {
                 return null;
             }
-        };
+        });
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -58,5 +59,22 @@ public class PlatformTest {
         assertThat(platform.getSupportedAttackTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(AttackType.STATE));
         assertThat(platform.getSupportedAttackTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(AttackType.STATE));
         Mockito.verify(container, times(1)).getSupportedAttackTypes();
+    }
+
+    @Test
+    public void getRoster () {
+        platform.getRoster();
+        platform.getRoster();
+        verify(platform, times(1)).generateRoster();
+        assertThat(platform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(container));
+    }
+
+    @Test
+    public void expireCachedRoster () {
+        platform.getRoster();
+        platform.expireCachedRoster();
+        platform.getRoster();
+        verify(platform, times(2)).generateRoster();
+        assertThat(platform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(container));
     }
 }

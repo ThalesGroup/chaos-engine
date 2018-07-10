@@ -51,11 +51,11 @@ public class AwsPlatform extends Platform {
     }
 
     @Override
-    public List<Container> getRoster () {
-        return getRoster(filter);
+    public List<Container> generateRoster () {
+        return generateRosterImpl(filter);
     }
 
-    private List<Container> getRoster (Map<String, String> filterValues) {
+    private List<Container> generateRosterImpl (Map<String, String> filterValues) {
         List<Container> containerList = new ArrayList<>();
         Collection<Filter> filters = new HashSet<>();
         if (filterValues != null) {

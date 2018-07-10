@@ -6,6 +6,7 @@ import java.time.Instant;
 public class Expiring<T> {
     private T object;
     private Instant expiryTime;
+    private boolean expired;
 
     public Expiring (T object, Instant expiryTime) {
         this.object = object;
@@ -27,7 +28,17 @@ public class Expiring<T> {
     }
 
     boolean isExpired () {
-        return Instant.now().isAfter(expiryTime);
+        if (expired) {
+            return true;
+        } else if (Instant.now().isAfter(expiryTime)) {
+            expired = true;
+            return true;
+        }
+        return false;
+    }
+
+    public void expire () {
+        expired = true;
     }
 
     @Override

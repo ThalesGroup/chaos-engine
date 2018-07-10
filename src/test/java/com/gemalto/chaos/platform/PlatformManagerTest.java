@@ -114,4 +114,12 @@ public class PlatformManagerTest {
         verify(platform1, times(1)).getSupportedAttackTypes();
         verify(platform2, times(1)).getSupportedAttackTypes();
     }
+
+    @Test
+    public void expirePlatformCachedRosters () {
+        platformManager.expirePlatformCachedRosters();
+        for (Platform platform : platformCollection) {
+            verify(platform, times(1)).expireCachedRoster();
+        }
+    }
 }

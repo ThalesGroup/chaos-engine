@@ -90,4 +90,9 @@ public class PlatformManager {
             attackSchedule.putIfAbsent(day++, pair);
         }
     }
+
+    void expirePlatformCachedRosters () {
+        log.info("Cached containers have been manually expired");
+        getPlatforms().forEach(Platform::expireCachedRoster);
+    }
 }

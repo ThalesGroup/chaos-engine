@@ -20,8 +20,6 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -36,7 +34,6 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 @Component
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform extends Platform {
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatform.class);
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
@@ -64,7 +61,7 @@ public class CloudFoundryPlatform extends Platform {
     }
 
     @Override
-    public List<Container> getRoster () {
+    public List<Container> generateRoster () {
         List<Container> containers = new ArrayList<>();
         cloudFoundryOperations.applications()
                               .list()
