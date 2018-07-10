@@ -10,8 +10,6 @@ import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -28,14 +26,13 @@ import java.util.zip.Checksum;
 
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
-@Component
 public abstract class Container implements AttackableObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
     private Method lastAttackMethod;
-    @Autowired
+
     protected Container () {
         for (AttackType attackType : AttackType.values()) {
             if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
