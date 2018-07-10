@@ -3,7 +3,7 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.AwsEC2Attack;
+import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
@@ -42,7 +42,11 @@ public class AwsEC2Container extends Container {
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return AwsEC2Attack.builder().withAttackType(attackType).withContainer(this).withTimeToLive(1).build();
+        return GenericContainerAttack.builder()
+                                     .withAttackType(attackType)
+                                     .withContainer(this)
+                                     .withTimeToLive(1)
+                                     .build();
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
+import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.fateengine.FateManager;
@@ -52,11 +52,11 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return CloudFoundryAttack.builder()
-                                 .container(this)
-                                 .attackType(attackType)
-                                 .timeToLive(new Random().nextInt(5))
-                                 .build();
+        return GenericContainerAttack.builder()
+                                     .withContainer(this)
+                                     .withAttackType(attackType)
+                                     .withTimeToLive(new Random().nextInt(5))
+                                     .build();
     }
 
     @Override
