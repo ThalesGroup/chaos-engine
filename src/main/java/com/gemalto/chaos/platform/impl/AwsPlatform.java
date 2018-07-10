@@ -67,15 +67,7 @@ public class AwsPlatform extends Platform {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : describeInstancesResult.getReservations()) {
                 for (Instance instance : reservation.getInstances()) {
-                    if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) continue;
-                    Container newContainer = createContainerFromInstance(instance);
-                    Container container = containerManager.getOrCreatePersistentContainer(newContainer);
-                    if (container != newContainer) {
-                        log.debug("Found existing container {}", container);
-                    } else {
-                        log.info("Found new container {}", container);
-                    }
-                    containerList.add(container);
+                    createContainerFromInstance(containerList, instance);
                 }
             }
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
@@ -84,6 +76,18 @@ public class AwsPlatform extends Platform {
             }
         }
         return containerList;
+    }
+
+    private void createContainerFromInstance (List<Container> containerList, Instance instance) {
+        if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return;
+        Container newContainer = createContainerFromInstance(instance);
+        Container container = containerManager.getOrCreatePersistentContainer(newContainer);
+        if (container != newContainer) {
+            log.debug("Found existing container {}", container);
+        } else {
+            log.info("Found new container {}", container);
+        }
+        containerList.add(container);
     }
 
     private Container createContainerFromInstance (Instance instance) {

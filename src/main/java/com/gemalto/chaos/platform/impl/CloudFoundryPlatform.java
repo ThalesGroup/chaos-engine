@@ -74,24 +74,28 @@ public class CloudFoundryPlatform extends Platform {
                                           log.debug("Skipping what appears to be me.");
                                           continue;
                                       }
-                                      CloudFoundryContainer c = CloudFoundryContainer.builder()
-                                                                                     .applicationId(app.getId())
-                                                                                     .name(app.getName())
-                                                                                     .instance(i)
-                                                                                     .platform(this)
-                                                                                     .fateManager(fateManager)
-                                                                                     .build();
-                                      Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-                                      containers.add(persistentContainer);
-                                      if (persistentContainer == c) {
-                                          log.info("Added container {}", persistentContainer);
-                                      } else {
-                                          log.debug("Existing container found: {}", persistentContainer);
-                                      }
+                                      createContainerFromApp(containers, app, i);
                                   }
                               });
         containerManager.removeOldContainers(CloudFoundryContainer.class, containers);
         return containers;
+    }
+
+    private void createContainerFromApp (List<Container> containers, ApplicationSummary app, Integer i) {
+        CloudFoundryContainer c = CloudFoundryContainer.builder()
+                                                       .applicationId(app.getId())
+                                                       .name(app.getName())
+                                                       .instance(i)
+                                                       .platform(this)
+                                                       .fateManager(fateManager)
+                                                       .build();
+        Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
+        containers.add(persistentContainer);
+        if (persistentContainer == c) {
+            log.info("Added container {}", persistentContainer);
+        } else {
+            log.debug("Existing container found: {}", persistentContainer);
+        }
     }
 
     @Override
