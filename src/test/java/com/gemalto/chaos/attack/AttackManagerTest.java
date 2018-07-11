@@ -1,13 +1,11 @@
 package com.gemalto.chaos.attack;
 
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,15 +48,21 @@ public class AttackManagerTest {
         List<Container> containerList = new ArrayList<>();
         containerList.add(container1);
         containerList.add(container2);
-        when(platformManager.getAttackPlatformAndType()).thenReturn(new Pair<>(platform, AttackType.STATE));
+        when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
+        when(platform.startAttack()).thenReturn(platform);
         when(platform.getRoster()).thenReturn(containerList);
-        when(container1.supportsAttackType(any(AttackType.class))).thenReturn(true);
-        when(container2.supportsAttackType(any(AttackType.class))).thenReturn(false);
+        when(platform.usingHolidayManager(any(HolidayManager.class))).thenReturn(platform);
+        when(platform.canAttack()).thenReturn(true);
+
+
         when(container1.canDestroy()).thenReturn(true);
-        when(container1.createAttack(any(AttackType.class))).thenReturn(attack1);
+        when(container1.createAttack()).thenReturn(attack1);
+        when(container2.canDestroy()).thenReturn(false);
         attackManager.startAttacks();
         assertThat(attackManager.getNewAttackQueue(), hasItem(attack1));
-        verify(container2, times(0)).canDestroy();
+        verify(container2, times(1)).canDestroy();
+        verify(container2, times(0)).createAttack();
+
 
     }
 

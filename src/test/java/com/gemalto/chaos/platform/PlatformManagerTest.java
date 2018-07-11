@@ -1,9 +1,7 @@
 package com.gemalto.chaos.platform;
 
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +10,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 import static com.gemalto.chaos.platform.enums.PlatformHealth.*;
@@ -22,7 +19,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PlatformManagerTest {
@@ -101,18 +97,6 @@ public class PlatformManagerTest {
         assertThat(platformLevels, IsIterableContainingInAnyOrder.containsInAnyOrder(PAAS, IAAS));
         assertThat(platformLevels, not(hasItem(SAAS)));
         assertThat(platformLevels, not(hasItem(OVERALL)));
-    }
-
-    @Test
-    public void getAttackPlatformAndType () {
-        doReturn(Collections.singletonList(AttackType.STATE)).when(platform1).getSupportedAttackTypes();
-        doReturn(Collections.singletonList(AttackType.NETWORK)).when(platform2).getSupportedAttackTypes();
-        assertTrue("Unexpected Attack Platform and Type: " + platformManager.getAttackPlatformAndType(), platformManager
-                .getAttackPlatformAndType()
-                .equals(new Pair<>(platform1, AttackType.STATE)) || platformManager.getAttackPlatformAndType()
-                                                                                   .equals(new Pair<>(platform2, AttackType.NETWORK)));
-        verify(platform1, times(1)).getSupportedAttackTypes();
-        verify(platform2, times(1)).getSupportedAttackTypes();
     }
 
     @Test

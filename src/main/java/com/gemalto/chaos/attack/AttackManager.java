@@ -1,23 +1,18 @@
 package com.gemalto.chaos.attack;
 
 import com.gemalto.chaos.attack.enums.AttackState;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
-import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
@@ -84,22 +79,22 @@ public class AttackManager {
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void startAttacks () {
         if (activeAttacks.isEmpty()) {
-            Pair<Platform, AttackType> platformAttackTypePair = platformManager.getAttackPlatformAndType();
-            AttackType attackType = platformAttackTypePair.getValue1();
-            platformAttackTypePair.getValue0()
-                                  .getRoster()
-                                  .stream()
-                                  .filter(container -> container.supportsAttackType(attackType))
-                                  .filter(container -> !this.attackAlreadyExists(container))
-                                  .filter(Container::canDestroy)
-                                  .map(container1 -> container1.createAttack(attackType))
-                                  .map(this::addAttack)
-                                  .forEach(attack -> log.info("{}", attack));
+            Optional<Platform> optionalPlatform = platformManager.getPlatforms()
+                                                                 .stream()
+                                                                 .map(platform -> platform.usingHolidayManager(holidayManager))
+                                                                 .filter(Platform::canAttack)
+                                                                 .findFirst();
+            if (optionalPlatform.isPresent()) {
+                Platform platform = optionalPlatform.get();
+                platform.startAttack()
+                        .getRoster()
+                        .stream()
+                        .filter(Container::canDestroy)
+                        .map(Container::createAttack)
+                        .map(this::addAttack)
+                        .forEach(attack -> log.info("{}", attack));
+            }
         }
-    }
-
-    private boolean attackAlreadyExists (Container newContainer) {
-        return activeAttacks.stream().map(Attack::getContainer).anyMatch(container -> container.equals(newContainer));
     }
 
     Set<Attack> getActiveAttacks () {
