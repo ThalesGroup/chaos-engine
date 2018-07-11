@@ -116,6 +116,7 @@ public abstract class Platform implements AttackableObject {
         return this;
     }
 
+    @SuppressWarnings("unused") // public get methods are consumed by Spring Rest.
     public Set<Instant> getAttackTimes () {
         return attackTimes;
     }
