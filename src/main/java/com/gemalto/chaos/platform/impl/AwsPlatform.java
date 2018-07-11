@@ -65,11 +65,11 @@ public class AwsPlatform extends Platform {
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
         while (!done) {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
-            for (Reservation reservation : describeInstancesResult.getReservations()) {
-                for (Instance instance : reservation.getInstances()) {
-                    createContainerFromInstance(containerList, instance);
-                }
-            }
+            describeInstancesResult.getReservations()
+                                   .parallelStream()
+                                   .map(Reservation::getInstances)
+                                   .flatMap(Collection::parallelStream)
+                                   .forEach(instance -> createContainerFromInstance(containerList, instance));
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
             if (describeInstancesRequest.getNextToken() == null) {
                 done = true;

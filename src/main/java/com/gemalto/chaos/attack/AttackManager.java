@@ -79,16 +79,14 @@ public class AttackManager {
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void startAttacks () {
         if (activeAttacks.isEmpty()) {
-            Optional<Platform> optionalPlatform = platformManager.getPlatforms()
-                                                                 .stream()
+            Optional<Platform> optionalPlatform = platformManager.getPlatforms().parallelStream()
                                                                  .map(platform -> platform.usingHolidayManager(holidayManager))
                                                                  .filter(Platform::canAttack)
                                                                  .findFirst();
             if (optionalPlatform.isPresent()) {
                 Platform platform = optionalPlatform.get();
                 platform.startAttack()
-                        .getRoster()
-                        .stream()
+                        .getRoster().parallelStream()
                         .filter(Container::canDestroy)
                         .map(Container::createAttack)
                         .map(this::addAttack)
