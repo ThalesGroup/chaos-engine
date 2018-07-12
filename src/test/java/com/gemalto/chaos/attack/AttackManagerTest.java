@@ -53,14 +53,12 @@ public class AttackManagerTest {
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.usingHolidayManager(any(HolidayManager.class))).thenReturn(platform);
         when(platform.canAttack()).thenReturn(true);
-
-
-        when(container1.canDestroy()).thenReturn(true);
+        when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
-        when(container2.canDestroy()).thenReturn(false);
+        when(container2.canAttack()).thenReturn(false);
         attackManager.startAttacks();
         assertThat(attackManager.getNewAttackQueue(), hasItem(attack1));
-        verify(container2, times(1)).canDestroy();
+        verify(container2, times(1)).canAttack();
         verify(container2, times(0)).createAttack();
 
 

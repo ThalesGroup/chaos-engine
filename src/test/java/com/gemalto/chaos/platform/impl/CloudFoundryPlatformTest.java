@@ -5,7 +5,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -45,8 +44,6 @@ public class CloudFoundryPlatformTest {
     @Mock
     private Applications applications;
     @Mock
-    private FateManager fateManager;
-    @Mock
     private CloudFoundryClient cloudFoundryClient;
     @Mock
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
@@ -59,7 +56,6 @@ public class CloudFoundryPlatformTest {
                                   .withCloudFoundryOperations(cloudFoundryOperations)
                                   .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
                                   .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                  .withFateManager(fateManager)
                                   .withContainerManager(containerManager)
                                   .build();
     }
@@ -84,14 +80,12 @@ public class CloudFoundryPlatformTest {
         Integer INSTANCES = 2;
         CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
                                                                           .applicationId(APPLICATION_ID)
-                                                                          .fateManager(null)
                                                                           .instance(0)
                                                                           .platform(cfp)
                                                                           .name(APPLICATION_NAME)
                                                                           .build();
         CloudFoundryContainer EXPECTED_CONTAINER_2 = CloudFoundryContainer.builder()
                                                                           .applicationId(APPLICATION_ID)
-                                                                          .fateManager(null)
                                                                           .instance(1)
                                                                           .platform(cfp)
                                                                           .name(APPLICATION_NAME)

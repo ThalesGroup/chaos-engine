@@ -7,7 +7,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
@@ -34,8 +33,6 @@ public class AwsPlatformTest {
     @Mock
     private AmazonEC2 amazonEC2;
     @Mock
-    private FateManager fateManager;
-    @Mock
     private DescribeInstancesResult describeInstancesResult;
     @Mock
     private Reservation reservation;
@@ -47,7 +44,7 @@ public class AwsPlatformTest {
 
     @Before
     public void setUp () {
-        awsPlatform = new AwsPlatform(null, null, amazonEC2, fateManager, containerManager);
+        awsPlatform = new AwsPlatform(null, null, amazonEC2, containerManager);
     }
 
     @Test

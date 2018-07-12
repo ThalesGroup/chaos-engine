@@ -6,7 +6,6 @@ import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 
@@ -61,7 +60,6 @@ public class AwsEC2Container extends Container {
     }
 
     public static final class AwsEC2ContainerBuilder {
-        private FateManager fateManager;
         private String instanceId;
         private String keyName;
         private String name;
@@ -94,15 +92,9 @@ public class AwsEC2Container extends Container {
             return this;
         }
 
-        public AwsEC2ContainerBuilder fateManager (FateManager fateManager) {
-            this.fateManager = fateManager;
-            return this;
-        }
-
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsPlatform = this.awsPlatform;
-            awsEC2Container.fateManager = this.fateManager;
             awsEC2Container.instanceId = this.instanceId;
             awsEC2Container.keyName = this.keyName;
             awsEC2Container.name = this.name;

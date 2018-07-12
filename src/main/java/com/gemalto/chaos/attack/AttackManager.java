@@ -85,9 +85,7 @@ public class AttackManager {
                                                                  .findFirst();
             if (optionalPlatform.isPresent()) {
                 Platform platform = optionalPlatform.get();
-                platform.startAttack()
-                        .getRoster().parallelStream()
-                        .filter(Container::canDestroy)
+                platform.startAttack().getRoster().parallelStream().filter(Container::canAttack)
                         .map(Container::createAttack)
                         .map(this::addAttack)
                         .forEach(attack -> log.info("{}", attack));

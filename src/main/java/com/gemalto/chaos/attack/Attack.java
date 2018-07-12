@@ -134,4 +134,12 @@ public abstract class Attack {
         if (!AdminManager.canRunAttacks()) return;
         container.repeatAttack();
     }
+
+    public Integer getTimeToLiveCounter () {
+        return timeToLiveCounter.get();
+    }
+
+    public Integer getTimetoLive () {
+        return timeToLive;
+    }
 }

@@ -1,7 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,15 +25,12 @@ public class AwsEC2ContainerTest {
     private AwsEC2Container awsEC2Container;
     @Mock
     private AwsPlatform awsPlatform;
-    @Mock
-    private FateManager fateManager;
 
     @Before
     public void setUp () {
         awsEC2Container = AwsEC2Container.builder()
                                          .keyName(KEY_NAME)
                                          .instanceId(INSTANCE_ID)
-                                         .fateManager(fateManager)
                                          .awsPlatform(awsPlatform)
                                          .name(NAME)
                                          .build();

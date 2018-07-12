@@ -8,7 +8,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
@@ -26,12 +25,11 @@ import java.util.stream.Stream;
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
 public class AwsPlatform extends Platform {
     private AmazonEC2 amazonEC2;
-    private FateManager fateManager;
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
 
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, FateManager fateManager, ContainerManager containerManager) {
+    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -42,7 +40,6 @@ public class AwsPlatform extends Platform {
             }
         }
         this.amazonEC2 = amazonEC2;
-        this.fateManager = fateManager;
         this.containerManager = containerManager;
     }
 
@@ -98,7 +95,6 @@ public class AwsPlatform extends Platform {
                               .awsPlatform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(instance.getKeyName())
-                              .fateManager(fateManager)
                               .name(name)
                               .build();
     }

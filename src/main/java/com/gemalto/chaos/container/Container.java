@@ -5,8 +5,6 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.fateengine.FateEngine;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +27,6 @@ import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 public abstract class Container implements AttackableObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
-    protected transient FateManager fateManager;
     private ContainerHealth containerHealth;
     private Method lastAttackMethod;
 
@@ -133,11 +130,6 @@ public abstract class Container implements AttackableObject {
     }
 
     public abstract Attack createAttack (AttackType attackType);
-
-    public boolean canDestroy () {
-        FateEngine fateEngine = fateManager.getFateEngineForContainer(this);
-        return this.containerHealth != ContainerHealth.UNDER_ATTACK && fateEngine.canDestroy();
-    }
 
     public Callable<Void> attackContainer (AttackType attackType) {
         containerHealth = ContainerHealth.UNDER_ATTACK;

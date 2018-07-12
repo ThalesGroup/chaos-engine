@@ -6,7 +6,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
@@ -34,22 +33,33 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 @Component
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform extends Platform {
-    @Autowired
+
     private CloudFoundryOperations cloudFoundryOperations;
-    @Autowired
+
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @Autowired
     private CloudFoundryClient cloudFoundryClient;
-    @Autowired
     private ContainerManager containerManager;
-    @Autowired
-    private FateManager fateManager;
-    @Autowired(required = false)
-    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     @Autowired
-    CloudFoundryPlatform () {
+    public CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
+        this.cloudFoundryOperations = cloudFoundryOperations;
+        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
+        this.cloudFoundryClient = cloudFoundryClient;
+        this.containerManager = containerManager;
     }
+
+
+    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
+    private CloudFoundryPlatform () {
+    }
+
+    @Autowired(required = false)
+    private void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
+        this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
+    }
+
+
 
     public static CloudFoundryPlatformBuilder builder () {
         return CloudFoundryPlatformBuilder.builder();
@@ -87,7 +97,6 @@ public class CloudFoundryPlatform extends Platform {
                                                        .name(app.getName())
                                                        .instance(i)
                                                        .platform(this)
-                                                       .fateManager(fateManager)
                                                        .build();
         Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
         containers.add(persistentContainer);
@@ -178,7 +187,6 @@ public class CloudFoundryPlatform extends Platform {
         private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
         private CloudFoundryClient cloudFoundryClient;
         private ContainerManager containerManager;
-        private FateManager fateManager;
         private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
         private CloudFoundryPlatformBuilder () {
@@ -208,11 +216,6 @@ public class CloudFoundryPlatform extends Platform {
             return this;
         }
 
-        CloudFoundryPlatformBuilder withFateManager (FateManager fateManager) {
-            this.fateManager = fateManager;
-            return this;
-        }
-
         CloudFoundryPlatformBuilder withCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
             this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
             return this;
@@ -224,7 +227,6 @@ public class CloudFoundryPlatform extends Platform {
             cloudFoundryPlatform.cloudFoundryClient = this.cloudFoundryClient;
             cloudFoundryPlatform.cloudFoundryOperations = this.cloudFoundryOperations;
             cloudFoundryPlatform.containerManager = this.containerManager;
-            cloudFoundryPlatform.fateManager = this.fateManager;
             cloudFoundryPlatform.cloudFoundryPlatformInfo = this.cloudFoundryPlatformInfo;
             return cloudFoundryPlatform;
         }
