@@ -89,7 +89,7 @@ public abstract class Platform implements AttackableObject {
             log.info("{} is above its attack quota. Aborting.", this.getClass().getSimpleName());
             return false;
         }
-        return new Random().nextBoolean(); // TODO Improve this significantly. This is a 50/50 chance every instantiation instead of being weighted.
+        return new Random().nextFloat() < getAttackChance();
     }
 
     private boolean belowMinAttacks () {
@@ -109,6 +109,11 @@ public abstract class Platform implements AttackableObject {
             beginningOfAttackPeriod = Instant.now().minus(1, attackPeriod);
         }
         return attackTimes.stream().filter(instant -> instant.isAfter(beginningOfAttackPeriod)).count();
+    }
+
+    private float getAttackChance () {
+        // TODO Actually calculate the chance of an attack
+        return 0.5F;
     }
 
     public Platform startAttack () {
