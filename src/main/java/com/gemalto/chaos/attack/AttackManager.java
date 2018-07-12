@@ -51,7 +51,7 @@ public class AttackManager {
     }
 
     private void startNewAttacks () {
-        if (holidayManager.isHoliday() || !holidayManager.isWorkingHours()) {
+        if (holidayManager.isHoliday() || holidayManager.isOutsideWorkingHours()) {
             log.debug("Cannot start new attacks right now.");
         }
         Attack attack = newAttackQueue.poll();

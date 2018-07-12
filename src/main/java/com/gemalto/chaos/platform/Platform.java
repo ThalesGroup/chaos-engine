@@ -31,6 +31,8 @@ public abstract class Platform implements AttackableObject {
     private static final int MAX_ATTACKS_PER_PERIOD = 5;
     private TemporalUnit attackPeriod = ChronoUnit.DAYS;
     private Set<Instant> attackTimes = new HashSet<>();
+    private Instant lastAttackCheckTime = Instant.now();
+    private Instant lastAttackTime = Instant.now();
     private HolidayManager holidayManager;
 
     public List<Container> getRoster () {
@@ -89,7 +91,8 @@ public abstract class Platform implements AttackableObject {
             log.info("{} is above its attack quota. Aborting.", this.getClass().getSimpleName());
             return false;
         }
-        return new Random().nextFloat() < getAttackChance();
+        return new Random().nextDouble() < getAttackChance();
+        // TODO : This takes a LONG time to diverge. It needs to be improved upon
     }
 
     private boolean belowMinAttacks () {
@@ -100,7 +103,39 @@ public abstract class Platform implements AttackableObject {
         return getAttacksInPeriod() >= MAX_ATTACKS_PER_PERIOD;
     }
 
-    private long getAttacksInPeriod () {
+    private double getAttackChance () {
+        double fudgeFactor;
+        long millisSinceLastAttack;
+        long averageTimeBetweenAttacks;
+        long millisSinceLastCheck;
+        if (attackPeriod.getDuration().toMillis() > ChronoUnit.DAYS.getDuration().toMillis()) {
+            // Handle if probability is in weeks/months
+            averageTimeBetweenAttacks = holidayManager.getWorkingMillisInDuration(attackPeriod.getDuration()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
+            millisSinceLastCheck = holidayManager.getWorkingMillisSinceInstant(lastAttackCheckTime);
+            millisSinceLastAttack = holidayManager.getWorkingMillisSinceInstant(lastAttackTime);
+        } else {
+            averageTimeBetweenAttacks = holidayManager.getTotalMillisInDay() / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
+            long now = Instant.now().toEpochMilli();
+            Instant startOfDay = holidayManager.getStartOfDay();
+            millisSinceLastCheck = now - lastAttackCheckTime.toEpochMilli() - (lastAttackCheckTime.isBefore(startOfDay) ? holidayManager
+                    .getOvernightMillis() : 0);
+            long lastAttackTimeMillis = lastAttackTime.toEpochMilli();
+            millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
+            if (millisSinceLastAttack == 0 || millisSinceLastCheck == 0) return 0;
+        }
+        fudgeFactor = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
+        fudgeFactor *= millisSinceLastCheck / (double) averageTimeBetweenAttacks;
+        log.debug("Chance of attack: {}", fudgeFactor);
+        log.debug("Based on: millisSinceLastAttack: {} averageTimeBetweenAttacks: {}", millisSinceLastAttack, averageTimeBetweenAttacks);
+        updateLastAttackCheckTime();
+        return fudgeFactor;
+    }
+
+    private void updateLastAttackCheckTime () {
+        lastAttackCheckTime = Instant.now();
+    }
+
+    private int getAttacksInPeriod () {
         Instant beginningOfAttackPeriod;
         if (holidayManager != null && attackPeriod == ChronoUnit.DAYS) {
             // If we're dealing in days, we need prune this down to working days.
@@ -108,16 +143,12 @@ public abstract class Platform implements AttackableObject {
         } else {
             beginningOfAttackPeriod = Instant.now().minus(1, attackPeriod);
         }
-        return attackTimes.stream().filter(instant -> instant.isAfter(beginningOfAttackPeriod)).count();
-    }
-
-    private float getAttackChance () {
-        // TODO Actually calculate the chance of an attack
-        return 0.5F;
+        return (int) attackTimes.stream().filter(instant -> instant.isAfter(beginningOfAttackPeriod)).count();
     }
 
     public Platform startAttack () {
-        attackTimes.add(Instant.now());
+        lastAttackTime = Instant.now();
+        attackTimes.add(lastAttackTime);
         return this;
     }
 
