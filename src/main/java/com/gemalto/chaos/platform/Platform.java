@@ -92,7 +92,6 @@ public abstract class Platform implements AttackableObject {
             return false;
         }
         return new Random().nextDouble() < getAttackChance();
-        // TODO : This takes a LONG time to diverge. It needs to be improved upon
     }
 
     private boolean belowMinAttacks () {
