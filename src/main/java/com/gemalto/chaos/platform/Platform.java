@@ -114,7 +114,8 @@ public abstract class Platform implements AttackableObject {
             millisSinceLastCheck = holidayManager.getWorkingMillisSinceInstant(lastAttackCheckTime);
             millisSinceLastAttack = holidayManager.getWorkingMillisSinceInstant(lastAttackTime);
         } else {
-            averageTimeBetweenAttacks = holidayManager.getTotalMillisInDay() / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
+            averageTimeBetweenAttacks = Math.min(attackPeriod.getDuration()
+                                                             .toMillis(), holidayManager.getTotalMillisInDay()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
             long now = Instant.now().toEpochMilli();
             Instant startOfDay = holidayManager.getStartOfDay();
             millisSinceLastCheck = now - lastAttackCheckTime.toEpochMilli() - (lastAttackCheckTime.isBefore(startOfDay) ? holidayManager
