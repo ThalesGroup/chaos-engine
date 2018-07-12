@@ -18,7 +18,7 @@ public class HolidayManagerTest {
     }
 
     @Test
-    public void getOneWorkingDayAgo () {
+    public void getPreviousWorkingDay () {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.DAY_OF_MONTH, 29);
         c.set(Calendar.MONTH, Calendar.JUNE);
