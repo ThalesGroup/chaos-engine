@@ -37,7 +37,7 @@ public class AttackManager {
         return attack;
     }
 
-    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
+    @Scheduled(fixedDelay = 15 * 1000)
     private synchronized void updateAttackStatus () {
         synchronized (activeAttacks) {
             startNewAttacks();
