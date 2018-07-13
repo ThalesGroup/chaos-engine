@@ -62,7 +62,7 @@ public class AttackControllerTest {
     @Test
     public void startAttacks () {
         attackController.startAttacks();
-        verify(attackManager, times(1)).startAttacks();
+        verify(attackManager, times(1)).startAttacks(true);
     }
 
     @Test

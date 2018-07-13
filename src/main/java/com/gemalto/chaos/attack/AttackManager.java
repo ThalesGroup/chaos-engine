@@ -78,10 +78,15 @@ public class AttackManager {
 
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void startAttacks () {
+        startAttacks(false);
+    }
+
+    void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
             Optional<Platform> optionalPlatform = platformManager.getPlatforms().parallelStream()
                                                                  .map(platform -> platform.usingHolidayManager(holidayManager))
-                                                                 .filter(Platform::canAttack)
+                                                                 .filter(platform1 -> force || platform1.canAttack())
+                                                                 // "force" needs to be before the .canAttack(), so if it's true canAttack is not evaluated.
                                                                  .findFirst();
             if (optionalPlatform.isPresent()) {
                 Platform platform = optionalPlatform.get();
