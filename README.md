@@ -107,7 +107,7 @@ Various REST endpoints are available for interacting with the Chaos Engine.
 | `/attack/` | `GET` | - | Returns a list of active attacks |
 | `/attack/queue` | `GET` | - | Returns the contents of the pending new attack queue. |
 | `/attack/start/{uuid}` | `POST` | - | Triggers an attack against the specific container identified by `$uuid` |
-| `/attack/start` | `POST` | - | Triggers the chaos engine to start a new attack (same mechanism as when the `schedule` variable is hit) |
+| `/attack/start` | `POST` | - | Triggers the chaos engine to start a new attack (same mechanism as when the `schedule` variable is hit, but without random chance) |
 | `/health` | `GET` | - | System Health Check endpoint that can be used for IAAS/PAAS level health checks. Checks the API status of all platforms configured and validates they are working. |
 | `/logging/{id}` | `GET` | - | Returns the logging level for the `$id` class path. |
 | `/logging/{id}` | `POST` | *loggingLevel* | Sets the logging level for the `$id` class path to *loggingLevel* level (normal logging levels, i.e. DEBUG, INFO, WARN, ERROR...). |
