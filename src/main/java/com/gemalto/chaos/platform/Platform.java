@@ -33,7 +33,7 @@ public abstract class Platform implements AttackableObject {
     private Set<Instant> attackTimes = new HashSet<>();
     private Instant lastAttackTime = Instant.now();
     private HolidayManager holidayManager;
-    private double destructionThreshold = new Random().nextDouble();
+    private Double destructionThreshold;
 
 
     public List<Container> getRoster () {
@@ -92,12 +92,21 @@ public abstract class Platform implements AttackableObject {
             return false;
         }
         double attackChance = getAttackChance();
+        if (destructionThreshold == null) {
+            generateDestructionThreshold();
+        }
         if (attackChance > destructionThreshold) {
             log.info("Attack threshold reached for {}", this);
             return true;
         }
         log.debug("Still not yet at attack threshold: {}/{}", attackChance, destructionThreshold);
         return false;
+    }
+
+    private void generateDestructionThreshold () {
+        do {
+            destructionThreshold = new Random().nextGaussian() + 0.5;
+        } while (destructionThreshold <= 0 || destructionThreshold >= 1);
     }
 
     private boolean belowMinAttacks () {
@@ -143,7 +152,7 @@ public abstract class Platform implements AttackableObject {
 
     public Platform startAttack () {
         lastAttackTime = Instant.now();
-        destructionThreshold = new Random().nextDouble();
+        destructionThreshold = null;
         attackTimes.add(lastAttackTime);
         return this;
     }
