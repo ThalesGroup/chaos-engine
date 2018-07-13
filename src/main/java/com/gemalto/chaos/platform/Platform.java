@@ -106,7 +106,7 @@ public abstract class Platform implements AttackableObject {
     private void generateDestructionThreshold () {
         do {
             destructionThreshold = new Random().nextGaussian() + 0.5;
-        } while (destructionThreshold <= 0 || destructionThreshold >= 1);
+        } while (destructionThreshold <= 0.1 || destructionThreshold >= 0.9);
     }
 
     private boolean belowMinAttacks () {
