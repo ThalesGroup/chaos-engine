@@ -126,7 +126,7 @@ public abstract class Platform implements AttackableObject {
         attackProbability = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
         attackProbability *= millisSinceLastCheck / (double) averageTimeBetweenAttacks;
         log.debug("Chance of attack: {}", attackProbability);
-        log.debug("Based on: millisSinceLastAttack: {} averageTimeBetweenAttacks: {}", millisSinceLastAttack, averageTimeBetweenAttacks);
+        log.debug("Based on:\n" + " millisSinceLastAttack: {}\n" + "averageTimeBetweenAttacks: {}\n" + "millisSinceLastCheck: {}", millisSinceLastAttack, averageTimeBetweenAttacks, millisSinceLastCheck);
         updateLastAttackCheckTime();
         return attackProbability;
     }
