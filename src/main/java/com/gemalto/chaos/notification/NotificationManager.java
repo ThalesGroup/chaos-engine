@@ -1,20 +1,23 @@
 package com.gemalto.chaos.notification;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Collection;
 
 @Component
 public class NotificationManager {
     @Autowired(required = false)
-    private List<NotificationMethods> notificationMethods;
+    private Collection<NotificationMethods> notificationMethods;
+    @Autowired(required = false)
+    private Collection<BufferedNotificationMethod> bufferedNotificationMethods;
 
     @Autowired
     private NotificationManager () {
     }
 
-    NotificationManager (List<NotificationMethods> notificationMethods) {
+    NotificationManager (Collection<NotificationMethods> notificationMethods) {
         this.notificationMethods = notificationMethods;
     }
 
@@ -23,6 +26,13 @@ public class NotificationManager {
             for (NotificationMethods notif : notificationMethods) {
                 notif.logEvent(chaosEvent);
             }
+        }
+    }
+
+    @Scheduled(initialDelay = 1000 * 60, fixedDelay = 1000 * 5)
+    public void flushBuffers () {
+        if (bufferedNotificationMethods != null) {
+            bufferedNotificationMethods.forEach(BufferedNotificationMethod::flushBuffer);
         }
     }
 }

@@ -28,13 +28,6 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | `cf_space` | Cloud Foundry Space | `default` |
 | `cf_linked_applications` | Dependent Cloud Foundry applications. These are ignored entirely from Chaos, so as to prevent accidentally killing a dependent service | \<None\> |
 
-### All Chaos Types
-
-#### Variables
-| Variable | Description | Default |
-|----------|-------|---------|
-| `probability` | A float value that controls how likely a container is to experience a chaos event | `0.2` |
-
 ## Scheduling
 
 The Chaos Engine is designed to run persistently, but only perform events on a certain schedule, and with exceptions. Here is how to control when chaos will occur.
@@ -42,7 +35,7 @@ The Chaos Engine is designed to run persistently, but only perform events on a c
 #### Variables
 | Variable | Description | Default |
 |----------|-------|---------|
-| `schedule` | A cron string which controls how frequently Chaos is run | `0 0 * * * *` |
+| `schedule` | A cron string which controls how frequently new attacks are created | `0 0 * * * *` |
 
 ### Pausing Chaos
 
@@ -86,6 +79,11 @@ Notifications can be sent out through various methods when Chaos Events occur.
 
 
 ## Misc
+
+### Logging
+The Chaos Engine log level can be dynamically changed during runtime using a REST method located at `/logging`. A POST request with the new log level (of `ERROR`, `WARN`, `INFO`, `DEBUG`, or `TRACE`) will set the log level.
+
+A path variable of the class to specify can also be used. (i.e., `/logging/org.springframework`, or `/logging/com.gemalto.notification`) to control specific elements. If no classpath is specified, `com.gemalto` is defaulted.
 
 ### Self preservation
 The Chaos Engine will try to identify if it is running in the same environment that it is destroying. It will then try and prevent itself from matching itself as a chaos target. However, linked applications will need to be manually specified through environment variables. Specifics are listed with each Chaos target type.

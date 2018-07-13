@@ -1,31 +1,35 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.CloudFoundryAttack;
+import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryPlatform cloudFoundryPlatform;
+    private transient Callable<Void> restageApplication = () -> {
+        cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
+        return null;
+    };
 
-    @Autowired
     private CloudFoundryContainer () {
-        supportedAttackTypes.addAll(Arrays.asList(AttackType.STATE));
+        super();
     }
 
     CloudFoundryContainer (String applicationId, String name, Integer instance) {
+        super();
         this.applicationId = applicationId;
         this.name = name;
         this.instance = instance;
@@ -42,33 +46,28 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryPlatform.checkHealth(applicationId, attackType);
+        return cloudFoundryPlatform.checkHealth(applicationId, attackType, instance);
     }
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return CloudFoundryAttack.builder()
-                                 .container(this)
-                                 .attackType(attackType)
-                                 .timeToLive(new Random().nextInt(5))
-                                 .build();
+        return GenericContainerAttack.builder()
+                                     .withContainer(this)
+                                     .withAttackType(attackType)
+                                     .withTimeToLive(new Random().nextInt(5))
+                                     .build();
     }
 
     @Override
-    public void attackContainerState () {
+    public String getSimpleName () {
+        return name + " - (" + instance + ")";
+    }
+
+    @StateAttack
+    public Callable<Void> restartContainer () {
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        return restageApplication;
     }
-
-    @Override
-    public void attackContainerNetwork () {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void attackContainerResources () {
-        cloudFoundryPlatform.degrade(this);
-    }
-
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
         RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
@@ -77,6 +76,12 @@ public class CloudFoundryContainer extends Container {
                                                                                                                .build();
         log.info("{}", restartApplicationInstanceRequest);
         return restartApplicationInstanceRequest;
+    }
+
+    private RestageApplicationRequest getRestageApplicationRequest () {
+        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
+        log.info("{}", restageApplicationRequest);
+        return restageApplicationRequest;
     }
 
     public String getApplicationId () {
@@ -96,7 +101,6 @@ public class CloudFoundryContainer extends Container {
         private String name;
         private Integer instance;
         private CloudFoundryPlatform cloudFoundryPlatform;
-        private FateManager fateManager;
 
         private CloudFoundryContainerBuilder () {
         }
@@ -125,18 +129,12 @@ public class CloudFoundryContainer extends Container {
             return this;
         }
 
-        public CloudFoundryContainerBuilder fateManager (FateManager fateManager) {
-            this.fateManager = fateManager;
-            return this;
-        }
-
         public CloudFoundryContainer build () {
             CloudFoundryContainer cloudFoundryContainer = new CloudFoundryContainer();
             cloudFoundryContainer.name = this.name;
             cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.applicationId = this.applicationId;
             cloudFoundryContainer.cloudFoundryPlatform = this.cloudFoundryPlatform;
-            cloudFoundryContainer.fateManager = this.fateManager;
             return cloudFoundryContainer;
         }
     }

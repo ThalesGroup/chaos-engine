@@ -1,78 +1,62 @@
 package com.gemalto.chaos.container;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.fateengine.FateEngine;
-import com.gemalto.chaos.fateengine.FateManager;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
-@Component
-public abstract class Container {
-    protected static List<AttackType> supportedAttackTypes = new ArrayList<>();
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-    protected FateManager fateManager;
+import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
+
+public abstract class Container implements AttackableObject {
+    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
+    private Method lastAttackMethod;
 
-    protected abstract Platform getPlatform ();
-
-    public boolean supportsAttackType (AttackType attackType) {
-        return supportedAttackTypes != null && supportedAttackTypes.contains(attackType);
-    }
-
-    public ContainerHealth getContainerHealth (AttackType attackType) {
-        updateContainerHealth(attackType);
-        return containerHealth;
-    }
-
-    private void updateContainerHealth (AttackType attackType) {
-        containerHealth = updateContainerHealthImpl(attackType);
-    }
-
-    protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
-
-    public Attack createAttack () {
-        return createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
-    }
-
-    public abstract Attack createAttack (AttackType attackType);
-
-    public boolean canDestroy () {
-        FateEngine fateEngine = fateManager.getFateEngineForContainer(this);
-        return fateEngine.canDestroy();
-    }
-
-    public void attackContainer (AttackType attackType) {
-        containerHealth = ContainerHealth.UNDER_ATTACK;
-        log.info("Starting a {} attack against container {}", attackType, this);
-        switch (attackType) {
-            case STATE:
-                attackContainerState();
-                break;
-            case NETWORK:
-                attackContainerNetwork();
-                break;
-            case RESOURCE:
-                attackContainerResources();
-                break;
+    protected Container () {
+        for (AttackType attackType : AttackType.values()) {
+            if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
+                supportedAttackTypes.add(attackType);
+            }
         }
     }
 
-    public abstract void attackContainerState ();
+    @Override
+    public boolean canAttack () {
+        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+    }
 
-    public abstract void attackContainerNetwork ();
+    protected abstract Platform getPlatform ();
 
-    public abstract void attackContainerResources ();
+    public List<AttackType> getSupportedAttackTypes () {
+        return supportedAttackTypes;
+    }
+
+    @Override
+    public boolean equals (Object o) {
+        if (o == null || o.getClass() != this.getClass()) {
+            return false;
+        }
+        Container other = (Container) o;
+        return this.getIdentity() == other.getIdentity();
+    }
 
     /**
      * Uses all the fields in the container implementation (but not the Container parent class)
@@ -85,6 +69,7 @@ public abstract class Container {
     public long getIdentity () {
         StringBuilder identity = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
             if (field.isSynthetic()) continue;
             field.setAccessible(true);
             try {
@@ -110,6 +95,8 @@ public abstract class Container {
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());
         for (Field field : this.getClass().getDeclaredFields()) {
+            if (Modifier.isTransient(field.getModifiers())) continue;
+            if (field.isSynthetic()) continue;
             field.setAccessible(true);
             try {
                 output.append("\n\t");
@@ -122,4 +109,61 @@ public abstract class Container {
         }
         return output.toString();
     }
+
+    public boolean supportsAttackType (AttackType attackType) {
+        return supportedAttackTypes.contains(attackType);
+    }
+
+    public ContainerHealth getContainerHealth (AttackType attackType) {
+        updateContainerHealth(attackType);
+        return containerHealth;
+    }
+
+    private void updateContainerHealth (AttackType attackType) {
+        containerHealth = updateContainerHealthImpl(attackType);
+    }
+
+    protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
+
+    public Attack createAttack () {
+        return createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
+    }
+
+    public abstract Attack createAttack (AttackType attackType);
+
+    public Callable<Void> attackContainer (AttackType attackType) {
+        containerHealth = ContainerHealth.UNDER_ATTACK;
+        log.info("Starting a {} attack against container {}", attackType, this);
+        return attackWithAnnotation(attackType.getAnnotation());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Callable<Void> attackWithAnnotation (Class<? extends Annotation> annotation) {
+        List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), annotation);
+        if (attackMethods.isEmpty()) {
+            throw new ChaosException("Could not find an attack vector");
+        }
+        Integer index = ThreadLocalRandom.current().nextInt(attackMethods.size());
+        try {
+            lastAttackMethod = attackMethods.get(index);
+            return (Callable<Void>) lastAttackMethod.invoke(this);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            log.error("Failed to run attack on container {}", this, e);
+            throw new ChaosException(e);
+        }
+    }
+
+    public void repeatAttack () {
+        if (lastAttackMethod == null) {
+            throw new ChaosException("Trying to repeat an attack without having a prior one");
+        }
+        containerHealth = ContainerHealth.UNDER_ATTACK;
+        try {
+            lastAttackMethod.invoke(this);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new ChaosException(e);
+        }
+    }
+
+    public abstract String getSimpleName ();
 }

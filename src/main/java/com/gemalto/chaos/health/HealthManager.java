@@ -6,19 +6,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
+import java.util.Collection;
 
 @Component
 public class HealthManager {
     public static final Logger log = LoggerFactory.getLogger(HealthManager.class);
     @Autowired(required = false)
-    private Set<SystemHealth> systemHealth;
+    private Collection<SystemHealth> systemHealth;
 
     @Autowired
     HealthManager () {
     }
 
-    HealthManager (Set<SystemHealth> systemHealth) {
+    HealthManager (Collection<SystemHealth> systemHealth) {
         this.systemHealth = systemHealth;
     }
 
