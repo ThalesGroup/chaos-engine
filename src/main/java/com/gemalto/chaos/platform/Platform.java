@@ -103,7 +103,7 @@ public abstract class Platform implements AttackableObject {
     }
 
     private double getAttackChance () {
-        double fudgeFactor;
+        double attackProbability;
         long millisSinceLastAttack;
         long averageTimeBetweenAttacks;
         long millisSinceLastCheck;
@@ -123,12 +123,12 @@ public abstract class Platform implements AttackableObject {
             millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
             if (millisSinceLastAttack == 0 || millisSinceLastCheck == 0) return 0;
         }
-        fudgeFactor = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
-        fudgeFactor *= millisSinceLastCheck / (double) averageTimeBetweenAttacks;
-        log.debug("Chance of attack: {}", fudgeFactor);
+        attackProbability = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
+        attackProbability *= millisSinceLastCheck / (double) averageTimeBetweenAttacks;
+        log.debug("Chance of attack: {}", attackProbability);
         log.debug("Based on: millisSinceLastAttack: {} averageTimeBetweenAttacks: {}", millisSinceLastAttack, averageTimeBetweenAttacks);
         updateLastAttackCheckTime();
-        return fudgeFactor;
+        return attackProbability;
     }
 
     private void updateLastAttackCheckTime () {
