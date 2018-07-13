@@ -27,13 +27,14 @@ public abstract class Platform implements AttackableObject {
     private static final double DEFAULT_PROBABILITY = 0.2D;
     private List<AttackType> supportedAttackTypes;
     private Expiring<List<Container>> roster;
-    private static final int MIN_ATTACKS_PER_PERIOD = 3;
-    private static final int MAX_ATTACKS_PER_PERIOD = 5;
-    private TemporalUnit attackPeriod = ChronoUnit.DAYS;
+    private static final int MIN_ATTACKS_PER_PERIOD = 1;
+    private static final int MAX_ATTACKS_PER_PERIOD = 30;
+    private TemporalUnit attackPeriod = ChronoUnit.HOURS;
     private Set<Instant> attackTimes = new HashSet<>();
-    private Instant lastAttackCheckTime = Instant.now();
     private Instant lastAttackTime = Instant.now();
     private HolidayManager holidayManager;
+    private double destructionThreshold = new Random().nextDouble();
+
 
     public List<Container> getRoster () {
         List<Container> returnValue;
@@ -82,16 +83,21 @@ public abstract class Platform implements AttackableObject {
     }
 
     @Override
-    public boolean canAttack () {
+    public synchronized boolean canAttack () {
         if (belowMinAttacks()) {
             log.info("{} is below its attack quota. Attacking.", this.getClass().getSimpleName());
             return true;
-        }
-        if (aboveMaxAttacks()) {
+        } else if (aboveMaxAttacks()) {
             log.info("{} is above its attack quota. Aborting.", this.getClass().getSimpleName());
             return false;
         }
-        return new Random().nextDouble() < getAttackChance();
+        double attackChance = getAttackChance();
+        if (attackChance > destructionThreshold) {
+            log.info("Attack threshold reached for {}", this);
+            return true;
+        }
+        log.debug("Still not yet at attack threshold: {}/{}", attackChance, destructionThreshold);
+        return false;
     }
 
     private boolean belowMinAttacks () {
@@ -106,34 +112,23 @@ public abstract class Platform implements AttackableObject {
         double attackProbability;
         long millisSinceLastAttack;
         long averageTimeBetweenAttacks;
-        long millisSinceLastCheck;
         if (attackPeriod.getDuration().toMillis() > ChronoUnit.DAYS.getDuration().toMillis()) {
             // Handle if probability is in weeks/months
             averageTimeBetweenAttacks = holidayManager.getWorkingMillisInDuration(attackPeriod.getDuration()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
-            millisSinceLastCheck = holidayManager.getWorkingMillisSinceInstant(lastAttackCheckTime);
             millisSinceLastAttack = holidayManager.getWorkingMillisSinceInstant(lastAttackTime);
         } else {
             averageTimeBetweenAttacks = Math.min(attackPeriod.getDuration()
                                                              .toMillis(), holidayManager.getTotalMillisInDay()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
             long now = Instant.now().toEpochMilli();
             Instant startOfDay = holidayManager.getStartOfDay();
-            millisSinceLastCheck = now - lastAttackCheckTime.toEpochMilli() - (lastAttackCheckTime.isBefore(startOfDay) ? holidayManager
-                    .getOvernightMillis() : 0);
             long lastAttackTimeMillis = lastAttackTime.toEpochMilli();
             millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
-            if (millisSinceLastAttack == 0 || millisSinceLastCheck == 0) return 0;
+            if (millisSinceLastAttack == 0) return 0;
         }
         attackProbability = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
-        attackProbability *= millisSinceLastCheck / (double) averageTimeBetweenAttacks;
-        log.debug("Chance of attack: {}", attackProbability);
-        log.debug("Based on:\n" + " millisSinceLastAttack: {}\n" + "averageTimeBetweenAttacks: {}\n" + "millisSinceLastCheck: {}", millisSinceLastAttack, averageTimeBetweenAttacks, millisSinceLastCheck);
-        updateLastAttackCheckTime();
         return attackProbability;
     }
 
-    private void updateLastAttackCheckTime () {
-        lastAttackCheckTime = Instant.now();
-    }
 
     private int getAttacksInPeriod () {
         Instant beginningOfAttackPeriod;
@@ -148,6 +143,7 @@ public abstract class Platform implements AttackableObject {
 
     public Platform startAttack () {
         lastAttackTime = Instant.now();
+        destructionThreshold = new Random().nextDouble();
         attackTimes.add(lastAttackTime);
         return this;
     }
