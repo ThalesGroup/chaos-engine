@@ -27,9 +27,9 @@ public abstract class Platform implements AttackableObject {
     private static final double DEFAULT_PROBABILITY = 0.2D;
     private List<AttackType> supportedAttackTypes;
     private Expiring<List<Container>> roster;
-    private static final int MIN_ATTACKS_PER_PERIOD = 1;
-    private static final int MAX_ATTACKS_PER_PERIOD = 30;
-    private TemporalUnit attackPeriod = ChronoUnit.HOURS;
+    private static final int MIN_ATTACKS_PER_PERIOD = 3;
+    private static final int MAX_ATTACKS_PER_PERIOD = 5;
+    private TemporalUnit attackPeriod = ChronoUnit.DAYS;
     private Set<Instant> attackTimes = new HashSet<>();
     private Instant lastAttackTime = Instant.now();
     private HolidayManager holidayManager;
