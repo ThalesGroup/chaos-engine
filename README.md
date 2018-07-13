@@ -15,7 +15,6 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | STATE | Yes | Supports randomly stopping application instances. |
 | RESOURCE | No  | Does not support starving of CPU, Memory, or Disk Performance |
 | NETWORK | No  | Does not support interfering in network latency, corruption, or reliability |
-| PLATFORM | No  | Does not support interfering with the platform between containers (i.e., routes) |
 
 #### Variables
 | Variable | Description | Default |
@@ -28,11 +27,30 @@ The following platforms act as entry points for the Chaos Engine. At least one n
 | `cf_space` | Cloud Foundry Space | `default` |
 | `cf_linked_applications` | Dependent Cloud Foundry applications. These are ignored entirely from Chaos, so as to prevent accidentally killing a dependent service | \<None\> |
 
+### Amazon AWS EC2
+
+#### Supports
+| Chaos Type | Supported | Description |
+| :-: | :-: | --- |
+| STATE | Yes | Supports randomly stopping EC2 instances. |
+| RESOURCE | No | Does not support starving of CPU, Memory, or Disk Resources
+| NETWORK | No | Does not support interfering in network latency, corruption, reliability, or routing. |
+
+#### Variables
+| Variable | Description | Default |
+| --- | --- | ---
+| *`AWS_ACCESS_KEY_ID`*     | AWS Access Key ID | \<None\> |
+| *`AWS_SECRET_ACCESS_KEY`* | AWS Secret Access Key | \<None\> |
+| `AWS_REGION` | AWS Region to target | `us-east-2` |
+| `AWS_FILTER_KEYS` | Comma separated list of keys to use for filtering AWS EC2 Container | \<None\> |
+| `AWS_FILTER_VALUES` | Comma separated list of values to use for filtering AWS EC2 Container.  | \<None\> |
+
+
 ## Scheduling
 
 The Chaos Engine is designed to run persistently, but only perform events on a certain schedule, and with exceptions. Here is how to control when chaos will occur.
 
-#### Variables
+### Variables
 | Variable | Description | Default |
 |----------|-------|---------|
 | `schedule` | A cron string which controls how frequently new attacks are created | `0 0 * * * *` |
@@ -71,10 +89,33 @@ Notifications can be sent out through various methods when Chaos Events occur.
 | *`datadog_apikey`* | API Key for DataDog access. | \<None\> |
 
 ### Slack
+
+Notifications can be sent to a slack channel when a Chaos Event occurs. Configure a Slack Webhook and provide the URI as an argument.
+
 #### Variables
 | Variable | Effect | Default |
 |----------|--------|--------|
 | *`slack_webhookuri`* | Web Hook URI for pushing to Slack. | \<None\> |
+
+
+## Rest Controllers
+
+Various REST endpoints are available for interacting with the Chaos Engine.
+| URI | METHOD | Required Variables | Effect |
+| :-: | :-: | :-- | --- |
+| `/attack/{uuid}` | `GET` | - | Returns the attack against a container identified by `$uuid` |
+| `/attack/` | `GET` | - | Returns a list of active attacks |
+| `/attack/queue` | `GET` | - | Returns the contents of the pending new attack queue. |
+| `/attack/start/{uuid}` | `POST` | - | Triggers an attack against the specific container identified by `$uuid` |
+| `/attack/start` | `POST` | - | Triggers the chaos engine to start a new attack (same mechanism as when the `schedule` variable is hit) |
+| `/health` | `GET` | - | System Health Check endpoint that can be used for IAAS/PAAS level health checks. Checks the API status of all platforms configured and validates they are working. |
+| `/logging/{id}` | `GET` | - | Returns the logging level for the `$id` class path. |
+| `/logging/{id}` | `POST` | *loggingLevel* | Sets the logging level for the `$id` class path to *loggingLevel* level (normal logging levels, i.e. DEBUG, INFO, WARN, ERROR...). |
+| `/logging` | `GET` | - | Returns the logging level for the `com.gemalto` class path. |
+| `/logging` | `POST` | *loggingLevel* | Sets the logging level for the `com.gemalto` class path to *loggingLevel* level (normal logging levels, i.e. DEBUG, INFO, WARN, ERROR...). |
+| `/platform/health` | `GET` | - | Returns the health level of all platforms in Chaos. |
+| `/platform` | `GET` | - | Returns a list of all platforms, including the roster of containers and the recent attack schedule. |
+
 
 
 
