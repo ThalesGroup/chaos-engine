@@ -65,19 +65,19 @@ public class CloudFoundryContainer extends Container {
         return name + " - (" + instance + ")";
     }
 
-    // @StateAttack <- TO BE UNCOMMENTED
+    // @StateAttack
     public Callable<Void> restartContainer () {
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
         return restageApplication;
     }
 
-    // @StateAttack <- TO BE UNCOMMENTED
+    @StateAttack
     public Callable<Void> forkBomb () {
         cloudFoundryPlatform.sshAttack(new ForkBomb(), this);
         return restageApplication;
     }
 
-    @StateAttack
+    // @StateAttack
     public Callable<Void> terminateProcess () {
         cloudFoundryPlatform.sshAttack(new RandomProcessTermination(), this);
         return restageApplication;
