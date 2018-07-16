@@ -33,7 +33,7 @@ public class ShellSessionCapabilityProvider {
         for (ShellSessionCapability requiredCapability : requiredCapabilities) {
             switch (requiredCapability.getCapabilityType()) {
                 case SHELL:
-                    capabilities.add(getShellType());
+                    checkShellType();
                     break;
                 case BINARY:
                     checkBinaryPresent(requiredCapability.getCapabilityOptions());
@@ -42,7 +42,7 @@ public class ShellSessionCapabilityProvider {
         }
     }
 
-    private ShellSessionCapability getShellType () {
+    private void checkShellType () {
         ShellSessionCapability capability;
         SshCommandResult result = sshManager.executeCommand(ShellCommand.SHELLTYPE.toString());
         if (result.getExitStatus() == 0 && result.getCommandOutput().length() > 0) {
@@ -53,13 +53,14 @@ public class ShellSessionCapabilityProvider {
                 if (type.toString().matches(shellName)) {
                     capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
                     capability.addCapabilityOption(type.name());
-                    return capability;
+                    capabilities.add(capability);
                 }
             }
+        } else {
+            capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
+            capability.addCapabilityOption(ShellType.UNKNOWN.name());
+            capabilities.add(capability);
         }
-        capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
-        capability.addCapabilityOption(ShellType.UNKNOWN.name());
-        return capability;
     }
 
     private void checkBinaryPresent (ArrayList<String> binaryOptions) {

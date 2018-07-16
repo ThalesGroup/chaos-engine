@@ -4,6 +4,7 @@ public enum BinaryType {
     KILL("kill"),
     TYPE("type"),
     GREP("grep"),
+    SORT("sort"),
     UNKNOWN("unknown");
     private String binaryName;
 

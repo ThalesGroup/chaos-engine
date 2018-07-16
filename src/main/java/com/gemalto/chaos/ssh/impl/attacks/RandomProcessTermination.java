@@ -29,6 +29,8 @@ public class RandomProcessTermination extends SshAttack {
                 .getBinaryName()));
         requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.KILL
                 .getBinaryName()));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.SORT
+                .getBinaryName()));
     }
 
     @Override
