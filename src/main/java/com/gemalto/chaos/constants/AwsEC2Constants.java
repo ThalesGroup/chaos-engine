@@ -12,6 +12,6 @@ public abstract class AwsEC2Constants {
     }
 
     public static int[] getAwsUnhealthyCodes () {
-        return new int[]{ AWS_PENDING_CODE, AWS_SHUTTING_DOWN_CODE, AWS_STOPPING_CODE, AWS_STOPPED_CODE, AWS_TERMINATED_CODE, AWS_STOPPED_CODE };
+        return new int[]{ AWS_PENDING_CODE, AWS_SHUTTING_DOWN_CODE, AWS_STOPPING_CODE, AWS_STOPPED_CODE, AWS_STOPPED_CODE };
     }
 }
