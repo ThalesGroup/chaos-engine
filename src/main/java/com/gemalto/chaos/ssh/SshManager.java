@@ -59,13 +59,14 @@ public class SshManager {
             //ttl is there for security reasons when the library don't recognize disconnected channel
             //can happen when aggressive attacks are performed
             int ttl = 0;
-            while (ssh.isConnected() && !shell.isEOF() && !shell.isOpen() && !session.isEOF() && ttl < maxSessionDuration) {
+            while (ssh.isConnected() && !shell.isEOF() && shell.isOpen() && !session.isEOF() && ttl < maxSessionDuration) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                log.debug("Interactive SSH session {} is still active, TTL: ", shellName, maxSessionDuration - ttl);
+                log.debug("Interactive SSH session {} is still active, TTL: {}", shellName, maxSessionDuration - ttl);
+                ttl++;
             }
             log.debug("Interactive SSH session {} has ended. Closing the shell", shellName);
             if (session.isOpen()) {
