@@ -135,10 +135,8 @@ public abstract class Platform implements AttackableObject {
         return calculateMTBFPercentile(millisSinceLastAttack, averageTimeBetweenAttacks);
     }
 
-    private static double calculateMTBFPercentile (long millisSinceLastAttack, double averageTimeBetweenAttacks) {
-        double attackProbability;
-        attackProbability = (Math.pow(Math.E, Math.log(0.5) * millisSinceLastAttack / averageTimeBetweenAttacks) * -1 + 1);
-        return attackProbability;
+    private static double calculateMTBFPercentile (float millisSinceLastAttack, float averageTimeBetweenAttacks) {
+        return 1 - Math.pow(0.5, millisSinceLastAttack / averageTimeBetweenAttacks);
     }
 
     private int getAttacksInPeriod () {
