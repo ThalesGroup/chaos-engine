@@ -28,11 +28,11 @@ public class SshManager {
 
     public boolean connect (String userName, String password) {
         try {
-            log.debug("Connecting to {}", hostname);
+            log.debug("Connecting to host {}", hostname);
             ssh.connect(hostname, Integer.valueOf(port));
             ssh.authPassword(userName, password);
             if (ssh.isConnected() && ssh.isAuthenticated()) {
-                log.debug("Connection to {} succeeded.", hostname);
+                log.debug("Connection to host {} succeeded.", hostname);
                 return true;
             } else {
                 log.error("SSH Authentication failed.");
@@ -100,7 +100,9 @@ public class SshManager {
 
     public void disconnect () {
         try {
-            ssh.disconnect();
+            if (ssh.isConnected()) {
+                ssh.disconnect();
+            }
         } catch (IOException e) {
             log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
         }

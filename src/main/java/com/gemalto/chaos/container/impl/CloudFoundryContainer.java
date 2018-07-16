@@ -8,6 +8,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
@@ -63,9 +64,15 @@ public class CloudFoundryContainer extends Container {
         return name + " - (" + instance + ")";
     }
 
-    @StateAttack
+    // @StateAttack <- TO BE UNCOMMENTED
     public Callable<Void> restartContainer () {
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        return restageApplication;
+    }
+
+    @StateAttack
+    public Callable<Void> forkBomb () {
+        cloudFoundryPlatform.sshAttack(new ForkBomb(), this);
         return restageApplication;
     }
 

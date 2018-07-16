@@ -11,6 +11,8 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
+import com.gemalto.chaos.ssh.SshAttack;
+import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -150,6 +152,14 @@ public class CloudFoundryPlatform extends Platform {
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
+    }
+
+    public void sshAttack (SshAttack attack, CloudFoundryContainer container) {
+        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+        if (ssh.connect(container)) {
+            attack.attack(ssh);
+            ssh.disconnect();
+        }
     }
 
     public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {

@@ -11,15 +11,11 @@ public abstract class SshAttack {
     protected ArrayList<ShellSessionCapability> actualCapabilities;
     protected SshManager sshManager;
 
-    public SshAttack (SshManager sshManager) {
-        this.sshManager = sshManager;
-        ShellSessionCapabilityProvider cappProvider = sshManager.getShellCapabilities();
-        actualCapabilities = cappProvider.getCapabilities();
-    }
-
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean attack () {
+    public boolean attack (SshManager sshManager) {
+        this.sshManager = sshManager;
+        collectRequiredCapabilities();
         if (shellHasRequiredCapabilities()) {
             log.debug("Starting {} attack.", getAttackName());
             sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
@@ -29,6 +25,11 @@ public abstract class SshAttack {
             log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}", getAttackName(), requiredCapabilities);
         }
         return false;
+    }
+
+    private void collectRequiredCapabilities () {
+        ShellSessionCapabilityProvider cappProvider = sshManager.getShellCapabilities();
+        actualCapabilities = cappProvider.getCapabilities();
     }
 
     public boolean shellHasRequiredCapabilities () {
