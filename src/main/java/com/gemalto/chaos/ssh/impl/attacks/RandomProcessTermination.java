@@ -47,6 +47,6 @@ public class RandomProcessTermination extends SshAttack {
 
     @Override
     protected int getSshSessionMaxDuration () {
-        return 60;
+        return 10;
     }
 }
