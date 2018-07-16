@@ -66,13 +66,13 @@ public class AttackManager {
     private void updateAttackStatusImpl () {
         log.info("Updating status on active attacks");
         Set<Attack> finishedAttacks = new HashSet<>();
-        for (Attack attack : activeAttacks) {
+        activeAttacks.parallelStream().forEach(attack -> {
             AttackState attackState = attack.getAttackState();
             if (attackState == AttackState.FINISHED) {
                 log.info("Removing attack from active attack roster");
                 finishedAttacks.add(attack);
             }
-        }
+        });
         activeAttacks.removeAll(finishedAttacks);
     }
 
