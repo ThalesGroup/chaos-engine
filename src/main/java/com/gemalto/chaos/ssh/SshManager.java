@@ -65,7 +65,7 @@ public class SshManager {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                log.debug("Interactive SSH session {} is still active", shellName);
+                log.debug("Interactive SSH session {} is still active, TTL: ", shellName, maxSessionDuration - ttl);
             }
             log.debug("Interactive SSH session {} has ended. Closing the shell", shellName);
             if (session.isOpen()) {
