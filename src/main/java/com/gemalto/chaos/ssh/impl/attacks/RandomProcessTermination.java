@@ -40,7 +40,7 @@ public class RandomProcessTermination extends SshAttack {
 
     @Override
     protected String getAttackCommand () {
-        return "echo NOOP";
+        return "kill $(cd /proc;ls -1 | grep '[0-9]' |sort -R | head -1)";
     }
 
     @Override
