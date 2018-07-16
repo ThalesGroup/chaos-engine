@@ -22,13 +22,13 @@ public abstract class SshAttack {
             log.debug("Attack {} deployed.", getAttackName());
             return true;
         } else {
-            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}", getAttackName(), requiredCapabilities);
+            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, actualCapabilities);
         }
         return false;
     }
 
     private void collectRequiredCapabilities () {
-        ShellSessionCapabilityProvider cappProvider = sshManager.getShellCapabilities();
+        ShellSessionCapabilityProvider cappProvider = getShellCapabilities();
         actualCapabilities = cappProvider.getCapabilities();
     }
 
@@ -36,10 +36,17 @@ public abstract class SshAttack {
         log.debug("Checking SSH attack required capabilities");
         for (ShellSessionCapability required : requiredCapabilities) {
             if (!requiredCapabilityMet(required)) {
+                log.debug("SSH Session does not have capability: {}", required);
                 return false;
             }
         }
         return true;
+    }
+
+    private ShellSessionCapabilityProvider getShellCapabilities () {
+        ShellSessionCapabilityProvider capabilities = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
+        capabilities.build();
+        return capabilities;
     }
 
     protected abstract String getAttackName ();

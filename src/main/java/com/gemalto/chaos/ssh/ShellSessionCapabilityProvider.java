@@ -13,9 +13,11 @@ public class ShellSessionCapabilityProvider {
     private static final Logger log = LoggerFactory.getLogger(ShellSessionCapabilityProvider.class);
     private SshManager sshManager;
     private ArrayList<ShellSessionCapability> capabilities = new ArrayList<>();
+    private ArrayList<ShellSessionCapability> requiredCapabilities;
 
-    public ShellSessionCapabilityProvider (SshManager sshManager) {
+    public ShellSessionCapabilityProvider (SshManager sshManager, ArrayList<ShellSessionCapability> requiredCapabilities) {
         this.sshManager = sshManager;
+        this.requiredCapabilities = requiredCapabilities;
     }
 
     public ArrayList<ShellSessionCapability> getCapabilities () {
@@ -24,13 +26,26 @@ public class ShellSessionCapabilityProvider {
 
     public void build () {
         log.debug("Collecting shell session capabilities");
-        capabilities.add(getShellType());
+        getAvailableCapabilities();
+    }
+
+    private void getAvailableCapabilities () {
+        for (ShellSessionCapability requiredCapability : requiredCapabilities) {
+            switch (requiredCapability.getCapabilityType()) {
+                case SHELL:
+                    capabilities.add(getShellType());
+                    break;
+                case BINARY:
+                    checkBinaryPresent(requiredCapability.getCapabilityOptions());
+                    break;
+            }
+        }
     }
 
     private ShellSessionCapability getShellType () {
         ShellSessionCapability capability;
         SshCommandResult result = sshManager.executeCommand(ShellCommand.SHELLTYPE.toString());
-        if (result.getExitStatus() != -1 && result.getCommandOutput().length() > 0) {
+        if (result.getExitStatus() == 0 && result.getCommandOutput().length() > 0) {
             String shellName = result.getCommandOutput();
             shellName = shellName.toUpperCase().trim();
             shellName = parseFileNameFromFilePath(shellName);
@@ -45,6 +60,18 @@ public class ShellSessionCapabilityProvider {
         capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
         capability.addCapabilityOption(ShellType.UNKNOWN.name());
         return capability;
+    }
+
+    private void checkBinaryPresent (ArrayList<String> binaryOptions) {
+        for (String option : binaryOptions) {
+            SshCommandResult result = sshManager.executeCommand(ShellCommand.BINARYEXISTS + option);
+            if (result.getExitStatus() == 0 && result.getCommandOutput().length() > 0) {
+                //String shellName = result.getCommandOutput();
+                ShellSessionCapability capability = new ShellSessionCapability(ShellCapabilityType.BINARY);
+                capability.addCapabilityOption(option);
+                capabilities.add(capability);
+            }
+        }
     }
 
     private String parseFileNameFromFilePath (String filepath) {

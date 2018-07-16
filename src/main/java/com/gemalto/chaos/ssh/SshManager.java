@@ -107,10 +107,4 @@ public class SshManager {
             log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
         }
     }
-
-    public ShellSessionCapabilityProvider getShellCapabilities () {
-        ShellSessionCapabilityProvider capabilities = new ShellSessionCapabilityProvider(this);
-        capabilities.build();
-        return capabilities;
-    }
 }
