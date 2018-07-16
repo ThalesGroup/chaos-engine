@@ -134,10 +134,14 @@ public abstract class Platform implements AttackableObject {
             millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
             if (millisSinceLastAttack == 0) return 0;
         }
-        attackProbability = Math.pow(Math.E, -1 * millisSinceLastAttack / (double) averageTimeBetweenAttacks) * -1 + 1;
-        return attackProbability;
+        return calculateMTBFPercentile(millisSinceLastAttack, averageTimeBetweenAttacks);
     }
 
+    private static double calculateMTBFPercentile (long millisSinceLastAttack, double averageTimeBetweenAttacks) {
+        double attackProbability;
+        attackProbability = (Math.pow(Math.E, Math.log(0.5) * millisSinceLastAttack / averageTimeBetweenAttacks) * -1 + 1);
+        return attackProbability;
+    }
 
     private int getAttacksInPeriod () {
         Instant beginningOfAttackPeriod;
