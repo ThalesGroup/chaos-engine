@@ -5,9 +5,13 @@ public enum BinaryType {
     TYPE("type"),
     GREP("grep"),
     UNKNOWN("unknown");
-    private String binaryType;
+    private String binaryName;
 
-    BinaryType (String binaryType) {
-        this.binaryType = binaryType;
+    BinaryType (String binaryName) {
+        this.binaryName = binaryName;
+    }
+
+    public String getBinaryName () {
+        return binaryName;
     }
 }
