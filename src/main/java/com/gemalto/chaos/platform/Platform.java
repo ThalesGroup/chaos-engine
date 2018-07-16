@@ -35,7 +35,6 @@ public abstract class Platform implements AttackableObject {
     private HolidayManager holidayManager;
     private Double destructionThreshold;
 
-
     public List<Container> getRoster () {
         List<Container> returnValue;
         if (roster == null || roster.value() == null) {
@@ -118,7 +117,6 @@ public abstract class Platform implements AttackableObject {
     }
 
     private double getAttackChance () {
-        double attackProbability;
         long millisSinceLastAttack;
         long averageTimeBetweenAttacks;
         if (attackPeriod.getDuration().toMillis() > ChronoUnit.DAYS.getDuration().toMillis()) {
