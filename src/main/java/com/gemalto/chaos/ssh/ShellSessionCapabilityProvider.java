@@ -56,10 +56,6 @@ public class ShellSessionCapabilityProvider {
                     capabilities.add(capability);
                 }
             }
-        } else {
-            capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
-            capability.addCapabilityOption(ShellType.UNKNOWN.name());
-            capabilities.add(capability);
         }
     }
 
