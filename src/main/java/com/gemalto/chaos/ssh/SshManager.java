@@ -16,22 +16,22 @@ import java.util.concurrent.TimeUnit;
 
 public class SshManager {
     private static final Logger log = LoggerFactory.getLogger(SshManager.class);
-    private SSHClient ssh = new SSHClient();
+    private SSHClient sshClient = new SSHClient();
     private String hostname;
     private String port;
 
     public SshManager (String hostname, String port) {
         this.hostname = hostname;
         this.port = port;
-        ssh.addHostKeyVerifier(new PromiscuousVerifier());
+        sshClient.addHostKeyVerifier(new PromiscuousVerifier());
     }
 
     public boolean connect (String userName, String password) {
         try {
             log.debug("Connecting to host {}", hostname);
-            ssh.connect(hostname, Integer.valueOf(port));
-            ssh.authPassword(userName, password);
-            if (ssh.isConnected() && ssh.isAuthenticated()) {
+            sshClient.connect(hostname, Integer.valueOf(port));
+            sshClient.authPassword(userName, password);
+            if (sshClient.isConnected() && sshClient.isAuthenticated()) {
                 log.debug("Connection to host {} succeeded.", hostname);
                 return true;
             } else {
@@ -45,7 +45,7 @@ public class SshManager {
 
     public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) {
         try {
-            Session session = ssh.startSession();
+            Session session = sshClient.startSession();
             session.allocateDefaultPTY();
             log.debug("Going to execute command {} in interactive shell session {}", command, shellName);
             Session.Shell shell = session.startShell();
@@ -55,11 +55,11 @@ public class SshManager {
             outputStream.write(Strings.toUTF8ByteArray(command + "\n"));
             outputStream.flush();
             InputStream stream = shell.getInputStream();
-            //Interactive session must be ended by exit command or ssh connection drop
+            //Interactive session must be ended by exit command or sshClient connection drop
             //ttl is there for security reasons when the library don't recognize disconnected channel
             //can happen when aggressive attacks are performed
             int ttl = 0;
-            while (ssh.isConnected() && !shell.isEOF() && shell.isOpen() && !session.isEOF() && ttl < maxSessionDuration) {
+            while (sshClient.isConnected() && !shell.isEOF() && shell.isOpen() && !session.isEOF() && ttl < maxSessionDuration) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -84,7 +84,7 @@ public class SshManager {
 
     public SshCommandResult executeCommand (String command) {
         try {
-            Session session = ssh.startSession();
+            Session session = sshClient.startSession();
             session.allocateDefaultPTY();
             log.debug("Going to execute command: {}", command);
             Command cmd = session.exec(command);
@@ -101,8 +101,8 @@ public class SshManager {
 
     public void disconnect () {
         try {
-            if (ssh.isConnected()) {
-                ssh.disconnect();
+            if (sshClient.isConnected()) {
+                sshClient.disconnect();
             }
         } catch (IOException e) {
             log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
