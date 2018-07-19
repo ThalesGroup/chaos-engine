@@ -19,3 +19,4 @@ public class ConsoleNotification implements NotificationMethods {
         log.debug("{}", event);
     }
 }
+

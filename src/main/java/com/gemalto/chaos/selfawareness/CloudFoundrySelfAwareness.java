@@ -36,3 +36,4 @@ public class CloudFoundrySelfAwareness {
         return (linkedApplicationNames.contains(applicationName));
     }
 }
+
