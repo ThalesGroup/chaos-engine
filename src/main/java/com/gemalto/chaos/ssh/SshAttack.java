@@ -11,34 +11,42 @@ public abstract class SshAttack {
     protected ArrayList<ShellSessionCapability> actualCapabilities;
     protected SshManager sshManager;
 
-    public SshAttack (SshManager sshManager) {
-        this.sshManager = sshManager;
-        ShellSessionCapabilityProvider cappProvider = sshManager.getShellCapabilities();
-        actualCapabilities = cappProvider.getCapabilities();
-    }
-
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean attack () {
+    public boolean attack (SshManager sshManager) {
+        this.sshManager = sshManager;
+        collectAvailableCapabilities();
         if (shellHasRequiredCapabilities()) {
             log.debug("Starting {} attack.", getAttackName());
             sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
             log.debug("Attack {} deployed.", getAttackName());
             return true;
         } else {
-            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}", getAttackName(), requiredCapabilities);
+            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, actualCapabilities);
         }
         return false;
+    }
+
+    private void collectAvailableCapabilities () {
+        ShellSessionCapabilityProvider capProvider = getShellCapabilities();
+        actualCapabilities = capProvider.getCapabilities();
     }
 
     public boolean shellHasRequiredCapabilities () {
         log.debug("Checking SSH attack required capabilities");
         for (ShellSessionCapability required : requiredCapabilities) {
             if (!requiredCapabilityMet(required)) {
+                log.debug("SSH Session does not have capability: {}", required);
                 return false;
             }
         }
         return true;
+    }
+
+    private ShellSessionCapabilityProvider getShellCapabilities () {
+        ShellSessionCapabilityProvider capabilities = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
+        capabilities.build();
+        return capabilities;
     }
 
     protected abstract String getAttackName ();
