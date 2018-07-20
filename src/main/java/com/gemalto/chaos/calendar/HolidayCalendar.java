@@ -99,3 +99,4 @@ public interface HolidayCalendar {
         return calendar.get(Calendar.DAY_OF_YEAR);
     }
 }
+

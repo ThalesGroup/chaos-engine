@@ -37,7 +37,7 @@ public class AttackManager {
         return attack;
     }
 
-    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 15 * 1000)
+    @Scheduled(fixedDelay = 15 * 1000)
     private synchronized void updateAttackStatus () {
         synchronized (activeAttacks) {
             startNewAttacks();
@@ -66,22 +66,27 @@ public class AttackManager {
     private void updateAttackStatusImpl () {
         log.info("Updating status on active attacks");
         Set<Attack> finishedAttacks = new HashSet<>();
-        for (Attack attack : activeAttacks) {
+        activeAttacks.parallelStream().forEach(attack -> {
             AttackState attackState = attack.getAttackState();
             if (attackState == AttackState.FINISHED) {
                 log.info("Removing attack from active attack roster");
                 finishedAttacks.add(attack);
             }
-        }
+        });
         activeAttacks.removeAll(finishedAttacks);
     }
 
     @Scheduled(cron = "${schedule:0 0 * * * *}")
     void startAttacks () {
+        startAttacks(false);
+    }
+
+    void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
             Optional<Platform> optionalPlatform = platformManager.getPlatforms().parallelStream()
                                                                  .map(platform -> platform.usingHolidayManager(holidayManager))
-                                                                 .filter(Platform::canAttack)
+                                                                 .filter(platform1 -> force || platform1.canAttack())
+                                                                 // "force" needs to be before the .canAttack(), so if it's true canAttack is not evaluated.
                                                                  .findFirst();
             if (optionalPlatform.isPresent()) {
                 Platform platform = optionalPlatform.get();

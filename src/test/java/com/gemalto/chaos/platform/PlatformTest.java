@@ -17,6 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -76,5 +77,16 @@ public class PlatformTest {
         platform.getRoster();
         verify(platform, times(2)).generateRoster();
         assertThat(platform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(container));
+    }
+
+    @Test
+    public void calculateMTBFPercentile () {
+        assertEquals(0.5F, Platform.calculateMTBFPercentile(1, 1), 0.0001);
+        assertEquals(0.292893F, Platform.calculateMTBFPercentile(1, 2), 0.000001);
+        assertEquals(0.646447F, Platform.calculateMTBFPercentile(3, 2), 0.000001);
+        assertEquals(0.206299F, Platform.calculateMTBFPercentile(1, 3), 0.000001);
+        assertEquals(0.370039F, Platform.calculateMTBFPercentile(2, 3), 0.000001);
+        assertEquals(0.603150F, Platform.calculateMTBFPercentile(4, 3), 0.000001);
+        assertEquals(0.159104F, Platform.calculateMTBFPercentile(1, 4), 0.000001);
     }
 }

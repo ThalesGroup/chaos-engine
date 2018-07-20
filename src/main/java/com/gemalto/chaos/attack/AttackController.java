@@ -33,7 +33,7 @@ public class AttackController {
 
     @PostMapping("/start")
     public void startAttacks () {
-        attackManager.startAttacks();
+        attackManager.startAttacks(true);
     }
 
     @PostMapping("/start/{id}")

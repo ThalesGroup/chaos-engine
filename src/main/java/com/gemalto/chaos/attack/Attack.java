@@ -1,6 +1,5 @@
 package com.gemalto.chaos.attack;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
@@ -86,7 +85,7 @@ public abstract class Attack {
                 log.info("This attack has gone on too long, invoking self-healing. \n{}", this);
                 selfHealingMethod.call();
             } catch (Exception e) {
-                throw new ChaosException("An exception occurred while self-healing", e);
+                log.error("An exception occurred while running self-healing.", e);
             }
         }
         switch (container.getContainerHealth(attackType)) {
