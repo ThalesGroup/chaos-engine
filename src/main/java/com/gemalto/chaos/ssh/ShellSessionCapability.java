@@ -22,6 +22,9 @@ public class ShellSessionCapability {
         return capabilityOptions;
     }
 
+    public boolean optionsEmpty () {
+        return capabilityOptions.isEmpty();
+    }
     public boolean hasAnOption (ArrayList<ShellSessionCapabilityOption> requiredOptions) {
         for (ShellSessionCapabilityOption option : requiredOptions) {
             for (ShellSessionCapabilityOption allowed : capabilityOptions) {

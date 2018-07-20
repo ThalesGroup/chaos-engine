@@ -27,6 +27,11 @@ public enum ShellSessionCapabilityOption {
         return type;
     }
 
+    @Override
+    public String toString () {
+        return getName();
+    }
+
     public static ArrayList<ShellSessionCapabilityOption> getShellTypes () {
         ArrayList<ShellSessionCapabilityOption> shellTypes = new ArrayList<>();
         for (ShellSessionCapabilityOption option : ShellSessionCapabilityOption.values()) {
