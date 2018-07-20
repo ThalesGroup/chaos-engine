@@ -1,6 +1,5 @@
 package com.gemalto.chaos.ssh.impl.attacks;
 
-import com.gemalto.chaos.ssh.ShellSessionCapabilityProvider;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
@@ -19,8 +18,6 @@ import static org.mockito.Mockito.when;
 public class RandomProcessTerminationTest {
     @Mock
     private SshManager sshManager;
-    @Mock
-    private ShellSessionCapabilityProvider capabilitiesProvider;
     @Mock
     private SshCommandResult resultShellCapability;
     @Mock

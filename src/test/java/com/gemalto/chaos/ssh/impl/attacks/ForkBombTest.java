@@ -1,6 +1,5 @@
 package com.gemalto.chaos.ssh.impl.attacks;
 
-import com.gemalto.chaos.ssh.ShellSessionCapabilityProvider;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
@@ -17,8 +16,6 @@ import static org.mockito.Mockito.when;
 public class ForkBombTest {
     @Mock
     SshManager sshManager;
-    @Mock
-    ShellSessionCapabilityProvider capabilitiesProvider;
     @Mock
     SshCommandResult result;
 
