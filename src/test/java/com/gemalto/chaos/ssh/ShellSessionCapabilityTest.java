@@ -1,6 +1,7 @@
 package com.gemalto.chaos.ssh;
 
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,24 +16,23 @@ public class ShellSessionCapabilityTest {
     @Before
     public void setUp () throws Exception {
         shellCapability = new ShellSessionCapability(ShellCapabilityType.SHELL);
-        shellCapability.addCapabilityOption("opt1");
-        shellCapability.addCapabilityOption("opt2");
-        shellCapability.addCapabilityOption("opt3");
+        shellCapability.addCapabilityOption(ShellSessionCapabilityOption.ASH);
+        shellCapability.addCapabilityOption(ShellSessionCapabilityOption.BASH);
         binaryCapability = new ShellSessionCapability(ShellCapabilityType.BINARY);
-        binaryCapability.addCapabilityOption("opt1");
-        binaryCapability.addCapabilityOption("opt2");
-        binaryCapability.addCapabilityOption("opt3");
+        binaryCapability.addCapabilityOption(ShellSessionCapabilityOption.GREP);
+        binaryCapability.addCapabilityOption(ShellSessionCapabilityOption.SORT);
+        binaryCapability.addCapabilityOption(ShellSessionCapabilityOption.KILL);
     }
 
     @Test
     public void hasAnOption () {
-        ArrayList<String> reqOpts = new ArrayList<>();
+        ArrayList<ShellSessionCapabilityOption> reqOpts = new ArrayList<>();
         assertEquals(false, shellCapability.hasAnOption(reqOpts));
-        reqOpts.add("opt4");
+        reqOpts.add(ShellSessionCapabilityOption.SH);
         assertEquals(false, shellCapability.hasAnOption(reqOpts));
-        reqOpts.add("opt3");
+        reqOpts.add(ShellSessionCapabilityOption.BASH);
         assertEquals(true, shellCapability.hasAnOption(reqOpts));
-        reqOpts.add("opt1");
+        reqOpts.add(ShellSessionCapabilityOption.ASH);
         assertEquals(true, shellCapability.hasAnOption(reqOpts));
     }
 

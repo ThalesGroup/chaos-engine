@@ -3,8 +3,8 @@ package com.gemalto.chaos.ssh.impl.attacks;
 import com.gemalto.chaos.ssh.ShellSessionCapabilityProvider;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
-import com.gemalto.chaos.ssh.enums.BinaryType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,11 +49,11 @@ public class RandomProcessTerminationTest {
         when(resultHeadCapability.getExitStatus()).thenReturn(0);
         when(resultHeadCapability.getCommandOutput()).thenReturn("head");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.TYPE.getBinaryName())).thenReturn(resultTypeCapability);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.GREP.getBinaryName())).thenReturn(resultGrepCapability);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.KILL.getBinaryName())).thenReturn(resultKillCapability);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.SORT.getBinaryName())).thenReturn(resultSortCapability);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.HEAD.getBinaryName())).thenReturn(resultHeadCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.GREP)).thenReturn(resultGrepCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
     }
 
     @Test
@@ -81,10 +81,10 @@ public class RandomProcessTerminationTest {
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
         when(resultTypeCapability.getExitStatus()).thenReturn(-1);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.TYPE.getBinaryName())).thenReturn(resultTypeCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
         when(resultTypeCapability.getExitStatus()).thenReturn(2);
-        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.TYPE.getBinaryName())).thenReturn(resultTypeCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
     }
 }

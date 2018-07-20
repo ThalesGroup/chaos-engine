@@ -1,9 +1,8 @@
 package com.gemalto.chaos.ssh;
 
-import com.gemalto.chaos.ssh.enums.BinaryType;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
-import com.gemalto.chaos.ssh.enums.ShellType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -22,10 +21,8 @@ public class ShellSessionCapabilityProviderTest {
     SshCommandResult result;
     ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     ShellSessionCapabilityProvider provider;
-    ShellSessionCapability capabilityBash = new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellType.BASH
-            .name());
-    ShellSessionCapability capabilityBinary = new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.GREP
-            .name());
+    ShellSessionCapability capabilityBash = new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH);
+    ShellSessionCapability capabilityBinary = new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP);
 
     @Test
     public void sessionHasShellCapability () {
@@ -50,7 +47,7 @@ public class ShellSessionCapabilityProviderTest {
         initCapabilities(capabilityBinary);
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("test string");
-        when(ssh.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.GREP.name())).thenReturn(result);
+        when(ssh.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.GREP.toString())).thenReturn(result);
         provider.build();
         ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBinary);
@@ -66,7 +63,7 @@ public class ShellSessionCapabilityProviderTest {
         provider.build();
         ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBash);
-        assertTrue(provider.getCapabilities().size() == 1);
+        assertTrue(provider.getCapabilities().size() == 0);
         assertNotEquals(expectedCapabilities.toString(), provider.getCapabilities().toString());
     }
 
@@ -74,7 +71,7 @@ public class ShellSessionCapabilityProviderTest {
     public void sessionBinaryCapabilityMissing () {
         initCapabilities(capabilityBinary);
         when(result.getExitStatus()).thenReturn(1);
-        when(ssh.executeCommand(ShellCommand.BINARYEXISTS.toString() + BinaryType.GREP.name())).thenReturn(result);
+        when(ssh.executeCommand(ShellCommand.BINARYEXISTS + ShellSessionCapabilityOption.GREP.getName())).thenReturn(result);
         provider.build();
         assertTrue(provider.getCapabilities().size() == 0);
     }
