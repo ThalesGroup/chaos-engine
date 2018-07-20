@@ -3,7 +3,7 @@ package com.gemalto.chaos.ssh.impl.attacks;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.SshAttack;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
-import com.gemalto.chaos.ssh.enums.ShellType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +17,9 @@ public class ForkBomb extends SshAttack {
 
     @Override
     protected void buildRequiredCapabilities () {
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellType.BASH
-                .toString())
-                                                                                      .addCapabilityOption(ShellType.ASH
-                                                                                              .toString())
-                                                                                      .addCapabilityOption(ShellType.SH.toString()));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.ASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.SH));
     }
 
     @Override
