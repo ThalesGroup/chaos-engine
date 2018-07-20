@@ -2,12 +2,14 @@ package com.gemalto.chaos.ssh;
 
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
-import com.gemalto.chaos.ssh.enums.ShellType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+
+\
 
 public class ShellSessionCapabilityProvider {
     private static final Logger log = LoggerFactory.getLogger(ShellSessionCapabilityProvider.class);
@@ -49,19 +51,19 @@ public class ShellSessionCapabilityProvider {
             String shellName = result.getCommandOutput();
             shellName = shellName.toUpperCase().trim();
             shellName = parseFileNameFromFilePath(shellName);
-            for (ShellType type : ShellType.values()) {
-                if (type.toString().matches(shellName)) {
+            for (ShellSessionCapabilityOption type : ShellSessionCapabilityOption.getShellTypes()) {
+                if (type.getName().matches(shellName)) {
                     capability = new ShellSessionCapability(ShellCapabilityType.SHELL);
-                    capability.addCapabilityOption(type.name());
+                    capability.addCapabilityOption(type);
                     capabilities.add(capability);
                 }
             }
         }
     }
 
-    private void checkBinaryPresent (ArrayList<String> binaryOptions) {
-        for (String option : binaryOptions) {
-            SshCommandResult result = sshManager.executeCommand(ShellCommand.BINARYEXISTS + option);
+    private void checkBinaryPresent (ArrayList<ShellSessionCapabilityOption> binaryOptions) {
+        for (ShellSessionCapabilityOption option : binaryOptions) {
+            SshCommandResult result = sshManager.executeCommand(ShellCommand.BINARYEXISTS + option.getName());
             if (result.getExitStatus() == 0 && result.getCommandOutput().length() > 0) {
                 //String shellName = result.getCommandOutput();
                 ShellSessionCapability capability = new ShellSessionCapability(ShellCapabilityType.BINARY);
