@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.util.Properties;
 
 @Component
 public class AwsEC2SelfAwareness {
@@ -20,7 +22,16 @@ public class AwsEC2SelfAwareness {
     }
 
     private void init () {
-        instanceId = HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", System.getProperty("aws.callback.host")));
+        if (initialized) return;
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
+        } catch (IOException e) {
+            log.error("Error loading application.properties");
+            initialized = true;
+            return;
+        }
+        instanceId = HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", prop.getProperty("aws.callback.host")));
         if (instanceId == null) {
             log.info("This does not appear to be running in AWS EC2");
         } else {
