@@ -10,6 +10,7 @@ import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,11 +41,13 @@ public class AwsPlatformTest {
     private Instance instance;
     @Mock
     private ContainerManager containerManager;
+    @Mock
+    private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private AwsPlatform awsPlatform;
 
     @Before
     public void setUp () {
-        awsPlatform = new AwsPlatform(null, null, amazonEC2, containerManager);
+        awsPlatform = new AwsPlatform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness);
     }
 
     @Test
