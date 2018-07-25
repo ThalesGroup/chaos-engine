@@ -12,6 +12,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,9 +28,10 @@ public class AwsPlatform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
+    private AwsEC2SelfAwareness awsEC2SelfAwareness;
 
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager) {
+    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -41,6 +43,7 @@ public class AwsPlatform extends Platform {
         }
         this.amazonEC2 = amazonEC2;
         this.containerManager = containerManager;
+        this.awsEC2SelfAwareness = awsEC2SelfAwareness;
     }
 
     private AwsPlatform () {
@@ -57,6 +60,10 @@ public class AwsPlatform extends Platform {
         Collection<Filter> filters = new HashSet<>();
         if (filterValues != null) {
             filterValues.forEach((k, v) -> filters.add(new Filter().withName("tag:" + k).withValues(v)));
+        }
+        Filter myFilter = awsEC2SelfAwareness.getRequestFilter();
+        if (myFilter != null) {
+            filters.add(myFilter);
         }
         boolean done = false;
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
@@ -118,7 +125,7 @@ public class AwsPlatform extends Platform {
     @Override
     public PlatformHealth getPlatformHealth () {
         Stream<Instance> instances = getInstanceStream();
-        Set<InstanceState> instanceStates = instances.map(Instance::getState).distinct().collect(Collectors.toSet());
+        Set<InstanceState> instanceStates = instances.map(Instance::getState).collect(Collectors.toSet());
         Set<Integer> instanceStateCodes = instanceStates.stream()
                                                         .map(InstanceState::getCode)
                                                         .collect(Collectors.toSet());
