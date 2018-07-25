@@ -35,7 +35,7 @@ public abstract class Platform implements AttackableObject {
     private HolidayManager holidayManager;
     private Double destructionThreshold;
 
-    public List<Container> getRoster () {
+    public synchronized List<Container> getRoster () {
         List<Container> returnValue;
         if (roster == null || roster.value() == null) {
             returnValue = generateRoster();
