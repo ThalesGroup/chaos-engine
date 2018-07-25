@@ -89,7 +89,6 @@ public class CloudFoundryPlatform extends Platform {
                                       createContainerFromApp(containers, app, i);
                                   }
                               });
-        containerManager.removeOldContainers(CloudFoundryContainer.class, containers);
         return containers;
     }
 
