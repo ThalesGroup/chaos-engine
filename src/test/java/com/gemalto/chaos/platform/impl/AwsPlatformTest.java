@@ -52,13 +52,14 @@ public class AwsPlatformTest {
 
     @Test
     public void getRoster () {
+        final Instance instance2 = mock(Instance.class);
         final String INSTANCE_NAME_1 = "NamedDevice";
         final String INSTANCE_KEYNAME_1 = randomUUID().toString();
         final String INSTANCE_ID_1 = randomUUID().toString();
         final String INSTANCE_KEYNAME_2 = randomUUID().toString();
         final String INSTANCE_ID_2 = randomUUID().toString();
         final List<Reservation> reservationList = Collections.singletonList(reservation);
-        final List<Instance> instanceList = Arrays.asList(instance, instance);
+        final List<Instance> instanceList = Arrays.asList(instance, instance2);
         final Tag namedTag = new Tag("Name", INSTANCE_NAME_1);
         final InstanceState instanceState = new InstanceState().withCode(AwsEC2Constants.AWS_RUNNING_CODE);
         final AwsEC2Container CONTAINER_1 = AwsEC2Container.builder()
@@ -74,14 +75,19 @@ public class AwsPlatformTest {
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
-        when(instance.getTags()).thenReturn(Collections.singletonList(namedTag), Collections.EMPTY_LIST);
+        when(instance.getTags()).thenReturn(Collections.singletonList(namedTag));
+        when(instance2.getTags()).thenReturn(Collections.emptyList());
         when(describeInstancesResult.getNextToken()).thenReturn(null);
-        when(instance.getInstanceId()).thenReturn(INSTANCE_ID_1, INSTANCE_ID_2);
-        when(instance.getKeyName()).thenReturn(INSTANCE_KEYNAME_1, INSTANCE_KEYNAME_2);
+        when(instance.getInstanceId()).thenReturn(INSTANCE_ID_1);
+        when(instance.getKeyName()).thenReturn(INSTANCE_KEYNAME_1);
         when(instance.getState()).thenReturn(instanceState);
+        when(instance2.getInstanceId()).thenReturn(INSTANCE_ID_2);
+        when(instance2.getKeyName()).thenReturn(INSTANCE_KEYNAME_2);
+        when(instance2.getState()).thenReturn(instanceState);
         when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
                 .getArguments()[0]);
-        assertThat(awsPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
+        final List<Container> roster = awsPlatform.getRoster();
+        assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
 
     @Test
@@ -151,5 +157,4 @@ public class AwsPlatformTest {
         when(instance.getState()).thenReturn(new InstanceState().withCode(16));
         assertEquals(PlatformHealth.OK, awsPlatform.getPlatformHealth());
     }
-
 }
