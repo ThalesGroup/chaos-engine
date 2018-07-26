@@ -30,12 +30,16 @@ public class AwsEC2SelfAwareness {
             initialized = true;
             return;
         }
-        instanceId = HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", prop.getProperty("aws.callback.host")));
+        instanceId = fetchInstanceId(prop);
         if (instanceId == null) {
             log.info("This does not appear to be running in AWS EC2");
         } else {
             log.info("Running in AWS EC2 as Instance: {}", instanceId);
         }
         initialized = true;
+    }
+
+    String fetchInstanceId (Properties prop) {
+        return HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", prop.getProperty("aws.callback.host")));
     }
 }
