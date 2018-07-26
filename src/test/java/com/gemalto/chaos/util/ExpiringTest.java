@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
@@ -28,8 +29,10 @@ public class ExpiringTest {
 
     @Test
     public void isExpired () {
-        expiringObject = new Expiring<>(object, Duration.ZERO);
-        await().atLeast(1, TimeUnit.MILLISECONDS);
+        expiringObject = new Expiring<>(object, Duration.ofMillis(50));
+        await().atLeast(100, TimeUnit.MILLISECONDS)
+               .atMost(200, TimeUnit.MILLISECONDS)
+               .until(() -> expiringObject.getExpiryTime().isBefore(Instant.now()));
         assertTrue(expiringObject.isExpired());
         assertNull(expiringObject.value());
     }

@@ -28,13 +28,18 @@ public class Expiring<T> {
     }
 
     boolean isExpired () {
+        Instant now = Instant.now();
         if (expired) {
             return true;
-        } else if (Instant.now().isAfter(expiryTime)) {
+        } else if (now.isAfter(expiryTime)) {
             expired = true;
             return true;
         }
         return false;
+    }
+
+    Instant getExpiryTime () {
+        return expiryTime;
     }
 
     public void expire () {
