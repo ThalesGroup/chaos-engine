@@ -61,10 +61,6 @@ public class AwsPlatform extends Platform {
         if (filterValues != null) {
             filterValues.forEach((k, v) -> filters.add(new Filter().withName("tag:" + k).withValues(v)));
         }
-        Filter myFilter = awsEC2SelfAwareness.getRequestFilter();
-        if (myFilter != null) {
-            filters.add(myFilter);
-        }
         boolean done = false;
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
         while (!done) {
@@ -73,6 +69,7 @@ public class AwsPlatform extends Platform {
                                    .parallelStream()
                                    .map(Reservation::getInstances)
                                    .flatMap(Collection::parallelStream)
+                                   .filter(instance -> !awsEC2SelfAwareness.isMe(instance.getInstanceId()))
                                    .forEach(instance -> createContainerFromInstance(containerList, instance));
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
             if (describeInstancesRequest.getNextToken() == null) {

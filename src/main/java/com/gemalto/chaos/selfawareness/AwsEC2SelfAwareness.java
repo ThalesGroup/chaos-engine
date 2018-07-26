@@ -1,6 +1,5 @@
 package com.gemalto.chaos.selfawareness;
 
-import com.amazonaws.services.ec2.model.Filter;
 import com.gemalto.chaos.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +37,5 @@ public class AwsEC2SelfAwareness {
             log.info("Running in AWS EC2 as Instance: {}", instanceId);
         }
         initialized = true;
-    }
-
-    public Filter getRequestFilter () {
-        if (!initialized) init();
-        return instanceId == null ? null : new Filter().withName("instance-id").withValues(instanceId);
     }
 }
