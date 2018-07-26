@@ -8,9 +8,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsEC2SelfAwarenessTest {
@@ -22,5 +23,8 @@ public class AwsEC2SelfAwarenessTest {
     public void isMe () {
         doReturn(RESPONSE).when(awsEC2SelfAwareness).fetchInstanceId(any(Properties.class));
         assertTrue(awsEC2SelfAwareness.isMe(RESPONSE));
+        assertTrue(awsEC2SelfAwareness.isMe(RESPONSE));
+        assertFalse(awsEC2SelfAwareness.isMe(RESPONSE.substring(RESPONSE.length() - 1)));
+        verify(awsEC2SelfAwareness, times(1)).fetchInstanceId(any(Properties.class));
     }
 }
