@@ -1,7 +1,6 @@
 package com.gemalto.chaos.admin;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +24,11 @@ public class AdminControllerTest {
     @Autowired
     private MockMvc mvc;
 
-    @BeforeClass
-    public static void setUp () {
-        await().untilAsserted(() -> assertSame(STARTED, AdminManager.getAdminState()));
-    }
-
     @Before
     public void beforeEach () {
         while (AdminManager.getAdminState() != STARTED) {
             AdminManager.setAdminState(STARTED);
+            await().untilAsserted(() -> assertSame(STARTED, AdminManager.getAdminState()));
         }
     }
 
