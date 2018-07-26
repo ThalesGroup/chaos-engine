@@ -5,9 +5,9 @@ import com.gemalto.chaos.platform.impl.AwsPlatform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.Callable;
 
@@ -17,13 +17,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 public class AwsEC2ContainerTest {
     private static final String KEY_NAME = randomUUID().toString();
     private static final String NAME = randomUUID().toString();
     private static final String INSTANCE_ID = randomUUID().toString();
     private AwsEC2Container awsEC2Container;
-    @Mock
+    @MockBean
     private AwsPlatform awsPlatform;
 
     @Before

@@ -10,7 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
 
@@ -19,14 +20,14 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 public class AttackManagerTest {
     private AttackManager attackManager;
-    @Mock
+    @MockBean
     private NotificationManager notificationManager;
-    @Mock
+    @MockBean
     private PlatformManager platformManager;
-    @Mock
+    @MockBean
     private HolidayManager holidayManager;
     @Mock
     private Attack attack1;
@@ -34,7 +35,7 @@ public class AttackManagerTest {
     private Container container1;
     @Mock
     private Container container2;
-    @Mock
+    @MockBean
     private Platform platform;
 
     @Before
