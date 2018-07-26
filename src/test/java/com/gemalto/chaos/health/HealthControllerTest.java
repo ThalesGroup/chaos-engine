@@ -1,41 +1,33 @@
 package com.gemalto.chaos.health;
 
 import com.gemalto.chaos.health.enums.SystemHealthState;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@WebMvcTest(HealthController.class)
 public class HealthControllerTest {
-    @Mock
+    @Autowired
+    private MockMvc mvc;
+    @MockBean
     private HealthManager healthManager;
-    private HealthController hc;
-
-    @Before
-    public void setUp () {
-        hc = new HealthController(healthManager);
-    }
 
     @Test
-    public void getHealthNormal () {
+    public void getHealth () throws Exception {
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.OK);
-        assertEquals(SystemHealthState.OK, hc.getHealth());
-    }
-
-    @Test(expected = HealthController.HealthUnknownException.class)
-    public void getHealthUnknown () {
+        mvc.perform(get("/health")).andExpect(status().isOk());
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.UNKNOWN);
-        hc.getHealth();
-    }
-
-    @Test(expected = HealthController.HealthErrorException.class)
-    public void getHealthError () {
+        mvc.perform(get("/health")).andExpect(status().is5xxServerError());
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.ERROR);
-        hc.getHealth();
+        mvc.perform(get("/health")).andExpect(status().is5xxServerError());
     }
 }
