@@ -23,7 +23,7 @@ public class AwsEC2SelfAwarenessTest {
     public void isMe () {
         doReturn(RESPONSE).when(awsEC2SelfAwareness).fetchInstanceId(any(Properties.class));
         assertTrue(awsEC2SelfAwareness.isMe(RESPONSE));
-        assertTrue(awsEC2SelfAwareness.isMe(RESPONSE));
+        assertTrue(awsEC2SelfAwareness.isMe(RESPONSE)); // Assertion repeated for testing caching of the ID.
         assertFalse(awsEC2SelfAwareness.isMe(RESPONSE.substring(RESPONSE.length() - 1)));
         verify(awsEC2SelfAwareness, times(1)).fetchInstanceId(any(Properties.class));
     }
