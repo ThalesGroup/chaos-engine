@@ -20,7 +20,7 @@ public class AwsEC2SelfAwareness {
         return (otherInstanceId.equals(instanceId));
     }
 
-    private void init () {
+    private synchronized void init () {
         if (initialized) return;
         Properties prop = new Properties();
         try {
