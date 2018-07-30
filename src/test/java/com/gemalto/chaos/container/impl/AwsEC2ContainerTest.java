@@ -62,6 +62,18 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
+    public void restartContainer () {
+        Callable<Void> healthCheckFunction = awsEC2Container.restartContainer();
+        try {
+            healthCheckFunction.call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Mockito.verify(awsPlatform, times(1)).restartInstance(INSTANCE_ID);
+        Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
+    }
+
+    @Test
     public void getSimpleName () {
         String EXPECTED_NAME = String.format("%s (%s) [%s]", NAME, KEY_NAME, INSTANCE_ID);
         assertEquals(EXPECTED_NAME, awsEC2Container.getSimpleName());

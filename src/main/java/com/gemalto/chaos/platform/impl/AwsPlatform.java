@@ -173,4 +173,9 @@ public class AwsPlatform extends Platform {
         log.info("Requesting a start of instances {}", (Object[]) instanceIds);
         amazonEC2.startInstances(new StartInstancesRequest().withInstanceIds(instanceIds));
     }
+
+    public void restartInstance (String... instanceIds) {
+        log.info("Requesting a reboot if instances {}", (Object[]) instanceIds);
+        amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
+    }
 }
