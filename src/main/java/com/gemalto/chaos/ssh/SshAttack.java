@@ -28,7 +28,8 @@ public abstract class SshAttack {
     }
 
     private void collectAvailableCapabilities () {
-        ShellSessionCapabilityProvider capProvider = getShellCapabilities();
+        ShellSessionCapabilityProvider capProvider = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
+        capProvider.build();
         actualCapabilities = capProvider.getCapabilities();
     }
 
@@ -43,11 +44,6 @@ public abstract class SshAttack {
         return true;
     }
 
-    private ShellSessionCapabilityProvider getShellCapabilities () {
-        ShellSessionCapabilityProvider capabilities = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
-        capabilities.build();
-        return capabilities;
-    }
 
     protected abstract String getAttackName ();
 
