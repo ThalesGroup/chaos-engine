@@ -70,17 +70,21 @@ public class RandomProcessTerminationTest {
 
     @Test
     public void cannotRetrieveCapabilities () {
+
         when(resultShellCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
         assertFalse(randomProcessTermination.attack(sshManager));
+        randomProcessTermination = new RandomProcessTermination();
         when(resultShellCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
+        randomProcessTermination = new RandomProcessTermination();
         when(resultTypeCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
-        when(resultTypeCapability.getExitStatus()).thenReturn(2);
+        randomProcessTermination = new RandomProcessTermination();
+        when(resultTypeCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         assertFalse(randomProcessTermination.attack(sshManager));
     }
