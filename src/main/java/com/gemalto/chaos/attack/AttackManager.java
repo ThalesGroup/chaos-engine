@@ -84,7 +84,7 @@ public class AttackManager {
     void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
             Optional<Platform> optionalPlatform = platformManager.getPlatforms().parallelStream()
-                                                                 .map(platform -> platform.usingHolidayManager(holidayManager))
+                                                                 .peek(platform -> platform.usingHolidayManager(holidayManager))
                                                                  .filter(platform1 -> force || platform1.canAttack())
                                                                  // "force" needs to be before the .canAttack(), so if it's true canAttack is not evaluated.
                                                                  .findFirst();

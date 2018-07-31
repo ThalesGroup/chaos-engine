@@ -1,14 +1,15 @@
 package com.gemalto.chaos.util;
 
-import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -28,8 +29,10 @@ public class ExpiringTest {
 
     @Test
     public void isExpired () {
-        expiringObject = new Expiring<>(object, Duration.ZERO);
-        Awaitility.await().atLeast(new org.awaitility.Duration(1, TimeUnit.MILLISECONDS));
+        expiringObject = new Expiring<>(object, Duration.ofMillis(50));
+        await().atLeast(100, TimeUnit.MILLISECONDS)
+               .atMost(200, TimeUnit.MILLISECONDS)
+               .until(() -> expiringObject.getExpiryTime().isBefore(Instant.now()));
         assertTrue(expiringObject.isExpired());
         assertNull(expiringObject.value());
     }

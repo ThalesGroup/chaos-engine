@@ -59,6 +59,12 @@ public class AwsEC2Container extends Container {
         return startContainerMethod;
     }
 
+    @StateAttack
+    public Callable<Void> restartContainer () {
+        awsPlatform.restartInstance(instanceId);
+        return startContainerMethod;
+    }
+
     public static final class AwsEC2ContainerBuilder {
         private String instanceId;
         private String keyName;

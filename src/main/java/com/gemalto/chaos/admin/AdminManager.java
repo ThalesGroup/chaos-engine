@@ -22,7 +22,7 @@ public class AdminManager {
     }
 
     public static void setAdminState (AdminState newAdminState) {
-        if (AdminState.getInvalidTransitions(newAdminState).contains(adminState)) {
+        if (newAdminState != adminState && AdminState.getInvalidTransitions(newAdminState).contains(adminState)) {
             throw new ChaosException("Cannot transition from " + adminState + " to " + newAdminState + ".");
         }
         setAdminStateInner(newAdminState);

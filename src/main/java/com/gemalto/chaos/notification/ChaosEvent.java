@@ -45,14 +45,16 @@ public class ChaosEvent {
     public String toString () {
         StringBuilder sb = new StringBuilder("Chaos Event: ");
         for (Field field : ChaosEvent.class.getDeclaredFields()) {
-            if (field.isSynthetic()) continue;
-            if (Modifier.isTransient(field.getModifiers())) continue;
+            boolean usedField = true;
             field.setAccessible(true);
             try {
-                if (field.get(this) == null) continue;
+                if (field.isSynthetic() || Modifier.isTransient(field.getModifiers()) || field.get(this) == null) {
+                    usedField = false;
+                }
             } catch (IllegalAccessException e) {
-                continue;
+                usedField = false;
             }
+            if (!usedField) continue;
             sb.append("[");
             sb.append(field.getName());
             sb.append("=");

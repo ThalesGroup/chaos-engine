@@ -101,6 +101,7 @@ Notifications can be sent to a slack channel when a Chaos Event occurs. Configur
 ## Rest Controllers
 
 Various REST endpoints are available for interacting with the Chaos Engine.
+
 | URI | METHOD | Required Variables | Effect |
 | :-: | :-: | :-- | --- |
 | `/attack/{uuid}` | `GET` | - | Returns the attack against a container identified by `$uuid` |

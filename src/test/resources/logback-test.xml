@@ -5,6 +5,8 @@
     <logger name="com.gemalto" level="OFF"/>
     <logger name="org.apache" level="OFF"/>
     <logger name="net.schmizz" level="OFF"/>
+    <logger name="cloudfoundry-client" level="OFF"/>
+
 
     <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
         <Name>ALWAYS</Name>

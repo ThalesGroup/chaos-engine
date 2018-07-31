@@ -18,10 +18,6 @@ public class HealthController {
     HealthController () {
     }
 
-    HealthController (HealthManager healthManager) {
-        this.healthManager = healthManager;
-    }
-
     @GetMapping
     public SystemHealthState getHealth () {
         switch (healthManager.getHealth()) {
@@ -36,10 +32,10 @@ public class HealthController {
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    class HealthErrorException extends RuntimeException {
+    private class HealthErrorException extends RuntimeException {
     }
 
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    class HealthUnknownException extends RuntimeException {
+    private class HealthUnknownException extends RuntimeException {
     }
 }
