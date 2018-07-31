@@ -17,7 +17,6 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -52,7 +51,6 @@ public class AttackManagerTest {
         when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
         when(platform.startAttack()).thenReturn(platform);
         when(platform.getRoster()).thenReturn(containerList);
-        when(platform.usingHolidayManager(any(HolidayManager.class))).thenReturn(platform);
         when(platform.canAttack()).thenReturn(true);
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);

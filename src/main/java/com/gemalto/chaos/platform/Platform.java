@@ -83,6 +83,7 @@ public abstract class Platform implements AttackableObject {
 
     @Override
     public synchronized boolean canAttack () {
+        if (holidayManager.isOutsideWorkingHours() || holidayManager.isHoliday()) return false;
         if (belowMinAttacks()) {
             log.info("{} is below its attack quota. Attacking.", this.getClass().getSimpleName());
             return true;
@@ -130,7 +131,7 @@ public abstract class Platform implements AttackableObject {
             Instant startOfDay = holidayManager.getStartOfDay();
             long lastAttackTimeMillis = lastAttackTime.toEpochMilli();
             millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
-            if (millisSinceLastAttack == 0) return 0;
+            if (millisSinceLastAttack <= 0) return 0;
         }
         return calculateMTBFPercentile(millisSinceLastAttack, averageTimeBetweenAttacks);
     }
@@ -162,8 +163,7 @@ public abstract class Platform implements AttackableObject {
         return attackTimes;
     }
 
-    public Platform usingHolidayManager (HolidayManager holidayManager) {
+    public void usingHolidayManager (HolidayManager holidayManager) {
         this.holidayManager = holidayManager;
-        return this;
     }
 }
