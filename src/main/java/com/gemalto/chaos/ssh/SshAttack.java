@@ -15,7 +15,11 @@ public abstract class SshAttack {
 
     public boolean attack (SshManager sshManager) {
         this.sshManager = sshManager;
-        collectAvailableCapabilities();
+        if (actualCapabilities == null) {
+            collectAvailableCapabilities();
+        } else {
+            log.debug("Skipping shell session capability collection");
+        }
         if (shellHasRequiredCapabilities()) {
             log.debug("Starting {} attack.", getAttackName());
             sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
@@ -27,6 +31,13 @@ public abstract class SshAttack {
         return false;
     }
 
+    public ArrayList<ShellSessionCapability> getShellSessionCapabilities () {
+        return actualCapabilities;
+    }
+
+    public void setShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+        this.actualCapabilities = detectedCapabilities;
+    }
     private void collectAvailableCapabilities () {
         ShellSessionCapabilityProvider capProvider = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
         capProvider.build();
