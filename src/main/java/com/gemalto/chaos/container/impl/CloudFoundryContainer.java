@@ -22,7 +22,7 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private ArrayList<ShellSessionCapability> detectedCapabilities;
+    private transient ArrayList<ShellSessionCapability> detectedCapabilities;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
