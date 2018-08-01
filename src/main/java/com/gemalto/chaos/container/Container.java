@@ -9,7 +9,6 @@ import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,10 +16,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
@@ -29,6 +26,7 @@ public abstract class Container implements AttackableObject {
     private final List<AttackType> supportedAttackTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
     private Method lastAttackMethod;
+    private Attack currentAttack;
 
     protected Container () {
         for (AttackType attackType : AttackType.values()) {
@@ -84,8 +82,8 @@ public abstract class Container implements AttackableObject {
             }
         }
         byte[] primitiveByteArray = identity.toString().getBytes();
-        Checksum checksum = new CRC32();
-        ((CRC32) checksum).update(primitiveByteArray);
+        CRC32 checksum = new CRC32();
+        checksum.update(primitiveByteArray);
         return checksum.getValue();
     }
 
@@ -126,27 +124,28 @@ public abstract class Container implements AttackableObject {
     protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
 
     public Attack createAttack () {
-        return createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
+        currentAttack = createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
+        return currentAttack;
     }
 
     public abstract Attack createAttack (AttackType attackType);
 
-    public Callable<Void> attackContainer (AttackType attackType) {
+    public void attackContainer (Attack attack) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
-        log.info("Starting a {} attack against container {}", attackType, this);
-        return attackWithAnnotation(attackType.getAnnotation());
+        log.info("Starting a {} attack against container {}", attack, this);
+        attackWithAnnotation(attack);
     }
 
     @SuppressWarnings("unchecked")
-    private Callable<Void> attackWithAnnotation (Class<? extends Annotation> annotation) {
-        List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), annotation);
+    private void attackWithAnnotation (Attack attack) {
+        List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), attack.getAttackType().getAnnotation());
         if (attackMethods.isEmpty()) {
             throw new ChaosException("Could not find an attack vector");
         }
-        Integer index = ThreadLocalRandom.current().nextInt(attackMethods.size());
+        int index = ThreadLocalRandom.current().nextInt(attackMethods.size());
         try {
             lastAttackMethod = attackMethods.get(index);
-            return (Callable<Void>) lastAttackMethod.invoke(this);
+            lastAttackMethod.invoke(this, attack);
         } catch (IllegalAccessException | InvocationTargetException e) {
             log.error("Failed to run attack on container {}", this, e);
             throw new ChaosException(e);

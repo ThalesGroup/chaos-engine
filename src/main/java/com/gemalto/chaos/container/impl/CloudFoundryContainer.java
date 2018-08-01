@@ -25,6 +25,11 @@ public class CloudFoundryContainer extends Container {
         cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
         return null;
     };
+    private transient Callable<Void> restartContainer = () -> {
+        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        return null;
+    };
+    private Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {
         super();
@@ -48,7 +53,7 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryPlatform.checkHealth(applicationId, attackType, instance);
+        return cloudFoundryPlatform.checkHealth(applicationId, instance);
     }
 
     @Override
@@ -66,21 +71,24 @@ public class CloudFoundryContainer extends Container {
     }
 
     @StateAttack
-    public Callable<Void> restartContainer () {
+    public void restartContainer (Attack attack) {
+        attack.setSelfHealingMethod(restageApplication);
+        attack.setCheckContainerHealth(isInstanceRunning);
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
-        return restageApplication;
     }
 
     @StateAttack
-    public Callable<Void> forkBomb () {
+    public void forkBomb (Attack attack) {
+        attack.setSelfHealingMethod(restartContainer);
+        attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
         cloudFoundryPlatform.sshAttack(new ForkBomb(), this);
-        return restageApplication;
     }
 
     @StateAttack
-    public Callable<Void> terminateProcess () {
+    public void terminateProcess (Attack attack) {
+        attack.setSelfHealingMethod(restartContainer);
+        attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
         cloudFoundryPlatform.sshAttack(new RandomProcessTermination(), this);
-        return restageApplication;
     }
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {

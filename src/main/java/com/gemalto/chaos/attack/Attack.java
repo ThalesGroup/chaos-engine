@@ -30,7 +30,16 @@ public abstract class Attack {
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
+    private Callable<ContainerHealth> checkContainerHealth;
     private Instant startTime = Instant.now();
+
+    public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
+        this.selfHealingMethod = selfHealingMethod;
+    }
+
+    public void setCheckContainerHealth (Callable<ContainerHealth> checkContainerHealth) {
+        this.checkContainerHealth = checkContainerHealth;
+    }
 
     String getId () {
         return id;
@@ -59,7 +68,7 @@ public abstract class Attack {
             return false;
         }
         if (container.supportsAttackType(attackType)) {
-            startAttackImpl(attackType);
+            container.attackContainer(this);
             attackState = AttackState.STARTED;
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
@@ -70,16 +79,12 @@ public abstract class Attack {
         return true;
     }
 
-    private void startAttackImpl (AttackType attackType) {
-        selfHealingMethod = container.attackContainer(attackType);
-    }
-
     AttackState getAttackState () {
         attackState = checkAttackState();
         return attackState;
     }
 
-    private AttackState checkAttackState () {
+    private synchronized AttackState checkAttackState () {
         if (isOverDuration()) {
             try {
                 log.info("This attack has gone on too long, invoking self-healing. \n{}", this);
@@ -88,7 +93,7 @@ public abstract class Attack {
                 log.error("An exception occurred while running self-healing.", e);
             }
         }
-        switch (container.getContainerHealth(attackType)) {
+        switch (checkContainerHealth()) {
             case NORMAL:
                 if (checkTimeToLive()) {
                     log.info("Attack {} complete", this);
@@ -119,6 +124,17 @@ public abstract class Attack {
                                                                .build());
                 return AttackState.STARTED;
         }
+    }
+
+    private ContainerHealth checkContainerHealth () {
+        if (checkContainerHealth != null) {
+            try {
+                return checkContainerHealth.call();
+            } catch (Exception e) {
+                log.error("Issue while checking container health using specific method", e);
+            }
+        }
+        return container.getContainerHealth(attackType);
     }
 
     private boolean isOverDuration () {
