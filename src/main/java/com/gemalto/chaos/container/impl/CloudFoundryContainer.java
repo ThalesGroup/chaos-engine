@@ -29,7 +29,7 @@ public class CloudFoundryContainer extends Container {
         cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
         return null;
     };
-    private Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryPlatform.checkHealth(applicationId, instance);
+    private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {
         super();

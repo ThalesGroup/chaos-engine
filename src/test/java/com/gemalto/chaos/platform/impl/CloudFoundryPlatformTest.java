@@ -142,7 +142,7 @@ public class CloudFoundryPlatformTest {
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cfp.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
     @Test
@@ -168,7 +168,7 @@ public class CloudFoundryPlatformTest {
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
-        assertEquals(ContainerHealth.UNDER_ATTACK, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
+        assertEquals(ContainerHealth.UNDER_ATTACK, cfp.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
     @Test
@@ -194,6 +194,6 @@ public class CloudFoundryPlatformTest {
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
-        assertEquals(ContainerHealth.NORMAL, cfp.checkHealth(APPLICATION_ID, ATTACK_TYPE, INSTANCE_ID));
+        assertEquals(ContainerHealth.NORMAL, cfp.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 }
