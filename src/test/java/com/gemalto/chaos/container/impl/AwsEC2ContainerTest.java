@@ -9,13 +9,15 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AwsEC2ContainerTest {
@@ -77,5 +79,23 @@ public class AwsEC2ContainerTest {
     public void getSimpleName () {
         String EXPECTED_NAME = String.format("%s (%s) [%s]", NAME, KEY_NAME, INSTANCE_ID);
         assertEquals(EXPECTED_NAME, awsEC2Container.getSimpleName());
+    }
+
+    @Test
+    public void removeSecurityGroups () {
+        String chaosSecurityGroupId = UUID.randomUUID().toString();
+        List<String> configuredSecurityGroupId = Collections.singletonList(UUID.randomUUID().toString());
+        doReturn(configuredSecurityGroupId).when(awsPlatform).getSecurityGroupIds(INSTANCE_ID);
+        doReturn(chaosSecurityGroupId).when(awsPlatform).getChaosSecurityGroupId();
+        Callable<Void> selfHealingFunction = awsEC2Container.removeSecurityGroups();
+        Mockito.verify(awsPlatform, times(1))
+               .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
+        Mockito.verify(awsPlatform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
+        try {
+            selfHealingFunction.call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Mockito.verify(awsPlatform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
 }

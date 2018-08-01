@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
@@ -9,6 +10,8 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 public class AwsEC2Container extends Container {
@@ -63,6 +66,16 @@ public class AwsEC2Container extends Container {
     public Callable<Void> restartContainer () {
         awsPlatform.restartInstance(instanceId);
         return startContainerMethod;
+    }
+
+    @NetworkAttack
+    public Callable<Void> removeSecurityGroups () {
+        List<String> originalSecurityGroupIds = awsPlatform.getSecurityGroupIds(instanceId);
+        awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(awsPlatform.getChaosSecurityGroupId()));
+        return () -> {
+            awsPlatform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
+            return null;
+        };
     }
 
     public static final class AwsEC2ContainerBuilder {

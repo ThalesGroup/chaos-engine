@@ -22,6 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
+
 @Component
 @ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
 public class AwsPlatform extends Platform {
@@ -29,6 +31,8 @@ public class AwsPlatform extends Platform {
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
+    private String chaosSecurityGroupId;
+    private Vpc defaultVpc;
 
     @Autowired
     AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
@@ -177,5 +181,56 @@ public class AwsPlatform extends Platform {
     public void restartInstance (String... instanceIds) {
         log.info("Requesting a reboot if instances {}", (Object[]) instanceIds);
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
+    }
+
+    public List<String> getSecurityGroupIds (String instanceId) {
+        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
+                        .getInstanceAttribute()
+                        .getGroups()
+                        .stream()
+                        .map(GroupIdentifier::getGroupId)
+                        .collect(Collectors.toList());
+    }
+
+    public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
+        amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
+                                                                              .withGroups(securityGroupIds));
+    }
+
+    public String getChaosSecurityGroupId () {
+        if (chaosSecurityGroupId == null) {
+            initChaosSecurityGroupId();
+        }
+        return chaosSecurityGroupId;
+    }
+
+    private void initChaosSecurityGroupId () {
+        amazonEC2.describeSecurityGroups()
+                 .getSecurityGroups()
+                 .stream()
+                 .filter(securityGroup -> securityGroup.getVpcId().equals(getDefaultVPC()))
+                 .filter(securityGroup -> securityGroup.getGroupName().equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME))
+                 .findFirst()
+                 .ifPresent(securityGroup -> chaosSecurityGroupId = securityGroup.getGroupId());
+        if (chaosSecurityGroupId == null) {
+            chaosSecurityGroupId = createChaosSecurityGroup();
+        }
+    }
+
+    private String getDefaultVPC () {
+        initDefaultVpc();
+        return defaultVpc != null ? defaultVpc.getVpcId() : null;
+    }
+
+    private String createChaosSecurityGroup () {
+        return amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
+                                                                             .withVpcId(getDefaultVPC())
+                                                                             .withDescription(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
+                        .getGroupId();
+    }
+
+    private synchronized void initDefaultVpc () {
+        if (defaultVpc != null) return;
+        defaultVpc = amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().orElse(null);
     }
 }
