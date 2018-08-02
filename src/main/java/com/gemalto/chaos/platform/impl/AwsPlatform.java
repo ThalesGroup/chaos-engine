@@ -179,7 +179,7 @@ public class AwsPlatform extends Platform {
     }
 
     public void restartInstance (String... instanceIds) {
-        log.info("Requesting a reboot if instances {}", (Object[]) instanceIds);
+        log.info("Requesting a reboot of instances {}", (Object[]) instanceIds);
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
     }
 

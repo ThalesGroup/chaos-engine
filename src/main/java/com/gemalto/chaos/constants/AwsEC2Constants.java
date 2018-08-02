@@ -9,6 +9,7 @@ public abstract class AwsEC2Constants {
     public static final int AWS_STOPPED_CODE = 80;
     public static final String EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME = "ChaosEngine Security Group";
     public static final String EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION = "(DO NOT USE) Security Group used by Chaos Engine to simulate random network failures.";
+    public static final int AWS_EC2_HARD_REBOOT_TIMER_MINUTES = 4;
 
     private AwsEC2Constants () {
     }
