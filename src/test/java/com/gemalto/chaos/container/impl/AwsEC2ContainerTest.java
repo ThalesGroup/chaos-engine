@@ -1,21 +1,21 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.concurrent.Callable;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AwsEC2ContainerTest {
@@ -25,6 +25,9 @@ public class AwsEC2ContainerTest {
     private AwsEC2Container awsEC2Container;
     @MockBean
     private AwsPlatform awsPlatform;
+    @Spy
+    private Attack attack = new Attack() {
+    };
 
     @Before
     public void setUp () {
@@ -51,26 +54,18 @@ public class AwsEC2ContainerTest {
 
     @Test
     public void stopContainer () {
-        Callable<Void> healthCheckFunction = awsEC2Container.stopContainer();
-        try {
-            healthCheckFunction.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        awsEC2Container.stopContainer(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).stopInstance(INSTANCE_ID);
-        Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
     }
 
     @Test
     public void restartContainer () {
-        Callable<Void> healthCheckFunction = awsEC2Container.restartContainer();
-        try {
-            healthCheckFunction.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        awsEC2Container.restartContainer(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).restartInstance(INSTANCE_ID);
-        Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
     }
 
     @Test

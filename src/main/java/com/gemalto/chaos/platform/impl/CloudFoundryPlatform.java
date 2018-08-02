@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -35,9 +34,7 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 @Component
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform extends Platform {
-
     private CloudFoundryOperations cloudFoundryOperations;
-
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundryClient cloudFoundryClient;
     private ContainerManager containerManager;
@@ -50,7 +47,6 @@ public class CloudFoundryPlatform extends Platform {
         this.containerManager = containerManager;
     }
 
-
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     private CloudFoundryPlatform () {
@@ -60,8 +56,6 @@ public class CloudFoundryPlatform extends Platform {
     private void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
         this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
     }
-
-
 
     public static CloudFoundryPlatformBuilder builder () {
         return CloudFoundryPlatformBuilder.builder();
@@ -161,30 +155,25 @@ public class CloudFoundryPlatform extends Platform {
         }
     }
 
-    public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
-        if (attackType == AttackType.STATE) {
-            Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
-            try {
-                applicationInstanceResponse = cloudFoundryClient.applicationsV2()
-                                                                .instances(ApplicationInstancesRequest.builder()
-                                                                                                      .applicationId(applicationId)
-                                                                                                      .build())
-                                                                .block()
-                                                                .getInstances();
-            } catch (ClientV2Exception e) {
-                return ContainerHealth.DOES_NOT_EXIST;
-            }
-            String status;
-            try {
-                status = applicationInstanceResponse.get(instanceId.toString()).getState();
-            } catch (NullPointerException e) {
-                return ContainerHealth.DOES_NOT_EXIST;
-            }
-            return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
-        } else {
-            // TODO: Implement Health Checks for other attack types.
-            return ContainerHealth.NORMAL;
+    public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
+        Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
+        try {
+            applicationInstanceResponse = cloudFoundryClient.applicationsV2()
+                                                            .instances(ApplicationInstancesRequest.builder()
+                                                                                                  .applicationId(applicationId)
+                                                                                                  .build())
+                                                            .block()
+                                                            .getInstances();
+        } catch (ClientV2Exception e) {
+            return ContainerHealth.DOES_NOT_EXIST;
         }
+        String status;
+        try {
+            status = applicationInstanceResponse.get(instanceId.toString()).getState();
+        } catch (NullPointerException e) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
+        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
     }
 
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {

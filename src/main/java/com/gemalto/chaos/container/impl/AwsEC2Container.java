@@ -20,6 +20,7 @@ public class AwsEC2Container extends Container {
         awsPlatform.startInstance(instanceId);
         return null;
     };
+    private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsPlatform.checkHealth(instanceId);
 
     private AwsEC2Container () {
         super();
@@ -54,15 +55,19 @@ public class AwsEC2Container extends Container {
     }
 
     @StateAttack
-    public Callable<Void> stopContainer () {
+    public void stopContainer (Attack attack) {
         awsPlatform.stopInstance(instanceId);
-        return startContainerMethod;
+        attack.setSelfHealingMethod(startContainerMethod);
+        attack.setCheckContainerHealth(checkContainerStartedMethod);
+
     }
 
     @StateAttack
-    public Callable<Void> restartContainer () {
+    public void restartContainer (Attack attack) {
         awsPlatform.restartInstance(instanceId);
-        return startContainerMethod;
+        attack.setSelfHealingMethod(startContainerMethod);
+        attack.setCheckContainerHealth(checkContainerStartedMethod);
+
     }
 
     public static final class AwsEC2ContainerBuilder {
