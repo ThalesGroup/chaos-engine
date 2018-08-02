@@ -33,8 +33,16 @@ public abstract class Attack {
     private Callable<ContainerHealth> checkContainerHealth;
     private Instant startTime = Instant.now();
 
+    public Callable<Void> getSelfHealingMethod () {
+        return selfHealingMethod;
+    }
+
     public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
+    }
+
+    public Callable<ContainerHealth> getCheckContainerHealth () {
+        return checkContainerHealth;
     }
 
     public void setCheckContainerHealth (Callable<ContainerHealth> checkContainerHealth) {
@@ -126,6 +134,10 @@ public abstract class Attack {
         }
     }
 
+    private boolean isOverDuration () {
+        return Instant.now().isAfter(startTime.plus(duration));
+    }
+
     private ContainerHealth checkContainerHealth () {
         if (checkContainerHealth != null) {
             try {
@@ -135,10 +147,6 @@ public abstract class Attack {
             }
         }
         return container.getContainerHealth(attackType);
-    }
-
-    private boolean isOverDuration () {
-        return Instant.now().isAfter(startTime.plus(duration));
     }
 
     private boolean checkTimeToLive () {

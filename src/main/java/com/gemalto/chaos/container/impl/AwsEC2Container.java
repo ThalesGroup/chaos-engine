@@ -62,7 +62,6 @@ public class AwsEC2Container extends Container {
         awsPlatform.stopInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(checkContainerStartedMethod);
-
     }
 
     @StateAttack
@@ -70,17 +69,17 @@ public class AwsEC2Container extends Container {
         awsPlatform.restartInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(checkContainerStartedMethod);
-
     }
 
     @NetworkAttack
-    public Callable<Void> removeSecurityGroups () {
+    public void removeSecurityGroups (Attack attack) {
         List<String> originalSecurityGroupIds = awsPlatform.getSecurityGroupIds(instanceId);
         awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(awsPlatform.getChaosSecurityGroupId()));
-        return () -> {
+        attack.setCheckContainerHealth(() -> awsPlatform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));
+        attack.setSelfHealingMethod(() -> {
             awsPlatform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
             return null;
-        };
+        });
     }
 
     public static final class AwsEC2ContainerBuilder {

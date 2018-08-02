@@ -233,4 +233,9 @@ public class AwsPlatform extends Platform {
         if (defaultVpc != null) return;
         defaultVpc = amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().orElse(null);
     }
+
+    public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
+        List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
+        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+    }
 }
