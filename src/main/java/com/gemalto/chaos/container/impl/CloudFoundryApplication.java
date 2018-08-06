@@ -77,7 +77,7 @@ public class CloudFoundryApplication extends Container {
 
     @ResourceAttack
     public Callable<Void> scaleApplicationToMinInstances () {
-        return scaleApplication(MAX_INSTANCES);
+        return scaleApplication(MIN_INSTANCES);
     }
 
 
