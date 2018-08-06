@@ -15,6 +15,7 @@ import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
     private String name;
+    private Integer containerInstances;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
@@ -58,6 +59,43 @@ public class CloudFoundryApplication extends Container {
 
     @StateAttack
     public Callable<Void> scaleApplication () {
+        cloudFoundryPlatform.rescaleApplication(name, 2);
         return restageApplication;
+    }
+
+    public static final class CloudFoundryApplicationBuilder {
+        private String name;
+        private Integer containerInstances;
+        private CloudFoundryPlatform cloudFoundryPlatform;
+
+        private CloudFoundryApplicationBuilder () {
+        }
+
+        static CloudFoundryApplicationBuilder builder () {
+            return new CloudFoundryApplicationBuilder();
+        }
+
+        public CloudFoundryApplicationBuilder name (String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CloudFoundryApplicationBuilder containerInstances (Integer containerInstances) {
+            this.containerInstances = containerInstances;
+            return this;
+        }
+
+        public CloudFoundryApplicationBuilder platform (CloudFoundryPlatform cloudFoundryPlatform) {
+            this.cloudFoundryPlatform = cloudFoundryPlatform;
+            return this;
+        }
+
+        public CloudFoundryApplication build () {
+            CloudFoundryApplication cloudFoundryApplication = new CloudFoundryApplication();
+            cloudFoundryApplication.name = this.name;
+            cloudFoundryApplication.containerInstances = this.containerInstances;
+            cloudFoundryApplication.cloudFoundryPlatform = this.cloudFoundryPlatform;
+            return cloudFoundryApplication;
+        }
     }
 }
