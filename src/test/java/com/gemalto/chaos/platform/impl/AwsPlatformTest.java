@@ -22,7 +22,9 @@ import org.mockito.stubbing.Answer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
+import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -156,5 +158,97 @@ public class AwsPlatformTest {
         assertEquals(PlatformHealth.DEGRADED, awsPlatform.getPlatformHealth());
         when(instance.getState()).thenReturn(new InstanceState().withCode(16));
         assertEquals(PlatformHealth.OK, awsPlatform.getPlatformHealth());
+    }
+
+    @Test
+    public void restartInstance () {
+        awsPlatform.restartInstance("123", "abc", "xyz");
+        verify(amazonEC2, times(1)).rebootInstances(any(RebootInstancesRequest.class));
+    }
+
+    @Test
+    public void getSecurityGroupIds () {
+        String groupId = UUID.randomUUID().toString();
+        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
+        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
+                .withGroups(groupIdentifier));
+        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
+        assertEquals(Collections.singletonList(groupId), awsPlatform.getSecurityGroupIds("123"));
+    }
+
+    @Test
+    public void setSecurityGroupIds () {
+        String instanceId = UUID.randomUUID().toString();
+        String groupId = UUID.randomUUID().toString();
+        awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
+        verify(amazonEC2, times(1)).modifyInstanceAttribute(any());
+    }
+
+    @Test
+    public void getChaosSecurityGroupId () {
+        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
+        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup1, customSecurityGroup2);
+        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
+        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
+        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
+        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                              .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
+                                                              .withGroupId(UUID.randomUUID().toString());
+        CreateSecurityGroupResult createSecurityGroupResult = new CreateSecurityGroupResult().withGroupId(chaosSecurityGroup
+                .getGroupId());
+        doReturn(createSecurityGroupResult).when(amazonEC2).createSecurityGroup(any());
+        assertEquals(chaosSecurityGroup.getGroupId(), awsPlatform.getChaosSecurityGroupId());
+        verify(amazonEC2, times(1)).describeVpcs();
+        verify(amazonEC2, times(1)).createSecurityGroup(any());
+    }
+
+    @Test
+    public void getChaosSecurityGroupIdAlreadyInitialized () {
+        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
+        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
+                                                                .withGroupName(UUID.randomUUID().toString());
+        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+                                                              .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
+                                                              .withGroupId(UUID.randomUUID().toString());
+        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, chaosSecurityGroup, customSecurityGroup1, customSecurityGroup2);
+        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
+        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
+        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
+        assertEquals(chaosSecurityGroup.getGroupId(), awsPlatform.getChaosSecurityGroupId());
+        verify(amazonEC2, times(1)).describeVpcs();
+        verify(amazonEC2, times(0)).createSecurityGroup(any());
+    }
+
+    @Test
+    public void verifySecurityGroupIds () {
+        String instanceId = UUID.randomUUID().toString();
+        String groupId = UUID.randomUUID().toString();
+        String groupId2 = UUID.randomUUID().toString();
+        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
+        GroupIdentifier groupIdentifier2 = new GroupIdentifier().withGroupName("Test Group 2").withGroupId(groupId2);
+        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
+                .withGroups(groupIdentifier));
+        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
+        assertEquals(ContainerHealth.NORMAL, awsPlatform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
+        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier, groupIdentifier2)))
+                .when(amazonEC2)
+                .describeInstanceAttribute(any());
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsPlatform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
+        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
+                .when(amazonEC2)
+                .describeInstanceAttribute(any());
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsPlatform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
     }
 }
