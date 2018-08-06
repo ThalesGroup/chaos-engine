@@ -1,7 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
+import com.gemalto.chaos.attack.annotations.ResourceAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
@@ -9,16 +9,22 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
-    private String name;
-    private Integer containerInstances;
+    private static final Integer MAX_INSTANCES = 5;
+    private static final Integer MIN_INSTANCES = 0;
+    private static final Logger log = LoggerFactory.getLogger(CloudFoundryApplication.class);
+    private transient String name;
+    private Integer originalContainerInstances;
+    private Integer actualContainerInstances;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
-    private transient Callable<Void> restageApplication = () -> {
-        cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
+    private transient Callable<Void> rescaleApplication = () -> {
+        cloudFoundryPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
 
@@ -57,11 +63,23 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    @StateAttack
-    public Callable<Void> scaleApplication () {
-        cloudFoundryPlatform.rescaleApplication(name, 2);
-        return restageApplication;
+    @ResourceAttack
+    public Callable<Void> scaleApplicationToMaxInstances () {
+        return scaleApplication(MAX_INSTANCES);
     }
+
+    private Callable<Void> scaleApplication (int instances) {
+        actualContainerInstances = instances;
+        log.debug("Scaling {} to {} instances", name);
+        cloudFoundryPlatform.rescaleApplication(name, actualContainerInstances);
+        return rescaleApplication;
+    }
+
+    @ResourceAttack
+    public Callable<Void> scaleApplicationToMinInstances () {
+        return scaleApplication(MAX_INSTANCES);
+    }
+
 
     public static CloudFoundryApplicationBuilder builder () {
         return CloudFoundryApplicationBuilder.builder();
@@ -97,7 +115,7 @@ public class CloudFoundryApplication extends Container {
         public CloudFoundryApplication build () {
             CloudFoundryApplication cloudFoundryApplication = new CloudFoundryApplication();
             cloudFoundryApplication.name = this.name;
-            cloudFoundryApplication.containerInstances = this.containerInstances;
+            cloudFoundryApplication.originalContainerInstances = this.containerInstances;
             cloudFoundryApplication.cloudFoundryPlatform = this.cloudFoundryPlatform;
             return cloudFoundryApplication;
         }
