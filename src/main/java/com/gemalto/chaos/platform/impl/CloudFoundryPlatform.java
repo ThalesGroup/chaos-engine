@@ -21,6 +21,7 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
+import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -165,6 +166,14 @@ public class CloudFoundryPlatform extends Platform {
             }
             ssh.disconnect();
         }
+    }
+
+    public void rescaleApplication (String applicationName, int instances) {
+        ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
+                                                                                 .name(applicationName)
+                                                                                 .instances(instances)
+                                                                                 .build();
+        cloudFoundryOperations.applications().scale(scaleApplicationRequest);
     }
 
     public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
