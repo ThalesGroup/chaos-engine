@@ -49,8 +49,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        //TBD Check to be implemented
-        return ContainerHealth.NORMAL;
+        return cloudFoundryPlatform.checkApplicationHealth(name);
     }
 
     @Override
@@ -85,10 +84,6 @@ public class CloudFoundryApplication extends Container {
     }
 
 
-    public static CloudFoundryApplicationBuilder builder () {
-        return CloudFoundryApplicationBuilder.builder();
-    }
-
     public static final class CloudFoundryApplicationBuilder {
         private String name;
         private Integer containerInstances;
@@ -120,6 +115,7 @@ public class CloudFoundryApplication extends Container {
             CloudFoundryApplication cloudFoundryApplication = new CloudFoundryApplication();
             cloudFoundryApplication.name = this.name;
             cloudFoundryApplication.originalContainerInstances = this.containerInstances;
+            cloudFoundryApplication.actualContainerInstances = this.containerInstances;
             cloudFoundryApplication.cloudFoundryPlatform = this.cloudFoundryPlatform;
             return cloudFoundryApplication;
         }
