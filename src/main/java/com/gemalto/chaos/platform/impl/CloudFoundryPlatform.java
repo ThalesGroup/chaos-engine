@@ -4,6 +4,7 @@ import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
@@ -20,6 +21,8 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
+import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
+import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -75,12 +78,13 @@ public class CloudFoundryPlatform extends Platform {
                               .toIterable()
                               .forEach(app -> {
                                   Integer instances = app.getInstances();
-                                  for (Integer i = 0; i < instances; i++) {
-                                      if (isChaosEngine(app.getName(), i)) {
-                                          log.debug("Skipping what appears to be me.");
-                                          continue;
+                                  if (!isChaosEngine(app.getName())) {
+                                      createApplication(containers, app, instances);
+                                      for (Integer i = 0; i < instances; i++) {
+                                          createContainerFromApp(containers, app, i);
                                       }
-                                      createContainerFromApp(containers, app, i);
+                                  } else {
+                                      log.debug("Skipping what appears to be me.");
                                   }
                               });
         return containers;
@@ -100,6 +104,15 @@ public class CloudFoundryPlatform extends Platform {
         } else {
             log.debug("Existing container found: {}", persistentContainer);
         }
+    }
+
+    private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
+        CloudFoundryApplication application = CloudFoundryApplication.builder().platform(this)
+                                                                     .name(app.getName())
+                                                                     .containerInstances(containerInstances)
+                                                                     .build();
+        containers.add(application);
+        log.info("Added application {}", application);
     }
 
     @Override
@@ -138,8 +151,8 @@ public class CloudFoundryPlatform extends Platform {
         return PlatformHealth.OK;
     }
 
-    private boolean isChaosEngine (String applicationName, Integer instanceId) {
-        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
+    private boolean isChaosEngine (String applicationName) {
+        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName) || cloudFoundrySelfAwareness
                 .isFriendly(applicationName));
     }
 
@@ -160,6 +173,15 @@ public class CloudFoundryPlatform extends Platform {
             ssh.disconnect();
         }
     }
+
+    public void rescaleApplication (String applicationName, int instances) {
+        ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
+                                                                                 .name(applicationName)
+                                                                                 .instances(instances)
+                                                                                 .build();
+        cloudFoundryOperations.applications().scale(scaleApplicationRequest).block();
+    }
+
 
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
         Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
