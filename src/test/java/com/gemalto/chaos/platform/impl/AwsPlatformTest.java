@@ -16,6 +16,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
@@ -45,11 +47,12 @@ public class AwsPlatformTest {
     private ContainerManager containerManager;
     @Mock
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
+    @Spy
     private AwsPlatform awsPlatform;
 
     @Before
     public void setUp () {
-        awsPlatform = new AwsPlatform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness);
+        awsPlatform = Mockito.spy(new AwsPlatform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
     }
 
     @Test
@@ -207,6 +210,9 @@ public class AwsPlatformTest {
         assertEquals(chaosSecurityGroup.getGroupId(), awsPlatform.getChaosSecurityGroupId());
         verify(amazonEC2, times(1)).describeVpcs();
         verify(amazonEC2, times(1)).createSecurityGroup(any());
+        verify(awsPlatform, times(1)).initChaosSecurityGroupId();
+        awsPlatform.getChaosSecurityGroupId();
+        verify(awsPlatform, times(1)).initChaosSecurityGroupId();
     }
 
     @Test

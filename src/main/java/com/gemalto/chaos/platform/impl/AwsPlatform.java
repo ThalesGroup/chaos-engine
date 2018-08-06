@@ -204,7 +204,7 @@ public class AwsPlatform extends Platform {
         return chaosSecurityGroupId;
     }
 
-    private void initChaosSecurityGroupId () {
+    void initChaosSecurityGroupId () {
         amazonEC2.describeSecurityGroups()
                  .getSecurityGroups()
                  .stream()
