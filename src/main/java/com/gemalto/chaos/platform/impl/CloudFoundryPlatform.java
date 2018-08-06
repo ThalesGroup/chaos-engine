@@ -22,7 +22,6 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
-import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -106,13 +105,9 @@ public class CloudFoundryPlatform extends Platform {
         }
     }
 
-    private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
-        CloudFoundryApplication application = CloudFoundryApplication.builder().platform(this)
-                                                                     .name(app.getName())
-                                                                     .containerInstances(containerInstances)
-                                                                     .build();
-        containers.add(application);
-        log.info("Added application {}", application);
+    private boolean isChaosEngine (String applicationName) {
+        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName) || cloudFoundrySelfAwareness
+                .isFriendly(applicationName));
     }
 
     @Override
@@ -151,9 +146,14 @@ public class CloudFoundryPlatform extends Platform {
         return PlatformHealth.OK;
     }
 
-    private boolean isChaosEngine (String applicationName) {
-        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName) || cloudFoundrySelfAwareness
-                .isFriendly(applicationName));
+    private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
+        CloudFoundryApplication application = CloudFoundryApplication.builder()
+                                                                     .platform(this)
+                                                                     .name(app.getName())
+                                                                     .containerInstances(containerInstances)
+                                                                     .build();
+        containers.add(application);
+        log.info("Added application {}", application);
     }
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
