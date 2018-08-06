@@ -182,6 +182,10 @@ public class CloudFoundryPlatform extends Platform {
         cloudFoundryOperations.applications().scale(scaleApplicationRequest).block();
     }
 
+    public ContainerHealth checkApplicationHealth (String applicationName) {
+        return ContainerHealth.UNDER_ATTACK;
+    }
+
 
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
         Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
