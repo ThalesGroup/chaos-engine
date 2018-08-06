@@ -16,10 +16,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.UUID.randomUUID;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -59,35 +60,31 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    public void stopContainer () {
+    public void stopContainer () throws Exception {
         awsEC2Container.stopContainer(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).stopInstance(INSTANCE_ID);
         Mockito.verify(awsPlatform, times(0)).startInstance(INSTANCE_ID);
-        try {
-            attack.getSelfHealingMethod().call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+        attack.getSelfHealingMethod().call();
         Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
+        Mockito.verify(awsPlatform, times(0)).checkHealth(INSTANCE_ID);
+        attack.getCheckContainerHealth().call();
+        Mockito.verify(awsPlatform, times(1)).checkHealth(INSTANCE_ID);
     }
 
     @Test
-    public void restartContainer () {
+    public void restartContainer () throws Exception {
         awsEC2Container.restartContainer(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).restartInstance(INSTANCE_ID);
         Mockito.verify(awsPlatform, times(0)).startInstance(INSTANCE_ID);
-        try {
-            attack.getSelfHealingMethod().call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+        attack.getSelfHealingMethod().call();
         Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
+        await().atMost(4, TimeUnit.MINUTES)
+               .until(() -> ContainerHealth.UNDER_ATTACK == attack.getCheckContainerHealth().call());
+        attack.getCheckContainerHealth().call();
     }
 
     @Test
@@ -97,7 +94,7 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    public void removeSecurityGroups () {
+    public void removeSecurityGroups () throws Exception {
         String chaosSecurityGroupId = UUID.randomUUID().toString();
         List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID()
                                                                                                  .toString());
@@ -113,20 +110,10 @@ public class AwsEC2ContainerTest {
         Mockito.verify(awsPlatform, times(1))
                .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
         Mockito.verify(awsPlatform, times(0)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        try {
-            attack.getCheckContainerHealth().call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+        attack.getCheckContainerHealth().call();
         Mockito.verify(awsPlatform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         Mockito.verify(awsPlatform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        try {
-            attack.getSelfHealingMethod().call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+        attack.getSelfHealingMethod().call();
         Mockito.verify(awsPlatform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
 }
