@@ -184,7 +184,7 @@ public class CloudFoundryPlatform extends Platform {
                                                                                  .name(applicationName)
                                                                                  .instances(instances)
                                                                                  .build();
-        cloudFoundryOperations.applications().scale(scaleApplicationRequest);
+        cloudFoundryOperations.applications().scale(scaleApplicationRequest).block();
     }
 
     public ContainerHealth checkHealth (String applicationId, AttackType attackType, Integer instanceId) {
