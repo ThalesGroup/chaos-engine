@@ -150,7 +150,13 @@ public class CloudFoundryPlatform extends Platform {
     public void sshAttack (SshAttack attack, CloudFoundryContainer container) {
         CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
         if (ssh.connect(container)) {
+            if (container.getDetectedCapabilities() != null) {
+                attack.setShellSessionCapabilities(container.getDetectedCapabilities());
+            }
             attack.attack(ssh);
+            if (container.getDetectedCapabilities() == null) {
+                container.setDetectedCapabilities(attack.getShellSessionCapabilities());
+            }
             ssh.disconnect();
         }
     }

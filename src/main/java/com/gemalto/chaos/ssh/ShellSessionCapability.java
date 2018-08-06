@@ -1,30 +1,34 @@
 package com.gemalto.chaos.ssh;
 
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 
 import java.util.ArrayList;
 
 public class ShellSessionCapability {
     private ShellCapabilityType capabilityType;
-    private ArrayList<String> capabilityOptions = new ArrayList<>();
+    private ArrayList<ShellSessionCapabilityOption> capabilityOptions = new ArrayList<>();
 
     public ShellSessionCapability (ShellCapabilityType capabilityType) {
         this.capabilityType = capabilityType;
     }
 
-    public ShellSessionCapability addCapabilityOption (String option) {
+    public ShellSessionCapability addCapabilityOption (ShellSessionCapabilityOption option) {
         capabilityOptions.add(option);
         return this;
     }
 
-    public ArrayList<String> getCapabilityOptions () {
+    public ArrayList<ShellSessionCapabilityOption> getCapabilityOptions () {
         return capabilityOptions;
     }
 
-    public boolean hasAnOption (ArrayList<String> requiredOptions) {
-        for (String option : requiredOptions) {
-            for (String allowed : capabilityOptions) {
-                if (option.matches(allowed)) {
+    public boolean optionsEmpty () {
+        return capabilityOptions.isEmpty();
+    }
+    public boolean hasAnOption (ArrayList<ShellSessionCapabilityOption> requiredOptions) {
+        for (ShellSessionCapabilityOption option : requiredOptions) {
+            for (ShellSessionCapabilityOption allowed : capabilityOptions) {
+                if (option == allowed) {
                     return true;
                 }
             }

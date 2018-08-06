@@ -2,9 +2,8 @@ package com.gemalto.chaos.ssh.impl.attacks;
 
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.SshAttack;
-import com.gemalto.chaos.ssh.enums.BinaryType;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
-import com.gemalto.chaos.ssh.enums.ShellType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,21 +17,14 @@ public class RandomProcessTermination extends SshAttack {
 
     @Override
     protected void buildRequiredCapabilities () {
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellType.BASH
-                .toString())
-                                                                                      .addCapabilityOption(ShellType.ASH
-                                                                                              .toString())
-                                                                                      .addCapabilityOption(ShellType.SH.toString()));
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.TYPE
-                .getBinaryName()));
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.GREP
-                .getBinaryName()));
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.KILL
-                .getBinaryName()));
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.SORT
-                .getBinaryName()));
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(BinaryType.HEAD
-                .getBinaryName()));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.ASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.SH));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.KILL));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.SORT));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
     }
 
     @Override

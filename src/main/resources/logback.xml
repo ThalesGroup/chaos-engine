@@ -4,6 +4,7 @@
     <logger name="org.springframework" level="WARN"/>
     <logger name="com.gemalto" level="DEBUG"/>
     <logger name="org.apache" level="WARN"/>
+    <logger name="net.schmizz" level="OFF"/>
 
     <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
         <Name>ALWAYS</Name>

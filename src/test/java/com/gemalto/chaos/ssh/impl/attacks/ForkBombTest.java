@@ -1,6 +1,5 @@
 package com.gemalto.chaos.ssh.impl.attacks;
 
-import com.gemalto.chaos.ssh.ShellSessionCapabilityProvider;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
@@ -18,8 +17,6 @@ public class ForkBombTest {
     @Mock
     SshManager sshManager;
     @Mock
-    ShellSessionCapabilityProvider capabilitiesProvider;
-    @Mock
     SshCommandResult result;
 
     @Test
@@ -29,15 +26,14 @@ public class ForkBombTest {
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();
         assertTrue(bomb.attack(sshManager));
-        when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("ash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertTrue(bomb.attack(sshManager));
-        when(result.getExitStatus()).thenReturn(0);
+        bomb = new ForkBomb();
         when(result.getCommandOutput()).thenReturn("sh");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertTrue(bomb.attack(sshManager));
-        when(result.getExitStatus()).thenReturn(0);
+        bomb = new ForkBomb();
         when(result.getCommandOutput()).thenReturn("BASH");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertTrue(bomb.attack(sshManager));
@@ -67,6 +63,7 @@ public class ForkBombTest {
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();
         assertFalse(bomb.attack(sshManager));
+        bomb = new ForkBomb();
         when(result.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertFalse(bomb.attack(sshManager));

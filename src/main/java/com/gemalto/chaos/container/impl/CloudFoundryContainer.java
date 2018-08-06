@@ -8,11 +8,13 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -20,6 +22,7 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
+    private transient ArrayList<ShellSessionCapability> detectedCapabilities;
     private transient CloudFoundryPlatform cloudFoundryPlatform;
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
@@ -116,6 +119,14 @@ public class CloudFoundryContainer extends Container {
 
     public Integer getInstance () {
         return instance;
+    }
+
+    public ArrayList<ShellSessionCapability> getDetectedCapabilities () {
+        return detectedCapabilities;
+    }
+
+    public void setDetectedCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+        this.detectedCapabilities = detectedCapabilities;
     }
 
     public static final class CloudFoundryContainerBuilder {
