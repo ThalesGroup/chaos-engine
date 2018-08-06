@@ -32,6 +32,10 @@ public class CloudFoundryApplication extends Container {
         super();
     }
 
+    public static CloudFoundryApplicationBuilder builder () {
+        return CloudFoundryApplicationBuilder.builder();
+    }
+
     private RestageApplicationRequest getRestageApplicationRequest () {
         RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
         log.info("{}", restageApplicationRequest);
