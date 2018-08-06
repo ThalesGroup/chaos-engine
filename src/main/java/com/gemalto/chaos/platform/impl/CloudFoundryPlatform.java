@@ -83,13 +83,13 @@ public class CloudFoundryPlatform extends Platform {
                               .toIterable()
                               .forEach(app -> {
                                   Integer instances = app.getInstances();
-                                  createApplication(containers, app, instances);
-                                  for (Integer i = 0; i < instances; i++) {
-                                      if (isChaosEngine(app.getName(), i)) {
-                                          log.debug("Skipping what appears to be me.");
-                                          continue;
+                                  if (!isChaosEngine(app.getName())) {
+                                      createApplication(containers, app, instances);
+                                      for (Integer i = 0; i < instances; i++) {
+                                          createContainerFromApp(containers, app, i);
                                       }
-                                      createContainerFromApp(containers, app, i);
+                                  } else {
+                                      log.debug("Skipping what appears to be me.");
                                   }
                               });
         return containers;
@@ -156,8 +156,8 @@ public class CloudFoundryPlatform extends Platform {
         return PlatformHealth.OK;
     }
 
-    private boolean isChaosEngine (String applicationName, Integer instanceId) {
-        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName, instanceId) || cloudFoundrySelfAwareness
+    private boolean isChaosEngine (String applicationName) {
+        return cloudFoundrySelfAwareness != null && (cloudFoundrySelfAwareness.isMe(applicationName) || cloudFoundrySelfAwareness
                 .isFriendly(applicationName));
     }
 

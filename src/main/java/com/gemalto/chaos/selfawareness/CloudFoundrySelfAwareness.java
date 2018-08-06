@@ -28,8 +28,8 @@ public class CloudFoundrySelfAwareness {
         this.linkedApplicationNames = linkedApplicationNames;
     }
 
-    public boolean isMe (String applicationName, Integer applicationInstanceIndex) {
-        return (applicationName.equals(this.applicationName) && applicationInstanceIndex.equals(this.applicationInstanceIndex));
+    public boolean isMe (String applicationName) {
+        return (applicationName.equals(this.applicationName));
     }
 
     public boolean isFriendly (String applicationName) {
