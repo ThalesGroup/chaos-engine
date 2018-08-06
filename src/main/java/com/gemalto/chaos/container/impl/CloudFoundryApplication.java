@@ -63,6 +63,10 @@ public class CloudFoundryApplication extends Container {
         return restageApplication;
     }
 
+    public static CloudFoundryApplicationBuilder builder () {
+        return CloudFoundryApplicationBuilder.builder();
+    }
+
     public static final class CloudFoundryApplicationBuilder {
         private String name;
         private Integer containerInstances;
