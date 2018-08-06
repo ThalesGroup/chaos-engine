@@ -112,7 +112,7 @@ public class CloudFoundryPlatform extends Platform {
     }
 
     private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
-        CloudFoundryApplication application = CloudFoundryApplication.builder()
+        CloudFoundryApplication application = CloudFoundryApplication.builder().platform(this)
                                                                      .name(app.getName())
                                                                      .containerInstances(containerInstances)
                                                                      .build();
