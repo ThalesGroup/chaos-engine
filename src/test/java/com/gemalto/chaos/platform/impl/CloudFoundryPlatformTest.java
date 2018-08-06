@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
@@ -78,6 +79,11 @@ public class CloudFoundryPlatformTest {
         String APPLICATION_NAME = randomUUID().toString();
         String APPLICATION_ID = randomUUID().toString();
         Integer INSTANCES = 2;
+        CloudFoundryApplication EXPECTED_APPLICATION = CloudFoundryApplication.builder()
+                                                                              .name(APPLICATION_NAME)
+                                                                              .containerInstances(INSTANCES)
+                                                                              .build();
+
         CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
                                                                           .applicationId(APPLICATION_ID)
                                                                           .instance(0)
@@ -106,7 +112,7 @@ public class CloudFoundryPlatformTest {
         doReturn(applicationsFlux).when(applications).list();
         when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
                 .getArguments()[0]);
-        assertThat(cfp.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
+        assertThat(cfp.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_APPLICATION, EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
     }
 
     @Test
