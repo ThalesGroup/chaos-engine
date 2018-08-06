@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -63,6 +64,14 @@ public class AwsEC2ContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).stopInstance(INSTANCE_ID);
+        Mockito.verify(awsPlatform, times(0)).startInstance(INSTANCE_ID);
+        try {
+            attack.getSelfHealingMethod().call();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
     }
 
     @Test
@@ -71,6 +80,14 @@ public class AwsEC2ContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsPlatform, times(1)).restartInstance(INSTANCE_ID);
+        Mockito.verify(awsPlatform, times(0)).startInstance(INSTANCE_ID);
+        try {
+            attack.getSelfHealingMethod().call();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        Mockito.verify(awsPlatform, times(1)).startInstance(INSTANCE_ID);
     }
 
     @Test
@@ -99,14 +116,16 @@ public class AwsEC2ContainerTest {
         try {
             attack.getCheckContainerHealth().call();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            fail();
         }
         Mockito.verify(awsPlatform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         Mockito.verify(awsPlatform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         try {
             attack.getSelfHealingMethod().call();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            fail();
         }
         Mockito.verify(awsPlatform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
