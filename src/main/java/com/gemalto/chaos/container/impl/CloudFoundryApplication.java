@@ -7,7 +7,7 @@ import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
-import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +22,9 @@ public class CloudFoundryApplication extends Container {
     private transient String name;
     private Integer originalContainerInstances;
     private Integer actualContainerInstances;
-    private transient CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private transient Callable<Void> rescaleApplication = () -> {
-        cloudFoundryPlatform.rescaleApplication(name, originalContainerInstances);
+        cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
 
@@ -44,12 +44,12 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     protected Platform getPlatform () {
-        return cloudFoundryPlatform;
+        return cloudFoundryApplicationPlatform;
     }
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryPlatform.checkApplicationHealth(name);
+        return cloudFoundryApplicationPlatform.checkApplicationHealth(name);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class CloudFoundryApplication extends Container {
     private Callable<Void> scaleApplication (int instances) {
         actualContainerInstances = instances;
         log.debug("Scaling {} to {} instances", name);
-        cloudFoundryPlatform.rescaleApplication(name, actualContainerInstances);
+        cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
         return rescaleApplication;
     }
 
@@ -87,7 +87,7 @@ public class CloudFoundryApplication extends Container {
     public static final class CloudFoundryApplicationBuilder {
         private String name;
         private Integer containerInstances;
-        private CloudFoundryPlatform cloudFoundryPlatform;
+        private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
 
         private CloudFoundryApplicationBuilder () {
         }
@@ -106,8 +106,8 @@ public class CloudFoundryApplication extends Container {
             return this;
         }
 
-        public CloudFoundryApplicationBuilder platform (CloudFoundryPlatform cloudFoundryPlatform) {
-            this.cloudFoundryPlatform = cloudFoundryPlatform;
+        public CloudFoundryApplicationBuilder platform (CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform) {
+            this.cloudFoundryApplicationPlatform = cloudFoundryApplicationPlatform;
             return this;
         }
 
@@ -116,7 +116,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplication.name = this.name;
             cloudFoundryApplication.originalContainerInstances = this.containerInstances;
             cloudFoundryApplication.actualContainerInstances = this.containerInstances;
-            cloudFoundryApplication.cloudFoundryPlatform = this.cloudFoundryPlatform;
+            cloudFoundryApplication.cloudFoundryApplicationPlatform = this.cloudFoundryApplicationPlatform;
             return cloudFoundryApplication;
         }
     }
