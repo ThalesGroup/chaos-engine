@@ -12,8 +12,6 @@ import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -21,8 +19,6 @@ import java.util.List;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
-@Component
-@ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryPlatform extends Platform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
