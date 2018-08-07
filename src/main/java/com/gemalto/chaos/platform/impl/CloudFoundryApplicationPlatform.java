@@ -39,10 +39,14 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                               .toIterable()
                               .forEach(app -> {
                                   Integer instances = app.getInstances();
-                                  if (!isChaosEngine(app.getName())) {
-                                      createApplication(containers, app, instances);
+                                  if (instances <= 0) {
+                                      log.debug("Skipping {} which has {} container instances.", app.getName(), instances);
                                   } else {
-                                      log.debug("Skipping what appears to be me.");
+                                      if (isChaosEngine(app.getName())) {
+                                          createApplication(containers, app, instances);
+                                      } else {
+                                          log.debug("Skipping what appears to be me.");
+                                      }
                                   }
                               });
         return containers;
