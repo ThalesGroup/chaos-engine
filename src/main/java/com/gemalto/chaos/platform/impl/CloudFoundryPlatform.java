@@ -35,16 +35,16 @@ public class CloudFoundryPlatform extends Platform {
 
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
-    private CloudFoundryPlatform () {
+    public CloudFoundryPlatform () {
+    }
+
+    public static CloudFoundryPlatformBuilder getBuilder () {
+        return CloudFoundryPlatformBuilder.builder();
     }
 
     @Autowired(required = false)
-    private void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
+    void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
         this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
-    }
-
-    public static CloudFoundryPlatformBuilder builder () {
-        return CloudFoundryPlatformBuilder.builder();
     }
 
     public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {

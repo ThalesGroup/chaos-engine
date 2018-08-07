@@ -5,6 +5,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -39,6 +40,15 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         this.cloudFoundryClient = cloudFoundryClient;
         this.containerManager = containerManager;
     }
+
+    private CloudFoundryContainerPlatform () {
+    }
+
+    public static CloudFoundryContainerPlatformBuilder builder () {
+        return CloudFoundryContainerPlatformBuilder.builder();
+    }
+
+
 
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
@@ -103,5 +113,55 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
+    }
+
+    public static final class CloudFoundryContainerPlatformBuilder {
+        private CloudFoundryOperations cloudFoundryOperations;
+        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+        private CloudFoundryClient cloudFoundryClient;
+        private ContainerManager containerManager;
+        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
+        private CloudFoundryContainerPlatformBuilder () {
+        }
+
+        private static CloudFoundryContainerPlatformBuilder builder () {
+            return new CloudFoundryContainerPlatformBuilder();
+        }
+
+        CloudFoundryContainerPlatformBuilder withCloudFoundryOperations (CloudFoundryOperations cloudFoundryOperations) {
+            this.cloudFoundryOperations = cloudFoundryOperations;
+            return this;
+        }
+
+        CloudFoundryContainerPlatformBuilder withCloudFoundryPlatformInfo (CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
+            this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
+            return this;
+        }
+
+        CloudFoundryContainerPlatformBuilder withCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
+            this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
+            return this;
+        }
+
+        CloudFoundryContainerPlatformBuilder withCloudFoundryClient (CloudFoundryClient cloudFoundryClient) {
+            this.cloudFoundryClient = cloudFoundryClient;
+            return this;
+        }
+
+        CloudFoundryContainerPlatformBuilder withContainerManager (ContainerManager containerManager) {
+            this.containerManager = containerManager;
+            return this;
+        }
+
+        public CloudFoundryContainerPlatform build () {
+            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform();
+            cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
+            cloudFoundryContainerPlatform.cloudFoundryOperations = this.cloudFoundryOperations;
+            cloudFoundryContainerPlatform.cloudFoundryPlatformInfo = this.cloudFoundryPlatformInfo;
+            cloudFoundryContainerPlatform.cloudFoundryClient = this.cloudFoundryClient;
+            cloudFoundryContainerPlatform.containerManager = this.containerManager;
+            return cloudFoundryContainerPlatform;
+        }
     }
 }
