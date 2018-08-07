@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
@@ -9,7 +10,13 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsPlatform;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
+
+import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 
 public class AwsEC2Container extends Container {
     private String instanceId;
@@ -59,15 +66,25 @@ public class AwsEC2Container extends Container {
         awsPlatform.stopInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(checkContainerStartedMethod);
-
     }
 
     @StateAttack
     public void restartContainer (Attack attack) {
+        final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsPlatform.restartInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
-        attack.setCheckContainerHealth(checkContainerStartedMethod);
+        attack.setCheckContainerHealth(() -> hardRebootTimer.isBefore(Instant.now()) ? awsPlatform.checkHealth(instanceId) : ContainerHealth.UNDER_ATTACK);
+    }
 
+    @NetworkAttack
+    public void removeSecurityGroups (Attack attack) {
+        List<String> originalSecurityGroupIds = awsPlatform.getSecurityGroupIds(instanceId);
+        awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(awsPlatform.getChaosSecurityGroupId()));
+        attack.setCheckContainerHealth(() -> awsPlatform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));
+        attack.setSelfHealingMethod(() -> {
+            awsPlatform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
+            return null;
+        });
     }
 
     public static final class AwsEC2ContainerBuilder {
