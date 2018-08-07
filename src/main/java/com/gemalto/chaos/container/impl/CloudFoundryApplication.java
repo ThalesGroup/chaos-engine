@@ -16,9 +16,9 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
-    private static final Integer MAX_INSTANCES = 5;
-    private static final Integer MIN_INSTANCES = 0;
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryApplication.class);
+    private transient static final Integer MAX_INSTANCES = 5;
+    private transient static final Integer MIN_INSTANCES = 0;
+    private transient static final Logger log = LoggerFactory.getLogger(CloudFoundryApplication.class);
     private transient String name;
     private Integer originalContainerInstances;
     private Integer actualContainerInstances;
