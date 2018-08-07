@@ -42,10 +42,10 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                   if (instances <= 0) {
                                       log.debug("Skipping {} which has {} container instances.", app.getName(), instances);
                                   } else {
-                                      if (isChaosEngine(app.getName())) {
+                                      if (!isChaosEngine(app.getName())) {
                                           createApplication(containers, app, instances);
                                       } else {
-                                          log.debug("Skipping what appears to be me.");
+                                          log.debug("Skipping {} what appears to be me.", app.getName());
                                       }
                                   }
                               });
