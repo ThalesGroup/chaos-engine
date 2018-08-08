@@ -34,7 +34,23 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         this.cloudFoundryClient = cloudFoundryClient;
     }
 
-    public ContainerHealth checkApplicationHealth (String applicationName, String applicationID) {
+    public ContainerHealth checkPlatformHealth () {
+        Iterable<ApplicationSummary> apps = cloudFoundryOperations.applications()
+                                                                  .list()
+                                                                  .filter(app -> app.getRequestedState()
+                                                                                    .equals(CLOUDFOUNDRY_APPLICATION_STARTED))
+                                                                  .filter(app -> app.getInstances() > 0)
+                                                                  .toIterable();
+        for (ApplicationSummary app : apps) {
+            ContainerHealth appHealth = checkApplicationHealth(app.getName(), app.getId());
+            if (ContainerHealth.NORMAL != appHealth) {
+                return appHealth;
+            }
+        }
+        return ContainerHealth.NORMAL;
+    }
+
+    private ContainerHealth checkApplicationHealth (String applicationName, String applicationID) {
         Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
         try {
             applicationInstanceResponse = cloudFoundryClient.applicationsV2()
@@ -49,9 +65,10 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         String status;
         try {
             status = CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE;
-            for (Map.Entry<String, ApplicationInstanceInfo> entry : applicationInstanceResponse.entrySet()) {
-                if (!CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE.equals(entry.getValue().getState())) {
-                    status = entry.getValue().getState();
+            for (Map.Entry<String, ApplicationInstanceInfo> appInfo : applicationInstanceResponse.entrySet()) {
+                log.debug("Checking container {} {}", applicationName, appInfo.getValue().getState());
+                if (!CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE.equals(appInfo.getValue().getState())) {
+                    status = appInfo.getValue().getState();
                     break;
                 }
             }

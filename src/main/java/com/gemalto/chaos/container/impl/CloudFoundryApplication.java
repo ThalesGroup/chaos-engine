@@ -28,7 +28,7 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
-    private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkApplicationHealth(name, applicationID);
+    private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
 
 
     public CloudFoundryApplication () {
@@ -56,7 +56,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryApplicationPlatform.checkApplicationHealth(name, applicationID);
+        return cloudFoundryApplicationPlatform.checkPlatformHealth();
     }
 
     @Override
