@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
     private transient static final Integer MAX_INSTANCES = 5;
-    private transient static final Integer MIN_INSTANCES = 0;
+    private transient static final Integer MIN_INSTANCES = 1;
     private transient static final Logger log = LoggerFactory.getLogger(CloudFoundryApplication.class);
     private String name;
     private Integer originalContainerInstances;
@@ -78,6 +78,7 @@ public class CloudFoundryApplication extends Container {
     public void scaleApplication (Attack attack) {
         attack.setSelfHealingMethod(rescaleApplication);
         attack.setCheckContainerHealth(isAppHealthy);
+        attack.setFinalizeMethod(rescaleApplication);
         Random rand = new Random();
         actualContainerInstances = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
