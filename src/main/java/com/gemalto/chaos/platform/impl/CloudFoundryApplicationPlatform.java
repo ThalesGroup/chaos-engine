@@ -66,7 +66,6 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         try {
             status = CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE;
             for (Map.Entry<String, ApplicationInstanceInfo> appInfo : applicationInstanceResponse.entrySet()) {
-                log.debug("Checking container {} {}", applicationName, appInfo.getValue().getState());
                 if (!CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE.equals(appInfo.getValue().getState())) {
                     status = appInfo.getValue().getState();
                     break;
