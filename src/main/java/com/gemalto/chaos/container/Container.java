@@ -152,13 +152,13 @@ public abstract class Container implements AttackableObject {
         }
     }
 
-    public void repeatAttack () {
+    public void repeatAttack (Attack attack) {
         if (lastAttackMethod == null) {
             throw new ChaosException("Trying to repeat an attack without having a prior one");
         }
         containerHealth = ContainerHealth.UNDER_ATTACK;
         try {
-            lastAttackMethod.invoke(this);
+            lastAttackMethod.invoke(this, attack);
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new ChaosException(e);
         }

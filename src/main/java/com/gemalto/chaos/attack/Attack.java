@@ -147,7 +147,7 @@ public abstract class Attack {
 
     private void resumeAttack () {
         if (!AdminManager.canRunAttacks()) return;
-        container.repeatAttack();
+        container.repeatAttack(this);
     }
 
     public Integer getTimeToLiveCounter () {
