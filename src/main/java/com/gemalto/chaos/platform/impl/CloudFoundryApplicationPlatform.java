@@ -1,8 +1,13 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
+import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.ClientV2Exception;
+import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
+import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
@@ -12,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
@@ -19,15 +25,40 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 @ConditionalOnProperty({ "cf_organization" })
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
+    private CloudFoundryClient cloudFoundryClient;
 
     @Autowired
-    public CloudFoundryApplicationPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
+    public CloudFoundryApplicationPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryClient cloudFoundryClient, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
         super(cloudFoundryOperations, cloudFoundryPlatformInfo);
         this.cloudFoundryOperations = cloudFoundryOperations;
+        this.cloudFoundryClient = cloudFoundryClient;
     }
 
-    public ContainerHealth checkApplicationHealth (String applicationName) {
-        return ContainerHealth.UNDER_ATTACK;
+    public ContainerHealth checkApplicationHealth (String applicationName, String applicationID) {
+        Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
+        try {
+            applicationInstanceResponse = cloudFoundryClient.applicationsV2()
+                                                            .instances(ApplicationInstancesRequest.builder()
+                                                                                                  .applicationId(applicationID)
+                                                                                                  .build())
+                                                            .block()
+                                                            .getInstances();
+        } catch (ClientV2Exception e) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
+        String status;
+        try {
+            status = CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE;
+            for (Map.Entry<String, ApplicationInstanceInfo> entry : applicationInstanceResponse.entrySet()) {
+                if (!CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE.equals(entry.getValue().getState())) {
+                    status = entry.getValue().getState();
+                    break;
+                }
+            }
+        } catch (NullPointerException e) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
+        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
     }
 
     @Override

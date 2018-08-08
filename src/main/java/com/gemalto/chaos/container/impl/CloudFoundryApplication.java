@@ -22,6 +22,7 @@ public class CloudFoundryApplication extends Container {
     private String name;
     private Integer originalContainerInstances;
     private Integer actualContainerInstances;
+    private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private transient Callable<Void> rescaleApplication = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
@@ -42,6 +43,10 @@ public class CloudFoundryApplication extends Container {
         return restageApplicationRequest;
     }
 
+    public String getApplicationID () {
+        return applicationID;
+    }
+
     @Override
     protected Platform getPlatform () {
         return cloudFoundryApplicationPlatform;
@@ -49,7 +54,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryApplicationPlatform.checkApplicationHealth(name);
+        return cloudFoundryApplicationPlatform.checkApplicationHealth(name, applicationID);
     }
 
     @Override
@@ -88,8 +93,14 @@ public class CloudFoundryApplication extends Container {
         private String name;
         private Integer containerInstances;
         private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+        private String applicationID;
 
         private CloudFoundryApplicationBuilder () {
+        }
+
+        public CloudFoundryApplicationBuilder applicationID (String applicationID) {
+            this.applicationID = applicationID;
+            return this;
         }
 
         static CloudFoundryApplicationBuilder builder () {
@@ -117,6 +128,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplication.originalContainerInstances = this.containerInstances;
             cloudFoundryApplication.actualContainerInstances = this.containerInstances;
             cloudFoundryApplication.cloudFoundryApplicationPlatform = this.cloudFoundryApplicationPlatform;
+            cloudFoundryApplication.applicationID = this.applicationID;
             return cloudFoundryApplication;
         }
     }
