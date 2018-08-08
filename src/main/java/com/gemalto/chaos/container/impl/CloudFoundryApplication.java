@@ -28,6 +28,10 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
+    private transient Callable<Void> rescaleApplication = () -> {
+        cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
+        return null;
+    };
 
     public CloudFoundryApplication () {
         super();
@@ -71,23 +75,17 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    @ResourceAttack
-    public Callable<Void> scaleApplicationToMaxInstances () {
-        return scaleApplication(MAX_INSTANCES);
-    }
 
-    private Callable<Void> scaleApplication (int instances) {
+    @ResourceAttack
+    private void scaleApplication (Attack attack) {
+        attack.setSelfHealingMethod(rescaleApplication);
+        //attack.setCheckContainerHealth(isInstanceRunning);
+        Random rand = new Random();
+        int instances = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
         actualContainerInstances = instances;
         log.debug("Scaling {} to {} instances", name);
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
-        return rescaleApplication;
     }
-
-    @ResourceAttack
-    public Callable<Void> scaleApplicationToMinInstances () {
-        return scaleApplication(MIN_INSTANCES);
-    }
-
 
     public static final class CloudFoundryApplicationBuilder {
         private String name;
