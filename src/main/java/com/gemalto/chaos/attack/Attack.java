@@ -31,10 +31,16 @@ public abstract class Attack {
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
     private Callable<ContainerHealth> checkContainerHealth;
+    private Callable<Void> finalizeMethod;
+
     private Instant startTime = Instant.now();
 
     public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
+    }
+
+    public void setFinalizeMethod (Callable<Void> finalizeMethod) {
+        this.finalizeMethod = finalizeMethod;
     }
 
     public void setCheckContainerHealth (Callable<ContainerHealth> checkContainerHealth) {
@@ -102,6 +108,7 @@ public abstract class Attack {
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
                                                                    .withMessage("Container recovered from final attack")
                                                                    .build());
+                    finalizeAttack();
                     return AttackState.FINISHED;
                 } else {
                     resumeAttack();
@@ -123,6 +130,17 @@ public abstract class Attack {
                                                                .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
+        }
+    }
+
+    private void finalizeAttack () {
+        if (finalizeMethod != null) {
+            try {
+                log.info("Finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+                finalizeMethod.call();
+            } catch (Exception e) {
+                log.error("Error while finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+            }
         }
     }
 
