@@ -22,10 +22,8 @@ public class CloudFoundrySelfAwarenessTest {
 
     @Test
     public void isMe () {
-        assertTrue(cloudFoundrySelfAwareness.isMe(engineName, engineId));
-        assertFalse(cloudFoundrySelfAwareness.isMe(engineName, 1));
-        assertFalse(cloudFoundrySelfAwareness.isMe("Bob", engineId));
-        assertFalse(cloudFoundrySelfAwareness.isMe("Bob", 1));
+        assertTrue(cloudFoundrySelfAwareness.isMe(engineName));
+        assertFalse(cloudFoundrySelfAwareness.isMe("TEST STRING"));
     }
 
     @Test

@@ -7,7 +7,7 @@ import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
-import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
@@ -23,16 +23,16 @@ public class CloudFoundryContainer extends Container {
     private String name;
     private Integer instance;
     private transient ArrayList<ShellSessionCapability> detectedCapabilities;
-    private transient CloudFoundryPlatform cloudFoundryPlatform;
+    private transient CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
     private transient Callable<Void> restageApplication = () -> {
-        cloudFoundryPlatform.restageApplication(getRestageApplicationRequest());
+        cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
         return null;
     };
     private transient Callable<Void> restartContainer = () -> {
-        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
         return null;
     };
-    private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryPlatform.checkHealth(applicationId, instance);
+    private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {
         super();
@@ -51,12 +51,12 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     protected Platform getPlatform () {
-        return cloudFoundryPlatform;
+        return cloudFoundryContainerPlatform;
     }
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return cloudFoundryPlatform.checkHealth(applicationId, instance);
+        return cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
     }
 
     @Override
@@ -77,21 +77,21 @@ public class CloudFoundryContainer extends Container {
     public void restartContainer (Attack attack) {
         attack.setSelfHealingMethod(restageApplication);
         attack.setCheckContainerHealth(isInstanceRunning);
-        cloudFoundryPlatform.restartInstance(getRestartApplicationInstanceRequest());
+        cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
     }
 
     @StateAttack
     public void forkBomb (Attack attack) {
         attack.setSelfHealingMethod(restartContainer);
         attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
-        cloudFoundryPlatform.sshAttack(new ForkBomb(), this);
+        cloudFoundryContainerPlatform.sshAttack(new ForkBomb(), this);
     }
 
     @StateAttack
     public void terminateProcess (Attack attack) {
         attack.setSelfHealingMethod(restartContainer);
         attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
-        cloudFoundryPlatform.sshAttack(new RandomProcessTermination(), this);
+        cloudFoundryContainerPlatform.sshAttack(new RandomProcessTermination(), this);
     }
 
     private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
@@ -133,7 +133,7 @@ public class CloudFoundryContainer extends Container {
         private String applicationId;
         private String name;
         private Integer instance;
-        private CloudFoundryPlatform cloudFoundryPlatform;
+        private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
 
         private CloudFoundryContainerBuilder () {
         }
@@ -157,8 +157,8 @@ public class CloudFoundryContainer extends Container {
             return this;
         }
 
-        public CloudFoundryContainerBuilder platform (CloudFoundryPlatform cloudFoundryPlatform) {
-            this.cloudFoundryPlatform = cloudFoundryPlatform;
+        public CloudFoundryContainerBuilder platform (CloudFoundryContainerPlatform cloudFoundryContainerPlatform) {
+            this.cloudFoundryContainerPlatform = cloudFoundryContainerPlatform;
             return this;
         }
 
@@ -167,7 +167,7 @@ public class CloudFoundryContainer extends Container {
             cloudFoundryContainer.name = this.name;
             cloudFoundryContainer.instance = this.instance;
             cloudFoundryContainer.applicationId = this.applicationId;
-            cloudFoundryContainer.cloudFoundryPlatform = this.cloudFoundryPlatform;
+            cloudFoundryContainer.cloudFoundryContainerPlatform = this.cloudFoundryContainerPlatform;
             return cloudFoundryContainer;
         }
     }
