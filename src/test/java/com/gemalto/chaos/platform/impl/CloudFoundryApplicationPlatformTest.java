@@ -12,6 +12,7 @@ import org.cloudfoundry.client.v2.applications.ApplicationsV2;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
+import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,8 +29,7 @@ import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryApplicationPlatformTest {
@@ -158,5 +158,19 @@ public class CloudFoundryApplicationPlatformTest {
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
         assertEquals(ContainerHealth.UNDER_ATTACK, cloudFoundryApplicationPlatform.checkPlatformHealth());
+    }
+
+    @Test
+    public void rescaleApplication () {
+        ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
+                                                                                 .name(APPLICATION_NAME)
+                                                                                 .instances(INSTANCES)
+                                                                                 .build();
+        Mono<Void> monoVoid = mock(Mono.class);
+        doReturn(applications).when(cloudFoundryOperations).applications();
+        doReturn(monoVoid).when(applications).scale(scaleApplicationRequest);
+        cloudFoundryApplicationPlatform.rescaleApplication(APPLICATION_NAME, INSTANCES);
+        verify(applications, times(1)).scale(scaleApplicationRequest);
+        verify(monoVoid, times(1)).block();
     }
 }
