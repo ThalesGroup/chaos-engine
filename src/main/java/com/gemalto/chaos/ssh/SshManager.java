@@ -64,6 +64,8 @@ public class SshManager {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    log.error("Interactive SSH session watch dog has been interrupted.");
+                    break;
                 }
                 log.debug("Interactive SSH session {} is still active, TTL: {}", shellName, (maxSessionDuration - ttl));
                 ttl++;
@@ -78,7 +80,6 @@ public class SshManager {
             log.debug("Interactive shell session ended.");
         } catch (IOException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
-            e.printStackTrace();
         }
     }
 
