@@ -59,8 +59,15 @@ public class AwsPlatform extends Platform {
         return generateRosterImpl(filter);
     }
 
+    /**
+     * Polls AWS EC2 API for a complete list of instances, with optional filters, and returns a list of Container class
+     * objects to be used.
+     *
+     * @param filterValues Key/Value pair of tags to do an inclusive filter on
+     * @return A list of Containers representing EC2 instances.
+     */
     private List<Container> generateRosterImpl (Map<String, String> filterValues) {
-        List<Container> containerList = new ArrayList<>();
+        final List<Container> containerList = new ArrayList<>();
         Collection<Filter> filters = new HashSet<>();
         if (filterValues != null) {
             filterValues.forEach((k, v) -> filters.add(new Filter().withName("tag:" + k).withValues(v)));
@@ -78,11 +85,18 @@ public class AwsPlatform extends Platform {
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
             if (describeInstancesRequest.getNextToken() == null) {
                 done = true;
+                // Loops until all pages of instances have been resolved
             }
         }
         return containerList;
     }
 
+    /**
+     * Creates a Container object from an EC2 Instance and appends it to a provided list of containers.
+     *
+     * @param containerList The list of containers to append the finalized container into
+     * @param instance      An EC2 Instance object to have a container created.
+     */
     private void createContainerFromInstance (List<Container> containerList, Instance instance) {
         if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return;
         Container newContainer = createContainerFromInstance(instance);
@@ -95,9 +109,16 @@ public class AwsPlatform extends Platform {
         containerList.add(container);
     }
 
+    /**
+     * Creates a Container object given an EC2 Instance object.
+     *
+     * @param instance Instance to have the Container created from.
+     * @return Container mapping to the instance.
+     */
     private Container createContainerFromInstance (Instance instance) {
         String name;
         Optional<Tag> nameTag = instance.getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
+        // Need to use an Optional for the name tag, as it may not be present.
         name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
         return AwsEC2Container.builder()
                               .awsPlatform(this)
@@ -107,6 +128,11 @@ public class AwsPlatform extends Platform {
                               .build();
     }
 
+    /**
+     * Runs an API call and tests that it returns without issue. Any exceptions returns an API Error
+     *
+     * @return OK if call resolves, or ERROR if the call fails.
+     */
     @Override
     public ApiStatus getApiStatus () {
         try {
@@ -157,6 +183,7 @@ public class AwsPlatform extends Platform {
             instance = result.getReservations().get(0).getInstances().get(0);
             state = instance.getState();
         } catch (IndexOutOfBoundsException | NullPointerException e) {
+            // If Index 0 in array doesn't exist, or we get an NPE, it's because the instance doesn't exist anymore.
             log.error("Instance {} doesn't seem to exist anymore", instanceId, e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
@@ -199,6 +226,7 @@ public class AwsPlatform extends Platform {
 
     public String getChaosSecurityGroupId () {
         if (chaosSecurityGroupId == null) {
+            // Let's cache this value, only need to look it up once.
             initChaosSecurityGroupId();
         }
         return chaosSecurityGroupId;
@@ -208,9 +236,12 @@ public class AwsPlatform extends Platform {
         amazonEC2.describeSecurityGroups()
                  .getSecurityGroups()
                  .stream()
+                 // Our security group must exist in the default VPC.
                  .filter(securityGroup -> securityGroup.getVpcId().equals(getDefaultVPC()))
+                 // Our Security Group is identified by a static name.
                  .filter(securityGroup -> securityGroup.getGroupName().equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME))
                  .findFirst()
+                 // If present, set the value, skipping the next section.
                  .ifPresent(securityGroup -> chaosSecurityGroupId = securityGroup.getGroupId());
         if (chaosSecurityGroupId == null) {
             chaosSecurityGroupId = createChaosSecurityGroup();
