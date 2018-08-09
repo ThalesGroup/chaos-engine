@@ -1,7 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
+import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
@@ -33,15 +33,14 @@ public class CloudFoundryContainerTest {
     private Attack attack = new Attack() {
     };
     @MockBean
-    private CloudFoundryPlatform cloudFoundryPlatform;
+    private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
 
     @Before
     public void setUp () {
         cloudFoundryContainer = CloudFoundryContainer.builder()
                                                      .applicationId(applicationId)
                                                      .instance(instance)
-                                                     .name(name)
-                                                     .platform(cloudFoundryPlatform)
+                                                     .name(name).platform(cloudFoundryContainerPlatform)
                                                      .build();
     }
 
@@ -58,7 +57,8 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer.restartContainer(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(cloudFoundryPlatform, times(1)).restartInstance(any(RestartApplicationInstanceRequest.class));
+        Mockito.verify(cloudFoundryContainerPlatform, times(1))
+               .restartInstance(any(RestartApplicationInstanceRequest.class));
     }
 
     @Test
@@ -66,7 +66,8 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer.forkBomb(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(cloudFoundryPlatform, times(1)).sshAttack(any(ForkBomb.class), any(CloudFoundryContainer.class));
+        Mockito.verify(cloudFoundryContainerPlatform, times(1))
+               .sshAttack(any(ForkBomb.class), any(CloudFoundryContainer.class));
     }
 
     @Test
@@ -74,7 +75,7 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer.terminateProcess(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(cloudFoundryPlatform, times(1))
+        Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .sshAttack(any(RandomProcessTermination.class), any(CloudFoundryContainer.class));
     }
 }
