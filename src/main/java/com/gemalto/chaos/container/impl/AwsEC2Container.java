@@ -74,6 +74,7 @@ public class AwsEC2Container extends Container {
         awsPlatform.restartInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(() -> hardRebootTimer.isBefore(Instant.now()) ? awsPlatform.checkHealth(instanceId) : ContainerHealth.UNDER_ATTACK);
+        // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
     @NetworkAttack
