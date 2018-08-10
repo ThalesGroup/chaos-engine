@@ -8,7 +8,6 @@ services:
   datadog:
     image: datadog/agent:latest
     environment:
-      DD_API_KEY: hi_bob
       DD_LOGS_ENABLED: "true"
       DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
     volumes:
