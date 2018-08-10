@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-def create(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str) -> list:
+def create(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str, count: int) -> list:
     import boto3
 
     ec2 = boto3.resource('ec2', region_name=aws_region,
@@ -10,7 +10,7 @@ def create(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str) 
 
     instances = []
     index = 0
-    for instance in ec2.create_instances(ImageId='ami-2a7d75c0',    MinCount=12,    MaxCount=15, InstanceType="t2.micro"):
+    for instance in ec2.create_instances(ImageId='ami-2a7d75c0',    MinCount=count,    MaxCount=count, InstanceType="t2.micro"):
         ec2.create_tags(
             Resources=[instance.id],
             Tags=[{
@@ -39,14 +39,19 @@ def destroy(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str,
 
 def saveInstances(instances: list):
     import pickle
-    with open('.instances', 'wb') as f:
+    with open(getPicklePath(), 'wb') as f:
         pickle.dump(instances, f)
 
 
 def loadInstances() -> list:
     import pickle
-    with open('.instances', 'rb') as f:
+    with open(getPicklePath(), 'rb') as f:
         return pickle.load(f)
+
+def getPicklePath() -> str:
+    import os
+    scriptPath = os.path.dirname(__file__)
+    return os.path.join(scriptPath, '.instances')
 
 
 if __name__ == '__main__':
@@ -57,11 +62,12 @@ if __name__ == '__main__':
     parser.add_argument("aws_access_key_id", type=str)
     parser.add_argument("aws_secret_access_key", type=str)
     parser.add_argument("--aws_region", "-r", type=str, default="eu-west-1")
+    parser.add_argument("--number_of_instances", "-n", type=int, default=15)
     args = parser.parse_args()
-    if os.path.isfile(".instances"):
+    if os.path.isfile(getPicklePath()):
         destroy(args.aws_access_key_id, args.aws_secret_access_key,
                 args.aws_region, loadInstances())
-        os.remove('.instances')
+        os.remove(getPicklePath())
     else:
         saveInstances(create(args.aws_access_key_id,
-                             args.aws_secret_access_key, args.aws_region))
+                             args.aws_secret_access_key, args.aws_region, args.number_of_instances))
