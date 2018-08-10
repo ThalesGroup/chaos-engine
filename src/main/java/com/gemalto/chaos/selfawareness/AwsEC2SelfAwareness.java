@@ -40,6 +40,6 @@ public class AwsEC2SelfAwareness {
     }
 
     String fetchInstanceId (Properties prop) {
-        return HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", prop.getProperty("aws.callback.host")));
+        return HttpUtils.curl(String.format("http://%s/latest/meta-data/instance-id", prop.getProperty("aws.callback.host")), true);
     }
 }

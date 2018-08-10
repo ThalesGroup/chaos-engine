@@ -17,14 +17,18 @@ public class HttpUtils {
     private HttpUtils () {
     }
 
-    public static String curl (String url) {
+    static String curl (String url) {
+        return curl(url, false);
+    }
+
+    public static String curl (String url, boolean supressErrors) {
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
             InputStream response = connection.getInputStream();
             return new BufferedReader(new InputStreamReader(response)).lines().collect(Collectors.joining("\n"));
-
         } catch (IOException e) {
+            if (supressErrors) return null;
             log.error("Exception when polling {}", url, e);
             return null;
         }
