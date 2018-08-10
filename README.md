@@ -135,11 +135,15 @@ The Chaos Engine will try to identify if it is running in the same environment t
 
 
 ###Building Chaos Engine Docker Image
+
 ####Prerequisites
+
 #####docker-compose 
 docker-compose version 1.22.0 is required, [see install or upgrade instructions](https://docs.docker.com/compose/install/#install-compose)
+
 #####docker engine
 Docker version 18.06.0-ce is required, [see install or upgrade instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1)
+
 ####Build steps
 1. Prepare environment file called `.env` in the same location as your `docker-compose.yml`
 
