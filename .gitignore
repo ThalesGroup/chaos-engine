@@ -19,3 +19,5 @@ buildNumber.properties
 
 *.iml
 *.iws
+
+.env
