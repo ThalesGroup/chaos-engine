@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
 import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
@@ -77,5 +78,12 @@ public class CloudFoundryContainerTest {
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .sshAttack(any(RandomProcessTermination.class), any(CloudFoundryContainer.class));
+    }
+
+    @Test
+    public void createAttack () {
+        Attack attack = cloudFoundryContainer.createAttack(AttackType.STATE);
+        assertEquals(cloudFoundryContainer, attack.getContainer());
+        assertEquals(AttackType.STATE, attack.getAttackType());
     }
 }
