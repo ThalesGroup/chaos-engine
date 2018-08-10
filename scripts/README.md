@@ -3,7 +3,8 @@
 ## ec2_instance_provisioning.py
 
 ### Description
-Script for automated provisioning of test EC2 instances
+Script for automated provisioning of test EC2 instances.
+A subsequent run will terminate the provisioned instances.
 
 ### Requirements
 1. Python 3.6
