@@ -134,3 +134,34 @@ The Chaos Engine will try to identify if it is running in the same environment t
 *`variables`* listed in italics are used to control if a feature is enabled. If those variables are specified, other dependant variables may also be logically required, but not programmatically required. This may cause run time errors.
 
 
+### Building Chaos Engine Docker Image
+
+#### Prerequisites
+
+##### docker-compose 
+docker-compose version 1.22.0 is required, [see install or upgrade instructions](https://docs.docker.com/compose/install/#install-compose)
+
+##### docker engine
+Docker version 18.06.0-ce is required, [see install or upgrade instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1)
+
+#### Build steps
+1. Prepare environment file called `.env` in the same location as your `docker-compose.yml`
+
+    File example:
+```
+   AWS_ACCESS_KEY_ID=
+   AWS_REGION=eu-west-1
+   AWS_SECRET_ACCESS_KEY=
+   schedule=*/30 * * * * *
+   holidays=CZE
+   AWS_FILTER_KEYS=Chaos Victim
+   AWS_FILTER_VALUES=true
+```
+2. Run `docker-compose build .`
+3. Ignore following maven error
+```
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:2.0.2.RELEASE:repackage (default) on project chaosengine: Execution default of goal org.springframework.boot:spring-boot-maven-plugin:2.0.2.RELEASE:repackage failed: Unable to find main class -> [Help 1]
+```
+4. Check new image has been created in your local docker registry `docker images`
+5. Run the image `docker run --env-file=.env -it chaos-engine_chaosengine`
+6. Very all environment variables were set properly `docker exec -it ${ContainerID} /bin/sh`
