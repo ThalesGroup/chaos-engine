@@ -25,7 +25,6 @@ public class CloudFoundryApplication extends Container {
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private transient Callable<Void> rescaleApplication = () -> {
-        log.info("Running self-healing on {} container and scaling back to {}", name, originalContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
@@ -64,8 +63,7 @@ public class CloudFoundryApplication extends Container {
     public Attack createAttack (AttackType attackType) {
         return GenericContainerAttack.builder()
                                      .withContainer(this)
-                                     .withAttackType(attackType)
-                                     .withTimeToLive(new Random().nextInt(5))
+                                     .withAttackType(attackType).withTimeToLive(1)
                                      .build();
     }
 
