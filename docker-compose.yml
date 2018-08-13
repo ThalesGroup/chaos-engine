@@ -1,0 +1,29 @@
+version: '3.2'
+services:
+  chaosengine:
+    build: .
+    ports:
+    - "8080:8080"
+    env_file: .env
+  datadog:
+    image: datadog/agent:latest
+    environment:
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+    volumes:
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      read_only: true
+    - type: bind
+      source: /proc
+      target: /host/proc
+      read_only: true
+    - type: bind
+      source: /opt/datadog-agent/run
+      target: /opt/datadog-agent/run
+    - type: bind
+      source: /sys/fs/cgroup/
+      target: /host/sys/fs/cgroup
+      read_only: true
+        
