@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument("aws_access_key_id", type=str)
     parser.add_argument("aws_secret_access_key", type=str)
     parser.add_argument("--aws_region", "-r", type=str, default="eu-west-1")
-    parser.add_argument("--number_of_instances", "-n", type=int, default=15)
+    parser.add_argument("--number_of_instances", "-n", type=int, default=10)
     args = parser.parse_args()
     if os.path.isfile(getPicklePath()):
         destroy(args.aws_access_key_id, args.aws_secret_access_key,
