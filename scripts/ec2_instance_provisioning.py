@@ -24,18 +24,20 @@ def create(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str, 
         )
         index += 1
         instances.append(instance.id)
+        print(f"New instance {instance.id} created ({index}/{count})")
+    print("done")
     return instances
 
 
 def destroy(aws_access_key_id: str, aws_secret_access_key: str, aws_region: str, instances: list) -> None:
     import boto3
-
+    print("Deleting existing EC2 instances")
     ec2 = boto3.client('ec2', region_name=aws_region,
                          aws_access_key_id=aws_access_key_id,
                          aws_secret_access_key=aws_secret_access_key)
 
     ec2.terminate_instances(InstanceIds = instances)
-
+    print ("done")
 
 def saveInstances(instances: list):
     import pickle
