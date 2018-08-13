@@ -63,8 +63,7 @@ public class CloudFoundryApplication extends Container {
     public Attack createAttack (AttackType attackType) {
         return GenericContainerAttack.builder()
                                      .withContainer(this)
-                                     .withAttackType(attackType)
-                                     .withTimeToLive(new Random().nextInt(5))
+                                     .withAttackType(attackType).withTimeToLive(1)
                                      .build();
     }
 
