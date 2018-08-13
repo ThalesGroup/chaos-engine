@@ -25,7 +25,6 @@ public class CloudFoundryApplication extends Container {
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private transient Callable<Void> rescaleApplication = () -> {
-        log.info("Running self-healing on {} container and scaling back to {}", name, originalContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
