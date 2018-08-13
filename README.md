@@ -164,4 +164,4 @@ Docker version 18.06.0-ce is required, [see install or upgrade instructions](htt
 ```
 4. Check new image has been created in your local docker registry `docker images`
 5. Run the image `docker run --env-file=.env -it chaos-engine_chaosengine`
-6. Very all environment variables were set properly `docker exec -it ${ContainerID} /bin/sh`
+6. Verify all environment variables were set properly `docker exec -it ${ContainerID} /bin/sh`
