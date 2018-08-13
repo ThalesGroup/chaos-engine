@@ -15,8 +15,11 @@ A subsequent run will terminate the provisioned instances.
 2. aws access key id
 3. aws secret access key
 
+### Optional Parameters
+1. number of instances (default 10)
+
 #### Execution example
 ```
-    python3 ec2_instance_provisioning.py -r eu-west-1 AKI********* OiBI********************
+    python3 ec2_instance_provisioning.py -r eu-west-1 AKI********* OiBI******************** 10
 ```
 
