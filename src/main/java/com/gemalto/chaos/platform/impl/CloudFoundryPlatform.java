@@ -11,6 +11,7 @@ import com.gemalto.chaos.ssh.SshAttack;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 
@@ -94,6 +95,10 @@ public class CloudFoundryPlatform extends Platform {
             return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;
+    }
+
+    public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
+        cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
     }
 
     public void sshAttack (SshAttack attack, CloudFoundryContainer container) {
