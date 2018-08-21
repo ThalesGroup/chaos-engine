@@ -149,12 +149,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         }
 
         public CloudFoundryContainerPlatform build () {
-            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform();
+            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
-            cloudFoundryContainerPlatform.cloudFoundryOperations = this.cloudFoundryOperations;
-            cloudFoundryContainerPlatform.cloudFoundryPlatformInfo = this.cloudFoundryPlatformInfo;
-            cloudFoundryContainerPlatform.cloudFoundryClient = this.cloudFoundryClient;
-            cloudFoundryContainerPlatform.containerManager = this.containerManager;
             return cloudFoundryContainerPlatform;
         }
     }
