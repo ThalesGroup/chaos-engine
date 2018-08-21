@@ -7,19 +7,33 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.gemalto.chaos.services.CloudService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
+@RefreshScope
+@ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
 public class AwsService implements CloudService {
+    @Value("${aws.ec2.accessKeyId}")
+    private String accessKeyId;
+    @Value("${aws.ec2.secretAccessKey}")
+    private String secretAccessKey;
+    @Value("${aws.ec2.region}")
+    private String region;
+
     @Bean
-    AWSStaticCredentialsProvider awsStaticCredentialsProvider (@Value("AWS_ACCESS_KEY_ID") String accessKey, @Value("AWS_SECRET_ACCESS_KEY") String secretKey) {
-        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
+    @RefreshScope
+    AWSStaticCredentialsProvider awsStaticCredentialsProvider () {
+        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey));
     }
 
     @Bean
-    AmazonEC2 amazonEC2 (@Value("${AWS_REGION:us-east-2}") String awsRegion, AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
-        return AmazonEC2ClientBuilder.standard().withRegion(awsRegion).build();
+    @RefreshScope
+    AmazonEC2 amazonEC2 (AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
+        return AmazonEC2ClientBuilder.standard()
+                                     .withCredentials(awsStaticCredentialsProvider)
+                                     .withRegion(region)
+                                     .build();
     }
 }

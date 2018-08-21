@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
 
 @Component
-@ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
+@ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
 public class AwsPlatform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;

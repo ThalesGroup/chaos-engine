@@ -5,12 +5,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Properties;
 import java.util.UUID;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -21,10 +19,10 @@ public class AwsEC2SelfAwarenessTest {
 
     @Test
     public void isMe () {
-        doReturn(RESPONSE).when(awsEC2SelfAwareness).fetchInstanceId(any(Properties.class));
+        doReturn(RESPONSE).when(awsEC2SelfAwareness).fetchInstanceId();
         assertTrue(awsEC2SelfAwareness.isMe(RESPONSE));
         assertTrue(awsEC2SelfAwareness.isMe(RESPONSE)); // Assertion repeated for testing caching of the ID.
         assertFalse(awsEC2SelfAwareness.isMe(RESPONSE.substring(RESPONSE.length() - 1)));
-        verify(awsEC2SelfAwareness, times(1)).fetchInstanceId(any(Properties.class));
+        verify(awsEC2SelfAwareness, times(1)).fetchInstanceId();
     }
 }

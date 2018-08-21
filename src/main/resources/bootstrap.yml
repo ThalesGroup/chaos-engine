@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: chaosengine
+  cloud:
+    vault:
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:00000000-0000-0000-0000-000000000000}
+      scheme: ${VAULT_SCHEME:http}
+      host: ${VAULT_HOST:localhost}
+      port: ${VAULT_PORT:8200}
+
+management:
+  security:
+    enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+server:
+  port: ${PORT:8080}
+
+aws:
+  callback:
+    host: 169.254.169.254

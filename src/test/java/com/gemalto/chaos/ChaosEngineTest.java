@@ -22,10 +22,6 @@ public class ChaosEngineTest {
         cloudFoundry.put("cf_password", "password");
         cloudFoundry.put("cf_organization", "organization");
         systemPropertiesMap.add(cloudFoundry);
-        HashMap<String, String> aws = new HashMap<>();
-        aws.put("AWS_ACCESS_KEY_ID", "xyz");
-        aws.put("AWS_SECRET_ACCESS_KEY", "abc");
-        systemPropertiesMap.add(aws);
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }
 
