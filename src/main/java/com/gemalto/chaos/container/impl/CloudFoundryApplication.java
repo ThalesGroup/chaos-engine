@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.ResourceAttack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
@@ -28,6 +29,11 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
+    private transient Callable<Void> noRecovery = () -> {
+        log.warn("There is no recovery method for this kind of attack.");
+        return null;
+    };
+
     private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
 
 
@@ -83,6 +89,14 @@ public class CloudFoundryApplication extends Container {
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
+
+    @StateAttack
+    public void restageApplication (Attack attack) {
+        attack.setCheckContainerHealth(isAppHealthy);
+        attack.setSelfHealingMethod(noRecovery);
+        cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+    }
+
 
     public static final class CloudFoundryApplicationBuilder {
         private String name;
