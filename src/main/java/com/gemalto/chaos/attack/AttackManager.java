@@ -70,7 +70,7 @@ public class AttackManager {
         activeAttacks.parallelStream().forEach(attack -> {
             AttackState attackState = attack.getAttackState();
             if (attackState == AttackState.FINISHED) {
-                log.info("Removing attack from active attack roster");
+                log.info("Removing attack {} from active attack roster", attack.getId());
                 finishedAttacks.add(attack);
             }
         });

@@ -91,7 +91,7 @@ public abstract class Attack {
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("Starting a new attack")
+                                                           .withMessage("Starting a new attack, id: " + id)
                                                            .build());
         }
         return true;
@@ -105,41 +105,41 @@ public abstract class Attack {
     private synchronized AttackState checkAttackState () {
         if (isOverDuration()) {
             try {
-                log.warn("This attack has gone on too long, invoking self-healing. \n{}", this);
+                log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
                 selfHealingMethod.call();
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("The attack has gone on too long, invoking self-healing.")
+                                                               .withMessage("The attack" + id + "has gone on too long, invoking self-healing.")
                                                                .build());
             } catch (Exception e) {
-                log.error("An exception occurred while running self-healing.", e);
+                log.error("Attack {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("An exception occurred while running self-healing.")
+                                                               .withMessage("Attack " + id + ": An exception occurred while running self-healing.")
                                                                .build());
             }
         }
         switch (checkContainerHealth()) {
             case NORMAL:
                 if (isFinalizable()) {
-                    log.info("Attack {} complete", this);
+                    log.info("Attack {} complete", id);
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Attack finished. Container recovered from the attack")
+                                                                   .withMessage("Attack " + id + " finished. Container recovered from the attack")
                                                                    .build());
                     finalizeAttack();
                     return AttackState.FINISHED;
                 }
                 return AttackState.STARTED;
             case DOES_NOT_EXIST:
-                log.info("Attack {} no longer maps to existing container", this);
+                log.info("Attack {} no longer maps to existing container", id);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Container no longer exists.")
+                                                               .withMessage("Attack " + id + ":Container no longer exists.")
                                                                .build());
                 return AttackState.FINISHED;
             case UNDER_ATTACK:
@@ -147,7 +147,7 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack not yet finished.")
+                                                               .withMessage("Attack " + id + " not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
         }
@@ -158,7 +158,7 @@ public abstract class Attack {
                 finalizationStartTime = Instant.now();
             }
             boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
-        log.debug("Attack {} is finalizable = {}", this, finalizable);
+        log.debug("Attack {} is finalizable = {}", id, finalizable);
             return finalizable;
     }
 
@@ -169,10 +169,10 @@ public abstract class Attack {
     private void finalizeAttack () {
         if (finalizeMethod != null) {
             try {
-                log.info("Finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+                log.info("Finalizing attack {} on container {}", id, container.getSimpleName());
                 finalizeMethod.call();
             } catch (Exception e) {
-                log.error("Error while finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+                log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
             }
         }
     }
