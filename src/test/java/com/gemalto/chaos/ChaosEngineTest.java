@@ -18,6 +18,7 @@ public class ChaosEngineTest {
         systemPropertiesMap = new HashSet<>();
         HashMap<String, String> cloudFoundry = new HashMap<>();
         cloudFoundry.put("cf.apihost", "localhost");
+        cloudFoundry.put("cf.port", "port");
         cloudFoundry.put("cf.username", "username");
         cloudFoundry.put("cf.password", "password");
         cloudFoundry.put("cf.organization", "organization");
