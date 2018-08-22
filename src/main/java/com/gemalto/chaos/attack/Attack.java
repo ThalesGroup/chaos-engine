@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static java.util.UUID.randomUUID;
@@ -25,10 +24,8 @@ public abstract class Attack {
     private final String id = randomUUID().toString();
     protected Container container;
     protected AttackType attackType;
-    protected Integer timeToLive = 1;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
-    private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
@@ -94,7 +91,7 @@ public abstract class Attack {
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
+                                                           .withMessage("This is a new attack")
                                                            .build());
         }
         return true;
@@ -116,7 +113,7 @@ public abstract class Attack {
         }
         switch (checkContainerHealth()) {
             case NORMAL:
-                if (checkTimeToLive() && isFinalizable()) {
+                if (isFinalizable()) {
                     log.info("Attack {} complete", this);
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
@@ -125,8 +122,6 @@ public abstract class Attack {
                                                                    .build());
                     finalizeAttack();
                     return AttackState.FINISHED;
-                } else {
-                    resumeAttack();
                 }
                 return AttackState.STARTED;
             case DOES_NOT_EXIST:
@@ -142,7 +137,7 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
+                                                               .withMessage("Attack not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
         }
@@ -183,20 +178,4 @@ public abstract class Attack {
         return container.getContainerHealth(attackType);
     }
 
-    private boolean checkTimeToLive () {
-        return timeToLiveCounter.incrementAndGet() > timeToLive;
-    }
-
-    private void resumeAttack () {
-        if (!AdminManager.canRunAttacks()) return;
-        container.repeatAttack(this);
-    }
-
-    public Integer getTimeToLiveCounter () {
-        return timeToLiveCounter.get();
-    }
-
-    public Integer getTimetoLive () {
-        return timeToLive;
-    }
 }

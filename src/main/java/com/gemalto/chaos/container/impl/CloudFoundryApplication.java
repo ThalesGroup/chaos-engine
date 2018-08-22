@@ -68,8 +68,7 @@ public class CloudFoundryApplication extends Container {
     @Override
     public Attack createAttack (AttackType attackType) {
         return GenericContainerAttack.builder()
-                                     .withContainer(this)
-                                     .withAttackType(attackType).withTimeToLive(1)
+                                     .withContainer(this).withAttackType(attackType)
                                      .build();
     }
 
