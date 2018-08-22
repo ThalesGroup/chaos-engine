@@ -17,11 +17,19 @@ public class ChaosEngineTest {
     public void setUp () {
         systemPropertiesMap = new HashSet<>();
         HashMap<String, String> cloudFoundry = new HashMap<>();
-        cloudFoundry.put("cf_apihost", "localhost");
-        cloudFoundry.put("cf_username", "username");
-        cloudFoundry.put("cf_password", "password");
-        cloudFoundry.put("cf_organization", "organization");
+        cloudFoundry.put("cf.apihost", "localhost");
+        cloudFoundry.put("cf.username", "username");
+        cloudFoundry.put("cf.password", "password");
+        cloudFoundry.put("cf.organization", "organization");
+        cloudFoundry.put("cf.space", "space!k");
         systemPropertiesMap.add(cloudFoundry);
+        HashMap<String, String> awsEC2 = new HashMap<>();
+        systemPropertiesMap.add(awsEC2);
+        awsEC2.put("aws.ec2.accessKeyId", "accessKeyId");
+        awsEC2.put("aws.ec2.secretAccessKey", "secretAccessKey");
+        awsEC2.put("aws.ec2.region", "region");
+
+
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }
 
