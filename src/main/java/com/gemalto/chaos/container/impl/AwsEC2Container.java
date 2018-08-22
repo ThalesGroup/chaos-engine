@@ -52,7 +52,6 @@ public class AwsEC2Container extends Container {
         return GenericContainerAttack.builder()
                                      .withAttackType(attackType)
                                      .withContainer(this)
-                                     .withTimeToLive(1)
                                      .build();
     }
 

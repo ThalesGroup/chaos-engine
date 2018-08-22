@@ -15,7 +15,6 @@ import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryContainer extends Container {
@@ -64,7 +63,6 @@ public class CloudFoundryContainer extends Container {
         return GenericContainerAttack.builder()
                                      .withContainer(this)
                                      .withAttackType(attackType)
-                                     .withTimeToLive(new Random().nextInt(5))
                                      .build();
     }
 

@@ -65,11 +65,12 @@ public class AttackManager {
 
     private void updateAttackStatusImpl () {
         log.info("Updating status on active attacks");
+        log.info("Active attacks: {}", activeAttacks.size());
         Set<Attack> finishedAttacks = new HashSet<>();
         activeAttacks.parallelStream().forEach(attack -> {
             AttackState attackState = attack.getAttackState();
             if (attackState == AttackState.FINISHED) {
-                log.info("Removing attack from active attack roster");
+                log.info("Removing attack {} from active attack roster", attack.getId());
                 finishedAttacks.add(attack);
             }
         });
@@ -93,7 +94,7 @@ public class AttackManager {
                 platform.startAttack().getRoster().parallelStream().filter(Container::canAttack)
                         .map(Container::createAttack)
                         .map(this::addAttack)
-                        .forEach(attack -> log.info("{}", attack));
+                        .forEach(attack -> log.info("Starting attack {}, {}", attack.getId(), attack));
             }
         }
     }
