@@ -5,22 +5,31 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.gemalto.chaos.services.CloudService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-@RefreshScope
+@ConfigurationProperties(prefix = "aws.ec2")
 @ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
 public class AwsService implements CloudService {
-    @Value("${aws.ec2.accessKeyId}")
     private String accessKeyId;
-    @Value("${aws.ec2.secretAccessKey}")
     private String secretAccessKey;
-    @Value("${aws.ec2.region}")
     private String region;
+
+    public void setAccessKeyId (String accessKeyId) {
+        this.accessKeyId = accessKeyId;
+    }
+
+    public void setSecretAccessKey (String secretAccessKey) {
+        this.secretAccessKey = secretAccessKey;
+    }
+
+    public void setRegion (String region) {
+        this.region = region;
+    }
 
     @Bean
     @RefreshScope
