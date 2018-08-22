@@ -88,6 +88,7 @@ public class ChaosEvent {
             this.chaosTime = Date.from(attack.getStartTime());
             this.targetContainer = attack.getContainer();
             this.attackType = attack.getAttackType();
+            this.attackId = attack.getId();
             return this;
         }
 
