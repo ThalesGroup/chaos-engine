@@ -4,7 +4,10 @@ services:
     build: .
     ports:
     - "8080:8080"
+    - "8081:8081"
     env_file: .env
+    depends_on:
+    - vault
   datadog:
     image: datadog/agent:latest
     environment:
@@ -26,4 +29,11 @@ services:
       source: /sys/fs/cgroup/
       target: /host/sys/fs/cgroup
       read_only: true
-        
+  vault:
+    image: vault:0.9.6
+    ports:
+    - "8200:8200"
+    cap_add:
+    - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "00000000-0000-0000-0000-000000000000"

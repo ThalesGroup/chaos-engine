@@ -13,30 +13,62 @@ import org.cloudfoundry.reactor.doppler.ReactorDopplerClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
 import org.cloudfoundry.reactor.uaa.ReactorUaaClient;
 import org.cloudfoundry.uaa.UaaClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "cf_apihost" })
+@ConfigurationProperties(prefix = "cf")
+@ConditionalOnProperty({ "cf.apihost" })
 public class CloudFoundryService implements CloudService {
-    private static final Logger log = LoggerFactory.getLogger(CloudFoundryService.class);
+    private String apiHost;
+    private Integer port = 443;
+    private String username;
+    private String password;
+    private String organization;
+    private String space = "default";
+
+    public void setApiHost (String apiHost) {
+        this.apiHost = apiHost;
+    }
+
+    public void setPort (Integer port) {
+        this.port = port;
+    }
+
+    public void setUsername (String username) {
+        this.username = username;
+    }
+
+    public void setPassword (String password) {
+        this.password = password;
+    }
+
+    public void setOrganization (String organization) {
+        this.organization = organization;
+    }
+
+    public void setSpace (String space) {
+        this.space = space;
+    }
 
     @Bean
-    DefaultConnectionContext defaultConnectionContext (@Value("${cf_apihost}") String apiHost, @Value("${cf_port:443}") int port) {
+    @RefreshScope
+    ConnectionContext connectionContext () {
         return DefaultConnectionContext.builder().apiHost(apiHost).port(port).build();
     }
 
     @Bean
-    PasswordGrantTokenProvider tokenProvider (@Value("${cf_username}") String username, @Value("${cf_password}") String password) {
+    @RefreshScope
+    TokenProvider tokenProvider () {
         return PasswordGrantTokenProvider.builder().password(password).username(username).build();
     }
 
     @Bean
-    ReactorCloudFoundryClient cloudFoundryClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
+    @RefreshScope
+    CloudFoundryClient cloudFoundryClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
         return ReactorCloudFoundryClient.builder()
                                         .connectionContext(connectionContext)
                                         .tokenProvider(tokenProvider)
@@ -44,18 +76,20 @@ public class CloudFoundryService implements CloudService {
     }
 
     @Bean
-    ReactorDopplerClient dopplerClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
+    @RefreshScope
+    DopplerClient dopplerClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
         return ReactorDopplerClient.builder().connectionContext(connectionContext).tokenProvider(tokenProvider).build();
     }
 
     @Bean
-    ReactorUaaClient uaaClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
+    @RefreshScope
+    UaaClient uaaClient (ConnectionContext connectionContext, TokenProvider tokenProvider) {
         return ReactorUaaClient.builder().connectionContext(connectionContext).tokenProvider(tokenProvider).build();
     }
 
     @Bean
-    @ConditionalOnProperty({ "cf_organization" })
-    CloudFoundryOperations cloudFoundryOperations (CloudFoundryClient cloudFoundryClient, DopplerClient dopplerClient, UaaClient uaaClient, @Value("${cf_organization}") String organization, @Value("${cf_space:default}") String space) {
+    @RefreshScope
+    CloudFoundryOperations cloudFoundryOperations (CloudFoundryClient cloudFoundryClient, DopplerClient dopplerClient, UaaClient uaaClient) {
         return DefaultCloudFoundryOperations.builder()
                                             .cloudFoundryClient(cloudFoundryClient)
                                             .dopplerClient(dopplerClient)

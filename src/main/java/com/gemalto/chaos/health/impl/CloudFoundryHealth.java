@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "cf_organization" })
+@ConditionalOnProperty({ "cf.organization" })
 public class CloudFoundryHealth extends AbstractPlatformHealth {
     @Autowired
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;

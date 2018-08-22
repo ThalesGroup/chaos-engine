@@ -25,7 +25,7 @@ import java.util.Map;
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
 @Component
-@ConditionalOnProperty({ "cf_organization" })
+@ConditionalOnProperty({ "cf.organization" })
 public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
     private ContainerManager containerManager;

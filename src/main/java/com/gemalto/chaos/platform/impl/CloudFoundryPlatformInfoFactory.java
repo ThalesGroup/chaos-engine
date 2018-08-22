@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-@ConditionalOnProperty({ "cf_organization" })
+@ConditionalOnProperty({ "cf.organization" })
 public class CloudFoundryPlatformInfoFactory {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryPlatformInfoFactory.class);
     @Autowired

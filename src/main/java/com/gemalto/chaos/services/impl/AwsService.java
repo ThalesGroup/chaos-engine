@@ -5,21 +5,44 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.gemalto.chaos.services.CloudService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY" })
+@ConfigurationProperties(prefix = "aws.ec2")
+@ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
 public class AwsService implements CloudService {
-    @Bean
-    AWSStaticCredentialsProvider awsStaticCredentialsProvider (@Value("AWS_ACCESS_KEY_ID") String accessKey, @Value("AWS_SECRET_ACCESS_KEY") String secretKey) {
-        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
+    private String accessKeyId;
+    private String secretAccessKey;
+    private String region;
+
+    public void setAccessKeyId (String accessKeyId) {
+        this.accessKeyId = accessKeyId;
+    }
+
+    public void setSecretAccessKey (String secretAccessKey) {
+        this.secretAccessKey = secretAccessKey;
+    }
+
+    public void setRegion (String region) {
+        this.region = region;
     }
 
     @Bean
-    AmazonEC2 amazonEC2 (@Value("${AWS_REGION:us-east-2}") String awsRegion, AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
-        return AmazonEC2ClientBuilder.standard().withRegion(awsRegion).build();
+    @RefreshScope
+    AWSStaticCredentialsProvider awsStaticCredentialsProvider () {
+        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey));
+    }
+
+    @Bean
+    @RefreshScope
+    AmazonEC2 amazonEC2 (AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
+        return AmazonEC2ClientBuilder.standard()
+                                     .withCredentials(awsStaticCredentialsProvider)
+                                     .withRegion(region)
+                                     .build();
     }
 }
