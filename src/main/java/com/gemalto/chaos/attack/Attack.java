@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static java.util.UUID.randomUUID;
 
 public abstract class Attack {
@@ -26,7 +27,7 @@ public abstract class Attack {
     protected AttackType attackType;
     protected Integer timeToLive = 1;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
-    protected Duration finalizationDuration;
+    protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
@@ -55,6 +56,10 @@ public abstract class Attack {
 
     public void setCheckContainerHealth (Callable<ContainerHealth> checkContainerHealth) {
         this.checkContainerHealth = checkContainerHealth;
+    }
+
+    public void setFinalizationDuration (Duration finalizationDuration) {
+        this.finalizationDuration = finalizationDuration;
     }
 
     String getId () {
@@ -144,16 +149,12 @@ public abstract class Attack {
     }
 
     private boolean isFinalizable () {
-        if (finalizationDuration == null) {
-            return true;
-        } else {
             if (finalizationStartTime == null) {
                 finalizationStartTime = Instant.now();
             }
             boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
-            log.debug("Attack is finalizable = {}", finalizable);
+        log.debug("Attack {} is finalizable = {}", this, finalizable);
             return finalizable;
-        }
     }
 
     private boolean isOverDuration () {
