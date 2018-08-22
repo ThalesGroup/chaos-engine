@@ -13,6 +13,7 @@ import java.util.Date;
 public class ChaosEvent {
     private Container targetContainer;
     private Date chaosTime;
+    private String attackId;
     private String message;
     private AttackType attackType;
     private NotificationLevel notificationLevel;
@@ -71,6 +72,7 @@ public class ChaosEvent {
     public static final class ChaosEventBuilder {
         private Container targetContainer;
         private Date chaosTime;
+        private String attackId;
         private String message;
         private AttackType attackType;
         private NotificationLevel notificationLevel;
@@ -86,6 +88,7 @@ public class ChaosEvent {
             this.chaosTime = Date.from(attack.getStartTime());
             this.targetContainer = attack.getContainer();
             this.attackType = attack.getAttackType();
+            this.attackId = attack.getId();
             return this;
         }
 
@@ -114,11 +117,16 @@ public class ChaosEvent {
             return this;
         }
 
+        public void withAttackId (String attackId) {
+            this.attackId = attackId;
+        }
+
         public ChaosEvent build () {
             ChaosEvent chaosEvent = new ChaosEvent();
             chaosEvent.targetContainer = this.targetContainer;
             chaosEvent.message = this.message;
             chaosEvent.chaosTime = this.chaosTime;
+            chaosEvent.attackId = this.attackId;
             chaosEvent.attackType = this.attackType;
             chaosEvent.notificationLevel = this.notificationLevel;
             return chaosEvent;

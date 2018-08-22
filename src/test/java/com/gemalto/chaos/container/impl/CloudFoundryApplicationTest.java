@@ -3,6 +3,7 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
+import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,15 @@ public class CloudFoundryApplicationTest {
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         verify(attack, times(1)).setFinalizeMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
+    }
+
+    @Test
+    public void restageApplication () {
+        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
+        cloudFoundryApplication.restageApplication(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restageApplication(restageApplicationRequest);
     }
 
     @Test

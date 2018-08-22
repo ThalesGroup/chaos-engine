@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static java.util.UUID.randomUUID;
 
 public abstract class Attack {
@@ -24,9 +24,8 @@ public abstract class Attack {
     private final String id = randomUUID().toString();
     protected Container container;
     protected AttackType attackType;
-    protected Integer timeToLive = 1;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
-    private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
+    protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
@@ -34,6 +33,7 @@ public abstract class Attack {
     private Callable<Void> finalizeMethod;
 
     private Instant startTime = Instant.now();
+    private Instant finalizationStartTime;
 
     public Callable<Void> getSelfHealingMethod () {
         return selfHealingMethod;
@@ -55,7 +55,11 @@ public abstract class Attack {
         this.checkContainerHealth = checkContainerHealth;
     }
 
-    String getId () {
+    public void setFinalizationDuration (Duration finalizationDuration) {
+        this.finalizationDuration = finalizationDuration;
+    }
+
+    public String getId () {
         return id;
     }
 
@@ -82,13 +86,13 @@ public abstract class Attack {
             return false;
         }
         if (container.supportsAttackType(attackType)) {
-            container.attackContainer(this);
-            attackState = AttackState.STARTED;
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("This is a new attack, with " + timeToLive + " total attacks.")
+                                                           .withMessage("Starting a new attack")
                                                            .build());
+            container.attackContainer(this);
+            attackState = AttackState.STARTED;
         }
         return true;
     }
@@ -101,29 +105,37 @@ public abstract class Attack {
     private synchronized AttackState checkAttackState () {
         if (isOverDuration()) {
             try {
-                log.info("This attack has gone on too long, invoking self-healing. \n{}", this);
+                log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
                 selfHealingMethod.call();
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
+                                                               .withNotificationLevel(NotificationLevel.WARN)
+                                                               .withMessage("The attack has gone on too long, invoking self-healing.")
+                                                               .build());
             } catch (Exception e) {
-                log.error("An exception occurred while running self-healing.", e);
+                log.error("Attack {}: An exception occurred while running self-healing.", id, e);
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withMessage("An exception occurred while running self-healing.")
+                                                               .build());
             }
         }
         switch (checkContainerHealth()) {
             case NORMAL:
-                if (checkTimeToLive()) {
-                    log.info("Attack {} complete", this);
+                if (isFinalizable()) {
+                    log.info("Attack {} complete", id);
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Container recovered from final attack")
+                                                                   .withMessage("Attack finished. Container recovered from the attack")
                                                                    .build());
                     finalizeAttack();
                     return AttackState.FINISHED;
-                } else {
-                    resumeAttack();
                 }
                 return AttackState.STARTED;
             case DOES_NOT_EXIST:
-                log.info("Attack {} no longer maps to existing container", this);
+                log.info("Attack {} no longer maps to existing container", id);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
@@ -135,10 +147,19 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
+                                                               .withMessage("Attack not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
         }
+    }
+
+    private boolean isFinalizable () {
+            if (finalizationStartTime == null) {
+                finalizationStartTime = Instant.now();
+            }
+            boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
+        log.debug("Attack {} is finalizable = {}", id, finalizable);
+            return finalizable;
     }
 
     private boolean isOverDuration () {
@@ -148,10 +169,10 @@ public abstract class Attack {
     private void finalizeAttack () {
         if (finalizeMethod != null) {
             try {
-                log.info("Finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+                log.info("Finalizing attack {} on container {}", id, container.getSimpleName());
                 finalizeMethod.call();
             } catch (Exception e) {
-                log.error("Error while finalizing {} attack on container {}", this.attackType, container.getSimpleName());
+                log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
             }
         }
     }
@@ -167,20 +188,4 @@ public abstract class Attack {
         return container.getContainerHealth(attackType);
     }
 
-    private boolean checkTimeToLive () {
-        return timeToLiveCounter.incrementAndGet() > timeToLive;
-    }
-
-    private void resumeAttack () {
-        if (!AdminManager.canRunAttacks()) return;
-        container.repeatAttack(this);
-    }
-
-    public Integer getTimeToLiveCounter () {
-        return timeToLiveCounter.get();
-    }
-
-    public Integer getTimetoLive () {
-        return timeToLive;
-    }
 }
