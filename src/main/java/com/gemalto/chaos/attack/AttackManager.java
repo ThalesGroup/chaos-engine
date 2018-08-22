@@ -65,6 +65,7 @@ public class AttackManager {
 
     private void updateAttackStatusImpl () {
         log.info("Updating status on active attacks");
+        log.info("Active attacks: {}", activeAttacks.size());
         Set<Attack> finishedAttacks = new HashSet<>();
         activeAttacks.parallelStream().forEach(attack -> {
             AttackState attackState = attack.getAttackState();
