@@ -86,13 +86,13 @@ public abstract class Attack {
             return false;
         }
         if (container.supportsAttackType(attackType)) {
-            container.attackContainer(this);
-            attackState = AttackState.STARTED;
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("Starting a new attack")
                                                            .build());
+            container.attackContainer(this);
+            attackState = AttackState.STARTED;
         }
         return true;
     }
