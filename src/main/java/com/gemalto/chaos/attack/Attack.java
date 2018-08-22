@@ -26,6 +26,7 @@ public abstract class Attack {
     protected AttackType attackType;
     protected Integer timeToLive = 1;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
+    protected Duration finalizationDuration;
     private AtomicInteger timeToLiveCounter = new AtomicInteger(1);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
@@ -34,6 +35,7 @@ public abstract class Attack {
     private Callable<Void> finalizeMethod;
 
     private Instant startTime = Instant.now();
+    private Instant finalizationStartTime;
 
     public Callable<Void> getSelfHealingMethod () {
         return selfHealingMethod;
@@ -109,7 +111,7 @@ public abstract class Attack {
         }
         switch (checkContainerHealth()) {
             case NORMAL:
-                if (checkTimeToLive()) {
+                if (checkTimeToLive() && isFinalizable()) {
                     log.info("Attack {} complete", this);
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
@@ -138,6 +140,19 @@ public abstract class Attack {
                                                                .withMessage("Attack " + timeToLiveCounter.get() + " not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
+        }
+    }
+
+    private boolean isFinalizable () {
+        if (finalizationDuration == null) {
+            return true;
+        } else {
+            if (finalizationStartTime == null) {
+                finalizationStartTime = Instant.now();
+            }
+            boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
+            log.debug("Attack is finalizable = {}", finalizable);
+            return finalizable;
         }
     }
 
