@@ -59,7 +59,7 @@ public abstract class Attack {
         this.finalizationDuration = finalizationDuration;
     }
 
-    String getId () {
+    public String getId () {
         return id;
     }
 
@@ -91,7 +91,7 @@ public abstract class Attack {
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("Starting a new attack, id: " + id)
+                                                           .withMessage("Starting a new attack")
                                                            .build());
         }
         return true;
@@ -110,14 +110,14 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("The attack" + id + "has gone on too long, invoking self-healing.")
+                                                               .withMessage("The attack has gone on too long, invoking self-healing.")
                                                                .build());
             } catch (Exception e) {
                 log.error("Attack {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack " + id + ": An exception occurred while running self-healing.")
+                                                               .withMessage("An exception occurred while running self-healing.")
                                                                .build());
             }
         }
@@ -128,7 +128,7 @@ public abstract class Attack {
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Attack " + id + " finished. Container recovered from the attack")
+                                                                   .withMessage("Attack finished. Container recovered from the attack")
                                                                    .build());
                     finalizeAttack();
                     return AttackState.FINISHED;
@@ -139,7 +139,7 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack " + id + ":Container no longer exists.")
+                                                               .withMessage("Container no longer exists.")
                                                                .build());
                 return AttackState.FINISHED;
             case UNDER_ATTACK:
@@ -147,7 +147,7 @@ public abstract class Attack {
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Attack " + id + " not yet finished.")
+                                                               .withMessage("Attack not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
         }
