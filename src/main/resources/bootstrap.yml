@@ -10,12 +10,18 @@ spring:
       port: ${VAULT_PORT:8200}
 
 management:
+  server:
+    port: 8081
   security:
-    enabled: false
+    enabled: true
   endpoints:
     web:
       exposure:
-        include: "*"
+        include:
+        - refresh
+        exclude:
+        - health
+        - info
 
 server:
   port: ${PORT:8080}
