@@ -7,6 +7,7 @@ import com.gemalto.chaos.container.Container;
 import java.time.Duration;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES;
+import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 
 public class GenericContainerAttack extends Attack {
     public static GenericContainerAttackBuilder builder () {
@@ -18,7 +19,7 @@ public class GenericContainerAttack extends Attack {
         private AttackType attackType;
         private Integer timeToLive = 1;
         private Duration duration = Duration.ofMinutes(DEFAULT_ATTACK_DURATION_MINUTES);
-
+        private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
         private GenericContainerAttackBuilder () {
         }
 
@@ -46,12 +47,18 @@ public class GenericContainerAttack extends Attack {
             return this;
         }
 
+        public GenericContainerAttackBuilder withFinalzationDuration (Duration finalizationDuration) {
+            this.finalizationDuration = finalizationDuration;
+            return this;
+        }
+
         public GenericContainerAttack build () {
             GenericContainerAttack genericContainerAttack = new GenericContainerAttack();
             genericContainerAttack.attackType = this.attackType;
             genericContainerAttack.timeToLive = this.timeToLive;
             genericContainerAttack.container = this.container;
             genericContainerAttack.duration = this.duration;
+            genericContainerAttack.finalizationDuration = this.finalizationDuration;
             return genericContainerAttack;
         }
     }
