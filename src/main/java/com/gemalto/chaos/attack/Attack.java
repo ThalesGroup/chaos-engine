@@ -91,7 +91,7 @@ public abstract class Attack {
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("This is a new attack")
+                                                           .withMessage("Starting a new attack")
                                                            .build());
         }
         return true;
@@ -105,10 +105,20 @@ public abstract class Attack {
     private synchronized AttackState checkAttackState () {
         if (isOverDuration()) {
             try {
-                log.info("This attack has gone on too long, invoking self-healing. \n{}", this);
+                log.warn("This attack has gone on too long, invoking self-healing. \n{}", this);
                 selfHealingMethod.call();
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
+                                                               .withNotificationLevel(NotificationLevel.WARN)
+                                                               .withMessage("The attack has gone on too long, invoking self-healing.")
+                                                               .build());
             } catch (Exception e) {
                 log.error("An exception occurred while running self-healing.", e);
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withMessage("An exception occurred while running self-healing.")
+                                                               .build());
             }
         }
         switch (checkContainerHealth()) {
@@ -118,7 +128,7 @@ public abstract class Attack {
                     notificationManager.sendNotification(ChaosEvent.builder()
                                                                    .fromAttack(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Container recovered from final attack")
+                                                                   .withMessage("Attack finished. Container recovered from the attack")
                                                                    .build());
                     finalizeAttack();
                     return AttackState.FINISHED;
