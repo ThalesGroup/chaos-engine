@@ -18,7 +18,11 @@ public abstract class SshAttack {
         if (actualCapabilities == null) {
             collectAvailableCapabilities();
         } else {
-            log.debug("Skipping shell session capability collection");
+            if (availableCapabilitiesOutdated()) {
+                updateAvailableCapabilities();
+            } else {
+                log.debug("Skipping shell session capability collection");
+            }
         }
         if (shellHasRequiredCapabilities()) {
             log.debug("Starting {} attack.", getAttackName());
@@ -26,7 +30,7 @@ public abstract class SshAttack {
             log.debug("Attack {} deployed.", getAttackName());
             return true;
         } else {
-            log.debug("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, actualCapabilities);
+            log.warn("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, actualCapabilities);
         }
         return false;
     }
@@ -42,6 +46,41 @@ public abstract class SshAttack {
         ShellSessionCapabilityProvider capProvider = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
         capProvider.build();
         actualCapabilities = capProvider.getCapabilities();
+    }
+
+    private boolean availableCapabilitiesOutdated () {
+        for (ShellSessionCapability requiredCap : requiredCapabilities) {
+            if (!shellHasCapability(requiredCap)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateAvailableCapabilities () {
+        log.debug("Updating shell capabilities");
+        ArrayList<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
+        ArrayList<ShellSessionCapability> additionalDetectedCapabilities;
+        for (ShellSessionCapability requiredCap : requiredCapabilities) {
+            if (!shellHasCapability(requiredCap)) {
+                additionalRequiredCapabilities.add(requiredCap);
+            }
+        }
+        ShellSessionCapabilityProvider capProvider = new ShellSessionCapabilityProvider(sshManager, additionalRequiredCapabilities);
+        capProvider.build();
+        additionalDetectedCapabilities = capProvider.getCapabilities();
+        for (ShellSessionCapability additionalDetectedCapability : additionalDetectedCapabilities) {
+            actualCapabilities.add(additionalDetectedCapability);
+        }
+    }
+
+    private boolean shellHasCapability (ShellSessionCapability requiredCap) {
+        for (ShellSessionCapability actualCap : actualCapabilities) {
+            if (actualCap.getCapabilityType() == requiredCap.getCapabilityType() && actualCap.hasAnOption(requiredCap.getCapabilityOptions())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean shellHasRequiredCapabilities () {
