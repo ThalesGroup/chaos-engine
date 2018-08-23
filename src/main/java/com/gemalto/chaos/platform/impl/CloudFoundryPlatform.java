@@ -108,7 +108,7 @@ public class CloudFoundryPlatform extends Platform {
                 attack.setShellSessionCapabilities(container.getDetectedCapabilities());
             }
             attack.attack(ssh);
-            if (container.getDetectedCapabilities() == null) {
+            if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != attack.getShellSessionCapabilities()) {
                 container.setDetectedCapabilities(attack.getShellSessionCapabilities());
             }
             ssh.disconnect();
