@@ -132,7 +132,7 @@ public abstract class Container implements AttackableObject {
 
     public void attackContainer (Attack attack) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
-        log.info("Starting a {} attack against container {}", attack, this);
+        log.info("Starting a attack {} against container {}", attack.getId(), this);
         attackWithAnnotation(attack);
     }
 
@@ -147,7 +147,7 @@ public abstract class Container implements AttackableObject {
             lastAttackMethod = attackMethods.get(index);
             lastAttackMethod.invoke(this, attack);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            log.error("Failed to run attack on container {}", this, e);
+            log.error("Failed to run attack {} on container {}: {}", attack.getId(), this, e);
             throw new ChaosException(e);
         }
     }
