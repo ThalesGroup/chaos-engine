@@ -1,14 +1,11 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
-import com.gemalto.chaos.ssh.SshAttack;
-import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
@@ -100,22 +97,6 @@ public class CloudFoundryPlatform extends Platform {
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
     }
-
-    public void sshAttack (SshAttack attack, CloudFoundryContainer container) {
-        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
-        if (ssh.connect(container)) {
-            if (container.getDetectedCapabilities() != null) {
-                attack.setShellSessionCapabilities(container.getDetectedCapabilities());
-            }
-            attack.attack(ssh);
-            if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != attack.getShellSessionCapabilities()) {
-                container.setDetectedCapabilities(attack.getShellSessionCapabilities());
-            }
-            ssh.disconnect();
-        }
-    }
-
-
 
     public static final class CloudFoundryPlatformBuilder {
         private CloudFoundryOperations cloudFoundryOperations;
