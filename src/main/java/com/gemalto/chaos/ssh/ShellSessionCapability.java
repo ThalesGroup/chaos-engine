@@ -4,6 +4,7 @@ import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ShellSessionCapability {
     private ShellCapabilityType capabilityType;
@@ -43,5 +44,15 @@ public class ShellSessionCapability {
 
     public ShellCapabilityType getCapabilityType () {
         return capabilityType;
+    }
+
+    @Override
+    public boolean equals (Object obj) {
+        ShellSessionCapability capability = (ShellSessionCapability) obj;
+        return this.getCapabilityType() == capability.getCapabilityType() && this.getCapabilityOptions()
+                                                                                 .size() == capability.getCapabilityOptions()
+                                                                                                      .size() && Arrays.equals(this
+                .getCapabilityOptions()
+                .toArray(), capability.getCapabilityOptions().toArray());
     }
 }
