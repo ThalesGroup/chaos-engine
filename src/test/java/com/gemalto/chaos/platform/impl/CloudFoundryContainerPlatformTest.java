@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -48,6 +47,7 @@ public class CloudFoundryContainerPlatformTest {
     @Mock
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
+    String APPLICATION_ID = randomUUID().toString();
 
     @Before
     public void setUp () {
@@ -64,7 +64,6 @@ public class CloudFoundryContainerPlatformTest {
     @SuppressWarnings("unchecked")
     public void getRoster () {
         String APPLICATION_NAME = randomUUID().toString();
-        String APPLICATION_ID = randomUUID().toString();
         Integer INSTANCES = 2;
         CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
                                                                           .applicationId(APPLICATION_ID)
@@ -122,8 +121,6 @@ public class CloudFoundryContainerPlatformTest {
     @Test
     public void checkHealthDoesNotExist () {
         Integer INSTANCE_ID = 0;
-        String APPLICATION_ID = randomUUID().toString();
-        AttackType ATTACK_TYPE = AttackType.STATE;
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder().build();
         Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
@@ -136,8 +133,6 @@ public class CloudFoundryContainerPlatformTest {
     @Test
     public void checkHealthUnderAttack () {
         Integer INSTANCE_ID = 0;
-        String APPLICATION_ID = randomUUID().toString();
-        AttackType ATTACK_TYPE = AttackType.STATE;
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder()
                                                                                                 .instance(INSTANCE_ID.toString(), ApplicationInstanceInfo
@@ -162,8 +157,6 @@ public class CloudFoundryContainerPlatformTest {
     @Test
     public void checkHealthNormal () {
         Integer INSTANCE_ID = 0;
-        String APPLICATION_ID = randomUUID().toString();
-        AttackType ATTACK_TYPE = AttackType.STATE;
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder()
                                                                                                 .instance(INSTANCE_ID.toString(), ApplicationInstanceInfo
