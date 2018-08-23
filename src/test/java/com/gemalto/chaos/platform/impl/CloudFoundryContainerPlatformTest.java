@@ -5,6 +5,13 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
+import com.gemalto.chaos.ssh.ShellSessionCapability;
+import com.gemalto.chaos.ssh.SshCommandResult;
+import com.gemalto.chaos.ssh.SshManager;
+import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
+import com.gemalto.chaos.ssh.enums.ShellCommand;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
+import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
@@ -14,6 +21,7 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +31,7 @@ import org.mockito.stubbing.Answer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
@@ -176,5 +185,49 @@ public class CloudFoundryContainerPlatformTest {
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
         assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
+    }
+
+    @Test
+    public void sshAttackMergeCapabilities () {
+        ArrayList<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
+        alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
+        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.KILL));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.SORT));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
+        SshManager sshManager = mock(SshManager.class);
+        RandomProcessTermination term = new RandomProcessTermination();
+        term.setShellSessionCapabilities(alreadyDetectedCapabilities);
+        SshCommandResult resultShellCapability = mock(SshCommandResult.class);
+        SshCommandResult resultTypeCapability = mock(SshCommandResult.class);
+        SshCommandResult resultGrepCapability = mock(SshCommandResult.class);
+        SshCommandResult resultKillCapability = mock(SshCommandResult.class);
+        SshCommandResult resultSortCapability = mock(SshCommandResult.class);
+        SshCommandResult resultHeadCapability = mock(SshCommandResult.class);
+        when(resultShellCapability.getExitStatus()).thenReturn(0);
+        when(resultShellCapability.getCommandOutput()).thenReturn("bash");
+        when(resultTypeCapability.getExitStatus()).thenReturn(0);
+        when(resultTypeCapability.getCommandOutput()).thenReturn("type");
+        when(resultGrepCapability.getExitStatus()).thenReturn(0);
+        when(resultGrepCapability.getCommandOutput()).thenReturn("grep");
+        when(resultKillCapability.getExitStatus()).thenReturn(0);
+        when(resultKillCapability.getCommandOutput()).thenReturn("kill");
+        when(resultSortCapability.getExitStatus()).thenReturn(0);
+        when(resultSortCapability.getCommandOutput()).thenReturn("sort");
+        when(resultHeadCapability.getExitStatus()).thenReturn(0);
+        when(resultHeadCapability.getCommandOutput()).thenReturn("head");
+        when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.GREP)).thenReturn(resultGrepCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
+        term.attack(sshManager);
+        assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
+        Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
     }
 }
