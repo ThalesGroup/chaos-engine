@@ -16,6 +16,8 @@ public class ChaosEvent {
     private String attackId;
     private String message;
     private AttackType attackType;
+    private String attackLayer;
+    private String attackMethod;
     private NotificationLevel notificationLevel;
 
     public static ChaosEventBuilder builder () {
@@ -75,6 +77,8 @@ public class ChaosEvent {
         private String attackId;
         private String message;
         private AttackType attackType;
+        private String attackLayer;
+        private String attackMethod;
         private NotificationLevel notificationLevel;
 
         private ChaosEventBuilder () {
@@ -89,6 +93,8 @@ public class ChaosEvent {
             this.targetContainer = attack.getContainer();
             this.attackType = attack.getAttackType();
             this.attackId = attack.getId();
+            this.attackLayer = attack.getAttackLayer().getPlatformType();
+            this.attackMethod = attack.getAttackMethod().getName();
             return this;
         }
 
@@ -128,6 +134,8 @@ public class ChaosEvent {
             chaosEvent.chaosTime = this.chaosTime;
             chaosEvent.attackId = this.attackId;
             chaosEvent.attackType = this.attackType;
+            chaosEvent.attackLayer = this.attackLayer;
+            chaosEvent.attackMethod = this.attackMethod;
             chaosEvent.notificationLevel = this.notificationLevel;
             return chaosEvent;
         }
