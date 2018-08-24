@@ -1,5 +1,6 @@
 package com.gemalto.chaos.attack;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.attack.enums.AttackType;
@@ -9,14 +10,19 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
+import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
+import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
 
 public abstract class Attack {
@@ -24,6 +30,8 @@ public abstract class Attack {
     private final String id = randomUUID().toString();
     protected Container container;
     protected AttackType attackType;
+    private Platform attackLayer;
+    private Method attackMethod;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private AttackState attackState = AttackState.NOT_YET_STARTED;
@@ -34,6 +42,22 @@ public abstract class Attack {
 
     private Instant startTime = Instant.now();
     private Instant finalizationStartTime;
+
+    public Platform getAttackLayer () {
+        return attackLayer;
+    }
+
+    private void setAttackLayer (Platform attackLayer) {
+        this.attackLayer = attackLayer;
+    }
+
+    public Method getAttackMethod () {
+        return attackMethod;
+    }
+
+    private void setAttackMethod (Method attackMethod) {
+        this.attackMethod = attackMethod;
+    }
 
     public Callable<Void> getSelfHealingMethod () {
         return selfHealingMethod;
@@ -86,6 +110,15 @@ public abstract class Attack {
             return false;
         }
         if (container.supportsAttackType(attackType)) {
+            List<Method> attackMethods = getMethodsWithAnnotation(container.getClass(), getAttackType().getAnnotation());
+            log.debug("Methods {}", attackMethods);
+            log.debug("Platform {}", container.getPlatform());
+            if (attackMethods.isEmpty()) {
+                throw new ChaosException("Could not find an attack vector");
+            }
+            int index = ThreadLocalRandom.current().nextInt(attackMethods.size());
+            setAttackMethod(attackMethods.get(index));
+            setAttackLayer(container.getPlatform());
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
