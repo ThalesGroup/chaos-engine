@@ -111,8 +111,6 @@ public abstract class Attack {
         }
         if (container.supportsAttackType(attackType)) {
             List<Method> attackMethods = getMethodsWithAnnotation(container.getClass(), getAttackType().getAnnotation());
-            log.debug("Methods {}", attackMethods);
-            log.debug("Platform {}", container.getPlatform());
             if (attackMethods.isEmpty()) {
                 throw new ChaosException("Could not find an attack vector");
             }
