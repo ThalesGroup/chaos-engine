@@ -41,7 +41,7 @@ public abstract class Container implements AttackableObject {
         return new Random().nextDouble() < getPlatform().getDestructionProbability();
     }
 
-    protected abstract Platform getPlatform ();
+    public abstract Platform getPlatform ();
 
     public List<AttackType> getSupportedAttackTypes () {
         return supportedAttackTypes;

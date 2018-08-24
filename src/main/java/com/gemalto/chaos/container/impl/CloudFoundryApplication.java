@@ -56,7 +56,7 @@ public class CloudFoundryApplication extends Container {
     }
 
     @Override
-    protected Platform getPlatform () {
+    public Platform getPlatform () {
         return cloudFoundryApplicationPlatform;
     }
 

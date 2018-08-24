@@ -25,7 +25,7 @@ public class ContainerTest {
         private String field1 = "FIELD1";
 
         @Override
-        protected Platform getPlatform () {
+        public Platform getPlatform () {
             return platform;
         }
 
@@ -54,7 +54,7 @@ public class ContainerTest {
         }
 
         @Override
-        protected Platform getPlatform () {
+        public Platform getPlatform () {
             return platform;
         }
 

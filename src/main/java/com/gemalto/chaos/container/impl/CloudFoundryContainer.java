@@ -49,7 +49,7 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
-    protected Platform getPlatform () {
+    public Platform getPlatform () {
         return cloudFoundryContainerPlatform;
     }
 
