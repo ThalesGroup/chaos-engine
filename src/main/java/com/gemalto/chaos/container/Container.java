@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.AttackableObject;
@@ -40,6 +41,7 @@ public abstract class Container implements AttackableObject {
         return new Random().nextDouble() < getPlatform().getDestructionProbability();
     }
 
+    @JsonIgnore
     public abstract Platform getPlatform ();
 
     public List<AttackType> getSupportedAttackTypes () {
