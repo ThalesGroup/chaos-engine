@@ -94,7 +94,7 @@ public class AttackManager {
                 platform.startAttack().getRoster().parallelStream().filter(Container::canAttack)
                         .map(Container::createAttack)
                         .map(this::addAttack)
-                        .forEach(attack -> log.info("Starting attack {}, {}", attack.getId(), attack));
+                        .forEach(attack -> log.info("Attack {}, {} added to the queue", attack.getId(), attack));
             }
         }
     }
