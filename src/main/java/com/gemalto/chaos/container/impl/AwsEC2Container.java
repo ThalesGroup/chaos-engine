@@ -38,7 +38,7 @@ public class AwsEC2Container extends Container {
     }
 
     @Override
-    protected Platform getPlatform () {
+    public Platform getPlatform () {
         return awsPlatform;
     }
 
