@@ -16,7 +16,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
@@ -138,13 +137,8 @@ public abstract class Container implements AttackableObject {
 
     @SuppressWarnings("unchecked")
     private void attackWithAnnotation (Attack attack) {
-        List<Method> attackMethods = getMethodsWithAnnotation(this.getClass(), attack.getAttackType().getAnnotation());
-        if (attackMethods.isEmpty()) {
-            throw new ChaosException("Could not find an attack vector");
-        }
-        int index = ThreadLocalRandom.current().nextInt(attackMethods.size());
         try {
-            lastAttackMethod = attackMethods.get(index);
+            lastAttackMethod = attack.getAttackMethod();
             lastAttackMethod.invoke(this, attack);
         } catch (IllegalAccessException | InvocationTargetException e) {
             log.error("Failed to run attack {} on container {}: {}", attack.getId(), this, e);
