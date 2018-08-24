@@ -4,7 +4,7 @@ spring:
   cloud:
     vault:
       kv:
-        enabled: false # Change to true for Vault 0.10 support
+        enabled: ${VAULT_10:false}
       authentication: TOKEN
       token: ${VAULT_TOKEN:00000000-0000-0000-0000-000000000000}
       scheme: ${VAULT_SCHEME:https}
