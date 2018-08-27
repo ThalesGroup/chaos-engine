@@ -13,7 +13,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 
 import java.util.Collections;
@@ -24,34 +25,35 @@ import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryPlatformTest {
-    @Mock
+    @MockBean
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @Mock
+    @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
-    @Mock
+    @MockBean
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
-    @Mock
+    @MockBean
     private CloudFoundryClient cloudFoundryClient;
-    @Mock
+    @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
-    @Mock
-    CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    @MockBean
+    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+
     private CloudFoundryPlatform cfp;
-    String APPLICATION_NAME = randomUUID().toString();
-    String APPLICATION_ID = randomUUID().toString();
-    String APPLICATION_NAME_2 = randomUUID().toString();
-    String APPLICATION_ID_2 = randomUUID().toString();
-    Integer INSTANCES = 2;
-    CloudFoundryApplication EXPECTED_CONTAINER_1;
-    CloudFoundryApplication EXPECTED_CONTAINER_2;
-    ApplicationSummary.Builder builder_1;
-    ApplicationSummary.Builder builder_2;
-    ApplicationSummary applicationSummary_1;
-    ApplicationSummary applicationSummary_2;
+    private String APPLICATION_NAME = randomUUID().toString();
+    private String APPLICATION_ID = randomUUID().toString();
+    private String APPLICATION_NAME_2 = randomUUID().toString();
+    private String APPLICATION_ID_2 = randomUUID().toString();
+    private Integer INSTANCES = 2;
+    private CloudFoundryApplication EXPECTED_CONTAINER_1;
+    private CloudFoundryApplication EXPECTED_CONTAINER_2;
+    private ApplicationSummary.Builder builder_1;
+    private ApplicationSummary.Builder builder_2;
+    private ApplicationSummary applicationSummary_1;
+    private ApplicationSummary applicationSummary_2;
 
     @Before
     public void setUp () {
@@ -76,8 +78,7 @@ public class CloudFoundryPlatformTest {
                                       .diskQuota(0)
                                       .instances(INSTANCES)
                                       .id(APPLICATION_ID)
-                                      .name(APPLICATION_NAME)
-                                      .addAllUrls(Collections.EMPTY_SET)
+                                      .name(APPLICATION_NAME).addAllUrls(Collections.emptySet())
                                       .runningInstances(INSTANCES)
                                       .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
                                       .memoryLimit(0);
@@ -85,8 +86,7 @@ public class CloudFoundryPlatformTest {
                                       .diskQuota(0)
                                       .instances(INSTANCES)
                                       .id(APPLICATION_ID_2)
-                                      .name(APPLICATION_NAME_2)
-                                      .addAllUrls(Collections.EMPTY_SET)
+                                      .name(APPLICATION_NAME_2).addAllUrls(Collections.emptySet())
                                       .runningInstances(INSTANCES)
                                       .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
                                       .memoryLimit(0);
