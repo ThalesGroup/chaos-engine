@@ -56,7 +56,7 @@ public class CloudFoundryContainerPlatformTest {
     @Mock
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    String APPLICATION_ID = randomUUID().toString();
+    private String APPLICATION_ID = randomUUID().toString();
 
     @Before
     public void setUp () {
@@ -91,7 +91,7 @@ public class CloudFoundryContainerPlatformTest {
                                                                .instances(INSTANCES)
                                                                .id(APPLICATION_ID)
                                                                .name(APPLICATION_NAME)
-                                                               .addAllUrls(Collections.EMPTY_SET)
+                                                               .addAllUrls(Collections.emptySet())
                                                                .runningInstances(INSTANCES)
                                                                .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
                                                                .memoryLimit(0);
