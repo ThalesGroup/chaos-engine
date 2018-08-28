@@ -1,7 +1,7 @@
 FROM maven:3.5.4-jdk-8-alpine AS build-env
 WORKDIR /chaosengine
 ADD pom.xml /chaosengine
-RUN mvn verify dependency:resolve --fail-never
+RUN mvn dependency:go-offline -Dsilent=true
 ADD src /chaosengine/src
 RUN cd /chaosengine && mvn clean test package
 
