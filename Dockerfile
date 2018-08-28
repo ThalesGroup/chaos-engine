@@ -5,7 +5,7 @@ RUN mvn verify dependency:resolve --fail-never
 ADD src /chaosengine/src
 RUN cd /chaosengine && mvn clean test package
 
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8-jre-alpine
 EXPOSE 8080
 COPY --from=build-env /chaosengine/target/chaosengine.jar /
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/chaosengine.jar"]
