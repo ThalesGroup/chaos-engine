@@ -32,11 +32,6 @@ public class PlatformTest {
     public void setUp () {
         platform = Mockito.spy(new Platform() {
             @Override
-            public List<Container> generateRoster () {
-                return Collections.singletonList(container);
-            }
-
-            @Override
             public ApiStatus getApiStatus () {
                 return null;
             }
@@ -49,6 +44,11 @@ public class PlatformTest {
             @Override
             public PlatformHealth getPlatformHealth () {
                 return null;
+            }
+
+            @Override
+            public List<Container> generateRoster () {
+                return Collections.singletonList(container);
             }
         });
     }

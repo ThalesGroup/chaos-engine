@@ -60,10 +60,7 @@ public class CloudFoundryContainer extends Container {
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder()
-                                     .withContainer(this)
-                                     .withAttackType(attackType)
-                                     .build();
+        return GenericContainerAttack.builder().withContainer(this).withAttackType(attackType).build();
     }
 
     @Override
@@ -78,6 +75,15 @@ public class CloudFoundryContainer extends Container {
         cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
     }
 
+    private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
+        RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
+                                                                                                               .name(name)
+                                                                                                               .instanceIndex(instance)
+                                                                                                               .build();
+        log.info("{}", restartApplicationInstanceRequest);
+        return restartApplicationInstanceRequest;
+    }
+
     @StateAttack
     public void forkBomb (Attack attack) {
         attack.setSelfHealingMethod(restartContainer);
@@ -90,15 +96,6 @@ public class CloudFoundryContainer extends Container {
         attack.setSelfHealingMethod(restartContainer);
         attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
         cloudFoundryContainerPlatform.sshAttack(new RandomProcessTermination(), this);
-    }
-
-    private RestartApplicationInstanceRequest getRestartApplicationInstanceRequest () {
-        RestartApplicationInstanceRequest restartApplicationInstanceRequest = RestartApplicationInstanceRequest.builder()
-                                                                                                               .name(name)
-                                                                                                               .instanceIndex(instance)
-                                                                                                               .build();
-        log.info("{}", restartApplicationInstanceRequest);
-        return restartApplicationInstanceRequest;
     }
 
     private RestageApplicationRequest getRestageApplicationRequest () {

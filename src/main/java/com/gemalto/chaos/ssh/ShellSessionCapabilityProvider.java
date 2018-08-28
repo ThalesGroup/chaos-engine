@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 
-
-
 public class ShellSessionCapabilityProvider {
     private static final Logger log = LoggerFactory.getLogger(ShellSessionCapabilityProvider.class);
     private SshManager sshManager;

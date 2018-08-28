@@ -35,6 +35,10 @@ public class PlatformManager {
         return platform.isPresent() ? platform.get().getPlatformHealth() : PlatformHealth.OK;
     }
 
+    public Collection<Platform> getPlatforms () {
+        return platforms != null ? platforms : Collections.emptySet();
+    }
+
     PlatformHealth getHealthOfPlatformLevel (PlatformLevel platformLevel) {
         return getPlatformHealthOfPlatforms(getPlatformsOfLevel(platformLevel));
     }
@@ -47,10 +51,6 @@ public class PlatformManager {
 
     Collection<PlatformLevel> getPlatformLevels () {
         return getPlatforms().stream().map(Platform::getPlatformLevel).collect(Collectors.toCollection(HashSet::new));
-    }
-
-    public Collection<Platform> getPlatforms () {
-        return platforms != null ? platforms : Collections.emptySet();
     }
 
     void expirePlatformCachedRosters () {

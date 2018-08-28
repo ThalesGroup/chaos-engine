@@ -49,7 +49,6 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         return CloudFoundryContainerPlatformBuilder.builder();
     }
 
-
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
         Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
         try {

@@ -33,7 +33,6 @@ public class AttackControllerTest {
     private MockMvc mvc;
     @MockBean
     private AttackManager attackManager;
-
     private Attack attack1;
     private Attack attack2;
 

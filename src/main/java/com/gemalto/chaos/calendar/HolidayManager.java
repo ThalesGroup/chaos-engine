@@ -24,12 +24,8 @@ public class HolidayManager {
         this.holidayCalendar = holidayCalendar;
     }
 
-    public boolean isHoliday () {
-        return isHoliday(holidayCalendar.getToday());
-    }
-
-    private boolean isHoliday (Calendar day) {
-        return holidayCalendar.isHoliday(day);
+    public Instant getPreviousWorkingDay () {
+        return getPreviousWorkingDay(holidayCalendar.getToday());
     }
 
     Instant getPreviousWorkingDay (Calendar day) {
@@ -37,19 +33,15 @@ public class HolidayManager {
         return day.toInstant();
     }
 
-    private boolean isWorkingHours (Instant now) {
-        return holidayCalendar.isWorkingHours(now);
-    }
-
-    public Instant getPreviousWorkingDay () {
-        return getPreviousWorkingDay(holidayCalendar.getToday());
-    }
-
     private void shiftBackToLastWorkingDay (Calendar day) {
         do {
             day.add(Calendar.DATE, -1);
         }
         while (isHoliday(day) || day.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || day.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY);
+    }
+
+    public boolean isHoliday () {
+        return isHoliday(holidayCalendar.getToday());
     }
 
     public long getMillisLeftInDay () {
@@ -65,8 +57,16 @@ public class HolidayManager {
         return (Instant.now().toEpochMilli() - end.toEpochMilli());
     }
 
+    private boolean isHoliday (Calendar day) {
+        return holidayCalendar.isHoliday(day);
+    }
+
     public boolean isOutsideWorkingHours () {
         return !isWorkingHours(holidayCalendar.getCurrentTime());
+    }
+
+    private boolean isWorkingHours (Instant now) {
+        return holidayCalendar.isWorkingHours(now);
     }
 
     public long getOvernightMillis () {

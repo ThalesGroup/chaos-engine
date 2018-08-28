@@ -20,14 +20,13 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 public class CloudFoundryPlatform extends Platform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     @Autowired
     public CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
     }
-
-    private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     public CloudFoundryPlatform () {
     }
@@ -44,13 +43,6 @@ public class CloudFoundryPlatform extends Platform {
     public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
         cloudFoundryPlatformInfo.fetchInfo();
         return cloudFoundryPlatformInfo;
-    }
-
-
-    @Override
-    public List<Container> generateRoster () {
-        List<Container> containers = new ArrayList<>();
-        return containers;
     }
 
     public boolean isChaosEngine (String applicationName) {
@@ -92,6 +84,12 @@ public class CloudFoundryPlatform extends Platform {
             return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;
+    }
+
+    @Override
+    public List<Container> generateRoster () {
+        List<Container> containers = new ArrayList<>();
+        return containers;
     }
 
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {

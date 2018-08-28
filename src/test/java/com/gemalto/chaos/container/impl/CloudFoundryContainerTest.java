@@ -41,7 +41,8 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer = CloudFoundryContainer.builder()
                                                      .applicationId(applicationId)
                                                      .instance(instance)
-                                                     .name(name).platform(cloudFoundryContainerPlatform)
+                                                     .name(name)
+                                                     .platform(cloudFoundryContainerPlatform)
                                                      .build();
     }
 

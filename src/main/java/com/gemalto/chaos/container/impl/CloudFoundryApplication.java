@@ -10,8 +10,6 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -19,7 +17,6 @@ import java.util.concurrent.Callable;
 public class CloudFoundryApplication extends Container {
     private transient static final Integer MAX_INSTANCES = 5;
     private transient static final Integer MIN_INSTANCES = 1;
-    private transient static final Logger log = LoggerFactory.getLogger(CloudFoundryApplication.class);
     private String name;
     private Integer originalContainerInstances;
     private Integer actualContainerInstances;
@@ -33,9 +30,7 @@ public class CloudFoundryApplication extends Container {
         log.warn("There is no recovery method for this kind of attack.");
         return null;
     };
-
     private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
-
 
     public CloudFoundryApplication () {
         super();
@@ -43,12 +38,6 @@ public class CloudFoundryApplication extends Container {
 
     public static CloudFoundryApplicationBuilder builder () {
         return CloudFoundryApplicationBuilder.builder();
-    }
-
-    private RestageApplicationRequest getRestageApplicationRequest () {
-        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
-        log.info("{}", restageApplicationRequest);
-        return restageApplicationRequest;
     }
 
     public String getApplicationID () {
@@ -67,16 +56,13 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder()
-                                     .withContainer(this).withAttackType(attackType)
-                                     .build();
+        return GenericContainerAttack.builder().withContainer(this).withAttackType(attackType).build();
     }
 
     @Override
     public String getSimpleName () {
         return name;
     }
-
 
     @ResourceAttack
     public void scaleApplication (Attack attack) {
@@ -96,6 +82,11 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
 
+    private RestageApplicationRequest getRestageApplicationRequest () {
+        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
+        log.info("{}", restageApplicationRequest);
+        return restageApplicationRequest;
+    }
 
     public static final class CloudFoundryApplicationBuilder {
         private String name;
@@ -106,13 +97,13 @@ public class CloudFoundryApplication extends Container {
         private CloudFoundryApplicationBuilder () {
         }
 
+        static CloudFoundryApplicationBuilder builder () {
+            return new CloudFoundryApplicationBuilder();
+        }
+
         public CloudFoundryApplicationBuilder applicationID (String applicationID) {
             this.applicationID = applicationID;
             return this;
-        }
-
-        static CloudFoundryApplicationBuilder builder () {
-            return new CloudFoundryApplicationBuilder();
         }
 
         public CloudFoundryApplicationBuilder name (String name) {

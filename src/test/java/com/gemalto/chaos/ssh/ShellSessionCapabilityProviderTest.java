@@ -26,7 +26,6 @@ public class ShellSessionCapabilityProviderTest {
     ShellSessionCapability capabilityBinary = new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP)
                                                                                                     .addCapabilityOption(ShellSessionCapabilityOption.SORT);
 
-
     @Test
     public void sessionHasShellCapability () {
         initCapabilities(capabilityBash);

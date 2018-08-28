@@ -42,7 +42,6 @@ public class AttackManagerTest {
         attackManager = new AttackManager(notificationManager, platformManager, holidayManager);
     }
 
-
     @Test
     public void startAttacks () {
         List<Container> containerList = new ArrayList<>();
@@ -59,8 +58,6 @@ public class AttackManagerTest {
         assertThat(attackManager.getNewAttackQueue(), hasItem(attack1));
         verify(container2, times(1)).canAttack();
         verify(container2, times(0)).createAttack();
-
-
     }
 
     @Test
@@ -79,5 +76,4 @@ public class AttackManagerTest {
         verify(container1, times(1)).createAttack();
         verify(container2, times(0)).createAttack();
     }
-
 }

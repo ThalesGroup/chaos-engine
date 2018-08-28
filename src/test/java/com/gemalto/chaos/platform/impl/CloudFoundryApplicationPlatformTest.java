@@ -77,16 +77,14 @@ public class CloudFoundryApplicationPlatformTest {
         builder_1 = ApplicationSummary.builder()
                                       .diskQuota(0)
                                       .instances(INSTANCES)
-                                      .id(APPLICATION_ID)
-                                      .name(APPLICATION_NAME).addAllUrls(Collections.emptySet())
+                                      .id(APPLICATION_ID).name(APPLICATION_NAME).addAllUrls(Collections.emptySet())
                                       .runningInstances(INSTANCES)
                                       .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
                                       .memoryLimit(0);
         builder_2 = ApplicationSummary.builder()
                                       .diskQuota(0)
                                       .instances(INSTANCES)
-                                      .id(APPLICATION_ID_2)
-                                      .name(APPLICATION_NAME_2).addAllUrls(Collections.emptySet())
+                                      .id(APPLICATION_ID_2).name(APPLICATION_NAME_2).addAllUrls(Collections.emptySet())
                                       .runningInstances(INSTANCES)
                                       .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
                                       .memoryLimit(0);

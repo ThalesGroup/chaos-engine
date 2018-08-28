@@ -41,6 +41,15 @@ public abstract class SshAttack {
         detectedCapabilities = capProvider.getCapabilities();
     }
 
+    private boolean availableCapabilitiesOutdated () {
+        for (ShellSessionCapability requiredCap : requiredCapabilities) {
+            if (!shellHasCapability(requiredCap)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void updateAvailableCapabilities () {
         log.debug("Updating shell capabilities");
         ArrayList<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
@@ -58,32 +67,6 @@ public abstract class SshAttack {
         }
     }
 
-    private boolean shellHasCapability (ShellSessionCapability requiredCap) {
-        for (ShellSessionCapability actualCap : detectedCapabilities) {
-            if (actualCap.getCapabilityType() == requiredCap.getCapabilityType() && actualCap.hasAnOption(requiredCap.getCapabilityOptions())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean availableCapabilitiesOutdated () {
-        for (ShellSessionCapability requiredCap : requiredCapabilities) {
-            if (!shellHasCapability(requiredCap)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public ArrayList<ShellSessionCapability> getShellSessionCapabilities () {
-        return detectedCapabilities;
-    }
-
-    public void setShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
-        this.detectedCapabilities = detectedCapabilities;
-    }
-
     public boolean shellHasRequiredCapabilities () {
         log.debug("Checking SSH attack required capabilities");
         for (ShellSessionCapability required : requiredCapabilities) {
@@ -95,12 +78,20 @@ public abstract class SshAttack {
         return true;
     }
 
-
     protected abstract String getAttackName ();
 
     protected abstract String getAttackCommand ();
 
     protected abstract int getSshSessionMaxDuration ();
+
+    private boolean shellHasCapability (ShellSessionCapability requiredCap) {
+        for (ShellSessionCapability actualCap : detectedCapabilities) {
+            if (actualCap.getCapabilityType() == requiredCap.getCapabilityType() && actualCap.hasAnOption(requiredCap.getCapabilityOptions())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private boolean requiredCapabilityMet (ShellSessionCapability required) {
         for (ShellSessionCapability actual : detectedCapabilities) {
@@ -111,5 +102,13 @@ public abstract class SshAttack {
             }
         }
         return false;
+    }
+
+    public ArrayList<ShellSessionCapability> getShellSessionCapabilities () {
+        return detectedCapabilities;
+    }
+
+    public void setShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+        this.detectedCapabilities = detectedCapabilities;
     }
 }

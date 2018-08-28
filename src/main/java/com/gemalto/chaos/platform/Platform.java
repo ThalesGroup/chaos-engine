@@ -23,34 +23,17 @@ import java.util.stream.Collectors;
 
 public abstract class Platform implements AttackableObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private static final double DEFAULT_PROBABILITY = 0.2D;
-    private List<AttackType> supportedAttackTypes;
-    private Expiring<List<Container>> roster;
     private static final int MIN_ATTACKS_PER_PERIOD = 3;
     private static final int MAX_ATTACKS_PER_PERIOD = 5;
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    private List<AttackType> supportedAttackTypes;
+    private Expiring<List<Container>> roster;
     private TemporalUnit attackPeriod = ChronoUnit.DAYS;
     private Set<Instant> attackTimes = new HashSet<>();
     private Instant lastAttackTime = Instant.now();
     private HolidayManager holidayManager;
     private Double destructionThreshold;
-
-    public synchronized List<Container> getRoster () {
-        List<Container> returnValue;
-        if (roster == null || roster.value() == null) {
-            returnValue = generateRoster();
-            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
-            return returnValue;
-        }
-        returnValue = roster.value();
-        if (returnValue == null) {
-            returnValue = generateRoster();
-            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
-        }
-        return returnValue;
-    }
-
-    protected abstract List<Container> generateRoster ();
 
     void expireCachedRoster () {
         roster.expire();
@@ -81,6 +64,25 @@ public abstract class Platform implements AttackableObject {
         return supportedAttackTypes;
     }
 
+    static double calculateMTBFPercentile (float millisSinceLastAttack, float averageTimeBetweenAttacks) {
+        return 1 - Math.pow(0.5, millisSinceLastAttack / averageTimeBetweenAttacks);
+    }
+
+    public synchronized List<Container> getRoster () {
+        List<Container> returnValue;
+        if (roster == null || roster.value() == null) {
+            returnValue = generateRoster();
+            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
+            return returnValue;
+        }
+        returnValue = roster.value();
+        if (returnValue == null) {
+            returnValue = generateRoster();
+            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
+        }
+        return returnValue;
+    }
+
     @Override
     public synchronized boolean canAttack () {
         if (holidayManager.isOutsideWorkingHours() || holidayManager.isHoliday()) return false;
@@ -101,12 +103,6 @@ public abstract class Platform implements AttackableObject {
         }
         log.debug("Still not yet at attack threshold: {}/{}", attackChance, destructionThreshold);
         return false;
-    }
-
-    private void generateDestructionThreshold () {
-        do {
-            destructionThreshold = (new Random().nextGaussian() / 4.0F) + 0.5;
-        } while (destructionThreshold <= 0.1 || destructionThreshold >= 0.9);
     }
 
     private boolean belowMinAttacks () {
@@ -136,9 +132,7 @@ public abstract class Platform implements AttackableObject {
         return calculateMTBFPercentile(millisSinceLastAttack, averageTimeBetweenAttacks);
     }
 
-    static double calculateMTBFPercentile (float millisSinceLastAttack, float averageTimeBetweenAttacks) {
-        return 1 - Math.pow(0.5, millisSinceLastAttack / averageTimeBetweenAttacks);
-    }
+    protected abstract List<Container> generateRoster ();
 
     private int getAttacksInPeriod () {
         Instant beginningOfAttackPeriod;
@@ -149,6 +143,12 @@ public abstract class Platform implements AttackableObject {
             beginningOfAttackPeriod = Instant.now().minus(1, attackPeriod);
         }
         return (int) attackTimes.stream().filter(instant -> instant.isAfter(beginningOfAttackPeriod)).count();
+    }
+
+    private void generateDestructionThreshold () {
+        do {
+            destructionThreshold = (new Random().nextGaussian() / 4.0F) + 0.5;
+        } while (destructionThreshold <= 0.1 || destructionThreshold >= 0.9);
     }
 
     public Platform startAttack () {

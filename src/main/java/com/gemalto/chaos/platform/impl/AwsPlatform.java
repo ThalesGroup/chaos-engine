@@ -54,6 +54,40 @@ public class AwsPlatform extends Platform {
         log.info("AWS Platform created");
     }
 
+    /**
+     * Runs an API call and tests that it returns without issue. Any exceptions returns an API Error
+     *
+     * @return OK if call resolves, or ERROR if the call fails.
+     */
+    @Override
+    public ApiStatus getApiStatus () {
+        try {
+            amazonEC2.describeInstances();
+            return ApiStatus.OK;
+        } catch (RuntimeException e) {
+            log.error("API for AWS failed to resolve.", e);
+            return ApiStatus.ERROR;
+        }
+    }
+
+    @Override
+    public PlatformLevel getPlatformLevel () {
+        return PlatformLevel.IAAS;
+    }
+
+    @Override
+    public PlatformHealth getPlatformHealth () {
+        Stream<Instance> instances = getInstanceStream();
+        Set<InstanceState> instanceStates = instances.map(Instance::getState).collect(Collectors.toSet());
+        Set<Integer> instanceStateCodes = instanceStates.stream()
+                                                        .map(InstanceState::getCode)
+                                                        .collect(Collectors.toSet());
+        for (int state : AwsEC2Constants.getAwsUnhealthyCodes()) {
+            if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
+        }
+        return PlatformHealth.OK;
+    }
+
     @Override
     public List<Container> generateRoster () {
         return generateRosterImpl(filter);
@@ -128,40 +162,6 @@ public class AwsPlatform extends Platform {
                               .build();
     }
 
-    /**
-     * Runs an API call and tests that it returns without issue. Any exceptions returns an API Error
-     *
-     * @return OK if call resolves, or ERROR if the call fails.
-     */
-    @Override
-    public ApiStatus getApiStatus () {
-        try {
-            amazonEC2.describeInstances();
-            return ApiStatus.OK;
-        } catch (RuntimeException e) {
-            log.error("API for AWS failed to resolve.", e);
-            return ApiStatus.ERROR;
-        }
-    }
-
-    @Override
-    public PlatformLevel getPlatformLevel () {
-        return PlatformLevel.IAAS;
-    }
-
-    @Override
-    public PlatformHealth getPlatformHealth () {
-        Stream<Instance> instances = getInstanceStream();
-        Set<InstanceState> instanceStates = instances.map(Instance::getState).collect(Collectors.toSet());
-        Set<Integer> instanceStateCodes = instanceStates.stream()
-                                                        .map(InstanceState::getCode)
-                                                        .collect(Collectors.toSet());
-        for (int state : AwsEC2Constants.getAwsUnhealthyCodes()) {
-            if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
-        }
-        return PlatformHealth.OK;
-    }
-
     private Stream<Instance> getInstanceStream () {
         return getInstanceStream(new DescribeInstancesRequest());
     }
@@ -208,15 +208,6 @@ public class AwsPlatform extends Platform {
     public void restartInstance (String... instanceIds) {
         log.info("Requesting a reboot of instances {}", (Object[]) instanceIds);
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
-    }
-
-    public List<String> getSecurityGroupIds (String instanceId) {
-        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
-                        .getInstanceAttribute()
-                        .getGroups()
-                        .stream()
-                        .map(GroupIdentifier::getGroupId)
-                        .collect(Collectors.toList());
     }
 
     public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
@@ -268,5 +259,14 @@ public class AwsPlatform extends Platform {
     public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
         List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
         return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+    }
+
+    public List<String> getSecurityGroupIds (String instanceId) {
+        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
+                        .getInstanceAttribute()
+                        .getGroups()
+                        .stream()
+                        .map(GroupIdentifier::getGroupId)
+                        .collect(Collectors.toList());
     }
 }

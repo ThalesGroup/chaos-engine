@@ -19,8 +19,14 @@ public enum ShellSessionCapabilityOption {
         this.type = type;
     }
 
-    public String getName () {
-        return name;
+    public static ArrayList<ShellSessionCapabilityOption> getShellTypes () {
+        ArrayList<ShellSessionCapabilityOption> shellTypes = new ArrayList<>();
+        for (ShellSessionCapabilityOption option : ShellSessionCapabilityOption.values()) {
+            if (option.type == ShellCapabilityType.SHELL) {
+                shellTypes.add(option);
+            }
+        }
+        return shellTypes;
     }
 
     public ShellCapabilityType getType () {
@@ -32,13 +38,7 @@ public enum ShellSessionCapabilityOption {
         return getName();
     }
 
-    public static ArrayList<ShellSessionCapabilityOption> getShellTypes () {
-        ArrayList<ShellSessionCapabilityOption> shellTypes = new ArrayList<>();
-        for (ShellSessionCapabilityOption option : ShellSessionCapabilityOption.values()) {
-            if (option.type == ShellCapabilityType.SHELL) {
-                shellTypes.add(option);
-            }
-        }
-        return shellTypes;
+    public String getName () {
+        return name;
     }
 }

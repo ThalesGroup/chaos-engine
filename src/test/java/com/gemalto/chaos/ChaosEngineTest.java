@@ -29,8 +29,6 @@ public class ChaosEngineTest {
         awsEC2.put("aws.ec2.accessKeyId", "accessKeyId");
         awsEC2.put("aws.ec2.secretAccessKey", "secretAccessKey");
         awsEC2.put("aws.ec2.region", "region");
-
-
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }
 

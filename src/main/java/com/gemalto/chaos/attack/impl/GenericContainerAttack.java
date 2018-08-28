@@ -19,6 +19,7 @@ public class GenericContainerAttack extends Attack {
         private AttackType attackType;
         private Duration duration = Duration.ofMinutes(DEFAULT_ATTACK_DURATION_MINUTES);
         private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
+
         private GenericContainerAttackBuilder () {
         }
 

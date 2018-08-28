@@ -49,10 +49,7 @@ public class AwsEC2Container extends Container {
 
     @Override
     public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder()
-                                     .withAttackType(attackType)
-                                     .withContainer(this)
-                                     .build();
+        return GenericContainerAttack.builder().withAttackType(attackType).withContainer(this).build();
     }
 
     @Override

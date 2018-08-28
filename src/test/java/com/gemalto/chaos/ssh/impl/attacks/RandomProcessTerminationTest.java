@@ -70,7 +70,6 @@ public class RandomProcessTerminationTest {
 
     @Test
     public void cannotRetrieveCapabilities () {
-
         when(resultShellCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();

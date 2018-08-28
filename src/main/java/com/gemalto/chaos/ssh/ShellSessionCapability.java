@@ -19,13 +19,10 @@ public class ShellSessionCapability {
         return this;
     }
 
-    public ArrayList<ShellSessionCapabilityOption> getCapabilityOptions () {
-        return capabilityOptions;
-    }
-
     public boolean optionsEmpty () {
         return capabilityOptions.isEmpty();
     }
+
     public boolean hasAnOption (ArrayList<ShellSessionCapabilityOption> requiredOptions) {
         for (ShellSessionCapabilityOption option : requiredOptions) {
             for (ShellSessionCapabilityOption allowed : capabilityOptions) {
@@ -38,6 +35,16 @@ public class ShellSessionCapability {
     }
 
     @Override
+    public boolean equals (Object obj) {
+        ShellSessionCapability capability = (ShellSessionCapability) obj;
+        return this.getCapabilityType() == capability.getCapabilityType() && this.getCapabilityOptions()
+                                                                                 .size() == capability.getCapabilityOptions()
+                                                                                                      .size() && Arrays.equals(this
+                .getCapabilityOptions()
+                .toArray(), capability.getCapabilityOptions().toArray());
+    }
+
+    @Override
     public String toString () {
         return "Type: " + capabilityType + "; Options: " + capabilityOptions;
     }
@@ -46,13 +53,7 @@ public class ShellSessionCapability {
         return capabilityType;
     }
 
-    @Override
-    public boolean equals (Object obj) {
-        ShellSessionCapability capability = (ShellSessionCapability) obj;
-        return this.getCapabilityType() == capability.getCapabilityType() && this.getCapabilityOptions()
-                                                                                 .size() == capability.getCapabilityOptions()
-                                                                                                      .size() && Arrays.equals(this
-                .getCapabilityOptions()
-                .toArray(), capability.getCapabilityOptions().toArray());
+    public ArrayList<ShellSessionCapabilityOption> getCapabilityOptions () {
+        return capabilityOptions;
     }
 }

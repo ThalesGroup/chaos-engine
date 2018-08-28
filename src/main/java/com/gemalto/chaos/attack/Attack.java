@@ -30,16 +30,15 @@ public abstract class Attack {
     private final String id = randomUUID().toString();
     protected Container container;
     protected AttackType attackType;
-    private Platform attackLayer;
-    private Method attackMethod;
     protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
+    private Platform attackLayer;
+    private Method attackMethod;
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
-
     private Instant startTime = Instant.now();
     private Instant finalizationStartTime;
 
@@ -95,10 +94,6 @@ public abstract class Attack {
         return container;
     }
 
-    public AttackType getAttackType () {
-        return attackType;
-    }
-
     boolean startAttack (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
         if (!AdminManager.canRunAttacks()) {
@@ -126,6 +121,10 @@ public abstract class Attack {
             attackState = AttackState.STARTED;
         }
         return true;
+    }
+
+    public AttackType getAttackType () {
+        return attackType;
     }
 
     AttackState getAttackState () {
@@ -184,28 +183,8 @@ public abstract class Attack {
         }
     }
 
-    private boolean isFinalizable () {
-            if (finalizationStartTime == null) {
-                finalizationStartTime = Instant.now();
-            }
-            boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
-        log.debug("Attack {} is finalizable = {}", id, finalizable);
-            return finalizable;
-    }
-
     private boolean isOverDuration () {
         return Instant.now().isAfter(startTime.plus(duration));
-    }
-
-    private void finalizeAttack () {
-        if (finalizeMethod != null) {
-            try {
-                log.info("Finalizing attack {} on container {}", id, container.getSimpleName());
-                finalizeMethod.call();
-            } catch (Exception e) {
-                log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
-            }
-        }
     }
 
     private ContainerHealth checkContainerHealth () {
@@ -219,4 +198,23 @@ public abstract class Attack {
         return container.getContainerHealth(attackType);
     }
 
+    private boolean isFinalizable () {
+        if (finalizationStartTime == null) {
+            finalizationStartTime = Instant.now();
+        }
+        boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
+        log.debug("Attack {} is finalizable = {}", id, finalizable);
+        return finalizable;
+    }
+
+    private void finalizeAttack () {
+        if (finalizeMethod != null) {
+            try {
+                log.info("Finalizing attack {} on container {}", id, container.getSimpleName());
+                finalizeMethod.call();
+            } catch (Exception e) {
+                log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
+            }
+        }
+    }
 }
