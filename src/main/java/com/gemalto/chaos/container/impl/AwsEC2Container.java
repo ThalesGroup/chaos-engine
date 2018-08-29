@@ -112,7 +112,7 @@ public class AwsEC2Container extends Container {
             return this;
         }
 
-        public AwsEC2ContainerBuilder awsPlatform (AwsEC2Platform awsEC2Platform) {
+        public AwsEC2ContainerBuilder awsEC2Platform (AwsEC2Platform awsEC2Platform) {
             this.awsEC2Platform = awsEC2Platform;
             return this;
         }

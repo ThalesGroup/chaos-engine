@@ -51,7 +51,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     private AwsEC2Platform () {
-        log.info("AWS Platform created");
+        log.info("AWS EC2 Platform created");
     }
 
     /**
@@ -65,7 +65,7 @@ public class AwsEC2Platform extends Platform {
             amazonEC2.describeInstances();
             return ApiStatus.OK;
         } catch (RuntimeException e) {
-            log.error("API for AWS failed to resolve.", e);
+            log.error("API for AWS EC2 failed to resolve.", e);
             return ApiStatus.ERROR;
         }
     }
@@ -154,8 +154,7 @@ public class AwsEC2Platform extends Platform {
         Optional<Tag> nameTag = instance.getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
         // Need to use an Optional for the name tag, as it may not be present.
         name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
-        return AwsEC2Container.builder()
-                              .awsPlatform(this)
+        return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(instance.getKeyName())
                               .name(name)

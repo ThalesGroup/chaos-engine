@@ -19,7 +19,7 @@ public class AwsEC2Health extends AbstractPlatformHealth {
 
     @Autowired
     AwsEC2Health () {
-        log.debug("Using AWS Health Check for System Health verification");
+        log.debug("Using AWS EC2 Health Check for System Health verification");
     }
 
     @Override

@@ -40,7 +40,8 @@ public class AwsEC2ContainerTest {
     public void setUp () {
         awsEC2Container = AwsEC2Container.builder()
                                          .keyName(KEY_NAME)
-                                         .instanceId(INSTANCE_ID).awsPlatform(awsEC2Platform)
+                                         .instanceId(INSTANCE_ID)
+                                         .awsEC2Platform(awsEC2Platform)
                                          .name(NAME)
                                          .build();
     }
