@@ -1,13 +1,14 @@
 package com.gemalto.chaos.health.impl;
 
+import com.amazonaws.services.ec2.AmazonEC2;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
+@ConditionalOnBean(AmazonEC2.class)
 public class AwsEC2Health extends AbstractPlatformHealth {
     @Autowired
     private AwsEC2Platform awsEC2Platform;
