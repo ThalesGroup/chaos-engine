@@ -41,7 +41,7 @@ public class AwsRDSService implements CloudService {
 
     @Bean
     @RefreshScope
-    public AmazonRDS amazonRDS (@Qualifier("rdsCredentials") AWSCredentialsProvider awsStaticCredentialsProvider) {
+    AmazonRDS amazonRDS (@Qualifier("rdsCredentials") AWSCredentialsProvider awsStaticCredentialsProvider) {
         return AmazonRDSClientBuilder.standard()
                                      .withCredentials(awsStaticCredentialsProvider)
                                      .withRegion(region)
