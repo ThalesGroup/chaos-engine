@@ -26,7 +26,7 @@ import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECU
 
 @Component
 @ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
-public class AwsPlatform extends Platform {
+public class AwsEC2Platform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
@@ -35,7 +35,7 @@ public class AwsPlatform extends Platform {
     private Vpc defaultVpc;
 
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
+    AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -50,7 +50,7 @@ public class AwsPlatform extends Platform {
         this.awsEC2SelfAwareness = awsEC2SelfAwareness;
     }
 
-    private AwsPlatform () {
+    private AwsEC2Platform () {
         log.info("AWS Platform created");
     }
 

@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "aws.ec2")
 @ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
-public class AwsService implements CloudService {
+public class AwsEC2Service implements CloudService {
     private String accessKeyId;
     private String secretAccessKey;
     private String region;

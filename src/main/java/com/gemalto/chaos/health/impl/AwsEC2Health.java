@@ -1,29 +1,29 @@
 package com.gemalto.chaos.health.impl;
 
 import com.gemalto.chaos.platform.Platform;
-import com.gemalto.chaos.platform.impl.AwsPlatform;
+import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
-public class AwsHealth extends AbstractPlatformHealth {
+public class AwsEC2Health extends AbstractPlatformHealth {
     @Autowired
-    private AwsPlatform awsPlatform;
+    private AwsEC2Platform awsEC2Platform;
 
-    AwsHealth (AwsPlatform awsPlatform) {
+    AwsEC2Health (AwsEC2Platform awsEC2Platform) {
         this();
-        this.awsPlatform = awsPlatform;
+        this.awsEC2Platform = awsEC2Platform;
     }
 
     @Autowired
-    AwsHealth () {
+    AwsEC2Health () {
         log.debug("Using AWS Health Check for System Health verification");
     }
 
     @Override
     Platform getPlatform () {
-        return awsPlatform;
+        return awsEC2Platform;
     }
 }
