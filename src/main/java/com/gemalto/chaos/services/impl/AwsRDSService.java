@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class AwsRDSService implements CloudService {
     private String accessKeyId;
     private String secretAccessKey;
-    private String region;
+    private String region = "us-east-2";
 
     public void setAccessKeyId (String accessKeyId) {
         this.accessKeyId = accessKeyId;
