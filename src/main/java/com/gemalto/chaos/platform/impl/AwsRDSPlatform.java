@@ -83,13 +83,19 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private Container createContainerFromDBInstance (DBInstance dbInstance) {
-        // TODO: Implement in SCT-5601
-        return null;
+        return AwsRDSInstanceContainer.builder()
+                                      .withAwsRDSPlatform(this)
+                                      .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
+                                      .withEngine(dbInstance.getEngine())
+                                      .build();
     }
 
     private Container createContainerFromDBCluster (DBCluster dbCluster) {
-        // TODO: Implement in SCT-5601
-        return null;
+        return AwsRDSClusterContainer.builder()
+                                     .withAwsRDSPlatform(this)
+                                     .withDbClusterIdentifier(dbCluster.getDBClusterIdentifier())
+                                     .withEngine(dbCluster.getEngine())
+                                     .build();
     }
 
     ContainerHealth getDBInstanceHealth (AwsRDSInstanceContainer awsRDSInstanceContainer) {
@@ -97,7 +103,7 @@ public class AwsRDSPlatform extends Platform {
         return getDBInstanceHealth(instanceId);
     }
 
-    ContainerHealth getDBInstanceHealth (String instanceId) {
+    private ContainerHealth getDBInstanceHealth (String instanceId) {
         DBInstance dbInstance;
         try {
             dbInstance = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId))
@@ -117,7 +123,7 @@ public class AwsRDSPlatform extends Platform {
         return getContainerHealth(clusterInstanceId);
     }
 
-    ContainerHealth getContainerHealth (String clusterInstanceId) {
+    private ContainerHealth getContainerHealth (String clusterInstanceId) {
         DBCluster dbCluster;
         try {
             dbCluster = amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(clusterInstanceId))
