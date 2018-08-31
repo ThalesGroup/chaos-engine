@@ -27,7 +27,7 @@ public class AwsRDSInstanceContainer extends Container {
 
     @Override
     public String getSimpleName () {
-        return null;
+        return getDbInstanceIdentifier();
     }
 
     public static AwsRDSInstanceContainerBuilder builder () {
