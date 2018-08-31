@@ -39,7 +39,7 @@ public abstract class Container implements AttackableObject {
 
     @Override
     public boolean canAttack () {
-        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+        return !supportedAttackTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability();
     }
 
     @JsonIgnore
