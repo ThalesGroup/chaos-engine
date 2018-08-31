@@ -72,9 +72,14 @@ public class ContainerTest {
     public void canAttack () {
         // TODO : Mock the random class inside the container.
         doReturn(1D).when(platform).getDestructionProbability();
-        assertTrue(testContainer.canAttack());
+        assertFalse(testContainer.canAttack());
         doReturn(0D).when(platform).getDestructionProbability();
         assertFalse(testContainer.canAttack());
+
+        doReturn(1D).when(platform).getDestructionProbability();
+        assertTrue(testContainer2.canAttack());
+        doReturn(0D).when(platform).getDestructionProbability();
+        assertFalse(testContainer2.canAttack());
     }
 
     @Test
