@@ -67,11 +67,8 @@ public class AwsRDSPlatform extends Platform {
     protected List<Container> generateRoster () {
         Collection<DBCluster> dbClusters = amazonRDS.describeDBClusters().getDBClusters();
         Collection<DBInstance> dbInstances = amazonRDS.describeDBInstances().getDBInstances();
-        log.debug("Clusters: {}", dbClusters);
-        log.debug("Instances: {}", dbInstances);
         Collection<Container> dbInstanceContainers = dbInstances.stream()
-                                                                .filter(dbInstance -> dbInstance.getDBClusterIdentifier()
-                                                                                                .isEmpty())
+                                                                .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
                                                                 .map(this::createContainerFromDBInstance)
                                                                 .collect(Collectors.toSet());
         Collection<Container> dbClusterContainers = dbClusters.stream()

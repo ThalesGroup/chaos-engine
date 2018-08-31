@@ -18,7 +18,7 @@ public class AwsRDSInstanceContainer extends Container {
 
     @Override
     public Platform getPlatform () {
-        return null;
+        return awsRDSPlatform;
     }
 
     @Override

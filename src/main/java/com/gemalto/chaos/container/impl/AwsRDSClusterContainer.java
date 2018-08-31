@@ -18,7 +18,7 @@ public class AwsRDSClusterContainer extends Container {
 
     @Override
     public Platform getPlatform () {
-        return null;
+        return awsRDSPlatform;
     }
 
     @Override
