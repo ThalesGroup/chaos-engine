@@ -27,7 +27,7 @@ public class AwsRDSClusterContainer extends Container {
 
     @Override
     public String getSimpleName () {
-        return null;
+        return getDbClusterIdentifier();
     }
 
     public static AwsRDSClusterContainerBuilder builder () {
