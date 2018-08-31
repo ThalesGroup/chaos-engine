@@ -3,7 +3,6 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
@@ -56,11 +55,6 @@ public class CloudFoundryContainer extends Container {
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
         return cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
-    }
-
-    @Override
-    public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder().withContainer(this).withAttackType(attackType).build();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -23,11 +22,6 @@ public class AwsRDSClusterContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return null;
-    }
-
-    @Override
-    public Attack createAttack (AttackType attackType) {
         return null;
     }
 

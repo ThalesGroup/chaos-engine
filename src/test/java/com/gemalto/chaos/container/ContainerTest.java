@@ -1,6 +1,5 @@
 package com.gemalto.chaos.container;
 
-import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
@@ -35,11 +34,6 @@ public class ContainerTest {
         }
 
         @Override
-        public Attack createAttack (AttackType attackType) {
-            return null;
-        }
-
-        @Override
         public String getSimpleName () {
             return null;
         }
@@ -61,11 +55,6 @@ public class ContainerTest {
         @Override
         protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
             return ContainerHealth.UNDER_ATTACK;
-        }
-
-        @Override
-        public Attack createAttack (AttackType attackType) {
-            return null;
         }
 
         @Override

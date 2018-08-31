@@ -4,7 +4,6 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
@@ -45,11 +44,6 @@ public class AwsEC2Container extends Container {
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
         return awsEC2Platform.checkHealth(instanceId);
-    }
-
-    @Override
-    public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder().withAttackType(attackType).withContainer(this).build();
     }
 
     @Override
