@@ -10,6 +10,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 public class AwsRDSPlatform extends Platform {
     private AmazonRDS amazonRDS;
 
+    @Autowired
     public AwsRDSPlatform (AmazonRDS amazonRDS) {
         this.amazonRDS = amazonRDS;
     }
