@@ -36,7 +36,7 @@ public abstract class Attack {
     private Method attackMethod;
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
-    private Callable<Void> selfHealingMethod;
+    private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
