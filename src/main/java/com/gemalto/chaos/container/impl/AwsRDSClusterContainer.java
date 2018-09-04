@@ -28,8 +28,7 @@ public class AwsRDSClusterContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return null;
-        //TODO Implement
+        return awsRDSPlatform.getInstanceStatus(getMembers().toArray(new String[0]));
     }
 
     @Override
