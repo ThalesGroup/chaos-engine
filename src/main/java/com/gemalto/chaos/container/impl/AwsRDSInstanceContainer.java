@@ -1,5 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -29,6 +31,12 @@ public class AwsRDSInstanceContainer extends Container {
     @Override
     public String getSimpleName () {
         return getDbInstanceIdentifier();
+    }
+
+    @StateAttack
+    public void restartInstance (Attack attack) {
+        attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
+        awsRDSPlatform.restartInstance(dbInstanceIdentifier);
     }
 
     public static AwsRDSInstanceContainerBuilder builder () {

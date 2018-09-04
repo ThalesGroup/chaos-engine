@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -141,5 +143,58 @@ public class AwsRDSPlatform extends Platform {
     @PostConstruct
     private void postConstruct () {
         log.info("Created AmazonRDS Platform");
+    }
+
+    public void failoverCluster (String dbClusterIdentifier) {
+        amazonRDS.failoverDBCluster(new FailoverDBClusterRequest().withDBClusterIdentifier(dbClusterIdentifier));
+    }
+
+    public void restartInstance (String... dbInstanceIdentifiers) {
+        for (String dbInstanceIdentifier : dbInstanceIdentifiers) {
+            restartInstance(dbInstanceIdentifier);
+        }
+    }
+
+    void restartInstance (String dbInstanceIdentifier) {
+        amazonRDS.rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(dbInstanceIdentifier));
+    }
+
+    public Set<String> getClusterInstances (String dbClusterIdentifier) {
+        return amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier))
+                        .getDBClusters()
+                        .stream()
+                        .map(DBCluster::getDBClusterMembers)
+                        .flatMap(Collection::stream)
+                        .map(DBClusterMember::getDBInstanceIdentifier)
+                        .collect(Collectors.toSet());
+    }
+
+    public ContainerHealth getInstanceStatus (String... dbInstanceIdentifiers) {
+        Collection<ContainerHealth> containerHealthCollection = new HashSet<>();
+        for (String dbInstanceIdentifier : dbInstanceIdentifiers) {
+            containerHealthCollection.add(getInstanceStatus(dbInstanceIdentifier));
+        }
+        if (containerHealthCollection.stream()
+                                     .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.DOES_NOT_EXIST))) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        } else if (containerHealthCollection.stream()
+                                            .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.UNDER_ATTACK))) {
+            return ContainerHealth.UNDER_ATTACK;
+        }
+        return ContainerHealth.NORMAL;
+    }
+
+    private ContainerHealth getInstanceStatus (String dbInstanceIdentifier) {
+        List<DBInstance> dbInstances = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
+                                                .getDBInstances();
+        Supplier<Stream<DBInstanceStatusInfo>> dbInstanceStatusInfo = () -> dbInstances.stream()
+                                                                                       .map(DBInstance::getStatusInfos)
+                                                                                       .flatMap(Collection::stream);
+        if (dbInstanceStatusInfo.get().count() == 0) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        } else if (dbInstanceStatusInfo.get().anyMatch(dbInstanceStatusInfo1 -> !dbInstanceStatusInfo1.getNormal())) {
+            return ContainerHealth.UNDER_ATTACK;
+        }
+        return ContainerHealth.NORMAL;
     }
 }

@@ -9,6 +9,7 @@ import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -22,6 +23,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -91,17 +93,35 @@ public class AwsRDSPlatformTest {
         String dbCluster1Identifier = UUID.randomUUID().toString();
         String dbCluster2Identifier = UUID.randomUUID().toString();
         String dbClusterInstanceIdentifier = UUID.randomUUID().toString();
-        DBInstance dbInstance1 = new DBInstance().withDBInstanceIdentifier(dbInstance1Identifier).withMultiAZ(false);
-        DBInstance dbInstance2 = new DBInstance().withDBInstanceIdentifier(dbInstance2Identifier).withMultiAZ(false);
+        DBInstance dbInstance1 = new DBInstance().withDBInstanceIdentifier(dbInstance1Identifier)
+                                                 .withMultiAZ(false)
+                                                 .withDBClusterIdentifier(null);
+        DBInstance dbInstance2 = new DBInstance().withDBInstanceIdentifier(dbInstance2Identifier)
+                                                 .withMultiAZ(false)
+                                                 .withDBClusterIdentifier(null);
         DBInstance clusterInstance = new DBInstance().withDBInstanceIdentifier(dbClusterInstanceIdentifier)
-                                                     .withMultiAZ(true);
+                                                     .withMultiAZ(true)
+                                                     .withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster1 = new DBCluster().withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster2 = new DBCluster().withDBClusterIdentifier(dbCluster2Identifier);
         doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)).when(amazonRDS)
                                                                                                             .describeDBInstances();
         doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)).when(amazonRDS)
                                                                                        .describeDBClusters();
-//        fail("Implement this!"); // TODO : Finish
+        assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
+                .builder()
+                .withDbClusterIdentifier(dbCluster1Identifier)
+                .withAwsRDSPlatform(awsRDSPlatform)
+                .build(), AwsRDSClusterContainer.builder()
+                                                .withDbClusterIdentifier(dbCluster2Identifier)
+                                                .withAwsRDSPlatform(awsRDSPlatform)
+                                                .build(), AwsRDSInstanceContainer.builder()
+                                                                                 .withAwsRDSPlatform(awsRDSPlatform)
+                                                                                 .withDbInstanceIdentifier(dbInstance1Identifier)
+                                                                                 .build(), AwsRDSInstanceContainer.builder()
+                                                                                                                  .withAwsRDSPlatform(awsRDSPlatform)
+                                                                                                                  .withDbInstanceIdentifier(dbInstance2Identifier)
+                                                                                                                  .build()));
     }
 
     @Test
@@ -149,6 +169,77 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void createContainerFromDBCluster () {
+    }
+
+    @Test
+    public void failoverCluster () {
+        String clusterIdentifier = UUID.randomUUID().toString();
+        awsRDSPlatform.failoverCluster(clusterIdentifier);
+        verify(amazonRDS, times(1)).failoverDBCluster(new FailoverDBClusterRequest().withDBClusterIdentifier(clusterIdentifier));
+    }
+
+    @Test
+    public void restartInstance () {
+        String instanceId1 = UUID.randomUUID().toString();
+        String instanceId2 = UUID.randomUUID().toString();
+        awsRDSPlatform.restartInstance(instanceId1);
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1));
+        Mockito.reset(amazonRDS);
+        awsRDSPlatform.restartInstance(instanceId1, instanceId2);
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1));
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId2));
+    }
+
+    @Test
+    public void getClusterInstances () {
+        String instanceId1 = UUID.randomUUID().toString();
+        String instanceId2 = UUID.randomUUID().toString();
+        String clusterId = UUID.randomUUID().toString();
+        DescribeDBClustersResult dbClustersResult = new DescribeDBClustersResult().withDBClusters(new DBCluster().withDBClusterMembers(new DBClusterMember()
+                .withDBInstanceIdentifier(instanceId1), new DBClusterMember().withDBInstanceIdentifier(instanceId2)));
+        doReturn(dbClustersResult).when(amazonRDS)
+                                  .describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(clusterId));
+        assertThat(awsRDSPlatform.getClusterInstances(clusterId), IsIterableContainingInAnyOrder.containsInAnyOrder(instanceId1, instanceId2));
+    }
+
+    @Test
+    public void getInstanceStatus () {
+        String instanceId1 = UUID.randomUUID().toString();
+        String instanceId2 = UUID.randomUUID().toString();
+        DescribeDBInstancesResult normalInstance1 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId1)
+                                                                                                                    .withStatusInfos(new DBInstanceStatusInfo()
+                                                                                                                            .withNormal(true)));
+        DescribeDBInstancesResult normalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
+                                                                                                                    .withStatusInfos(new DBInstanceStatusInfo()
+                                                                                                                            .withNormal(true)));
+        DescribeDBInstancesResult abnormalInstance1 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId1)
+                                                                                                                      .withStatusInfos(new DBInstanceStatusInfo()
+                                                                                                                              .withNormal(false)));
+        DescribeDBInstancesResult abnormalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
+                                                                                                                      .withStatusInfos(new DBInstanceStatusInfo()
+                                                                                                                              .withNormal(false)));
+        DescribeDBInstancesResult emptyDBInstanceresult = new DescribeDBInstancesResult();
+        doReturn(emptyDBInstanceresult).when(amazonRDS)
+                                       .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getInstanceStatus(instanceId1));
+        reset(amazonRDS);
+        doReturn(normalInstance1).when(amazonRDS)
+                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(normalInstance2).when(amazonRDS)
+                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
+        reset(amazonRDS);
+        doReturn(normalInstance1).when(amazonRDS)
+                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(abnormalInstance2).when(amazonRDS)
+                                   .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
+        reset(amazonRDS);
+        doReturn(abnormalInstance1).when(amazonRDS)
+                                   .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(normalInstance2).when(amazonRDS)
+                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
     }
 
     @Configuration
