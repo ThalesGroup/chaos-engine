@@ -244,9 +244,12 @@ public class AwsRDSPlatformTest {
 
     @Configuration
     static class TestConfig {
+        @Autowired
+        private AmazonRDS amazonRDS;
+
         @Bean
         AwsRDSPlatform awsRDSPlatform () {
-            return new AwsRDSPlatform();
+            return new AwsRDSPlatform(amazonRDS);
         }
     }
 }
