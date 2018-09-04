@@ -69,7 +69,7 @@ public class AwsRDSClusterContainer extends Container {
         return returnSet;
     }
 
-    Set<String> getMembers () {
+    public Set<String> getMembers () {
         return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
 
