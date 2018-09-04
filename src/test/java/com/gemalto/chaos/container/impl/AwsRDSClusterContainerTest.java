@@ -59,6 +59,7 @@ public class AwsRDSClusterContainerTest {
 
     @Test
     @Repeat(value = 10)
+    @SuppressWarnings("unchecked")
     public void getSomeMembers () {
         Set<String> members = new HashSet<>();
         String instanceId1 = UUID.randomUUID().toString();
