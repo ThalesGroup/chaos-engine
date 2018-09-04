@@ -74,6 +74,11 @@
             <artifactId>reactor-core</artifactId>
             <version>3.1.8.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor.ipc</groupId>
+            <artifactId>reactor-netty</artifactId>
+            <version>0.7.8.RELEASE</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk -->
         <dependency>
