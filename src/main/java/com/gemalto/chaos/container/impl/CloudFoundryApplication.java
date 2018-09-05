@@ -25,6 +25,10 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         return null;
     };
+    private transient Callable<Void> restageApplication = () -> {
+        cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+        return null;
+    };
     private transient Callable<Void> noRecovery = () -> {
         log.warn("There is no recovery method for this kind of attack.");
         return null;
@@ -67,6 +71,13 @@ public class CloudFoundryApplication extends Container {
         actualContainerInstances = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
+    }
+
+    @StateAttack
+    public void restartApplication (Attack attack) {
+        attack.setSelfHealingMethod(restageApplication);
+        attack.setCheckContainerHealth(isAppHealthy);
+        cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
     @StateAttack

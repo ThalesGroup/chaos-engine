@@ -10,6 +10,7 @@ import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -116,5 +117,12 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                  .instances(instances)
                                                                                  .build();
         cloudFoundryOperations.applications().scale(scaleApplicationRequest).block();
+    }
+
+    public void restartApplication (String applicationName) {
+        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder()
+                                                                                       .name(applicationName)
+                                                                                       .build();
+        cloudFoundryOperations.applications().restart(restartApplicationRequest).block();
     }
 }
