@@ -138,12 +138,22 @@ public abstract class Attack {
         if (isOverDuration()) {
             try {
                 log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
-                selfHealingMethod.call();
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
-                                                               .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("The attack has gone on too long, invoking self-healing.")
-                                                               .build());
+                ChaosEvent chaosEvent;
+                if (AdminManager.canRunSelfHealing()) {
+                    selfHealingMethod.call();
+                    chaosEvent = ChaosEvent.builder()
+                                           .fromAttack(this)
+                                           .withNotificationLevel(NotificationLevel.WARN)
+                                           .withMessage("The attack has gone on too long, invoking self-healing.")
+                                           .build();
+                } else {
+                    chaosEvent = ChaosEvent.builder()
+                                           .fromAttack(this)
+                                           .withNotificationLevel(NotificationLevel.WARN)
+                                           .withMessage("System is paused and unable to run self healing")
+                                           .build();
+                }
+                notificationManager.sendNotification(chaosEvent);
             } catch (Exception e) {
                 log.error("Attack {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder()

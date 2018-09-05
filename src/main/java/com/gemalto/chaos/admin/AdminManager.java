@@ -1,6 +1,5 @@
 package com.gemalto.chaos.admin;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.enums.AdminState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +21,6 @@ public class AdminManager {
     }
 
     public static void setAdminState (AdminState newAdminState) {
-        if (newAdminState != adminState && AdminState.getInvalidTransitions(newAdminState).contains(adminState)) {
-            throw new ChaosException("Cannot transition from " + adminState + " to " + newAdminState + ".");
-        }
         setAdminStateInner(newAdminState);
     }
 
@@ -43,5 +39,9 @@ public class AdminManager {
 
     public static boolean canRunAttacks () {
         return AdminState.getAttackStates().contains(adminState);
+    }
+
+    public static boolean canRunSelfHealing () {
+        return AdminState.getSelfHealingStates().contains(adminState);
     }
 }

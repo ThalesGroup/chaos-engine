@@ -41,8 +41,6 @@ public class AdminControllerTest {
 
     @Test
     public void setAdminState () throws Exception {
-        mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "STARTING"))
-           .andExpect(status().is5xxServerError());
         mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "BOGUS STATE"))
            .andExpect(status().is5xxServerError());
         mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "PAUSED"))
