@@ -1,5 +1,6 @@
 package com.gemalto.chaos.attack;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
@@ -36,7 +37,7 @@ public abstract class Attack {
     private Method attackMethod;
     private AttackState attackState = AttackState.NOT_YET_STARTED;
     private transient NotificationManager notificationManager;
-    private Callable<Void> selfHealingMethod;
+    private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
@@ -50,6 +51,7 @@ public abstract class Attack {
         this.attackLayer = attackLayer;
     }
 
+    @JsonIgnore
     public Method getAttackMethod () {
         return attackMethod;
     }

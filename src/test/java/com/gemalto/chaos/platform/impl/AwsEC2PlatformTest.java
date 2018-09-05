@@ -34,7 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsPlatformTest {
+public class AwsEC2PlatformTest {
     @Mock
     private AmazonEC2 amazonEC2;
     @Mock
@@ -48,11 +48,11 @@ public class AwsPlatformTest {
     @Mock
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     @Spy
-    private AwsPlatform awsPlatform;
+    private AwsEC2Platform awsEC2Platform;
 
     @Before
     public void setUp () {
-        awsPlatform = Mockito.spy(new AwsPlatform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
+        awsEC2Platform = Mockito.spy(new AwsEC2Platform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
     }
 
     @Test
@@ -91,20 +91,20 @@ public class AwsPlatformTest {
         when(instance2.getState()).thenReturn(instanceState);
         when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
                 .getArguments()[0]);
-        final List<Container> roster = awsPlatform.getRoster();
+        final List<Container> roster = awsEC2Platform.getRoster();
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
 
     @Test
     public void getApiStatusSuccess () {
         when(amazonEC2.describeInstances()).thenReturn(null);
-        assertEquals(ApiStatus.OK, awsPlatform.getApiStatus());
+        assertEquals(ApiStatus.OK, awsEC2Platform.getApiStatus());
     }
 
     @Test
     public void getApiStatusFail () {
         when(amazonEC2.describeInstances()).thenThrow(mock(RuntimeException.class));
-        assertEquals(ApiStatus.ERROR, awsPlatform.getApiStatus());
+        assertEquals(ApiStatus.ERROR, awsEC2Platform.getApiStatus());
     }
 
     @Test
@@ -116,38 +116,38 @@ public class AwsPlatformTest {
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
         when(instance.getState()).thenReturn(new InstanceState().withCode(16));
-        assertEquals(ContainerHealth.NORMAL, awsPlatform.checkHealth(null));
+        assertEquals(ContainerHealth.NORMAL, awsEC2Platform.checkHealth(null));
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
         when(instance.getState()).thenReturn(new InstanceState().withCode(0));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsPlatform.checkHealth(null));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.checkHealth(null));
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
         when(describeInstancesResult.getReservations()).thenReturn(Collections.EMPTY_LIST);
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, awsPlatform.checkHealth(null));
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, awsEC2Platform.checkHealth(null));
     }
 
     @Test
     public void stopInstance () {
-        awsPlatform.stopInstance("123", "abc", "xyz");
+        awsEC2Platform.stopInstance("123", "abc", "xyz");
         verify(amazonEC2, times(1)).stopInstances(any(StopInstancesRequest.class));
     }
 
     @Test
     public void terminateInstance () {
-        awsPlatform.terminateInstance("123", "abc", "xyz");
+        awsEC2Platform.terminateInstance("123", "abc", "xyz");
         verify(amazonEC2, times(1)).terminateInstances(any(TerminateInstancesRequest.class));
     }
 
     @Test
     public void startInstance () {
-        awsPlatform.startInstance("123", "abc", "xyz");
+        awsEC2Platform.startInstance("123", "abc", "xyz");
         verify(amazonEC2, times(1)).startInstances(any(StartInstancesRequest.class));
     }
 
     @Test
     public void getPlatformLevel () {
-        assertEquals(PlatformLevel.IAAS, awsPlatform.getPlatformLevel());
+        assertEquals(PlatformLevel.IAAS, awsEC2Platform.getPlatformLevel());
     }
 
     @Test
@@ -158,14 +158,14 @@ public class AwsPlatformTest {
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
         when(instance.getState()).thenReturn(new InstanceState().withCode(0));
-        assertEquals(PlatformHealth.DEGRADED, awsPlatform.getPlatformHealth());
+        assertEquals(PlatformHealth.DEGRADED, awsEC2Platform.getPlatformHealth());
         when(instance.getState()).thenReturn(new InstanceState().withCode(16));
-        assertEquals(PlatformHealth.OK, awsPlatform.getPlatformHealth());
+        assertEquals(PlatformHealth.OK, awsEC2Platform.getPlatformHealth());
     }
 
     @Test
     public void restartInstance () {
-        awsPlatform.restartInstance("123", "abc", "xyz");
+        awsEC2Platform.restartInstance("123", "abc", "xyz");
         verify(amazonEC2, times(1)).rebootInstances(any(RebootInstancesRequest.class));
     }
 
@@ -176,14 +176,14 @@ public class AwsPlatformTest {
         DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
                 .withGroups(groupIdentifier));
         doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(Collections.singletonList(groupId), awsPlatform.getSecurityGroupIds("123"));
+        assertEquals(Collections.singletonList(groupId), awsEC2Platform.getSecurityGroupIds("123"));
     }
 
     @Test
     public void setSecurityGroupIds () {
         String instanceId = UUID.randomUUID().toString();
         String groupId = UUID.randomUUID().toString();
-        awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
+        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
         verify(amazonEC2, times(1)).modifyInstanceAttribute(any());
     }
 
@@ -207,12 +207,12 @@ public class AwsPlatformTest {
         CreateSecurityGroupResult createSecurityGroupResult = new CreateSecurityGroupResult().withGroupId(chaosSecurityGroup
                 .getGroupId());
         doReturn(createSecurityGroupResult).when(amazonEC2).createSecurityGroup(any());
-        assertEquals(chaosSecurityGroup.getGroupId(), awsPlatform.getChaosSecurityGroupId());
+        assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
         verify(amazonEC2, times(1)).describeVpcs();
         verify(amazonEC2, times(1)).createSecurityGroup(any());
-        verify(awsPlatform, times(1)).initChaosSecurityGroupId();
-        awsPlatform.getChaosSecurityGroupId();
-        verify(awsPlatform, times(1)).initChaosSecurityGroupId();
+        verify(awsEC2Platform, times(1)).initChaosSecurityGroupId();
+        awsEC2Platform.getChaosSecurityGroupId();
+        verify(awsEC2Platform, times(1)).initChaosSecurityGroupId();
     }
 
     @Test
@@ -232,7 +232,7 @@ public class AwsPlatformTest {
         DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
         doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
         doReturn(vpcsResult).when(amazonEC2).describeVpcs();
-        assertEquals(chaosSecurityGroup.getGroupId(), awsPlatform.getChaosSecurityGroupId());
+        assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
         verify(amazonEC2, times(1)).describeVpcs();
         verify(amazonEC2, times(0)).createSecurityGroup(any());
     }
@@ -247,14 +247,14 @@ public class AwsPlatformTest {
         DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
                 .withGroups(groupIdentifier));
         doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(ContainerHealth.NORMAL, awsPlatform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
+        assertEquals(ContainerHealth.NORMAL, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
         doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier, groupIdentifier2)))
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsPlatform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
         doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsPlatform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
     }
 }

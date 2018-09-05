@@ -26,7 +26,7 @@ import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECU
 
 @Component
 @ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
-public class AwsPlatform extends Platform {
+public class AwsEC2Platform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
@@ -35,7 +35,7 @@ public class AwsPlatform extends Platform {
     private Vpc defaultVpc;
 
     @Autowired
-    AwsPlatform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
+    AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
         if (filterKeys != null && filterValues != null) {
             if (filterKeys.length != filterValues.length) {
@@ -50,8 +50,8 @@ public class AwsPlatform extends Platform {
         this.awsEC2SelfAwareness = awsEC2SelfAwareness;
     }
 
-    private AwsPlatform () {
-        log.info("AWS Platform created");
+    private AwsEC2Platform () {
+        log.info("AWS EC2 Platform created");
     }
 
     /**
@@ -65,7 +65,7 @@ public class AwsPlatform extends Platform {
             amazonEC2.describeInstances();
             return ApiStatus.OK;
         } catch (RuntimeException e) {
-            log.error("API for AWS failed to resolve.", e);
+            log.error("API for AWS EC2 failed to resolve.", e);
             return ApiStatus.ERROR;
         }
     }
@@ -154,8 +154,7 @@ public class AwsPlatform extends Platform {
         Optional<Tag> nameTag = instance.getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
         // Need to use an Optional for the name tag, as it may not be present.
         name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
-        return AwsEC2Container.builder()
-                              .awsPlatform(this)
+        return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(instance.getKeyName())
                               .name(name)

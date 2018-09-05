@@ -5,6 +5,7 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
+import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public abstract class Container implements AttackableObject {
 
     @Override
     public boolean canAttack () {
-        return new Random().nextDouble() < getPlatform().getDestructionProbability();
+        return !supportedAttackTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability();
     }
 
     @JsonIgnore
@@ -129,7 +130,9 @@ public abstract class Container implements AttackableObject {
         return currentAttack;
     }
 
-    public abstract Attack createAttack (AttackType attackType);
+    public Attack createAttack (AttackType attackType) {
+        return GenericContainerAttack.builder().withAttackType(attackType).withContainer(this).build();
+    }
 
     public void attackContainer (Attack attack) {
         containerHealth = ContainerHealth.UNDER_ATTACK;

@@ -4,11 +4,10 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
-import com.gemalto.chaos.platform.impl.AwsPlatform;
+import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,12 +21,12 @@ public class AwsEC2Container extends Container {
     private String instanceId;
     private String keyName;
     private String name;
-    private transient AwsPlatform awsPlatform;
+    private transient AwsEC2Platform awsEC2Platform;
     private final transient Callable<Void> startContainerMethod = () -> {
-        awsPlatform.startInstance(instanceId);
+        awsEC2Platform.startInstance(instanceId);
         return null;
     };
-    private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsPlatform.checkHealth(instanceId);
+    private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
 
     private AwsEC2Container () {
         super();
@@ -39,17 +38,12 @@ public class AwsEC2Container extends Container {
 
     @Override
     public Platform getPlatform () {
-        return awsPlatform;
+        return awsEC2Platform;
     }
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
-        return awsPlatform.checkHealth(instanceId);
-    }
-
-    @Override
-    public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder().withAttackType(attackType).withContainer(this).build();
+        return awsEC2Platform.checkHealth(instanceId);
     }
 
     @Override
@@ -59,7 +53,7 @@ public class AwsEC2Container extends Container {
 
     @StateAttack
     public void stopContainer (Attack attack) {
-        awsPlatform.stopInstance(instanceId);
+        awsEC2Platform.stopInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(checkContainerStartedMethod);
     }
@@ -67,19 +61,19 @@ public class AwsEC2Container extends Container {
     @StateAttack
     public void restartContainer (Attack attack) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
-        awsPlatform.restartInstance(instanceId);
+        awsEC2Platform.restartInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
-        attack.setCheckContainerHealth(() -> hardRebootTimer.isBefore(Instant.now()) ? awsPlatform.checkHealth(instanceId) : ContainerHealth.UNDER_ATTACK);
+        attack.setCheckContainerHealth(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform.checkHealth(instanceId) : ContainerHealth.UNDER_ATTACK);
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
     @NetworkAttack
     public void removeSecurityGroups (Attack attack) {
-        List<String> originalSecurityGroupIds = awsPlatform.getSecurityGroupIds(instanceId);
-        awsPlatform.setSecurityGroupIds(instanceId, Collections.singletonList(awsPlatform.getChaosSecurityGroupId()));
-        attack.setCheckContainerHealth(() -> awsPlatform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));
+        List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
+        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupId()));
+        attack.setCheckContainerHealth(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));
         attack.setSelfHealingMethod(() -> {
-            awsPlatform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
+            awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
             return null;
         });
     }
@@ -88,7 +82,7 @@ public class AwsEC2Container extends Container {
         private String instanceId;
         private String keyName;
         private String name;
-        private AwsPlatform awsPlatform;
+        private AwsEC2Platform awsEC2Platform;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -112,14 +106,14 @@ public class AwsEC2Container extends Container {
             return this;
         }
 
-        public AwsEC2ContainerBuilder awsPlatform (AwsPlatform awsPlatform) {
-            this.awsPlatform = awsPlatform;
+        public AwsEC2ContainerBuilder awsEC2Platform (AwsEC2Platform awsEC2Platform) {
+            this.awsEC2Platform = awsEC2Platform;
             return this;
         }
 
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
-            awsEC2Container.awsPlatform = this.awsPlatform;
+            awsEC2Container.awsEC2Platform = this.awsEC2Platform;
             awsEC2Container.instanceId = this.instanceId;
             awsEC2Container.keyName = this.keyName;
             awsEC2Container.name = this.name;

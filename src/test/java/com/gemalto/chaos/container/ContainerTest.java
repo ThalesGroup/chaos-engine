@@ -1,6 +1,5 @@
 package com.gemalto.chaos.container;
 
-import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
@@ -35,11 +34,6 @@ public class ContainerTest {
         }
 
         @Override
-        public Attack createAttack (AttackType attackType) {
-            return null;
-        }
-
-        @Override
         public String getSimpleName () {
             return null;
         }
@@ -64,11 +58,6 @@ public class ContainerTest {
         }
 
         @Override
-        public Attack createAttack (AttackType attackType) {
-            return null;
-        }
-
-        @Override
         public String getSimpleName () {
             return null;
         }
@@ -83,9 +72,14 @@ public class ContainerTest {
     public void canAttack () {
         // TODO : Mock the random class inside the container.
         doReturn(1D).when(platform).getDestructionProbability();
-        assertTrue(testContainer.canAttack());
+        assertFalse(testContainer.canAttack());
         doReturn(0D).when(platform).getDestructionProbability();
         assertFalse(testContainer.canAttack());
+
+        doReturn(1D).when(platform).getDestructionProbability();
+        assertTrue(testContainer2.canAttack());
+        doReturn(0D).when(platform).getDestructionProbability();
+        assertFalse(testContainer2.canAttack());
     }
 
     @Test
