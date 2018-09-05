@@ -152,12 +152,13 @@ public class AwsRDSPlatform extends Platform {
 
     public void restartInstance (String... dbInstanceIdentifiers) {
         for (String dbInstanceIdentifier : dbInstanceIdentifiers) {
-            restartInstance(dbInstanceIdentifier);
+            restartInstance(dbInstanceIdentifier, dbInstanceIdentifiers.length > 1);
         }
     }
 
-    void restartInstance (String dbInstanceIdentifier) {
-        amazonRDS.rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(dbInstanceIdentifier));
+    private void restartInstance (String dbInstanceIdentifier, Boolean failover) {
+        amazonRDS.rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                .withForceFailover(failover));
     }
 
     public Set<String> getClusterInstances (String dbClusterIdentifier) {
