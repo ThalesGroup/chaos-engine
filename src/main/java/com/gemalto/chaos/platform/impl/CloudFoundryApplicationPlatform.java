@@ -123,6 +123,6 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder()
                                                                                        .name(applicationName)
                                                                                        .build();
-        cloudFoundryOperations.applications().restart(restartApplicationRequest);
+        cloudFoundryOperations.applications().restart(restartApplicationRequest).block();
     }
 }
