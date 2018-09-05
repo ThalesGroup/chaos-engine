@@ -184,11 +184,14 @@ public class AwsRDSPlatformTest {
         String instanceId1 = UUID.randomUUID().toString();
         String instanceId2 = UUID.randomUUID().toString();
         awsRDSPlatform.restartInstance(instanceId1);
-        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1));
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1)
+                                                                                  .withForceFailover(false));
         Mockito.reset(amazonRDS);
         awsRDSPlatform.restartInstance(instanceId1, instanceId2);
-        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1));
-        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId2));
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1)
+                                                                                  .withForceFailover(true));
+        verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId2)
+                                                                                  .withForceFailover(true));
     }
 
     @Test
