@@ -172,7 +172,7 @@ public class AwsRDSPlatformTest {
         doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)))
                 .when(amazonRDS)
                 .describeDBInstances(any(DescribeDBInstancesRequest.class));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
     }
 
     @Test
