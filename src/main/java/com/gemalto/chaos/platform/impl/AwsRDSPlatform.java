@@ -56,13 +56,12 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        Supplier<Stream<DBInstanceStatusInfo>> dbInstanceStatusInfoStreamSupplier = () -> amazonRDS.describeDBInstances()
-                                                                                                   .getDBInstances()
-                                                                                                   .stream()
-                                                                                                   .map(DBInstance::getStatusInfos)
-                                                                                                   .flatMap(Collection::stream);
-        if (!dbInstanceStatusInfoStreamSupplier.get().allMatch(DBInstanceStatusInfo::getNormal)) {
-            if (dbInstanceStatusInfoStreamSupplier.get().anyMatch(DBInstanceStatusInfo::getNormal)) {
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> amazonRDS.describeDBInstances()
+                                                                           .getDBInstances()
+                                                                           .stream()
+                                                                           .map(DBInstance::getDBInstanceStatus);
+        if (!dbInstanceStatusSupplier.get().allMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
+            if (dbInstanceStatusSupplier.get().anyMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
                 return PlatformHealth.DEGRADED;
             }
             return PlatformHealth.FAILED;
@@ -116,10 +115,7 @@ public class AwsRDSPlatform extends Platform {
         } catch (IndexOutOfBoundsException e) {
             return DOES_NOT_EXIST;
         }
-        return dbInstance.getStatusInfos()
-                         .stream()
-                         .anyMatch(dbInstanceStatusInfo -> dbInstanceStatusInfo.getNormal()
-                                                                               .equals(false)) ? UNDER_ATTACK : NORMAL;
+        return dbInstance.getDBInstanceStatus().equals(AwsRDSConstants.AWS_RDS_AVAILABLE) ? UNDER_ATTACK : NORMAL;
     }
 
     ContainerHealth getDBClusterHealth (AwsRDSClusterContainer awsRDSClusterContainer) {
@@ -192,12 +188,11 @@ public class AwsRDSPlatform extends Platform {
     private ContainerHealth getInstanceStatus (String dbInstanceIdentifier) {
         List<DBInstance> dbInstances = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                                                 .getDBInstances();
-        Supplier<Stream<DBInstanceStatusInfo>> dbInstanceStatusInfo = () -> dbInstances.stream()
-                                                                                       .map(DBInstance::getStatusInfos)
-                                                                                       .flatMap(Collection::stream);
-        if (dbInstanceStatusInfo.get().count() == 0) {
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> dbInstances.stream()
+                                                                             .map(DBInstance::getDBInstanceStatus);
+        if (dbInstanceStatusSupplier.get().count() == 0) {
             return ContainerHealth.DOES_NOT_EXIST;
-        } else if (dbInstanceStatusInfo.get().anyMatch(dbInstanceStatusInfo1 -> !dbInstanceStatusInfo1.getNormal())) {
+        } else if (dbInstanceStatusSupplier.get().noneMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
             return ContainerHealth.UNDER_ATTACK;
         }
         return ContainerHealth.NORMAL;
