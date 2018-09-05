@@ -12,6 +12,7 @@ import org.cloudfoundry.client.v2.applications.ApplicationsV2;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
+import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
@@ -168,6 +169,19 @@ public class CloudFoundryApplicationPlatformTest {
         doReturn(monoVoid).when(applications).scale(scaleApplicationRequest);
         cloudFoundryApplicationPlatform.rescaleApplication(APPLICATION_NAME, INSTANCES);
         verify(applications, times(1)).scale(scaleApplicationRequest);
+        verify(monoVoid, times(1)).block();
+    }
+
+    @Test
+    public void restartApplication () {
+        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder()
+                                                                                       .name(APPLICATION_NAME)
+                                                                                       .build();
+        Mono monoVoid = mock(Mono.class);
+        doReturn(applications).when(cloudFoundryOperations).applications();
+        doReturn(monoVoid).when(applications).restart(restartApplicationRequest);
+        cloudFoundryApplicationPlatform.restartApplication(APPLICATION_NAME);
+        verify(applications, times(1)).restart(restartApplicationRequest);
         verify(monoVoid, times(1)).block();
     }
 }
