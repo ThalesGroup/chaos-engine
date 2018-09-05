@@ -76,6 +76,13 @@ public class CloudFoundryApplication extends Container {
     }
 
     @StateAttack
+    public void restartApplication (Attack attack) {
+        attack.setSelfHealingMethod(restageApplication());
+        attack.setCheckContainerHealth(isAppHealthy);
+        cloudFoundryApplicationPlatform.restartApplication(name);
+    }
+
+    @StateAttack
     public void restageApplication (Attack attack) {
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setSelfHealingMethod(noRecovery);
