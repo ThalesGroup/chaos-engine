@@ -132,6 +132,17 @@ public class AwsRDSPlatformTest {
         doReturn(new DescribeDBInstancesResult().withDBInstances()).when(amazonRDS)
                                                                    .describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
+        doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus("Bogus"))).when(amazonRDS)
+                                                                                                                 .describeDBInstances(any(DescribeDBInstancesRequest.class));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
+        doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)))
+                .when(amazonRDS)
+                .describeDBInstances(any(DescribeDBInstancesRequest.class));
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
+
+
+
+
     }
 
     @Test

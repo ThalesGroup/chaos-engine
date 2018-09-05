@@ -115,7 +115,7 @@ public class AwsRDSPlatform extends Platform {
         } catch (IndexOutOfBoundsException e) {
             return DOES_NOT_EXIST;
         }
-        return dbInstance.getDBInstanceStatus().equals(AwsRDSConstants.AWS_RDS_AVAILABLE) ? UNDER_ATTACK : NORMAL;
+        return dbInstance.getDBInstanceStatus().equals(AwsRDSConstants.AWS_RDS_AVAILABLE) ? NORMAL : UNDER_ATTACK;
     }
 
     ContainerHealth getDBClusterHealth (AwsRDSClusterContainer awsRDSClusterContainer) {
