@@ -58,8 +58,8 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getPlatformHealth () {
-        DBInstance normalDbInstance = new DBInstance().withStatusInfos(new DBInstanceStatusInfo().withNormal(true));
-        DBInstance failedDbInstance = new DBInstance().withStatusInfos(new DBInstanceStatusInfo().withNormal(false));
+        DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE);
+        DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER);
         DescribeDBInstancesResult describeDBInstancesResult;
         // Case 1: Single normal instance.
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(normalDbInstance);
@@ -158,8 +158,9 @@ public class AwsRDSPlatformTest {
                                                                                       .withDBInstanceIdentifier(memberId2))))
                 .when(amazonRDS)
                 .describeDBClusters(any(DescribeDBClustersRequest.class));
-        doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withStatusInfos(new DBInstanceStatusInfo()
-                .withNormal(false)))).when(amazonRDS).describeDBInstances(any(DescribeDBInstancesRequest.class));
+        doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)))
+                .when(amazonRDS)
+                .describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
     }
 
@@ -207,17 +208,13 @@ public class AwsRDSPlatformTest {
         String instanceId1 = UUID.randomUUID().toString();
         String instanceId2 = UUID.randomUUID().toString();
         DescribeDBInstancesResult normalInstance1 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId1)
-                                                                                                                    .withStatusInfos(new DBInstanceStatusInfo()
-                                                                                                                            .withNormal(true)));
+                                                                                                                    .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE));
         DescribeDBInstancesResult normalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
-                                                                                                                    .withStatusInfos(new DBInstanceStatusInfo()
-                                                                                                                            .withNormal(true)));
+                                                                                                                    .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE));
         DescribeDBInstancesResult abnormalInstance1 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId1)
-                                                                                                                      .withStatusInfos(new DBInstanceStatusInfo()
-                                                                                                                              .withNormal(false)));
+                                                                                                                      .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER));
         DescribeDBInstancesResult abnormalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
-                                                                                                                      .withStatusInfos(new DBInstanceStatusInfo()
-                                                                                                                              .withNormal(false)));
+                                                                                                                      .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER));
         DescribeDBInstancesResult emptyDBInstanceresult = new DescribeDBInstancesResult();
         doReturn(emptyDBInstanceresult).when(amazonRDS)
                                        .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
