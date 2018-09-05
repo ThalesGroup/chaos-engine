@@ -1,5 +1,6 @@
 package com.gemalto.chaos.attack;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.attack.enums.AttackState;
@@ -50,6 +51,7 @@ public abstract class Attack {
         this.attackLayer = attackLayer;
     }
 
+    @JsonIgnore
     public Method getAttackMethod () {
         return attackMethod;
     }
