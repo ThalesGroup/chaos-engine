@@ -63,6 +63,14 @@ public class CloudFoundryApplicationTest {
     }
 
     @Test
+    public void restartApplication () {
+        cloudFoundryApplication.restartApplication(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restartApplication(name);
+    }
+
+    @Test
     public void createAttack () {
         Attack attack = cloudFoundryApplication.createAttack(AttackType.RESOURCE);
         assertEquals(cloudFoundryApplication, attack.getContainer());
