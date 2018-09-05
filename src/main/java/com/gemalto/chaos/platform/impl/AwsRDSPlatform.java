@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
@@ -11,7 +12,7 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 
-@ConditionalOnBean(AmazonRDS.class)
+@ConditionalOnProperty({ "aws.rds.accessKeyId", "aws.rds.secretAccessKey" })
 @Component
 public class AwsRDSPlatform extends Platform {
     private AmazonRDS amazonRDS;
