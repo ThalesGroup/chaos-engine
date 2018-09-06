@@ -1,12 +1,16 @@
 package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.connection.ConnectionException;
+import net.schmizz.sshj.connection.channel.direct.Session;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -18,8 +22,13 @@ public class SshManagerTest {
     private final int port = 123;
     private final String username = "username";
     private final String passwd = "passwd";
+    private final String script = "command";
     @Mock
     SSHClient sshClient;
+    @Mock
+    Session session;
+    @Mock
+    Session.Command command;
 
     @Test
     public void connect () {
@@ -50,7 +59,7 @@ public class SshManagerTest {
             verify(sshClient, times(1)).authPassword(anyString(), anyString());
             assertFalse(connected);
         } catch (Exception e) {
-            fail();
+            fail(e.getMessage());
         }
     }
 
@@ -82,7 +91,51 @@ public class SshManagerTest {
             verify(sshClient, times(1)).isAuthenticated();
             assertFalse(connected);
         } catch (Exception e) {
-            fail();
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void executeCommand () {
+        String okString = "Success";
+        int okExitCode = 0;
+        SshCommandResult expectedResult = new SshCommandResult(okString, okExitCode);
+        try {
+            when(sshClient.startSession()).thenReturn(session);
+            when(sshClient.isConnected()).thenReturn(true);
+            when(sshClient.isAuthenticated()).thenReturn(true);
+            InputStream stream = new ByteArrayInputStream(okString.getBytes());
+            when(command.getExitStatus()).thenReturn(okExitCode);
+            when(command.getInputStream()).thenReturn(stream);
+            when(session.exec(script)).thenReturn(command);
+            SshManager sshManager = new SshManager(host, String.valueOf(port));
+            sshManager.setSshClient(sshClient);
+            sshManager.connect(username, passwd);
+            assertEquals(expectedResult.toString(), sshManager.executeCommand(script).toString());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void executeCommandFailed () {
+        String koString = "Fail";
+        int koExitCode = -1;
+        SshCommandResult expectedResult = new SshCommandResult(koString, koExitCode);
+        try {
+            when(sshClient.startSession()).thenReturn(session);
+            when(sshClient.isConnected()).thenReturn(true);
+            when(sshClient.isAuthenticated()).thenReturn(true);
+            InputStream stream = new ByteArrayInputStream(koString.getBytes());
+            when(command.getExitStatus()).thenReturn(koExitCode);
+            when(command.getInputStream()).thenReturn(stream);
+            doThrow(new ConnectionException(koString)).when(session).exec(script);
+            SshManager sshManager = new SshManager(host, String.valueOf(port));
+            sshManager.setSshClient(sshClient);
+            sshManager.connect(username, passwd);
+            assertEquals(expectedResult.toString(), sshManager.executeCommand(script).toString());
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
     }
 }

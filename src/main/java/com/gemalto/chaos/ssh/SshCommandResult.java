@@ -33,6 +33,11 @@ public class SshCommandResult {
         this.exitStatus = exitStatus;
     }
 
+    SshCommandResult (String commandOutput, int exitStatus) {
+        this.commandOutput = commandOutput;
+        this.exitStatus = exitStatus;
+    }
+
     @Override
     public String toString () {
         if (exitStatus == -1) {
