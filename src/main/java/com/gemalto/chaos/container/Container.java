@@ -164,4 +164,8 @@ public abstract class Container implements AttackableObject {
     }
 
     public abstract String getSimpleName ();
+
+    public String getContainerType () {
+        return this.getClass().getSimpleName();
+    }
 }
