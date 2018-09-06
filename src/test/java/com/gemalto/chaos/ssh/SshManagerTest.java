@@ -43,6 +43,7 @@ public class SshManagerTest {
             verify(sshClient, times(1)).isConnected();
             verify(sshClient, times(1)).isAuthenticated();
             assertTrue(connected);
+            sshManager.disconnect();
         } catch (Exception e) {
             fail();
         }
@@ -58,6 +59,7 @@ public class SshManagerTest {
             verify(sshClient, times(1)).connect(host, port);
             verify(sshClient, times(1)).authPassword(anyString(), anyString());
             assertFalse(connected);
+            sshManager.disconnect();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -126,9 +128,6 @@ public class SshManagerTest {
             when(sshClient.startSession()).thenReturn(session);
             when(sshClient.isConnected()).thenReturn(true);
             when(sshClient.isAuthenticated()).thenReturn(true);
-            InputStream stream = new ByteArrayInputStream(koString.getBytes());
-            when(command.getExitStatus()).thenReturn(koExitCode);
-            when(command.getInputStream()).thenReturn(stream);
             doThrow(new ConnectionException(koString)).when(session).exec(script);
             SshManager sshManager = new SshManager(host, String.valueOf(port));
             sshManager.setSshClient(sshClient);
