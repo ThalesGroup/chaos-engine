@@ -26,6 +26,9 @@ public class SshManager {
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
     }
 
+    void setSshClient (SSHClient sshClient) {
+        this.sshClient = sshClient;
+    }
     public boolean connect (String userName, String password) {
         try {
             log.debug("Connecting to host {}", hostname);
