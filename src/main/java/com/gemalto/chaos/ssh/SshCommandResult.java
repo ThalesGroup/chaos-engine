@@ -29,8 +29,7 @@ public class SshCommandResult {
         }
     }
 
-    public SshCommandResult (Session.Command command, int exitStatus) {
-        this.command = command;
+    public SshCommandResult (int exitStatus) {
         this.exitStatus = exitStatus;
     }
 

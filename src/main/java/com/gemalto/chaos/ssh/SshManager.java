@@ -97,7 +97,7 @@ public class SshManager {
         } catch (SSHException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
         }
-        return new SshCommandResult(null, -1);
+        return new SshCommandResult(-1);
     }
 
     public void disconnect () {
