@@ -87,10 +87,11 @@ public abstract class Platform implements AttackableObject {
     public synchronized boolean canAttack () {
         if (holidayManager.isOutsideWorkingHours() || holidayManager.isHoliday()) return false;
         if (belowMinAttacks()) {
-            log.info("{} is below its attack quota. Attacking.", this.getClass().getSimpleName());
+            log.info("{} is below its experiment quota. Eligible for experiment.", this.getClass().getSimpleName());
             return true;
         } else if (aboveMaxAttacks()) {
-            log.info("{} is above its attack quota. Aborting.", this.getClass().getSimpleName());
+            log.info("{} is above its experiment quota. Not eligible for experiment..", this.getClass()
+                                                                                            .getSimpleName());
             return false;
         }
         double attackChance = getAttackChance();
@@ -98,10 +99,10 @@ public abstract class Platform implements AttackableObject {
             generateDestructionThreshold();
         }
         if (attackChance > destructionThreshold) {
-            log.info("Attack threshold reached for {}", this);
+            log.info("Experiment threshold reached for {}", this);
             return true;
         }
-        log.debug("Still not yet at attack threshold: {}/{}", attackChance, destructionThreshold);
+        log.debug("Still not yet at experiment threshold: {}/{}", attackChance, destructionThreshold);
         return false;
     }
 
