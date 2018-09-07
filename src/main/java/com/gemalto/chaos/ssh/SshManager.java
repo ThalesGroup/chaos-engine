@@ -26,6 +26,9 @@ public class SshManager {
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
     }
 
+    void setSshClient (SSHClient sshClient) {
+        this.sshClient = sshClient;
+    }
     public boolean connect (String userName, String password) {
         try {
             log.debug("Connecting to host {}", hostname);
@@ -97,7 +100,7 @@ public class SshManager {
         } catch (SSHException e) {
             log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
         }
-        return new SshCommandResult(null, -1);
+        return new SshCommandResult(-1);
     }
 
     public void disconnect () {

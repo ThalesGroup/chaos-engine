@@ -188,7 +188,7 @@ public abstract class Attack {
             default:
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withNotificationLevel(NotificationLevel.WARN)
                                                                .withMessage("Attack not yet finished.")
                                                                .build());
                 return AttackState.STARTED;
