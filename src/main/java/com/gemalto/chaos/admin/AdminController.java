@@ -19,6 +19,7 @@ public class AdminController {
     @PostMapping("/state")
     public void setAdminState (@RequestParam("state") String newAdminStateString) {
         AdminState newAdminState;
+        newAdminStateString = newAdminStateString.toUpperCase();
         log.info("Setting admin state to {}", newAdminStateString);
         try {
             newAdminState = AdminState.valueOf(newAdminStateString);
