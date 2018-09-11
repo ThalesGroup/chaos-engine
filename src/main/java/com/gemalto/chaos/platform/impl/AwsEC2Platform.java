@@ -122,6 +122,9 @@ public class AwsEC2Platform extends Platform {
                 // Loops until all pages of instances have been resolved
             }
         }
+        if (containerList.isEmpty()) {
+            log.warn("No matching EC2 instance found.");
+        }
         return containerList;
     }
 
