@@ -21,6 +21,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
+
 public abstract class Platform implements AttackableObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
     private static final double DEFAULT_PROBABILITY = 0.2D;
@@ -166,5 +168,9 @@ public abstract class Platform implements AttackableObject {
 
     public void usingHolidayManager (HolidayManager holidayManager) {
         this.holidayManager = holidayManager;
+    }
+
+    public Duration getMinimumSelfHealingInterval () {
+        return Duration.ofMinutes(DEFAULT_SELF_HEALING_INTERVAL_MINUTES);
     }
 }

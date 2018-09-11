@@ -252,6 +252,6 @@ public abstract class Attack {
     }
 
     private Duration getMinimumTimeBetweenSelfHealing () {
-        return Duration.ofMinutes(1);
+        return container.getMinimumSelfHealingInterval();
     }
 }
