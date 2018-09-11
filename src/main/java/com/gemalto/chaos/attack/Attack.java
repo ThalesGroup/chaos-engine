@@ -64,6 +64,10 @@ public abstract class Attack {
         return selfHealingMethod;
     }
 
+    public Callable<Void> getFinalizeMethod () {
+        return finalizeMethod;
+    }
+
     public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
     }

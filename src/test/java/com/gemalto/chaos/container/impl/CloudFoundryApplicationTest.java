@@ -17,6 +17,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -43,6 +44,31 @@ public class CloudFoundryApplicationTest {
                                                          .platform(cloudFoundryApplicationPlatform)
                                                          .build();
     }
+
+    @Test
+    public void scaleApplicationHealing () {
+        cloudFoundryApplication.scaleApplication(attack);
+        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
+        try {
+            attack.getSelfHealingMethod().call();
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
+    }
+
+    @Test
+    public void scaleApplicationFinalization () {
+        cloudFoundryApplication.scaleApplication(attack);
+        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
+        try {
+            attack.getFinalizeMethod().call();
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
+    }
+
 
     @Test
     public void scaleApplication () {

@@ -30,6 +30,15 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
         return null;
     };
+
+    public Integer getOriginalContainerInstances () {
+        return originalContainerInstances;
+    }
+
+    public Integer getActualContainerInstances () {
+        return actualContainerInstances;
+    }
+
     private transient Callable<Void> noRecovery = () -> {
         log.warn("There is no recovery method for this kind of attack.");
         return null;
