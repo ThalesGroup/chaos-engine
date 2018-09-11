@@ -38,7 +38,7 @@ public abstract class Platform implements AttackableObject {
     private Double destructionThreshold;
 
     void expireCachedRoster () {
-        roster.expire();
+        if (roster != null) roster.expire();
     }
 
     public abstract ApiStatus getApiStatus ();
