@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
@@ -42,6 +43,8 @@ public abstract class Attack {
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
     private Instant finalizationStartTime;
+    private Instant lastSelfHealingTime;
+    private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
     public Platform getAttackLayer () {
         return attackLayer;
@@ -143,12 +146,23 @@ public abstract class Attack {
             try {
                 log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
                 ChaosEvent chaosEvent;
-                if (AdminManager.canRunSelfHealing()) {
-                    selfHealingMethod.call();
+                if (canRunSelfHealing()) {
+                    StringBuilder message = new StringBuilder();
+                    message.append("The attack has gone on too long, invoking self-healing.");
+                    if (selfHealingCounter.incrementAndGet() > 1) {
+                        message.append("This is self healing attempt number ").append(selfHealingCounter.get()).append(".");
+                    }
                     chaosEvent = ChaosEvent.builder()
                                            .fromAttack(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("The attack has gone on too long, invoking self-healing.")
+                                           .withMessage(message.toString())
+                                           .build();
+                    callSelfHealing();
+                } else if (AdminManager.canRunSelfHealing()) {
+                    chaosEvent = ChaosEvent.builder()
+                                           .fromAttack(this)
+                                           .withNotificationLevel(NotificationLevel.WARN)
+                                           .withMessage("Cannot run self healing again yet")
                                            .build();
                 } else {
                     chaosEvent = ChaosEvent.builder()
@@ -158,7 +172,7 @@ public abstract class Attack {
                                            .build();
                 }
                 notificationManager.sendNotification(chaosEvent);
-            } catch (Exception e) {
+            } catch (ChaosException e) {
                 log.error("Attack {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
@@ -232,5 +246,25 @@ public abstract class Attack {
                 log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
             }
         }
+    }
+
+    private boolean canRunSelfHealing () {
+        boolean canRunSelfHealing = lastSelfHealingTime == null || lastSelfHealingTime.plus(getMinimumTimeBetweenSelfHealing())
+                                                                                      .isBefore(Instant.now());
+        return canRunSelfHealing && AdminManager.canRunSelfHealing();
+    }
+
+    private void callSelfHealing () {
+        try {
+            selfHealingMethod.call();
+        } catch (Exception e) {
+            throw new ChaosException("Exception while self healing.", e);
+        } finally {
+            lastSelfHealingTime = Instant.now();
+        }
+    }
+
+    private Duration getMinimumTimeBetweenSelfHealing () {
+        return container.getMinimumSelfHealingInterval();
     }
 }
