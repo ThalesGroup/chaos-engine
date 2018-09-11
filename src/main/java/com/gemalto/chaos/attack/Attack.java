@@ -236,7 +236,8 @@ public abstract class Attack {
     }
 
     private boolean canRunSelfHealing () {
-        boolean canRunSelfHealing = true;
+        boolean canRunSelfHealing = lastSelfHealingTime == null || lastSelfHealingTime.plus(getMinimumTimeBetweenSelfHealing())
+                                                                                      .isBefore(Instant.now());
         return canRunSelfHealing && AdminManager.canRunSelfHealing();
     }
 
@@ -248,5 +249,9 @@ public abstract class Attack {
         } finally {
             lastSelfHealingTime = Instant.now();
         }
+    }
+
+    private Duration getMinimumTimeBetweenSelfHealing () {
+        return Duration.ofMinutes(1);
     }
 }
