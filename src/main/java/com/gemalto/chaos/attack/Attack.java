@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
@@ -43,6 +44,7 @@ public abstract class Attack {
     private Instant startTime = Instant.now();
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
+    private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
     public Platform getAttackLayer () {
         return attackLayer;
@@ -145,10 +147,17 @@ public abstract class Attack {
                 log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
                 ChaosEvent chaosEvent;
                 if (canRunSelfHealing()) {
+                    StringBuilder message = new StringBuilder();
+                    message.append("The attack has gone on too long, invoking self-healing.");
+                    if (selfHealingCounter.incrementAndGet() > 1) {
+                        message.append("This is self healing attempt number ")
+                               .append(selfHealingCounter.get())
+                               .append(".");
+                    }
                     chaosEvent = ChaosEvent.builder()
                                            .fromAttack(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("The attack has gone on too long, invoking self-healing.")
+                                           .withMessage(message.toString())
                                            .build();
                     callSelfHealing();
                 } else {
