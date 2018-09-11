@@ -42,6 +42,7 @@ public abstract class Attack {
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
     private Instant finalizationStartTime;
+    private Instant lastSelfHealingTime;
 
     public Platform getAttackLayer () {
         return attackLayer;
@@ -244,6 +245,8 @@ public abstract class Attack {
             selfHealingMethod.call();
         } catch (Exception e) {
             throw new ChaosException("Exception while self healing.", e);
+        } finally {
+            lastSelfHealingTime = Instant.now();
         }
     }
 }
