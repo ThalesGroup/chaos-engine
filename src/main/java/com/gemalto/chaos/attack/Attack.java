@@ -143,13 +143,13 @@ public abstract class Attack {
             try {
                 log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
                 ChaosEvent chaosEvent;
-                if (AdminManager.canRunSelfHealing()) {
-                    selfHealingMethod.call();
+                if (canRunSelfHealing()) {
                     chaosEvent = ChaosEvent.builder()
                                            .fromAttack(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage("The attack has gone on too long, invoking self-healing.")
                                            .build();
+                    callSelfHealing();
                 } else {
                     chaosEvent = ChaosEvent.builder()
                                            .fromAttack(this)
@@ -158,7 +158,7 @@ public abstract class Attack {
                                            .build();
                 }
                 notificationManager.sendNotification(chaosEvent);
-            } catch (Exception e) {
+            } catch (ChaosException e) {
                 log.error("Attack {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder()
                                                                .fromAttack(this)
@@ -231,6 +231,19 @@ public abstract class Attack {
             } catch (Exception e) {
                 log.error("Error while finalizing attack {} on container {}", id, container.getSimpleName());
             }
+        }
+    }
+
+    private boolean canRunSelfHealing () {
+        boolean canRunSelfHealing = true;
+        return canRunSelfHealing && AdminManager.canRunSelfHealing();
+    }
+
+    private void callSelfHealing () {
+        try {
+            selfHealingMethod.call();
+        } catch (Exception e) {
+            throw new ChaosException("Exception while self healing.", e);
         }
     }
 }
