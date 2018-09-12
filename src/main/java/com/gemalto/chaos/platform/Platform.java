@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.calendar.HolidayManager;
@@ -170,6 +171,7 @@ public abstract class Platform implements AttackableObject {
         this.holidayManager = holidayManager;
     }
 
+    @JsonIgnore
     public Duration getMinimumSelfHealingInterval () {
         return Duration.ofMinutes(DEFAULT_SELF_HEALING_INTERVAL_MINUTES);
     }

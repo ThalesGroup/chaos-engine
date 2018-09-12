@@ -170,6 +170,7 @@ public abstract class Container implements AttackableObject {
         return this.getClass().getSimpleName();
     }
 
+    @JsonIgnore
     public Duration getMinimumSelfHealingInterval () {
         return getPlatform().getMinimumSelfHealingInterval();
     }
