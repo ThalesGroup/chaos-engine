@@ -20,7 +20,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -253,6 +254,89 @@ public class AwsRDSPlatformTest {
         assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
     }
 
+    @Test
+    public void getVpcSecurityGroupIds () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        Collection<String> expectedVpcIds = new HashSet<>();
+        for (int x = 0; x < 100; x++) {
+            expectedVpcIds.add(UUID.randomUUID().toString());
+        }
+        when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
+                .thenReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withVpcSecurityGroups(expectedVpcIds
+                        .stream()
+                        .map(vpcIds -> new VpcSecurityGroupMembership().withVpcSecurityGroupId(vpcIds))
+                        .collect(Collectors.toSet()))));
+        assertThat(awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier), IsIterableContainingInAnyOrder.containsInAnyOrder(expectedVpcIds
+                .toArray()));
+    }
+
+    @Test
+    public void setVpcSecurityGroupIds () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        String vpcSecurityGroupId = UUID.randomUUID().toString();
+        awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupId);
+        verify(amazonRDS, times(1)).modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(Collections
+                .singleton(vpcSecurityGroupId)));
+    }
+
+    @Test
+    public void setVpcSecurityGroupIds1 () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        Collection<String> vpcSecurityGroupIds = new HashSet<>();
+        for (int x = 0; x < 100; x++) {
+            vpcSecurityGroupIds.add(UUID.randomUUID().toString());
+        }
+        awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds);
+        verify(amazonRDS, times(1)).modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
+    }
+
+    @Test
+    public void checkVpcSecurityGroupIds () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        Collection<String> vpcSecurityGroupIds = new HashSet<>();
+        vpcSecurityGroupIds.add(UUID.randomUUID().toString());
+        when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
+                .thenReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withVpcSecurityGroups(vpcSecurityGroupIds
+                        .stream()
+                        .map(vpcIds -> new VpcSecurityGroupMembership().withVpcSecurityGroupId(vpcIds))
+                        .collect(Collectors.toSet()))));
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds
+                .iterator()
+                .next()));
+    }
+
+    @Test
+    public void checkVpcSecurityGroupIds1 () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        Collection<String> vpcSecurityGroupIds = new HashSet<>();
+        List<String> reverseOrderSet = new ArrayList<>();
+        for (int x = 0; x < 100; x++) {
+            String randomString = UUID.randomUUID().toString();
+            vpcSecurityGroupIds.add(randomString);
+            reverseOrderSet.add(randomString);
+        }
+        Collections.reverse(reverseOrderSet);
+        Collection<String> biggerSet = new HashSet<>(vpcSecurityGroupIds);
+        biggerSet.add(UUID.randomUUID().toString());
+        Collection<String> smallerSet = new HashSet<>(vpcSecurityGroupIds);
+        smallerSet.remove(vpcSecurityGroupIds.iterator().next());
+        when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
+                .thenReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withVpcSecurityGroups(vpcSecurityGroupIds
+                        .stream()
+                        .map(vpcIds -> new VpcSecurityGroupMembership().withVpcSecurityGroupId(vpcIds))
+                        .collect(Collectors.toSet()))));
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds
+                .iterator()
+                .next()));
+        // Two equal sets
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds));
+        // Second set is in different order
+        assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, reverseOrderSet));
+        // Second set has one more item
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, biggerSet));
+        // Second set has one less item
+        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, smallerSet));
+    }
     @Configuration
     static class TestConfig {
         @Autowired
