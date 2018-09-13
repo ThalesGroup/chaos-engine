@@ -1,8 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType;
+import org.cloudfoundry.operations.routes.Route;
 
 import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.http;
+import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.tcp;
 
 public class CloudFoundryApplicationRoute {
     private String host;
@@ -42,32 +44,54 @@ public class CloudFoundryApplicationRoute {
             return cloudFoundryApplicationRoute;
         }
 
+        public CloudFoundryApplicationRouteBuilder fromRoute (Route route) {
+            domain = route.getDomain();
+            applicationName = route.getApplications().get(0);
+            service = route.getService();
+            if (route.getType() == tcp.name()) {
+                type = tcp;
+                port = Integer.valueOf(route.getPort());
+            } else {
+                type = http;
+                path = route.getPath();
+                host = route.getHost();
+            }
+            return this;
+        }
+
         public CloudFoundryApplicationRouteBuilder host (String host) {
             this.host = host;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder domain (String domain) {
             this.domain = domain;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder port (int port) {
             this.port = port;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder path (String path) {
             this.path = path;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder type (CloudFoundryApplicationRouteType type) {
             this.type = type;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder applicationName (String applicationName) {
             this.applicationName = applicationName;
+            return this;
         }
 
         public CloudFoundryApplicationRouteBuilder service (String service) {
             this.service = service;
+            return this;
         }
     }
 }
