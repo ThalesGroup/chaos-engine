@@ -66,21 +66,33 @@ public class CloudFoundryApplicationPlatformTest {
     @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
-    private Route route = Route.builder()
-                               .application(APPLICATION_NAME)
-                               .host("host")
-                               .domain("domain")
-                               .id("id")
-                               .space("space")
-                               .build();
-    private CloudFoundryApplicationRoute app1_route;
+    private Route httpRoute = Route.builder()
+                                   .application(APPLICATION_NAME)
+                                   .host("host")
+                                   .domain("domain")
+                                   .id("id")
+                                   .space("space")
+                                   .build();
+    private Route tcpRoute = Route.builder()
+                                  .application(APPLICATION_NAME)
+                                  .type("tcp")
+                                  .domain("domain")
+                                  .port("1")
+                                  .id("id")
+                                  .host("")
+                                  .space("space")
+                                  .build();
+    private CloudFoundryApplicationRoute app1_httpRoute;
+    private CloudFoundryApplicationRoute app1_tcpRoute;
 
     @Before
     public void setUp () {
         cloudFoundryApplicationPlatform = new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
-        app1_route = CloudFoundryApplicationRoute.builder().fromRoute(route).build();
+        app1_httpRoute = CloudFoundryApplicationRoute.builder().fromRoute(httpRoute).build();
+        app1_tcpRoute = CloudFoundryApplicationRoute.builder().fromRoute(tcpRoute).build();
         List<CloudFoundryApplicationRoute> app1_routes = new ArrayList<>();
-        app1_routes.add(app1_route);
+        app1_routes.add(app1_httpRoute);
+        app1_routes.add(app1_tcpRoute);
 
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
@@ -120,7 +132,7 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1, applicationSummary_2, stoppedApplicationSummary, zeroInstancesApplicationSummary);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
-        Flux<Route> routeFlux = Flux.just(route);
+        Flux<Route> routeFlux = Flux.just(httpRoute, tcpRoute);
         doReturn(routes).when(cloudFoundryOperations).routes();
         doReturn(routeFlux).when(routes).list(any());
         assertThat(cloudFoundryApplicationPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
