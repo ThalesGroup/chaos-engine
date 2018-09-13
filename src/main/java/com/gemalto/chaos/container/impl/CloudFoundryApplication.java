@@ -10,6 +10,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -21,6 +22,7 @@ public class CloudFoundryApplication extends Container {
     private Integer actualContainerInstances;
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    private List<CloudFoundryApplicationRoute> applicationRoutes;
     private transient Callable<Void> rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
@@ -108,12 +110,17 @@ public class CloudFoundryApplication extends Container {
         private Integer containerInstances;
         private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
         private String applicationID;
+        private List<CloudFoundryApplicationRoute> applicationRoutes;
 
         private CloudFoundryApplicationBuilder () {
         }
 
         static CloudFoundryApplicationBuilder builder () {
             return new CloudFoundryApplicationBuilder();
+        }
+
+        public void applicationRoutes (List<CloudFoundryApplicationRoute> applicationRoutes) {
+            this.applicationRoutes = applicationRoutes;
         }
 
         public CloudFoundryApplicationBuilder applicationID (String applicationID) {
@@ -143,6 +150,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplication.actualContainerInstances = this.containerInstances;
             cloudFoundryApplication.cloudFoundryApplicationPlatform = this.cloudFoundryApplicationPlatform;
             cloudFoundryApplication.applicationID = this.applicationID;
+            cloudFoundryApplication.applicationRoutes = this.applicationRoutes;
             return cloudFoundryApplication;
         }
     }
