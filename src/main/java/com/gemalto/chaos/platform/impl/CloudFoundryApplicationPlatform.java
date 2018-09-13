@@ -4,6 +4,7 @@ import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
+import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -12,6 +13,8 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
+import org.cloudfoundry.operations.routes.ListRoutesRequest;
+import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -106,11 +109,30 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                      .name(app.getName())
                                                                      .applicationID(app.getId())
                                                                      .containerInstances(containerInstances)
+                                                                     .applicationRoutes(gatherApplicationRoutes(app.getName()))
                                                                      .build();
         containers.add(application);
         log.info("Added application {}", application);
     }
 
+    private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName) {
+        List<CloudFoundryApplicationRoute> routes = new ArrayList<>();
+        ListRoutesRequest listRoutesRequest = ListRoutesRequest.builder().build();
+        cloudFoundryOperations.routes()
+                              .list(listRoutesRequest)
+                              .filter(route -> !route.getApplications().isEmpty() && route.getApplications()
+                                                                                          .get(0)
+                                                                                          .equals(applicationName))
+                              .toIterable()
+                              .forEach(route -> {
+                                  CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute
+                                          .builder()
+                                          .fromRoute(route)
+                                          .build();
+                                  routes.add(cloudFoundryApplicationRoute);
+                              });
+        return routes;
+    }
     public void rescaleApplication (String applicationName, int instances) {
         ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
                                                                                  .name(applicationName)
@@ -124,5 +146,9 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                        .name(applicationName)
                                                                                        .build();
         cloudFoundryOperations.applications().restart(restartApplicationRequest).block();
+    }
+
+    public void unmapRoute (UnmapRouteRequest unmapRouteRequest) {
+        cloudFoundryOperations.routes().unmap(unmapRouteRequest);
     }
 }

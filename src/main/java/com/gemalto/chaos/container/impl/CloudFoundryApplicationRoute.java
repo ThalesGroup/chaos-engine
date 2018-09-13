@@ -19,6 +19,11 @@ public class CloudFoundryApplicationRoute {
         return CloudFoundryApplicationRouteBuilder.builder();
     }
 
+    @Override
+    public String toString () {
+        return "Route{" + "application=" + applicationName + ", domain=" + domain + ", host=" + host + ", path=" + path + ", port=" + port + ", type=" + type + ", service=" + service + "}";
+    }
+
     public static final class CloudFoundryApplicationRouteBuilder {
         private String host;
         private String domain;

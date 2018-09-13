@@ -121,6 +121,7 @@ public class CloudFoundryApplication extends Container {
 
         public CloudFoundryApplicationBuilder applicationRoutes (List<CloudFoundryApplicationRoute> applicationRoutes) {
             this.applicationRoutes = applicationRoutes;
+            return this;
         }
 
         public CloudFoundryApplicationBuilder applicationID (String applicationID) {
