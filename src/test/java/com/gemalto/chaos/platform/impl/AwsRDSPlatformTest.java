@@ -1,7 +1,10 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
@@ -23,6 +26,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
+import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
@@ -32,6 +37,8 @@ import static org.mockito.Mockito.*;
 public class AwsRDSPlatformTest {
     @MockBean
     private AmazonRDS amazonRDS;
+    @MockBean
+    private AmazonEC2 amazonEC2;
     @Autowired
     private AwsRDSPlatform awsRDSPlatform;
 
@@ -129,7 +136,7 @@ public class AwsRDSPlatformTest {
     public void getDBInstanceHealth () {
         String instanceId = UUID.randomUUID().toString();
         AwsRDSInstanceContainer awsRDSInstanceContainer = mock(AwsRDSInstanceContainer.class);
-        doReturn(instanceId).when(awsRDSInstanceContainer).getDbInstanceIdentifier();
+//        doReturn(instanceId).when(awsRDSInstanceContainer).getDbInstanceIdentifier();
         doReturn(new DescribeDBInstancesResult().withDBInstances()).when(amazonRDS)
                                                                    .describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
@@ -152,7 +159,7 @@ public class AwsRDSPlatformTest {
         String memberId1 = UUID.randomUUID().toString();
         String memberId2 = UUID.randomUUID().toString();
         AwsRDSClusterContainer awsRDSClusterContainer = mock(AwsRDSClusterContainer.class);
-        doReturn(clusterId).when(awsRDSClusterContainer).getDbClusterIdentifier();
+//        doReturn(clusterId).when(awsRDSClusterContainer).getDbClusterIdentifier();
         doReturn(new DescribeDBClustersResult().withDBClusters()).when(amazonRDS)
                                                                  .describeDBClusters(any(DescribeDBClustersRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
@@ -337,14 +344,95 @@ public class AwsRDSPlatformTest {
         // Second set has one less item
         assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, smallerSet));
     }
+
+    @Test
+    public void getChaosSecurityGroup () {
+        awsRDSPlatform = Mockito.spy(new AwsRDSPlatform(amazonRDS, amazonEC2));
+        String defaultVpcId = UUID.randomUUID().toString();
+        String customVpcId = UUID.randomUUID().toString();
+        String defaultSecurityGroupID = UUID.randomUUID().toString();
+        String customSecurityGroupID = UUID.randomUUID().toString();
+        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        SecurityGroup chaosSecurityGroup = new SecurityGroup().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
+                                                              .withVpcId(defaultVpcId)
+                                                              .withGroupId(chaosSecurityGroupID);
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
+                                                                .withVpcId(defaultVpcId)
+                                                                .withGroupId(defaultSecurityGroupID);
+        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
+                                                               .withVpcId(customVpcId)
+                                                               .withGroupId(customSecurityGroupID);
+        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(chaosSecurityGroup, defaultSecurityGroup, customSecurityGroup))
+                .when(amazonEC2)
+                .describeSecurityGroups();
+        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
+        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
+        verify(awsRDSPlatform, times(1)).initChaosSecurityGroup();
+    }
+
+    @Test
+    public void getChaosSecurityGroup2 () {
+        awsRDSPlatform = Mockito.spy(new AwsRDSPlatform(amazonRDS, amazonEC2));
+        String defaultVpcId = UUID.randomUUID().toString();
+        String customVpcId = UUID.randomUUID().toString();
+        String defaultSecurityGroupID = UUID.randomUUID().toString();
+        String customSecurityGroupID = UUID.randomUUID().toString();
+        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
+                                                                .withVpcId(defaultVpcId)
+                                                                .withGroupId(defaultSecurityGroupID);
+        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
+                                                               .withVpcId(customVpcId)
+                                                               .withGroupId(customSecurityGroupID);
+        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(defaultVpcId);
+        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(customVpcId);
+        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup)).when(amazonEC2)
+                                                                                                                  .describeSecurityGroups();
+        doReturn(new DescribeVpcsResult().withVpcs(defaultVpc, customVpc)).when(amazonEC2).describeVpcs();
+        doReturn(new CreateSecurityGroupResult().withGroupId(chaosSecurityGroupID)).when(amazonEC2)
+                                                                                   .createSecurityGroup(new CreateSecurityGroupRequest()
+                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
+                                                                                           .withVpcId(defaultVpcId)
+                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION));
+        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
+    }
+
+    @Test(expected = ChaosException.class)
+    public void getChaosSecurityGroup3 () {
+        awsRDSPlatform = Mockito.spy(new AwsRDSPlatform(amazonRDS, amazonEC2));
+        String defaultVpcId = UUID.randomUUID().toString();
+        String customVpcId = UUID.randomUUID().toString();
+        String defaultSecurityGroupID = UUID.randomUUID().toString();
+        String customSecurityGroupID = UUID.randomUUID().toString();
+        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
+                                                                .withVpcId(defaultVpcId)
+                                                                .withGroupId(defaultSecurityGroupID);
+        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
+                                                               .withVpcId(customVpcId)
+                                                               .withGroupId(customSecurityGroupID);
+        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(customVpcId);
+        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup)).when(amazonEC2)
+                                                                                                                  .describeSecurityGroups();
+        doReturn(new DescribeVpcsResult().withVpcs(customVpc)).when(amazonEC2).describeVpcs();
+        doReturn(new CreateSecurityGroupResult().withGroupId(chaosSecurityGroupID)).when(amazonEC2)
+                                                                                   .createSecurityGroup(new CreateSecurityGroupRequest()
+                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
+                                                                                           .withVpcId(defaultVpcId)
+                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION));
+        awsRDSPlatform.getChaosSecurityGroup();
+    }
+
     @Configuration
     static class TestConfig {
         @Autowired
         private AmazonRDS amazonRDS;
+        @Autowired
+        private AmazonEC2 amazonEC2;
 
         @Bean
         AwsRDSPlatform awsRDSPlatform () {
-            return new AwsRDSPlatform(amazonRDS);
+            return new AwsRDSPlatform(amazonRDS, amazonEC2);
         }
     }
 }

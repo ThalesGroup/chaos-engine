@@ -3,10 +3,13 @@ package com.gemalto.chaos.services.impl;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClientBuilder;
 import com.gemalto.chaos.services.CloudService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -43,6 +46,16 @@ public class AwsRDSService implements CloudService {
     @RefreshScope
     AmazonRDS amazonRDS (@Qualifier("rdsCredentials") AWSCredentialsProvider awsStaticCredentialsProvider) {
         return AmazonRDSClientBuilder.standard()
+                                     .withCredentials(awsStaticCredentialsProvider)
+                                     .withRegion(region)
+                                     .build();
+    }
+
+    @Bean
+    @RefreshScope
+    @ConditionalOnMissingBean
+    AmazonEC2 amazonEC2 (@Qualifier("rdsCredentials") AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
+        return AmazonEC2ClientBuilder.standard()
                                      .withCredentials(awsStaticCredentialsProvider)
                                      .withRegion(region)
                                      .build();

@@ -1,7 +1,11 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
+import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -22,16 +26,26 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
+import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 
 @ConditionalOnProperty({ "aws.rds.accessKeyId", "aws.rds.secretAccessKey" })
 @Component
 public class AwsRDSPlatform extends Platform {
+    @Autowired
     private AmazonRDS amazonRDS;
+    @Autowired
+    private AmazonEC2 amazonEC2;
+    private String defaultVpcId;
+    private String chaosSecurityGroup;
 
     @Autowired
-    public AwsRDSPlatform (AmazonRDS amazonRDS) {
+    public AwsRDSPlatform () {
+    }
+
+    AwsRDSPlatform (AmazonRDS amazonRDS, AmazonEC2 amazonEC2) {
         this.amazonRDS = amazonRDS;
+        this.amazonEC2 = amazonEC2;
     }
 
     @Override
@@ -221,5 +235,38 @@ public class AwsRDSPlatform extends Platform {
                         .flatMap(Collection::stream)
                         .map(VpcSecurityGroupMembership::getVpcSecurityGroupId)
                         .collect(Collectors.toSet());
+    }
+
+    public String getChaosSecurityGroup () {
+        if (chaosSecurityGroup == null) initChaosSecurityGroup();
+        return chaosSecurityGroup;
+    }
+
+    void initChaosSecurityGroup () {
+        amazonEC2.describeSecurityGroups()
+                 .getSecurityGroups()
+                 .stream()
+                 .filter(securityGroup -> securityGroup.getGroupName().equals(AWS_RDS_CHAOS_SECURITY_GROUP))
+                 .findFirst()
+                 .ifPresent(securityGroup -> chaosSecurityGroup = securityGroup.getGroupId());
+        if (chaosSecurityGroup == null) {
+            chaosSecurityGroup = createChaosSecurityGroup();
+        }
+    }
+
+    private String createChaosSecurityGroup () {
+        amazonEC2.describeVpcs()
+                 .getVpcs()
+                 .stream()
+                 .filter(Vpc::isDefault)
+                 .findFirst()
+                 .ifPresent(vpc -> defaultVpcId = vpc.getVpcId());
+        if (defaultVpcId == null) {
+            throw new ChaosException("No Default VPC Found");
+        }
+        return amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withVpcId(defaultVpcId)
+                                                                             .withDescription(AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
+                                                                             .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP))
+                        .getGroupId();
     }
 }
