@@ -118,6 +118,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName) {
         List<CloudFoundryApplicationRoute> routes = new ArrayList<>();
         ListRoutesRequest listRoutesRequest = ListRoutesRequest.builder().build();
+
         cloudFoundryOperations.routes()
                               .list(listRoutesRequest)
                               .filter(route -> !route.getApplications().isEmpty() && route.getApplications()
@@ -131,6 +132,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                           .build();
                                   routes.add(cloudFoundryApplicationRoute);
                               });
+        log.debug("Application {} routes: {}", applicationName, routes);
         return routes;
     }
     public void rescaleApplication (String applicationName, int instances) {

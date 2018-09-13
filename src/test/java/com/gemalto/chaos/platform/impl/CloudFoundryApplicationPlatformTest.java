@@ -3,6 +3,7 @@ package com.gemalto.chaos.platform.impl;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
+import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -14,6 +15,8 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
+import org.cloudfoundry.operations.routes.Route;
+import org.cloudfoundry.operations.routes.Routes;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +27,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
 import static java.util.UUID.randomUUID;
@@ -54,26 +59,40 @@ public class CloudFoundryApplicationPlatformTest {
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
+    @Mock
+    private Routes routes;
     @MockBean
     private CloudFoundryClient cloudFoundryClient;
     @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    private Route route = Route.builder()
+                               .application(APPLICATION_NAME)
+                               .host("host")
+                               .domain("domain")
+                               .id("id")
+                               .space("space")
+                               .build();
+    private CloudFoundryApplicationRoute app1_route;
 
     @Before
     public void setUp () {
         cloudFoundryApplicationPlatform = new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
+        app1_route = CloudFoundryApplicationRoute.builder().fromRoute(route).build();
+        List<CloudFoundryApplicationRoute> app1_routes = new ArrayList<>();
+        app1_routes.add(app1_route);
+
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
                                                       .applicationID(APPLICATION_ID)
                                                       .platform(cloudFoundryApplicationPlatform)
-                                                      .name(APPLICATION_NAME)
+                                                      .name(APPLICATION_NAME).applicationRoutes(app1_routes)
                                                       .build();
         EXPECTED_CONTAINER_2 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
                                                       .applicationID(APPLICATION_ID_2)
                                                       .platform(cloudFoundryApplicationPlatform)
-                                                      .name(APPLICATION_NAME_2)
+                                                      .name(APPLICATION_NAME_2).applicationRoutes(new ArrayList<>())
                                                       .build();
         builder_1 = ApplicationSummary.builder()
                                       .diskQuota(0)
@@ -101,6 +120,9 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1, applicationSummary_2, stoppedApplicationSummary, zeroInstancesApplicationSummary);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
+        Flux<Route> routeFlux = Flux.just(route);
+        doReturn(routes).when(cloudFoundryOperations).routes();
+        doReturn(routeFlux).when(routes).list(any());
         assertThat(cloudFoundryApplicationPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
     }
 
