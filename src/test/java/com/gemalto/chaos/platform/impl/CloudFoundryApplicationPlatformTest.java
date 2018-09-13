@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
@@ -135,7 +136,9 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<Route> routeFlux = Flux.just(httpRoute, tcpRoute);
         doReturn(routes).when(cloudFoundryOperations).routes();
         doReturn(routeFlux).when(routes).list(any());
-        assertThat(cloudFoundryApplicationPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
+        List<Container> roster = cloudFoundryApplicationPlatform.getRoster();
+        assertEquals(2, roster.size());
+        assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
     }
 
     @Test
