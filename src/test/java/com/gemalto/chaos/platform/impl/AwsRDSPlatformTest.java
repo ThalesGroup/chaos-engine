@@ -134,9 +134,7 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getDBInstanceHealth () {
-        String instanceId = UUID.randomUUID().toString();
         AwsRDSInstanceContainer awsRDSInstanceContainer = mock(AwsRDSInstanceContainer.class);
-//        doReturn(instanceId).when(awsRDSInstanceContainer).getDbInstanceIdentifier();
         doReturn(new DescribeDBInstancesResult().withDBInstances()).when(amazonRDS)
                                                                    .describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
@@ -155,11 +153,9 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getDBClusterHealth () {
-        String clusterId = UUID.randomUUID().toString();
         String memberId1 = UUID.randomUUID().toString();
         String memberId2 = UUID.randomUUID().toString();
         AwsRDSClusterContainer awsRDSClusterContainer = mock(AwsRDSClusterContainer.class);
-//        doReturn(clusterId).when(awsRDSClusterContainer).getDbClusterIdentifier();
         doReturn(new DescribeDBClustersResult().withDBClusters()).when(amazonRDS)
                                                                  .describeDBClusters(any(DescribeDBClustersRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
