@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
-@ConditionalOnProperty({ "aws.rds.accessKeyId", "aws.rds.secretAccessKey" })
+@ConditionalOnProperty("aws.rds")
 @Component
 public class AwsRDSHealth extends AbstractPlatformHealth {
     @Autowired

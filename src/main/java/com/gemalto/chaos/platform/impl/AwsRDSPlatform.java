@@ -29,7 +29,7 @@ import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 
-@ConditionalOnProperty({ "aws.rds.accessKeyId", "aws.rds.secretAccessKey" })
+@ConditionalOnProperty("aws.rds")
 @Component
 public class AwsRDSPlatform extends Platform {
     @Autowired

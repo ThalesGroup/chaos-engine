@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty({ "aws.ec2.accessKeyId", "aws.ec2.secretAccessKey" })
+@ConditionalOnProperty("aws.ec2")
 public class AwsEC2Health extends AbstractPlatformHealth {
     @Autowired
     private AwsEC2Platform awsEC2Platform;
