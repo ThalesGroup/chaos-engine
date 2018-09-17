@@ -18,6 +18,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.routes.MapRouteRequest;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -174,6 +175,10 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     }
 
     public void unmapRoute (UnmapRouteRequest unmapRouteRequest) {
-        cloudFoundryOperations.routes().unmap(unmapRouteRequest);
+        cloudFoundryOperations.routes().unmap(unmapRouteRequest).block();
+    }
+
+    public void mapRoute (MapRouteRequest mapRouteRequest) {
+        cloudFoundryOperations.routes().map(mapRouteRequest).block();
     }
 }
