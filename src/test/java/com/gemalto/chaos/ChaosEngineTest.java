@@ -24,16 +24,15 @@ public class ChaosEngineTest {
         cloudFoundry.put("cf.organization", "organization");
         cloudFoundry.put("cf.space", "space!k");
         systemPropertiesMap.add(cloudFoundry);
-        HashMap<String, String> awsEC2 = new HashMap<>();
-        systemPropertiesMap.add(awsEC2);
-        awsEC2.put("aws.ec2.accessKeyId", "accessKeyId");
-        awsEC2.put("aws.ec2.secretAccessKey", "secretAccessKey");
-        awsEC2.put("aws.ec2.region", "region");
-        HashMap<String, String> awsRDS = new HashMap<>();
-        systemPropertiesMap.add(awsRDS);
-        awsRDS.put("aws.rds.accessKeyId", "accessKeyId");
-        awsRDS.put("aws.rds.secretAccessKey", "secretAccessKey");
-        awsRDS.put("aws.rds.region", "region");
+        HashMap<String, String> awsCredentials = new HashMap<>();
+        systemPropertiesMap.add(awsCredentials);
+        awsCredentials.put("aws.accessKeyId", "accessKeyId");
+        awsCredentials.put("aws.secretAccessKey", "secretAccessKey");
+        awsCredentials.put("aws.region", "region");
+        HashMap<String, String> awsModules = new HashMap<>();
+        systemPropertiesMap.add(awsModules);
+        awsModules.put("aws.rds", "");
+        awsModules.put("aws.ec2", "");
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }
 
