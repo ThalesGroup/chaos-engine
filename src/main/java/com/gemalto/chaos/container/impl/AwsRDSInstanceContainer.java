@@ -1,12 +1,15 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
+
+import java.util.Collection;
 
 public class AwsRDSInstanceContainer extends Container {
     private String dbInstanceIdentifier;
@@ -36,6 +39,17 @@ public class AwsRDSInstanceContainer extends Container {
     public void restartInstance (Attack attack) {
         attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
+    }
+
+    @NetworkAttack
+    public void removeSecurityGroups (Attack attack) {
+        Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
+        attack.setSelfHealingMethod(() -> {
+            awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);
+            return null;
+        });
+        attack.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
+        awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup());
     }
 
     public static AwsRDSInstanceContainerBuilder builder () {
