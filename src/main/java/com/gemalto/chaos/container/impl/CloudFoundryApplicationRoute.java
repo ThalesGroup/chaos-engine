@@ -3,6 +3,8 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.routes.MapRouteRequest;
+import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 
 import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.http;
 import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.tcp;
@@ -18,6 +20,40 @@ public class CloudFoundryApplicationRoute {
 
     public static CloudFoundryApplicationRouteBuilder builder () {
         return CloudFoundryApplicationRouteBuilder.builder();
+    }
+
+    public UnmapRouteRequest getUnmapRouteRequest () {
+        if (type == http) {
+            return UnmapRouteRequest.builder()
+                                    .applicationName(applicationName)
+                                    .domain(domain.getName())
+                                    .path(path)
+                                    .host(host)
+                                    .build();
+        } else {
+            return UnmapRouteRequest.builder()
+                                    .applicationName(applicationName)
+                                    .domain(domain.getName())
+                                    .port(port)
+                                    .build();
+        }
+    }
+
+    public MapRouteRequest getMapRouteRequest () {
+        if (type == http) {
+            return MapRouteRequest.builder()
+                                  .applicationName(applicationName)
+                                  .domain(domain.getName())
+                                  .path(path)
+                                  .host(host)
+                                  .build();
+        } else {
+            return MapRouteRequest.builder()
+                                  .applicationName(applicationName)
+                                  .domain(domain.getName())
+                                  .port(port)
+                                  .build();
+        }
     }
 
     @Override
