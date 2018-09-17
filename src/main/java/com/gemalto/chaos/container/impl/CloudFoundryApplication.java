@@ -1,8 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.ResourceAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -23,6 +22,7 @@ public class CloudFoundryApplication extends Container {
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private List<CloudFoundryApplicationRoute> applicationRoutes;
+    private transient CloudFoundryApplicationRoute routeUnderAttack;
     private transient Callable<Void> rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
@@ -30,6 +30,13 @@ public class CloudFoundryApplication extends Container {
     };
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+        return null;
+    };
+    private transient Callable<Void> mapApplicationRoute = () -> {
+        if (routeUnderAttack != null) {
+            log.debug("Mapping application route: {}", routeUnderAttack);
+            cloudFoundryApplicationPlatform.mapRoute(routeUnderAttack.getMapRouteRequest());
+        }
         return null;
     };
 
@@ -74,7 +81,7 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    @ResourceAttack
+    //@ResourceAttack
     public void scaleApplication (Attack attack) {
         attack.setSelfHealingMethod(rescaleApplicationToDefault);
         attack.setCheckContainerHealth(isAppHealthy);
@@ -85,19 +92,35 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
 
-    @StateAttack
+    //@StateAttack
     public void restartApplication (Attack attack) {
         attack.setSelfHealingMethod(restageApplication);
         attack.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
-    @StateAttack
+    //@StateAttack
     public void restageApplication (Attack attack) {
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setSelfHealingMethod(noRecovery);
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
+
+    @NetworkAttack
+    public void unmapRoute (Attack attack) {
+        if (!applicationRoutes.isEmpty()) {
+            Random rand = new Random();
+            int routeIndex = rand.nextInt(applicationRoutes.size());
+            this.routeUnderAttack = applicationRoutes.get(routeIndex);
+            attack.setSelfHealingMethod(mapApplicationRoute);
+            attack.setFinalizeMethod(mapApplicationRoute);
+            log.debug("Unmapping application route: {}", routeUnderAttack);
+            cloudFoundryApplicationPlatform.unmapRoute(routeUnderAttack.getUnmapRouteRequest());
+        } else {
+            log.warn("Application {} has no routes set skipping the attack {}", applicationID, attack.getId());
+        }
+    }
+
 
     private RestageApplicationRequest getRestageApplicationRequest () {
         RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
