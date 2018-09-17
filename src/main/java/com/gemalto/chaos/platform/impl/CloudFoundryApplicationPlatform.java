@@ -9,15 +9,20 @@ import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
+import org.cloudfoundry.client.v2.applications.ListApplicationRoutesRequest;
+import org.cloudfoundry.client.v2.applications.ListApplicationRoutesResponse;
+import org.cloudfoundry.client.v2.routes.RouteEntity;
+import org.cloudfoundry.client.v2.routes.RouteResource;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
-import org.cloudfoundry.operations.routes.ListRoutesRequest;
+import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,31 +114,49 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                      .name(app.getName())
                                                                      .applicationID(app.getId())
                                                                      .containerInstances(containerInstances)
-                                                                     .applicationRoutes(gatherApplicationRoutes(app.getName()))
+                                                                     .applicationRoutes(gatherApplicationRoutes(app.getName(), app
+                                                                             .getId()))
                                                                      .build();
         containers.add(application);
         log.info("Added application {}", application);
     }
 
-    private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName) {
+    private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {
         List<CloudFoundryApplicationRoute> routes = new ArrayList<>();
-        ListRoutesRequest listRoutesRequest = ListRoutesRequest.builder().build();
+        ListApplicationRoutesRequest listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
+                                                                                                .applicationId(applicationId)
+                                                                                                .build();
+        ListApplicationRoutesResponse listApplicationRoutesResponse = cloudFoundryClient.applicationsV2()
+                                                                                        .listRoutes(listApplicationRoutesRequest)
+                                                                                        .block();
+        List<RouteResource> routeResources = listApplicationRoutesResponse.getResources();
+        if (routeResources != null) {
+            for (RouteResource route : routeResources) {
+                RouteEntity routeEntity = route.getEntity();
+                CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute.builder()
+                                                                                                        .applicationName(applicationName)
+                                                                                                        .route(routeEntity)
+                                                                                                        .domain(getAppRouteDomain(routeEntity
+                                                                                                                .getDomainId()))
+                                                                                                        .build();
+                log.debug("Route: {}", cloudFoundryApplicationRoute);
+                routes.add(cloudFoundryApplicationRoute);
+            }
+        }
 
-        cloudFoundryOperations.routes()
-                              .list(listRoutesRequest)
-                              .filter(route -> !route.getApplications().isEmpty() && route.getApplications()
-                                                                                          .get(0)
-                                                                                          .equals(applicationName))
-                              .toIterable()
-                              .forEach(route -> {
-                                  CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute
-                                          .builder()
-                                          .fromRoute(route)
-                                          .build();
-                                  routes.add(cloudFoundryApplicationRoute);
-                              });
         log.debug("Application {} routes: {}", applicationName, routes);
         return routes;
+    }
+
+    private Domain getAppRouteDomain (String domainID) {
+        Flux<Domain> domains = cloudFoundryOperations.domains().list();
+        for (Domain domain : domains.toIterable()) {
+            if (domainID.equals(domain.getId())) {
+                log.debug("Domain: {}", domain);
+                return domain;
+            }
+        }
+        return null;
     }
     public void rescaleApplication (String applicationName, int instances) {
         ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
