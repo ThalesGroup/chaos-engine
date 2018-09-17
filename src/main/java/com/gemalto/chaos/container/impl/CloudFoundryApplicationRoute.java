@@ -1,19 +1,20 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType;
-import org.cloudfoundry.operations.routes.Route;
+import org.cloudfoundry.client.v2.routes.RouteEntity;
+import org.cloudfoundry.operations.domains.Domain;
 
 import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.http;
 import static com.gemalto.chaos.container.enums.CloudFoundryApplicationRouteType.tcp;
 
 public class CloudFoundryApplicationRoute {
-    private String host;
-    private String domain;
-    private int port;
-    private String path;
-    private CloudFoundryApplicationRouteType type = http;
+    private RouteEntity route;
+    private Domain domain;
     private String applicationName;
-    private String service;
+    private String host;
+    private String path;
+    private Integer port;
+    private CloudFoundryApplicationRouteType type = http;
 
     public static CloudFoundryApplicationRouteBuilder builder () {
         return CloudFoundryApplicationRouteBuilder.builder();
@@ -21,17 +22,13 @@ public class CloudFoundryApplicationRoute {
 
     @Override
     public String toString () {
-        return "Route{" + "application=" + applicationName + ", domain=" + domain + ", host=" + host + ", path=" + path + ", port=" + port + ", type=" + type + ", service=" + service + "}";
+        return "Route{" + "application=" + applicationName + ", domain=" + domain.getName() + ", host=" + host + ", path=" + path + ", port=" + port + ", type=" + type + "}";
     }
 
     public static final class CloudFoundryApplicationRouteBuilder {
-        private String host;
-        private String domain;
-        private int port;
-        private String path;
-        private CloudFoundryApplicationRouteType type = http;
+        private RouteEntity route;
+        private Domain domain;
         private String applicationName;
-        private String service;
 
         static CloudFoundryApplicationRouteBuilder builder () {
             return new CloudFoundryApplicationRouteBuilder();
@@ -39,63 +36,31 @@ public class CloudFoundryApplicationRoute {
 
         public CloudFoundryApplicationRoute build () {
             CloudFoundryApplicationRoute cloudFoundryApplicationRoute = new CloudFoundryApplicationRoute();
-            cloudFoundryApplicationRoute.host = this.host;
-            cloudFoundryApplicationRoute.domain = this.domain;
-            cloudFoundryApplicationRoute.port = this.port;
-            cloudFoundryApplicationRoute.path = this.path;
-            cloudFoundryApplicationRoute.type = this.type;
-            cloudFoundryApplicationRoute.applicationName = this.applicationName;
-            cloudFoundryApplicationRoute.service = this.service;
+            cloudFoundryApplicationRoute.applicationName = applicationName;
+            cloudFoundryApplicationRoute.route = route;
+            cloudFoundryApplicationRoute.domain = domain;
+            cloudFoundryApplicationRoute.host = route.getHost();
+            cloudFoundryApplicationRoute.path = route.getPath();
+            cloudFoundryApplicationRoute.port = route.getPort();
+            if (tcp.toString().equals(domain.getType())) {
+                cloudFoundryApplicationRoute.type = tcp;
+            }
+
             return cloudFoundryApplicationRoute;
         }
 
-        public CloudFoundryApplicationRouteBuilder fromRoute (Route route) {
-            domain = route.getDomain();
-            applicationName = route.getApplications().get(0);
-            service = route.getService();
-            if (route.getType() == tcp.name()) {
-                type = tcp;
-                port = Integer.valueOf(route.getPort());
-            } else {
-                type = http;
-                path = route.getPath();
-                host = route.getHost();
-            }
+        public CloudFoundryApplicationRouteBuilder route (RouteEntity route) {
+            this.route = route;
             return this;
         }
 
-        public CloudFoundryApplicationRouteBuilder host (String host) {
-            this.host = host;
-            return this;
-        }
-
-        public CloudFoundryApplicationRouteBuilder domain (String domain) {
+        public CloudFoundryApplicationRouteBuilder domain (Domain domain) {
             this.domain = domain;
-            return this;
-        }
-
-        public CloudFoundryApplicationRouteBuilder port (int port) {
-            this.port = port;
-            return this;
-        }
-
-        public CloudFoundryApplicationRouteBuilder path (String path) {
-            this.path = path;
-            return this;
-        }
-
-        public CloudFoundryApplicationRouteBuilder type (CloudFoundryApplicationRouteType type) {
-            this.type = type;
             return this;
         }
 
         public CloudFoundryApplicationRouteBuilder applicationName (String applicationName) {
             this.applicationName = applicationName;
-            return this;
-        }
-
-        public CloudFoundryApplicationRouteBuilder service (String service) {
-            this.service = service;
             return this;
         }
     }
