@@ -7,17 +7,17 @@ import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
-import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
-import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
-import org.cloudfoundry.client.v2.applications.ApplicationInstancesResponse;
-import org.cloudfoundry.client.v2.applications.ApplicationsV2;
+import org.cloudfoundry.client.v2.applications.*;
+import org.cloudfoundry.client.v2.routes.RouteEntity;
+import org.cloudfoundry.client.v2.routes.RouteResource;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
-import org.cloudfoundry.operations.routes.Route;
-import org.cloudfoundry.operations.routes.Routes;
+import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.domains.Domains;
+import org.cloudfoundry.operations.domains.Status;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,36 +61,44 @@ public class CloudFoundryApplicationPlatformTest {
     @Mock
     private Applications applications;
     @Mock
-    private Routes routes;
+    private Domains domains;
+
     @MockBean
     private CloudFoundryClient cloudFoundryClient;
     @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
-    private Route httpRoute = Route.builder()
-                                   .application(APPLICATION_NAME)
-                                   .host("host")
-                                   .domain("domain")
-                                   .id("id")
-                                   .space("space")
-                                   .build();
-    private Route tcpRoute = Route.builder()
-                                  .application(APPLICATION_NAME)
-                                  .type("tcp")
-                                  .domain("domain")
-                                  .port("1")
-                                  .id("id")
-                                  .host("")
-                                  .space("space")
-                                  .build();
+    private Domain httpDomain = Domain.builder()
+                                      .id("httpDomain")
+                                      .name("http.domain.com")
+                                      .type("")
+                                      .status(Status.SHARED)
+                                      .build();
+    private Domain tcpDomain = Domain.builder()
+                                     .id("tcpDomain")
+                                     .name("tcp.domain.com")
+                                     .type("tcp")
+                                     .status(Status.SHARED)
+                                     .build();
+    private RouteEntity httpRoute = RouteEntity.builder().host("httpHost").domainId(httpDomain.getId()).build();
+    private RouteEntity tcpRoute = RouteEntity.builder().port(666).domainId(tcpDomain.getId()).build();
     private CloudFoundryApplicationRoute app1_httpRoute;
     private CloudFoundryApplicationRoute app1_tcpRoute;
 
     @Before
     public void setUp () {
         cloudFoundryApplicationPlatform = new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
-        app1_httpRoute = CloudFoundryApplicationRoute.builder().fromRoute(httpRoute).build();
-        app1_tcpRoute = CloudFoundryApplicationRoute.builder().fromRoute(tcpRoute).build();
+        app1_httpRoute = CloudFoundryApplicationRoute.builder()
+                                                     .route(httpRoute)
+                                                     .domain(httpDomain)
+                                                     .applicationName(APPLICATION_NAME)
+                                                     .build();
+        app1_tcpRoute = CloudFoundryApplicationRoute.builder()
+                                                    .route(tcpRoute)
+                                                    .domain(tcpDomain)
+                                                    .applicationName(APPLICATION_NAME)
+                                                    .build();
+
         List<CloudFoundryApplicationRoute> app1_routes = new ArrayList<>();
         app1_routes.add(app1_httpRoute);
         app1_routes.add(app1_tcpRoute);
@@ -127,15 +135,39 @@ public class CloudFoundryApplicationPlatformTest {
 
     @Test
     public void getRoster () {
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         ApplicationSummary stoppedApplicationSummary = builder_1.requestedState(CLOUDFOUNDRY_APPLICATION_STOPPED)
                                                                 .build();
         ApplicationSummary zeroInstancesApplicationSummary = builder_1.instances(0).build();
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1, applicationSummary_2, stoppedApplicationSummary, zeroInstancesApplicationSummary);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
-        Flux<Route> routeFlux = Flux.just(httpRoute, tcpRoute);
-        doReturn(routes).when(cloudFoundryOperations).routes();
-        doReturn(routeFlux).when(routes).list(any());
+        Flux<Domain> domainFlux = Flux.just(httpDomain, tcpDomain);
+        doReturn(domains).when(cloudFoundryOperations).domains();
+        doReturn(domainFlux).when(domains).list();
+        ListApplicationRoutesRequest app1_listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
+                                                                                                     .applicationId(APPLICATION_ID)
+                                                                                                     .build();
+        ListApplicationRoutesRequest app2_listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
+                                                                                                     .applicationId(APPLICATION_ID_2)
+                                                                                                     .build();
+        RouteResource httpRouteResource = RouteResource.builder().entity(httpRoute).build();
+        RouteResource tcpRouteResource = RouteResource.builder().entity(tcpRoute).build();
+        ListApplicationRoutesResponse app1_listApplicationRoutesResponse = ListApplicationRoutesResponse.builder()
+                                                                                                        .resources(httpRouteResource, tcpRouteResource)
+                                                                                                        .build();
+        Mono<ListApplicationRoutesResponse> app1_listApplicationRoutesResponses = Mono.just(app1_listApplicationRoutesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(app1_listApplicationRoutesResponses).when(applicationsV2)
+                                                     .listRoutes(app1_listApplicationRoutesRequest);
+        ListApplicationRoutesResponse app2_listApplicationRoutesResponse = ListApplicationRoutesResponse.builder()
+                                                                                                        .build();
+        Mono<ListApplicationRoutesResponse> app2_listApplicationRoutesResponses = Mono.just(app2_listApplicationRoutesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(app2_listApplicationRoutesResponses).when(applicationsV2)
+                                                     .listRoutes(app2_listApplicationRoutesRequest);
+
+
         List<Container> roster = cloudFoundryApplicationPlatform.getRoster();
         assertEquals(2, roster.size());
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
