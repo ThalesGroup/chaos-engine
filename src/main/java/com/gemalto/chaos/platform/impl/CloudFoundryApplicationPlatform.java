@@ -140,7 +140,6 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                                         .domain(getAppRouteDomain(routeEntity
                                                                                                                 .getDomainId()))
                                                                                                         .build();
-                log.debug("Route: {}", cloudFoundryApplicationRoute);
                 routes.add(cloudFoundryApplicationRoute);
             }
         }
@@ -153,7 +152,6 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         Flux<Domain> domains = cloudFoundryOperations.domains().list();
         for (Domain domain : domains.toIterable()) {
             if (domainID.equals(domain.getId())) {
-                log.debug("Domain: {}", domain);
                 return domain;
             }
         }

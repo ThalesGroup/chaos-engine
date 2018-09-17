@@ -2,6 +2,8 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
+import com.gemalto.chaos.attack.annotations.ResourceAttack;
+import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -21,7 +23,7 @@ public class CloudFoundryApplication extends Container {
     private Integer actualContainerInstances;
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
-    private List<CloudFoundryApplicationRoute> applicationRoutes;
+    private transient List<CloudFoundryApplicationRoute> applicationRoutes;
     private transient CloudFoundryApplicationRoute routeUnderAttack;
     private transient Callable<Void> rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
@@ -81,7 +83,7 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    //@ResourceAttack
+    @ResourceAttack
     public void scaleApplication (Attack attack) {
         attack.setSelfHealingMethod(rescaleApplicationToDefault);
         attack.setCheckContainerHealth(isAppHealthy);
@@ -92,14 +94,14 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
 
-    //@StateAttack
+    @StateAttack
     public void restartApplication (Attack attack) {
         attack.setSelfHealingMethod(restageApplication);
         attack.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
-    //@StateAttack
+    @StateAttack
     public void restageApplication (Attack attack) {
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setSelfHealingMethod(noRecovery);
