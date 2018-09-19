@@ -3,7 +3,10 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
+import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
+import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.domains.Status;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +16,9 @@ import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -40,9 +46,27 @@ public class CloudFoundryApplicationTest {
         cloudFoundryApplication = CloudFoundryApplication.builder()
                                                          .applicationID(applicationId)
                                                          .containerInstances(instance)
-                                                         .name(name)
+                                                         .name(name).applicationRoutes(getRouteList())
                                                          .platform(cloudFoundryApplicationPlatform)
                                                          .build();
+    }
+
+    private List<CloudFoundryApplicationRoute> getRouteList () {
+        Domain httpDomain = Domain.builder()
+                                  .id("httpDomain")
+                                  .name("http.domain.com")
+                                  .type("")
+                                  .status(Status.SHARED)
+                                  .build();
+        RouteEntity httpRouteEntity = RouteEntity.builder().host("httpHost").domainId(httpDomain.getId()).build();
+        List<CloudFoundryApplicationRoute> cloudFoundryApplicationRoutes = new ArrayList<>();
+        CloudFoundryApplicationRoute route = CloudFoundryApplicationRoute.builder()
+                                                                         .route(httpRouteEntity)
+                                                                         .domain(httpDomain)
+                                                                         .applicationName(name)
+                                                                         .build();
+        cloudFoundryApplicationRoutes.add(route);
+        return cloudFoundryApplicationRoutes;
     }
 
     @Test
@@ -69,7 +93,6 @@ public class CloudFoundryApplicationTest {
         assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
     }
 
-
     @Test
     public void scaleApplication () {
         cloudFoundryApplication.scaleApplication(attack);
@@ -94,6 +117,31 @@ public class CloudFoundryApplicationTest {
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restartApplication(name);
+    }
+
+    @Test
+    public void unmapRoute () {
+        cloudFoundryApplication.unmapRoute(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).unmapRoute(ArgumentMatchers.any());
+    }
+
+    @Test
+    public void unmapRouteAppWithNoRoutes () {
+        CloudFoundryApplication appNoRoutes = CloudFoundryApplication.builder()
+                                                                     .applicationID(applicationId)
+                                                                     .containerInstances(instance)
+                                                                     .name(name)
+                                                                     .applicationRoutes(new ArrayList<>())
+                                                                     .platform(cloudFoundryApplicationPlatform)
+                                                                     .build();
+        appNoRoutes.unmapRoute(attack);
+        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        verify(attack, times(0)).setFinalizeMethod(ArgumentMatchers.any());
+        verify(attack, times(1)).setFinalizationDuration(Duration.ZERO);
+        Mockito.verify(cloudFoundryApplicationPlatform, times(0)).unmapRoute(ArgumentMatchers.any());
     }
 
     @Test
