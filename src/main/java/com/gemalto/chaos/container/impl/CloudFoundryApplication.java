@@ -11,6 +11,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -110,6 +111,7 @@ public class CloudFoundryApplication extends Container {
 
     @NetworkAttack
     public void unmapRoute (Attack attack) {
+        attack.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {
             Random rand = new Random();
             int routeIndex = rand.nextInt(applicationRoutes.size());
@@ -119,7 +121,9 @@ public class CloudFoundryApplication extends Container {
             log.debug("Unmapping application route: {}", routeUnderAttack);
             cloudFoundryApplicationPlatform.unmapRoute(routeUnderAttack.getUnmapRouteRequest());
         } else {
-            log.warn("Application {} has no routes set skipping the attack {}", applicationID, attack.getId());
+            attack.setFinalizationDuration(Duration.ZERO);
+            attack.setSelfHealingMethod(noRecovery);
+            log.warn("Application {} has no routes set, skipping the attack {}", applicationID, attack.getId());
         }
     }
 
