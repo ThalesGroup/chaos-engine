@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.ResourceAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
@@ -10,6 +11,8 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 
+import java.time.Duration;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -21,6 +24,8 @@ public class CloudFoundryApplication extends Container {
     private Integer actualContainerInstances;
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    private transient List<CloudFoundryApplicationRoute> applicationRoutes;
+    private transient CloudFoundryApplicationRoute routeUnderAttack;
     private transient Callable<Void> rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
@@ -28,6 +33,13 @@ public class CloudFoundryApplication extends Container {
     };
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+        return null;
+    };
+    private transient Callable<Void> mapApplicationRoute = () -> {
+        if (routeUnderAttack != null) {
+            log.debug("Mapping application route: {}", routeUnderAttack);
+            cloudFoundryApplicationPlatform.mapRoute(routeUnderAttack.getMapRouteRequest());
+        }
         return null;
     };
 
@@ -97,6 +109,25 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
 
+    @NetworkAttack
+    public void unmapRoute (Attack attack) {
+        attack.setCheckContainerHealth(isAppHealthy);
+        if (!applicationRoutes.isEmpty()) {
+            Random rand = new Random();
+            int routeIndex = rand.nextInt(applicationRoutes.size());
+            this.routeUnderAttack = applicationRoutes.get(routeIndex);
+            attack.setSelfHealingMethod(mapApplicationRoute);
+            attack.setFinalizeMethod(mapApplicationRoute);
+            log.debug("Unmapping application route: {}", routeUnderAttack);
+            cloudFoundryApplicationPlatform.unmapRoute(routeUnderAttack.getUnmapRouteRequest());
+        } else {
+            attack.setFinalizationDuration(Duration.ZERO);
+            attack.setSelfHealingMethod(noRecovery);
+            log.warn("Application {} has no routes set, skipping the attack {}", applicationID, attack.getId());
+        }
+    }
+
+
     private RestageApplicationRequest getRestageApplicationRequest () {
         RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
         log.info("{}", restageApplicationRequest);
@@ -108,12 +139,18 @@ public class CloudFoundryApplication extends Container {
         private Integer containerInstances;
         private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
         private String applicationID;
+        private List<CloudFoundryApplicationRoute> applicationRoutes;
 
         private CloudFoundryApplicationBuilder () {
         }
 
         static CloudFoundryApplicationBuilder builder () {
             return new CloudFoundryApplicationBuilder();
+        }
+
+        public CloudFoundryApplicationBuilder applicationRoutes (List<CloudFoundryApplicationRoute> applicationRoutes) {
+            this.applicationRoutes = applicationRoutes;
+            return this;
         }
 
         public CloudFoundryApplicationBuilder applicationID (String applicationID) {
@@ -143,6 +180,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplication.actualContainerInstances = this.containerInstances;
             cloudFoundryApplication.cloudFoundryApplicationPlatform = this.cloudFoundryApplicationPlatform;
             cloudFoundryApplication.applicationID = this.applicationID;
+            cloudFoundryApplication.applicationRoutes = this.applicationRoutes;
             return cloudFoundryApplication;
         }
     }
