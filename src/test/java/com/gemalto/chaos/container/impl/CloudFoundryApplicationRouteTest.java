@@ -13,6 +13,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryApplicationRouteTest {
@@ -95,5 +96,12 @@ public class CloudFoundryApplicationRouteTest {
                                                                      .port(tcpRouteEntity.getPort())
                                                                      .build();
         assertEquals(expectedMapRouteRequest, tcpRoute.getUnmapRouteRequest());
+
+    }
+
+    @Test
+    public void testToString () {
+        assertTrue(httpRoute.toString().contains("type=http"));
+        assertTrue(tcpRoute.toString().contains("type=tcp"));
     }
 }
