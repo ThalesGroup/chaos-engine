@@ -84,18 +84,26 @@ public class AttackManager {
 
     void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
-            Optional<Platform> optionalPlatform = platformManager.getPlatforms().parallelStream()
-                                                                 .peek(platform -> platform.usingHolidayManager(holidayManager))
-                                                                 .filter(platform1 -> force || platform1.canAttack())
-                                                                 // "force" needs to be before the .canAttack(), so if it's true canAttack is not evaluated.
-                                                                 .findFirst();
-            if (optionalPlatform.isPresent()) {
-                Platform platform = optionalPlatform.get();
-                platform.startAttack().getRoster().parallelStream().filter(Container::canAttack)
+            List<Platform> eligiblePlatforms = platformManager.getPlatforms()
+                                                              .parallelStream()
+                                                              .peek(platform -> platform.usingHolidayManager(holidayManager))
+                                                              .filter(platform1 -> force || platform1.canAttack())
+                                                              .collect(Collectors.toList());
+            if (eligiblePlatforms.isEmpty()) {
+                log.info("No platforms eligible for experiments");
+                return;
+            }
+            Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
+            List<Container> roster = chosenPlatform.startAttack().getRoster();
+            if (roster.isEmpty()) return;
+            Set<Container> containersToAttack;
+            do {
+                containersToAttack = roster.parallelStream().filter(Container::canAttack).collect(Collectors.toSet());
+            } while (force && containersToAttack.isEmpty());
+            containersToAttack.stream()
                         .map(Container::createAttack)
                         .map(this::addAttack)
                         .forEach(attack -> log.info("Attack {}, {} added to the queue", attack.getId(), attack));
-            }
         }
     }
 
