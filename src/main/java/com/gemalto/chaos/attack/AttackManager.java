@@ -99,7 +99,7 @@ public class AttackManager {
             Set<Container> containersToAttack;
             do {
                 containersToAttack = roster.parallelStream().filter(Container::canAttack).collect(Collectors.toSet());
-            } while (!force || containersToAttack.isEmpty());
+            } while (force && containersToAttack.isEmpty());
             containersToAttack.stream()
                         .map(Container::createAttack)
                         .map(this::addAttack)
