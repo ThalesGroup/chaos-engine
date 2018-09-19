@@ -18,6 +18,9 @@ import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Domains;
 import org.cloudfoundry.operations.domains.Status;
+import org.cloudfoundry.operations.routes.MapRouteRequest;
+import org.cloudfoundry.operations.routes.Routes;
+import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +65,8 @@ public class CloudFoundryApplicationPlatformTest {
     private Applications applications;
     @Mock
     private Domains domains;
+    @Mock
+    private Routes routes;
 
     @MockBean
     private CloudFoundryClient cloudFoundryClient;
@@ -252,5 +257,33 @@ public class CloudFoundryApplicationPlatformTest {
         cloudFoundryApplicationPlatform.restartApplication(APPLICATION_NAME);
         verify(applications, times(1)).restart(restartApplicationRequest);
         verify(monoVoid, times(1)).block();
+    }
+
+    @Test
+    public void mapRoute () {
+        MapRouteRequest mapRouteRequest = MapRouteRequest.builder()
+                                                         .applicationName(APPLICATION_NAME)
+                                                         .domain(randomUUID().toString())
+                                                         .build();
+        Mono monoInt = mock(Mono.class);
+        doReturn(routes).when(cloudFoundryOperations).routes();
+        doReturn(monoInt).when(routes).map(mapRouteRequest);
+        cloudFoundryApplicationPlatform.mapRoute(mapRouteRequest);
+        verify(routes, times(1)).map(mapRouteRequest);
+        verify(monoInt, times(1)).block();
+    }
+
+    @Test
+    public void unmapRoute () {
+        UnmapRouteRequest unmapRouteRequest = UnmapRouteRequest.builder()
+                                                               .applicationName(APPLICATION_NAME)
+                                                               .domain(randomUUID().toString())
+                                                               .build();
+        Mono monoInt = mock(Mono.class);
+        doReturn(routes).when(cloudFoundryOperations).routes();
+        doReturn(monoInt).when(routes).unmap(unmapRouteRequest);
+        cloudFoundryApplicationPlatform.unmapRoute(unmapRouteRequest);
+        verify(routes, times(1)).unmap(unmapRouteRequest);
+        verify(monoInt, times(1)).block();
     }
 }
