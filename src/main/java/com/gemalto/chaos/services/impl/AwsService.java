@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "aws")
-@ConditionalOnProperty({ "aws.accessKeyId", "aws.secretAccessKey" })
+@ConditionalOnProperty({ "aws.accessKeyId", "aws.secretAccessKey", "aws.region" })
 public class AwsService {
     private String accessKeyId;
     private String secretAccessKey;
