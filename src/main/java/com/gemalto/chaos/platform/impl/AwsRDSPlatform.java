@@ -5,6 +5,7 @@ import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.amazonaws.util.StringUtils;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
@@ -86,6 +87,8 @@ public class AwsRDSPlatform extends Platform {
         Collection<DBInstance> dbInstances = amazonRDS.describeDBInstances().getDBInstances();
         Collection<Container> dbInstanceContainers = dbInstances.stream()
                                                                 .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
+                                                                .filter(dbInstance -> StringUtils.isNullOrEmpty(dbInstance
+                                                                        .getReadReplicaSourceDBInstanceIdentifier()))
                                                                 .map(this::createContainerFromDBInstance)
                                                                 .collect(Collectors.toSet());
         Collection<Container> dbClusterContainers = dbClusters.stream()
