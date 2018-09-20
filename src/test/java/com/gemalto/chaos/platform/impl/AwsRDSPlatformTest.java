@@ -101,9 +101,13 @@ public class AwsRDSPlatformTest {
         String dbCluster1Identifier = UUID.randomUUID().toString();
         String dbCluster2Identifier = UUID.randomUUID().toString();
         String dbClusterInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstance1ReadReplicaIdentifier = UUID.randomUUID().toString();
         DBInstance dbInstance1 = new DBInstance().withDBInstanceIdentifier(dbInstance1Identifier)
-                                                 .withMultiAZ(false)
-                                                 .withDBClusterIdentifier(null);
+                                                 .withMultiAZ(true)
+                                                 .withDBClusterIdentifier(null)
+                                                 .withReadReplicaDBInstanceIdentifiers(dbInstance1ReadReplicaIdentifier);
+        DBInstance replicaInstance = new DBInstance().withDBInstanceIdentifier(dbInstance1ReadReplicaIdentifier)
+                                                     .withReadReplicaSourceDBInstanceIdentifier(dbInstance1Identifier);
         DBInstance dbInstance2 = new DBInstance().withDBInstanceIdentifier(dbInstance2Identifier)
                                                  .withMultiAZ(false)
                                                  .withDBClusterIdentifier(null);
@@ -112,8 +116,9 @@ public class AwsRDSPlatformTest {
                                                      .withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster1 = new DBCluster().withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster2 = new DBCluster().withDBClusterIdentifier(dbCluster2Identifier);
-        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)).when(amazonRDS)
-                                                                                                            .describeDBInstances();
+        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance, replicaInstance))
+                .when(amazonRDS)
+                .describeDBInstances();
         doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)).when(amazonRDS)
                                                                                        .describeDBClusters();
         assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
@@ -126,6 +131,7 @@ public class AwsRDSPlatformTest {
                                                 .build(), AwsRDSInstanceContainer.builder()
                                                                                  .withAwsRDSPlatform(awsRDSPlatform)
                                                                                  .withDbInstanceIdentifier(dbInstance1Identifier)
+                                                                                 .withReadReplicas(Collections.singleton(dbInstance1ReadReplicaIdentifier))
                                                                                  .build(), AwsRDSInstanceContainer.builder()
                                                                                                                   .withAwsRDSPlatform(awsRDSPlatform)
                                                                                                                   .withDbInstanceIdentifier(dbInstance2Identifier)
