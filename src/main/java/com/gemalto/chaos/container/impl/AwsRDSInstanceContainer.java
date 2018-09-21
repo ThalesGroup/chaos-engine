@@ -1,6 +1,5 @@
 package com.gemalto.chaos.container.impl;
 
-import com.amazonaws.util.StringUtils;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
@@ -11,12 +10,10 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
     private String dbInstanceIdentifier;
     private String engine;
-    private Collection<String> readReplicaDBInstanceIdentifiers;
     private transient AwsRDSPlatform awsRDSPlatform;
 
     public String getDbInstanceIdentifier () {
@@ -35,17 +32,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
 
     @Override
     public String getSimpleName () {
-        StringBuilder sb = new StringBuilder(getDbInstanceIdentifier());
-        if (readReplicaDBInstanceIdentifiers != null && !readReplicaDBInstanceIdentifiers.isEmpty()) {
-            sb.append(" [");
-            sb.append(StringUtils.join(",", readReplicaDBInstanceIdentifiers.toArray(new String[]{})));
-            sb.append("]");
-        }
-        return sb.toString();
-    }
-
-    public Collection<String> getReadReplicaDBInstanceIdentifiers () {
-        return readReplicaDBInstanceIdentifiers;
+        return getDbInstanceIdentifier();
     }
 
     @StateAttack
@@ -74,7 +61,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         private String engine;
         private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
-        private Collection<String> readReplicaDBInstanceIdentifiers;
 
         private AwsRDSInstanceContainerBuilder () {
         }
@@ -98,11 +84,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             return this;
         }
 
-        public AwsRDSInstanceContainerBuilder withReadReplicas (Collection<String> readReplicaDBInstanceIdentifiers) {
-            this.readReplicaDBInstanceIdentifiers = new HashSet<>(readReplicaDBInstanceIdentifiers);
-            return this;
-        }
-
         public AwsRDSInstanceContainerBuilder withAvailabilityZone (String availabilityZone) {
             this.availabilityZone = availabilityZone;
             return this;
@@ -113,7 +94,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             awsRDSInstanceContainer.dbInstanceIdentifier = this.dbInstanceIdentifier;
             awsRDSInstanceContainer.engine = this.engine;
             awsRDSInstanceContainer.awsRDSPlatform = this.awsRDSPlatform;
-            awsRDSInstanceContainer.readReplicaDBInstanceIdentifiers = this.readReplicaDBInstanceIdentifiers;
             awsRDSInstanceContainer.availabilityZone = this.availabilityZone;
             return awsRDSInstanceContainer;
         }

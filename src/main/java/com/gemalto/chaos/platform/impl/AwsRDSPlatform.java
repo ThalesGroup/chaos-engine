@@ -143,7 +143,6 @@ public class AwsRDSPlatform extends Platform {
                                       .withAwsRDSPlatform(this).withAvailabilityZone(dbInstance.getAvailabilityZone())
                                       .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
                                       .withEngine(dbInstance.getEngine())
-                                      .withReadReplicas(dbInstance.getReadReplicaDBInstanceIdentifiers())
                                       .build();
     }
 
