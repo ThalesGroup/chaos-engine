@@ -116,9 +116,8 @@ public class AwsRDSPlatformTest {
                                                      .withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster1 = new DBCluster().withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster2 = new DBCluster().withDBClusterIdentifier(dbCluster2Identifier);
-        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance, replicaInstance))
-                .when(amazonRDS)
-                .describeDBInstances(any(DescribeDBInstancesRequest.class));
+        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)).when(amazonRDS)
+                                                                                                            .describeDBInstances(any(DescribeDBInstancesRequest.class));
         doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)).when(amazonRDS)
                                                                                        .describeDBClusters(any(DescribeDBClustersRequest.class));
         assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
