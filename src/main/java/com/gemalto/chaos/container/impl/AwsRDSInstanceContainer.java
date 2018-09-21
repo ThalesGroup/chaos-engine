@@ -11,7 +11,6 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
@@ -75,7 +74,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         private String engine;
         private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
-        private Collection<String> readReplicaDBInstanceIdentifiers = Collections.emptySet();
+        private Collection<String> readReplicaDBInstanceIdentifiers;
 
         private AwsRDSInstanceContainerBuilder () {
         }
