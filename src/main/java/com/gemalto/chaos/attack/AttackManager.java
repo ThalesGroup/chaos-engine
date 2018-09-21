@@ -82,7 +82,7 @@ public class AttackManager {
         startAttacks(false);
     }
 
-    void startAttacks (final boolean force) {
+    synchronized void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
             List<Platform> eligiblePlatforms = platformManager.getPlatforms()
                                                               .parallelStream()
