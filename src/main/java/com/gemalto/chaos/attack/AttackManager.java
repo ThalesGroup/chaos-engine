@@ -98,7 +98,7 @@ public class AttackManager {
                 return;
             }
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
-            List<Container> roster = chosenPlatform.startAttack().getRoster();
+            List<Container> roster = chosenPlatform.startAttack().generateExperimentRoster();
             if (roster.isEmpty()) return;
             Set<Container> containersToAttack;
             do {

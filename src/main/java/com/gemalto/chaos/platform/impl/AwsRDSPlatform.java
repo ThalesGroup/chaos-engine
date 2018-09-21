@@ -8,6 +8,7 @@ import com.amazonaws.services.rds.model.*;
 import com.amazonaws.util.StringUtils;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
+import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
@@ -97,6 +98,22 @@ public class AwsRDSPlatform extends Platform {
                      .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Container> generateExperimentRoster () {
+        List<String> availabilityZones = getRoster().stream()
+                                                    .map(container -> (AwsContainer) container)
+                                                    .map(AwsContainer::getAvailabilityZone)
+                                                    .filter(s -> !StringUtils.isNullOrEmpty(s))
+                                                    .distinct()
+                                                    .collect(Collectors.toList());
+        String randomAvailabilityZone = availabilityZones.get(new Random().nextInt(availabilityZones.size()));
+        return getRoster().stream()
+                          .map(container -> (AwsContainer) container)
+                          .filter(awsContainer -> awsContainer.getAvailabilityZone() == null || awsContainer.getAvailabilityZone()
+                                                                                                            .equals(randomAvailabilityZone))
+                          .collect(Collectors.toList());
+    }
+
     private Collection<DBInstance> getAllDBInstances () {
         Collection<DBInstance> dbInstances = new HashSet<>();
         DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
@@ -123,7 +140,7 @@ public class AwsRDSPlatform extends Platform {
 
     private Container createContainerFromDBInstance (DBInstance dbInstance) {
         return AwsRDSInstanceContainer.builder()
-                                      .withAwsRDSPlatform(this)
+                                      .withAwsRDSPlatform(this).withAvailabilityZone(dbInstance.getAvailabilityZone())
                                       .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
                                       .withEngine(dbInstance.getEngine())
                                       .withReadReplicas(dbInstance.getReadReplicaDBInstanceIdentifiers())

@@ -60,6 +60,7 @@ public class AttackManagerTest {
         containerList.add(container2);
         when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
         when(platform.startAttack()).thenReturn(platform);
+        when(platform.generateExperimentRoster()).thenCallRealMethod();
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canAttack()).thenReturn(true);
         when(container1.canAttack()).thenReturn(true);
