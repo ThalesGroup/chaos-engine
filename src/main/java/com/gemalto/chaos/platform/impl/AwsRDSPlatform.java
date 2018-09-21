@@ -105,6 +105,7 @@ public class AwsRDSPlatform extends Platform {
                                                     .distinct()
                                                     .collect(Collectors.toList());
         String randomAvailabilityZone = availabilityZones.get(new Random().nextInt(availabilityZones.size()));
+        log.debug("Experiment will target availability-zone={}", randomAvailabilityZone);
         return getRoster().stream()
                           .map(container -> (AwsContainer) container)
                           .filter(awsContainer -> awsContainer.getAvailabilityZone() == null || awsContainer.getAvailabilityZone()
