@@ -12,14 +12,17 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,10 +35,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 public class AwsEC2PlatformTest {
-    @Mock
+    @MockBean
     private AmazonEC2 amazonEC2;
     @Mock
     private DescribeInstancesResult describeInstancesResult;
@@ -43,17 +48,12 @@ public class AwsEC2PlatformTest {
     private Reservation reservation;
     @Mock
     private Instance instance;
-    @Mock
+    @MockBean
     private ContainerManager containerManager;
-    @Mock
+    @MockBean
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
-    @Spy
+    @Autowired
     private AwsEC2Platform awsEC2Platform;
-
-    @Before
-    public void setUp () {
-        awsEC2Platform = Mockito.spy(new AwsEC2Platform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
-    }
 
     @Test
     public void getRoster () {
@@ -256,5 +256,20 @@ public class AwsEC2PlatformTest {
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
         assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
+    }
+
+    @Configuration
+    static class AwsEC2PlatformTestConfiguration {
+        @Autowired
+        private AmazonEC2 amazonEC2;
+        @Autowired
+        private ContainerManager containerManager;
+        @Autowired
+        private AwsEC2SelfAwareness awsEC2SelfAwareness;
+
+        @Bean
+        AwsEC2Platform awsEC2Platform () {
+            return Mockito.spy(new AwsEC2Platform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
+        }
     }
 }
