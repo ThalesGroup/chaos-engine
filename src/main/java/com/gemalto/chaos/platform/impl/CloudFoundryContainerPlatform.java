@@ -42,9 +42,6 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         this.containerManager = containerManager;
     }
 
-    private CloudFoundryContainerPlatform () {
-    }
-
     public static CloudFoundryContainerPlatformBuilder builder () {
         return CloudFoundryContainerPlatformBuilder.builder();
     }
