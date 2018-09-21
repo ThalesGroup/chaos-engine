@@ -83,20 +83,42 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
-        Collection<DBCluster> dbClusters = amazonRDS.describeDBClusters().getDBClusters();
-        Collection<DBInstance> dbInstances = amazonRDS.describeDBInstances().getDBInstances();
-        Collection<Container> dbInstanceContainers = dbInstances.stream()
-                                                                .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
-                                                                .filter(dbInstance -> StringUtils.isNullOrEmpty(dbInstance
+        Collection<Container> dbInstanceContainers = getAllDBInstances().stream()
+                                                                        .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
+                                                                        .filter(dbInstance -> StringUtils.isNullOrEmpty(dbInstance
                                                                         .getReadReplicaSourceDBInstanceIdentifier()))
-                                                                .map(this::createContainerFromDBInstance)
-                                                                .collect(Collectors.toSet());
-        Collection<Container> dbClusterContainers = dbClusters.stream()
-                                                              .map(this::createContainerFromDBCluster)
-                                                              .collect(Collectors.toSet());
+                                                                        .map(this::createContainerFromDBInstance)
+                                                                        .collect(Collectors.toSet());
+        Collection<Container> dbClusterContainers = getAllDBClusters().stream()
+                                                                      .map(this::createContainerFromDBCluster)
+                                                                      .collect(Collectors.toSet());
         return Stream.of(dbClusterContainers, dbInstanceContainers)
                      .flatMap(Collection::stream)
                      .collect(Collectors.toList());
+    }
+
+    private Collection<DBInstance> getAllDBInstances () {
+        Collection<DBInstance> dbInstances = new HashSet<>();
+        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
+        DescribeDBInstancesResult describeDBInstancesResult;
+        do {
+            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
+            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
+            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
+        } while (describeDBInstancesRequest.getMarker() != null);
+        return dbInstances;
+    }
+
+    private Collection<DBCluster> getAllDBClusters () {
+        Collection<DBCluster> dbClusters = new HashSet<>();
+        DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
+        DescribeDBClustersResult describeDBClustersResult;
+        do {
+            describeDBClustersResult = amazonRDS.describeDBClusters(describeDBClustersRequest);
+            dbClusters.addAll(describeDBClustersResult.getDBClusters());
+            describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
+        } while (describeDBClustersRequest.getMarker() != null);
+        return dbClusters;
     }
 
     private Container createContainerFromDBInstance (DBInstance dbInstance) {
