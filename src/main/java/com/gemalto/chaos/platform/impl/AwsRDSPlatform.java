@@ -86,8 +86,6 @@ public class AwsRDSPlatform extends Platform {
     protected List<Container> generateRoster () {
         Collection<Container> dbInstanceContainers = getAllDBInstances().stream()
                                                                         .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
-                                                                        .filter(dbInstance -> StringUtils.isNullOrEmpty(dbInstance
-                                                                        .getReadReplicaSourceDBInstanceIdentifier()))
                                                                         .map(this::createContainerFromDBInstance)
                                                                         .collect(Collectors.toSet());
         Collection<Container> dbClusterContainers = getAllDBClusters().stream()
