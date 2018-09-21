@@ -9,11 +9,13 @@ import com.gemalto.chaos.platform.PlatformManager;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
@@ -26,6 +28,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AttackManagerTest {
+    @Autowired
     private AttackManager attackManager;
     @MockBean
     private NotificationManager notificationManager;
@@ -48,10 +51,6 @@ public class AttackManagerTest {
     @MockBean
     private Platform platform;
 
-    @Before
-    public void setUp () {
-        attackManager = new AttackManager(notificationManager, platformManager, holidayManager);
-    }
 
     @Test
     public void startAttacks () {
@@ -183,5 +182,20 @@ public class AttackManagerTest {
         assertThat(attackManager.attackContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(attack1));
         verify(container1, times(1)).createAttack();
         verify(container2, times(0)).createAttack();
+    }
+
+    @Configuration
+    static class AttackManagerTestConfiguration {
+        @Autowired
+        private NotificationManager notificationManager;
+        @Autowired
+        private PlatformManager platformManager;
+        @Autowired
+        private HolidayManager holidayManager;
+
+        @Bean
+        AttackManager attackManager () {
+            return new AttackManager(notificationManager, platformManager, holidayManager);
+        }
     }
 }
