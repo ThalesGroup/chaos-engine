@@ -130,7 +130,6 @@ public class AwsRDSPlatformTest {
                                                 .build(), AwsRDSInstanceContainer.builder()
                                                                                  .withAwsRDSPlatform(awsRDSPlatform)
                                                                                  .withDbInstanceIdentifier(dbInstance1Identifier)
-                                                                                 .withReadReplicas(Collections.singleton(dbInstance1ReadReplicaIdentifier))
                                                                                  .build(), AwsRDSInstanceContainer.builder()
                                                                                                                   .withAwsRDSPlatform(awsRDSPlatform)
                                                                                                                   .withDbInstanceIdentifier(dbInstance2Identifier)
