@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
@@ -26,8 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryApplicationTest {
@@ -103,32 +103,35 @@ public class CloudFoundryApplicationTest {
     }
 
     @Test
-    public void restageApplication () {
+    public void restageApplication () throws Exception {
         RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
         cloudFoundryApplication.restageApplication(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restageApplication(restageApplicationRequest);
+        attack.getSelfHealingMethod().call();
     }
 
     @Test
-    public void restartApplication () {
+    public void restartApplication () throws Exception {
         cloudFoundryApplication.restartApplication(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restartApplication(name);
+        attack.getSelfHealingMethod().call();
     }
 
     @Test
-    public void unmapRoute () {
+    public void unmapRoute () throws Exception {
         cloudFoundryApplication.unmapRoute(attack);
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).unmapRoute(ArgumentMatchers.any());
+        attack.getSelfHealingMethod().call();
     }
 
     @Test
-    public void unmapRouteAppWithNoRoutes () {
+    public void unmapRouteAppWithNoRoutes () throws Exception {
         CloudFoundryApplication appNoRoutes = CloudFoundryApplication.builder()
                                                                      .applicationID(applicationId)
                                                                      .containerInstances(instance)
@@ -142,6 +145,7 @@ public class CloudFoundryApplicationTest {
         verify(attack, times(0)).setFinalizeMethod(ArgumentMatchers.any());
         verify(attack, times(1)).setFinalizationDuration(Duration.ZERO);
         Mockito.verify(cloudFoundryApplicationPlatform, times(0)).unmapRoute(ArgumentMatchers.any());
+        attack.getSelfHealingMethod().call();
     }
 
     @Test
@@ -149,5 +153,26 @@ public class CloudFoundryApplicationTest {
         Attack attack = cloudFoundryApplication.createAttack(AttackType.RESOURCE);
         assertEquals(cloudFoundryApplication, attack.getContainer());
         assertEquals(AttackType.RESOURCE, attack.getAttackType());
+    }
+
+    @Test
+    public void updateContainerHealthImpl () {
+        doReturn(ContainerHealth.NORMAL).when(cloudFoundryApplicationPlatform).checkPlatformHealth();
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryApplication.updateContainerHealthImpl(AttackType.STATE));
+    }
+
+    @Test
+    public void getPlatform () {
+        assertEquals(cloudFoundryApplicationPlatform, cloudFoundryApplication.getPlatform());
+    }
+
+    @Test
+    public void getApplicationID () {
+        assertEquals(applicationId, cloudFoundryApplication.getApplicationID());
+    }
+
+    @Test
+    public void getSimpleName () {
+        assertEquals(name, cloudFoundryApplication.getSimpleName());
     }
 }
