@@ -123,7 +123,7 @@ public class CloudFoundryApplication extends Container {
         } else {
             attack.setFinalizationDuration(Duration.ZERO);
             attack.setSelfHealingMethod(noRecovery);
-            log.warn("Application {} has no routes set, skipping the attack {}", applicationID, attack.getId());
+            log.warn("Application {} has no routes set, skipping the attack {}", name, attack.getId());
         }
     }
 
