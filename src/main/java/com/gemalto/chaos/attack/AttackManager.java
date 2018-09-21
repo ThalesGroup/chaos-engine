@@ -84,6 +84,10 @@ public class AttackManager {
 
     synchronized void startAttacks (final boolean force) {
         if (activeAttacks.isEmpty()) {
+            if (platformManager.getPlatforms().isEmpty()) {
+                log.warn("There are no platforms enabled");
+                return;
+            }
             List<Platform> eligiblePlatforms = platformManager.getPlatforms()
                                                               .parallelStream()
                                                               .peek(platform -> platform.usingHolidayManager(holidayManager))
