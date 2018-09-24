@@ -110,8 +110,6 @@ public class AwsRDSPlatformTest {
                                                  .withMultiAZ(true)
                                                  .withDBClusterIdentifier(null)
                                                  .withReadReplicaDBInstanceIdentifiers(dbInstance1ReadReplicaIdentifier);
-        DBInstance replicaInstance = new DBInstance().withDBInstanceIdentifier(dbInstance1ReadReplicaIdentifier)
-                                                     .withReadReplicaSourceDBInstanceIdentifier(dbInstance1Identifier);
         DBInstance dbInstance2 = new DBInstance().withDBInstanceIdentifier(dbInstance2Identifier)
                                                  .withMultiAZ(false)
                                                  .withDBClusterIdentifier(null);
