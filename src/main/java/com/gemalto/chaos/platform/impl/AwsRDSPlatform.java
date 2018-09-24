@@ -5,7 +5,6 @@ import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
-import com.amazonaws.util.StringUtils;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.AwsContainer;
@@ -27,9 +26,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 
 @ConditionalOnProperty("aws.rds")
 @Component
@@ -87,10 +89,10 @@ public class AwsRDSPlatform extends Platform {
         Collection<Container> dbInstanceContainers = getAllDBInstances().stream()
                                                                         .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
                                                                         .map(this::createContainerFromDBInstance)
-                                                                        .collect(Collectors.toSet());
+                                                                        .collect(toSet());
         Collection<Container> dbClusterContainers = getAllDBClusters().stream()
                                                                       .map(this::createContainerFromDBCluster)
-                                                                      .collect(Collectors.toSet());
+                                                                      .collect(toSet());
         return Stream.of(dbClusterContainers, dbInstanceContainers)
                      .flatMap(Collection::stream)
                      .collect(Collectors.toList());
@@ -98,19 +100,20 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public List<Container> generateExperimentRoster () {
-        List<String> availabilityZones = getRoster().stream()
-                                                    .map(container -> (AwsContainer) container)
-                                                    .map(AwsContainer::getAvailabilityZone)
-                                                    .filter(s -> !StringUtils.isNullOrEmpty(s))
-                                                    .distinct()
-                                                    .collect(Collectors.toList());
-        String randomAvailabilityZone = availabilityZones.get(new Random().nextInt(availabilityZones.size()));
-        log.debug("Experiment will target availability-zone={}", randomAvailabilityZone);
-        return getRoster().stream()
-                          .map(container -> (AwsContainer) container)
-                          .filter(awsContainer -> awsContainer.getAvailabilityZone() == null || awsContainer.getAvailabilityZone()
-                                                                                                            .equals(randomAvailabilityZone))
-                          .collect(Collectors.toList());
+        Map<String, List<AwsContainer>> availabilityZoneMap = getRoster().stream()
+                                                                         .map(AwsContainer.class::cast)
+                                                                         .collect(groupingBy(AwsContainer::getAvailabilityZone));
+        final String[] availabilityZones = availabilityZoneMap.keySet()
+                                                              .stream()
+                                                              .filter(s -> !s.equals(NO_AZ_INFORMATION))
+                                                              .collect(toSet())
+                                                              .toArray(new String[]{});
+        final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
+        log.debug("Experiment on Platform={} will use AvailabilityZone={}", this, randomAvailabilityZone);
+        List<Container> chosenSet = new ArrayList<>();
+        chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
+        chosenSet.addAll(availabilityZoneMap.get(NO_AZ_INFORMATION));
+        return chosenSet;
     }
 
     private Collection<DBInstance> getAllDBInstances () {
@@ -220,7 +223,7 @@ public class AwsRDSPlatform extends Platform {
                         .map(DBCluster::getDBClusterMembers)
                         .flatMap(Collection::stream)
                         .map(DBClusterMember::getDBInstanceIdentifier)
-                        .collect(Collectors.toSet());
+                        .collect(toSet());
     }
 
     public ContainerHealth getInstanceStatus (String... dbInstanceIdentifiers) {
@@ -274,8 +277,7 @@ public class AwsRDSPlatform extends Platform {
                         .stream()
                         .map(DBInstance::getVpcSecurityGroups)
                         .flatMap(Collection::stream)
-                        .map(VpcSecurityGroupMembership::getVpcSecurityGroupId)
-                        .collect(Collectors.toSet());
+                        .map(VpcSecurityGroupMembership::getVpcSecurityGroupId).collect(toSet());
     }
 
     public String getChaosSecurityGroup () {

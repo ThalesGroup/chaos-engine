@@ -12,6 +12,8 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
+
 public class AwsRDSClusterContainer extends AwsContainer {
     private String dbClusterIdentifier;
     private String engine;
@@ -121,7 +123,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
             awsRDSClusterContainer.engine = this.engine;
             awsRDSClusterContainer.dbClusterIdentifier = this.dbClusterIdentifier;
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
-            awsRDSClusterContainer.availabilityZone = this.availabilityZone;
+            awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
             return awsRDSClusterContainer;
         }
     }
