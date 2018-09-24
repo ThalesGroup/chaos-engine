@@ -102,17 +102,17 @@ public class AwsRDSPlatformTest {
     public void generateRoster () {
         String dbInstance1Identifier = UUID.randomUUID().toString();
         String dbInstance2Identifier = UUID.randomUUID().toString();
+        String instance1AvailabilityZone = UUID.randomUUID().toString();
+        String instance2AvailabilityZone = UUID.randomUUID().toString();
         String dbCluster1Identifier = UUID.randomUUID().toString();
         String dbCluster2Identifier = UUID.randomUUID().toString();
         String dbClusterInstanceIdentifier = UUID.randomUUID().toString();
-        String dbInstance1ReadReplicaIdentifier = UUID.randomUUID().toString();
         DBInstance dbInstance1 = new DBInstance().withDBInstanceIdentifier(dbInstance1Identifier)
-                                                 .withMultiAZ(true)
                                                  .withDBClusterIdentifier(null)
-                                                 .withReadReplicaDBInstanceIdentifiers(dbInstance1ReadReplicaIdentifier);
+                                                 .withAvailabilityZone(instance1AvailabilityZone);
         DBInstance dbInstance2 = new DBInstance().withDBInstanceIdentifier(dbInstance2Identifier)
-                                                 .withMultiAZ(false)
-                                                 .withDBClusterIdentifier(null);
+                                                 .withDBClusterIdentifier(null)
+                                                 .withAvailabilityZone(instance2AvailabilityZone);
         DBInstance clusterInstance = new DBInstance().withDBInstanceIdentifier(dbClusterInstanceIdentifier)
                                                      .withMultiAZ(true)
                                                      .withDBClusterIdentifier(dbCluster1Identifier);
@@ -132,9 +132,11 @@ public class AwsRDSPlatformTest {
                                                 .build(), AwsRDSInstanceContainer.builder()
                                                                                  .withAwsRDSPlatform(awsRDSPlatform)
                                                                                  .withDbInstanceIdentifier(dbInstance1Identifier)
+                                                                                 .withAvailabilityZone(instance1AvailabilityZone)
                                                                                  .build(), AwsRDSInstanceContainer.builder()
                                                                                                                   .withAwsRDSPlatform(awsRDSPlatform)
                                                                                                                   .withDbInstanceIdentifier(dbInstance2Identifier)
+                                                                                                                  .withAvailabilityZone(instance2AvailabilityZone)
                                                                                                                   .build()));
     }
 
