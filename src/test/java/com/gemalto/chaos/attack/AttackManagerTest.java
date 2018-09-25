@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class AttackManagerTest {
     @Autowired
     private AttackManager attackManager;
@@ -87,10 +89,12 @@ public class AttackManagerTest {
         when(platformManager.getPlatforms()).thenReturn(platforms);
         when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canAttack()).thenReturn(true);
         when(pcfContainerPlatform.startAttack()).thenReturn(pcfContainerPlatform);
         when(pcfContainerPlatform.getRoster()).thenReturn(containerListContainers);
         when(pcfContainerPlatform.canAttack()).thenReturn(true);
+        when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
@@ -138,6 +142,7 @@ public class AttackManagerTest {
         when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.canAttack()).thenReturn(true);
+        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
