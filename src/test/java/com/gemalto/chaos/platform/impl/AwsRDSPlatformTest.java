@@ -196,14 +196,6 @@ public class AwsRDSPlatformTest {
     }
 
     @Test
-    public void createContainerFromDBInstance () {
-    }
-
-    @Test
-    public void createContainerFromDBCluster () {
-    }
-
-    @Test
     public void failoverCluster () {
         String clusterIdentifier = UUID.randomUUID().toString();
         awsRDSPlatform.failoverCluster(clusterIdentifier);
