@@ -20,11 +20,11 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -127,7 +127,9 @@ public class AttackManagerTest {
         assertEquals(scheduledAttack, activeAttacksCount);
         //all active attacks should belong to same platform layer
         Platform attackPlatform = activeAttacks.iterator().next().getContainer().getPlatform();
-        activeAttacks.stream().allMatch(attack -> attack.getContainer().getPlatform().equals(attackPlatform));
+        assertEquals(1, activeAttacks.stream()
+                                     .collect(Collectors.groupingBy(attack -> attack.getContainer().getPlatform()))
+                                     .size());
     }
 
     @Test
@@ -159,16 +161,16 @@ public class AttackManagerTest {
         attackManager.startAttacks();
         attackManager.updateAttackStatus();
         //check they are active
-        assertTrue(attackManager.getActiveAttacks().size() == 2);
+        assertEquals(2, attackManager.getActiveAttacks().size());
         when(attack1.getAttackState()).thenReturn(AttackState.FINISHED);
         when(attack2.getAttackState()).thenReturn(AttackState.NOT_YET_STARTED);
         //one attack to be removed
         attackManager.updateAttackStatus();
-        assertTrue(attackManager.getActiveAttacks().size() == 1);
+        assertEquals(1, attackManager.getActiveAttacks().size());
         when(attack2.getAttackState()).thenReturn(AttackState.FINISHED);
         attackManager.updateAttackStatus();
         //all attacks should be removed
-        assertTrue(attackManager.getActiveAttacks().size() == 0);
+        assertEquals(0, attackManager.getActiveAttacks().size());
     }
 
 
