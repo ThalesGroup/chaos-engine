@@ -90,7 +90,11 @@ public class CloudFoundryApplication extends Container {
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setFinalizeMethod(rescaleApplicationToDefault);
         Random rand = new Random();
-        actualContainerInstances = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
+        int newScale;
+        do {
+            newScale = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
+        } while (newScale == actualContainerInstances);
+        actualContainerInstances = newScale;
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
