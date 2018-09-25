@@ -118,10 +118,18 @@ public class AwsRDSPlatformTest {
                                                      .withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster1 = new DBCluster().withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster2 = new DBCluster().withDBClusterIdentifier(dbCluster2Identifier);
-        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)).when(amazonRDS)
-                                                                                                            .describeDBInstances(any(DescribeDBInstancesRequest.class));
-        doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)).when(amazonRDS)
-                                                                                       .describeDBClusters(any(DescribeDBClustersRequest.class));
+        String marker1 = UUID.randomUUID().toString();
+        String marker2 = UUID.randomUUID().toString();
+        doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)
+                                                .withMarker(marker1)).when(amazonRDS)
+                                                                     .describeDBInstances(new DescribeDBInstancesRequest());
+        doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)
+                                               .withMarker(marker2)).when(amazonRDS)
+                                                                    .describeDBClusters(new DescribeDBClustersRequest());
+        doReturn(new DescribeDBInstancesResult()).when(amazonRDS)
+                                                 .describeDBInstances(new DescribeDBInstancesRequest().withMarker(marker1));
+        doReturn(new DescribeDBClustersResult()).when(amazonRDS)
+                                                .describeDBClusters(new DescribeDBClustersRequest().withMarker(marker2));
         assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
                 .builder()
                 .withDbClusterIdentifier(dbCluster1Identifier)
