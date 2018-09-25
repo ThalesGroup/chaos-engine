@@ -9,11 +9,14 @@ import com.gemalto.chaos.platform.PlatformManager;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
@@ -25,7 +28,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class AttackManagerTest {
+    @Autowired
     private AttackManager attackManager;
     @MockBean
     private NotificationManager notificationManager;
@@ -48,10 +53,6 @@ public class AttackManagerTest {
     @MockBean
     private Platform platform;
 
-    @Before
-    public void setUp () {
-        attackManager = new AttackManager(notificationManager, platformManager, holidayManager);
-    }
 
     @Test
     public void startAttacks () {
@@ -60,6 +61,7 @@ public class AttackManagerTest {
         containerList.add(container2);
         when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
         when(platform.startAttack()).thenReturn(platform);
+        when(platform.generateExperimentRoster()).thenCallRealMethod();
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canAttack()).thenReturn(true);
         when(container1.canAttack()).thenReturn(true);
@@ -87,10 +89,12 @@ public class AttackManagerTest {
         when(platformManager.getPlatforms()).thenReturn(platforms);
         when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canAttack()).thenReturn(true);
         when(pcfContainerPlatform.startAttack()).thenReturn(pcfContainerPlatform);
         when(pcfContainerPlatform.getRoster()).thenReturn(containerListContainers);
         when(pcfContainerPlatform.canAttack()).thenReturn(true);
+        when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
@@ -138,6 +142,7 @@ public class AttackManagerTest {
         when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.canAttack()).thenReturn(true);
+        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
@@ -182,5 +187,20 @@ public class AttackManagerTest {
         assertThat(attackManager.attackContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(attack1));
         verify(container1, times(1)).createAttack();
         verify(container2, times(0)).createAttack();
+    }
+
+    @Configuration
+    static class AttackManagerTestConfiguration {
+        @Autowired
+        private NotificationManager notificationManager;
+        @Autowired
+        private PlatformManager platformManager;
+        @Autowired
+        private HolidayManager holidayManager;
+
+        @Bean
+        AttackManager attackManager () {
+            return new AttackManager(notificationManager, platformManager, holidayManager);
+        }
     }
 }

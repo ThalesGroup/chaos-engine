@@ -4,14 +4,14 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
 import java.util.Collection;
 
-public class AwsRDSInstanceContainer extends Container {
+public class AwsRDSInstanceContainer extends AwsContainer {
     private String dbInstanceIdentifier;
     private String engine;
     private transient AwsRDSPlatform awsRDSPlatform;
@@ -59,6 +59,7 @@ public class AwsRDSInstanceContainer extends Container {
     public static final class AwsRDSInstanceContainerBuilder {
         private String dbInstanceIdentifier;
         private String engine;
+        private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
 
         private AwsRDSInstanceContainerBuilder () {
@@ -83,11 +84,17 @@ public class AwsRDSInstanceContainer extends Container {
             return this;
         }
 
+        public AwsRDSInstanceContainerBuilder withAvailabilityZone (String availabilityZone) {
+            this.availabilityZone = availabilityZone;
+            return this;
+        }
+
         public AwsRDSInstanceContainer build () {
             AwsRDSInstanceContainer awsRDSInstanceContainer = new AwsRDSInstanceContainer();
             awsRDSInstanceContainer.dbInstanceIdentifier = this.dbInstanceIdentifier;
             awsRDSInstanceContainer.engine = this.engine;
             awsRDSInstanceContainer.awsRDSPlatform = this.awsRDSPlatform;
+            awsRDSInstanceContainer.availabilityZone = this.availabilityZone;
             return awsRDSInstanceContainer;
         }
     }

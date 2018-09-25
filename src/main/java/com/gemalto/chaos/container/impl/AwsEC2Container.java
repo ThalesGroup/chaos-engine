@@ -4,7 +4,7 @@ import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 
-public class AwsEC2Container extends Container {
+public class AwsEC2Container extends AwsContainer {
     private String instanceId;
     private String keyName;
     private String name;
@@ -83,6 +83,7 @@ public class AwsEC2Container extends Container {
         private String keyName;
         private String name;
         private AwsEC2Platform awsEC2Platform;
+        private String availabilityZone;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -111,12 +112,19 @@ public class AwsEC2Container extends Container {
             return this;
         }
 
+        public AwsEC2ContainerBuilder availabilityZone (String availabilityZone) {
+            this.availabilityZone = availabilityZone;
+            return this;
+        }
+
+
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
             awsEC2Container.instanceId = this.instanceId;
             awsEC2Container.keyName = this.keyName;
             awsEC2Container.name = this.name;
+            awsEC2Container.availabilityZone = this.availabilityZone;
             return awsEC2Container;
         }
     }

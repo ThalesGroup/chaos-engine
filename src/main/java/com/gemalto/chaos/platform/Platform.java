@@ -175,4 +175,8 @@ public abstract class Platform implements AttackableObject {
     public Duration getMinimumSelfHealingInterval () {
         return Duration.ofMinutes(DEFAULT_SELF_HEALING_INTERVAL_MINUTES);
     }
+
+    public List<Container> generateExperimentRoster () {
+        return getRoster();
+    }
 }

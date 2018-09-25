@@ -4,7 +4,7 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
@@ -12,13 +12,15 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class AwsRDSClusterContainer extends Container {
+import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
+
+public class AwsRDSClusterContainer extends AwsContainer {
     private String dbClusterIdentifier;
     private String engine;
     private transient AwsRDSPlatform awsRDSPlatform;
 
-    public String getDbClusterIdentifier () {
-        return dbClusterIdentifier;
+    public static AwsRDSClusterContainerBuilder builder () {
+        return AwsRDSClusterContainerBuilder.anAwsRDSClusterContainer();
     }
 
     @Override
@@ -34,6 +36,14 @@ public class AwsRDSClusterContainer extends Container {
     @Override
     public String getSimpleName () {
         return getDbClusterIdentifier();
+    }
+
+    public String getDbClusterIdentifier () {
+        return dbClusterIdentifier;
+    }
+
+    public Set<String> getMembers () {
+        return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
 
     @StateAttack
@@ -69,10 +79,6 @@ public class AwsRDSClusterContainer extends Container {
         return returnSet;
     }
 
-    public Set<String> getMembers () {
-        return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
-    }
-
     @StateAttack
     public void initiateFailover (Attack attack) {
         final String[] members = getMembers().toArray(new String[0]);
@@ -80,20 +86,21 @@ public class AwsRDSClusterContainer extends Container {
         awsRDSPlatform.failoverCluster(dbClusterIdentifier);
     }
 
-    public static AwsRDSClusterContainerBuilder builder () {
-        return AwsRDSClusterContainerBuilder.anAwsRDSClusterContainer();
-    }
-
     public static final class AwsRDSClusterContainerBuilder {
         private String dbClusterIdentifier;
         private String engine;
+        private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
-
         private AwsRDSClusterContainerBuilder () {
         }
 
         static AwsRDSClusterContainerBuilder anAwsRDSClusterContainer () {
             return new AwsRDSClusterContainerBuilder();
+        }
+
+        public AwsRDSClusterContainerBuilder withAvailabilityZone (String availabilityZone) {
+            this.availabilityZone = availabilityZone;
+            return this;
         }
 
         public AwsRDSClusterContainerBuilder withDbClusterIdentifier (String dbClusterIdentifier) {
@@ -116,6 +123,7 @@ public class AwsRDSClusterContainer extends Container {
             awsRDSClusterContainer.engine = this.engine;
             awsRDSClusterContainer.dbClusterIdentifier = this.dbClusterIdentifier;
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
+            awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
             return awsRDSClusterContainer;
         }
     }
