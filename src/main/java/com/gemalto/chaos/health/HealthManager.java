@@ -23,8 +23,8 @@ public class HealthManager {
     }
 
     SystemHealthState getHealth () {
-        if (systemHealth != null) {
-            for (SystemHealth health : systemHealth) {
+        if (getSystemHealth() != null) {
+            for (SystemHealth health : getSystemHealth()) {
                 SystemHealthState healthCheck = health.getHealth();
                 if (healthCheck == SystemHealthState.OK) {
                     log.debug("{} : {}", health.getClass().getSimpleName(), healthCheck);
@@ -36,5 +36,9 @@ public class HealthManager {
             return SystemHealthState.OK;
         }
         return SystemHealthState.UNKNOWN;
+    }
+
+    Collection<SystemHealth> getSystemHealth () {
+        return systemHealth;
     }
 }
