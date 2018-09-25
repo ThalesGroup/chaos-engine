@@ -5,6 +5,8 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
+import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
+import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +33,15 @@ public class AttackManagerTest {
     @Mock
     private Attack attack1;
     @Mock
+    private Attack attack2;
+    @Mock
+    private Attack attack3;
+    @Mock
     private Container container1;
     @Mock
     private Container container2;
+    @Mock
+    private Container container3;
     @MockBean
     private Platform platform;
 
@@ -58,6 +66,39 @@ public class AttackManagerTest {
         assertThat(attackManager.getNewAttackQueue(), hasItem(attack1));
         verify(container2, times(1)).canAttack();
         verify(container2, times(0)).createAttack();
+    }
+
+    //SCT-5854
+    @Test
+    public void avoidOverlappingAttacks () {
+        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
+        CloudFoundryContainerPlatform pcfContainerPlatform = mock(CloudFoundryContainerPlatform.class);
+        List<Container> containerListApps = new ArrayList<>();
+        containerListApps.add(container1);
+        containerListApps.add(container2);
+        List<Container> containerListContainers = new ArrayList<>();
+        containerListContainers.add(container3);
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(pcfApplicationPlatform);
+        platforms.add(pcfContainerPlatform);
+        when(platformManager.getPlatforms()).thenReturn(platforms);
+        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(pcfApplicationPlatform.canAttack()).thenReturn(true);
+        when(pcfContainerPlatform.startAttack()).thenReturn(pcfContainerPlatform);
+        when(pcfContainerPlatform.getRoster()).thenReturn(containerListContainers);
+        when(pcfContainerPlatform.canAttack()).thenReturn(true);
+        when(container1.canAttack()).thenReturn(true);
+        when(container1.createAttack()).thenReturn(attack1);
+        when(container2.canAttack()).thenReturn(true);
+        when(container2.createAttack()).thenReturn(attack2);
+        when(container3.canAttack()).thenReturn(true);
+        when(container3.createAttack()).thenReturn(attack3);
+        attackManager.startAttacks();
+        Queue<Attack> attacks = attackManager.getNewAttackQueue();
+        attackManager.startAttacks();
+        Queue<Attack> attacks2 = attackManager.getNewAttackQueue();
+        assert (attacks == attacks2);
     }
 
     @Test
