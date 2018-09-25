@@ -1,5 +1,6 @@
 package com.gemalto.chaos.attack;
 
+import com.gemalto.chaos.attack.enums.AttackState;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.notification.NotificationManager;
@@ -20,6 +21,7 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -123,6 +125,47 @@ public class AttackManagerTest {
         Platform attackPlatform = activeAttacks.iterator().next().getContainer().getPlatform();
         activeAttacks.stream().allMatch(attack -> attack.getContainer().getPlatform().equals(attackPlatform));
     }
+
+    @Test
+    public void removeFinishedAttack () {
+        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
+        List<Container> containerListApps = new ArrayList<>();
+        containerListApps.add(container1);
+        containerListApps.add(container2);
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(pcfApplicationPlatform);
+        when(platformManager.getPlatforms()).thenReturn(platforms);
+        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(pcfApplicationPlatform.canAttack()).thenReturn(true);
+        when(container1.canAttack()).thenReturn(true);
+        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container2.canAttack()).thenReturn(true);
+        when(container2.createAttack()).thenReturn(attack2);
+        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(attack1.startAttack(notificationManager)).thenReturn(true);
+        when(attack2.startAttack(notificationManager)).thenReturn(true);
+        when(attack1.getContainer()).thenReturn(container1);
+        when(attack2.getContainer()).thenReturn(container2);
+        when(holidayManager.isHoliday()).thenReturn(false);
+        when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
+        //schedule attacks
+        attackManager.startAttacks();
+        attackManager.updateAttackStatus();
+        //check they are active
+        assertTrue(attackManager.getActiveAttacks().size() == 2);
+        when(attack1.getAttackState()).thenReturn(AttackState.FINISHED);
+        when(attack2.getAttackState()).thenReturn(AttackState.NOT_YET_STARTED);
+        //one attack to be removed
+        attackManager.updateAttackStatus();
+        assertTrue(attackManager.getActiveAttacks().size() == 1);
+        when(attack2.getAttackState()).thenReturn(AttackState.FINISHED);
+        attackManager.updateAttackStatus();
+        //all attacks should be removed
+        assertTrue(attackManager.getActiveAttacks().size() == 0);
+    }
+
 
     @Test
     public void attackContainerId () {
