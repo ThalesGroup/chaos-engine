@@ -38,7 +38,7 @@ public class AttackManager {
     }
 
     @Scheduled(fixedDelay = 15 * 1000)
-    private synchronized void updateAttackStatus () {
+    synchronized void updateAttackStatus () {
         synchronized (activeAttacks) {
             startNewAttacks();
             log.debug("Checking on existing attacks");

@@ -19,6 +19,7 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -90,15 +91,37 @@ public class AttackManagerTest {
         when(pcfContainerPlatform.canAttack()).thenReturn(true);
         when(container1.canAttack()).thenReturn(true);
         when(container1.createAttack()).thenReturn(attack1);
+        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canAttack()).thenReturn(true);
         when(container2.createAttack()).thenReturn(attack2);
+        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container3.canAttack()).thenReturn(true);
         when(container3.createAttack()).thenReturn(attack3);
+        when(container3.getPlatform()).thenReturn(pcfContainerPlatform);
+        when(attack1.startAttack(notificationManager)).thenReturn(true);
+        when(attack2.startAttack(notificationManager)).thenReturn(true);
+        when(attack3.startAttack(notificationManager)).thenReturn(true);
+        when(attack1.getContainer()).thenReturn(container1);
+        when(attack2.getContainer()).thenReturn(container2);
+        when(attack3.getContainer()).thenReturn(container3);
+        when(holidayManager.isHoliday()).thenReturn(false);
+        when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
+
         attackManager.startAttacks();
         Queue<Attack> attacks = attackManager.getNewAttackQueue();
+        int scheduledAttack = attacks.size();
         attackManager.startAttacks();
         Queue<Attack> attacks2 = attackManager.getNewAttackQueue();
-        assert (attacks == attacks2);
+        // new startAttacks invocation should not add new attack until newAttackQueue is empty
+        assertEquals(attacks, attacks2);
+        attackManager.updateAttackStatus();
+        Set<Attack> activeAttacks = attackManager.getActiveAttacks();
+        int activeAttacksCount = activeAttacks.size();
+        //number active attacks should be equal to number of previously scheduled attacks
+        assertEquals(scheduledAttack, activeAttacksCount);
+        //all active attacks should belong to same platform layer
+        Platform attackPlatform = activeAttacks.iterator().next().getContainer().getPlatform();
+        activeAttacks.stream().allMatch(attack -> attack.getContainer().getPlatform().equals(attackPlatform));
     }
 
     @Test
