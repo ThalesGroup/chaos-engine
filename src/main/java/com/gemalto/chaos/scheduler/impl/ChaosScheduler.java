@@ -1,5 +1,6 @@
 package com.gemalto.chaos.scheduler.impl;
 
+import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.scheduler.Scheduler;
 
 import java.time.Instant;
@@ -9,15 +10,8 @@ public class ChaosScheduler implements Scheduler {
     private long averageMillisBetweenExperiments;
     private Instant nextChaosTime;
     private Instant lastChaosTime;
+    private HolidayManager holidayManager;
 
-    public ChaosScheduler (long averageMillisBetweenExperiments) {
-        this.averageMillisBetweenExperiments = averageMillisBetweenExperiments;
-    }
-
-    public ChaosScheduler (long averageMillisBetweenExperiments, Instant lastChaosTime) {
-        this.averageMillisBetweenExperiments = averageMillisBetweenExperiments;
-        this.lastChaosTime = lastChaosTime;
-    }
 
     @Override
     public Instant getNextChaosTime () {
@@ -56,5 +50,45 @@ public class ChaosScheduler implements Scheduler {
     public void startAttack () {
         lastChaosTime = nextChaosTime;
         nextChaosTime = null;
+    }
+
+    public static ChaosSchedulerBuilder builder () {
+        return ChaosSchedulerBuilder.aChaosScheduler();
+    }
+
+    public static final class ChaosSchedulerBuilder {
+        private long averageMillisBetweenExperiments;
+        private Instant lastChaosTime;
+        private HolidayManager holidayManager;
+
+        private ChaosSchedulerBuilder () {
+        }
+
+        private static ChaosSchedulerBuilder aChaosScheduler () {
+            return new ChaosSchedulerBuilder();
+        }
+
+        public ChaosSchedulerBuilder withAverageMillisBetweenExperiments (long averageMillisBetweenExperiments) {
+            this.averageMillisBetweenExperiments = averageMillisBetweenExperiments;
+            return this;
+        }
+
+        public ChaosSchedulerBuilder withLastChaosTime (Instant lastChaosTime) {
+            this.lastChaosTime = lastChaosTime;
+            return this;
+        }
+
+        public ChaosSchedulerBuilder withHolidayManager (HolidayManager holidayManager) {
+            this.holidayManager = holidayManager;
+            return this;
+        }
+
+        public ChaosScheduler build () {
+            ChaosScheduler chaosScheduler = new ChaosScheduler();
+            chaosScheduler.lastChaosTime = this.lastChaosTime;
+            chaosScheduler.averageMillisBetweenExperiments = this.averageMillisBetweenExperiments;
+            chaosScheduler.holidayManager = this.holidayManager;
+            return chaosScheduler;
+        }
     }
 }
