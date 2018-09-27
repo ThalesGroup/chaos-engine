@@ -11,6 +11,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import static com.gemalto.chaos.util.CalendarUtils.incrementCalendarToMidnight;
+
 @Component
 public class HolidayManager {
     @Resource(name = "${holidays:CAN}")
@@ -45,16 +47,20 @@ public class HolidayManager {
     }
 
     public long getMillisLeftInDay () {
-        if (isHoliday() || isOutsideWorkingHours()) {
+        return getMillisLeftInDay(holidayCalendar.getToday());
+    }
+
+    private long getMillisLeftInDay (Calendar from) {
+        if (isHoliday(from) || isOutsideWorkingHours(from)) {
             return 0;
         }
-        Calendar endOfDay = holidayCalendar.getToday();
+        Calendar endOfDay = (Calendar) from.clone();
         endOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
         Instant end = endOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
-        if (Instant.now().isAfter(end)) {
+        if (from.toInstant().isAfter(end)) {
             return 0;
         }
-        return (Instant.now().toEpochMilli() - end.toEpochMilli());
+        return from.toInstant().toEpochMilli() - end.toEpochMilli();
     }
 
     private boolean isHoliday (Calendar day) {
@@ -63,6 +69,10 @@ public class HolidayManager {
 
     public boolean isOutsideWorkingHours () {
         return !isWorkingHours(holidayCalendar.getCurrentTime());
+    }
+
+    private boolean isOutsideWorkingHours (Calendar from) {
+        return !isWorkingHours(from.toInstant());
     }
 
     private boolean isWorkingHours (Instant now) {
@@ -111,6 +121,18 @@ public class HolidayManager {
     }
 
     public Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
-        return null;
+        Calendar calendar = GregorianCalendar.from(ZonedDateTime.ofInstant(start, holidayCalendar.getTimeZoneId()));
+        long millisLeftInDay;
+        boolean looper = true;
+        do {
+            millisLeftInDay = getMillisLeftInDay(calendar);
+            if (millisLeftInDay > workingMillis) {
+                incrementCalendarToMidnight(calendar);
+                workingMillis -= millisLeftInDay;
+            } else {
+                looper = false;
+            }
+        } while (looper);
+        return calendar.toInstant().plusMillis(workingMillis);
     }
 }
