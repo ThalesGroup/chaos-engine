@@ -92,6 +92,7 @@ public class AttackManager {
                                                               .parallelStream()
                                                               .peek(platform -> platform.usingHolidayManager(holidayManager))
                                                               .filter(platform1 -> force || platform1.canAttack())
+                                                              .filter(platform1 -> !platform1.getRoster().isEmpty())
                                                               .collect(Collectors.toList());
             if (eligiblePlatforms.isEmpty()) {
                 log.info("No platforms eligible for experiments");

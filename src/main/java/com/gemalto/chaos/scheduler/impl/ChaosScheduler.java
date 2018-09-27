@@ -46,6 +46,7 @@ public class ChaosScheduler implements Scheduler {
         return getInstantAfterWorkingMillis(Instant.now(), workingMillis);
     }
 
+    @Override
     public void startAttack () {
         lastChaosTime = nextChaosTime;
         nextChaosTime = null;
