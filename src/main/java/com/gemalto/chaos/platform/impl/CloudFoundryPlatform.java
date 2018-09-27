@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
@@ -40,6 +41,7 @@ public class CloudFoundryPlatform extends Platform {
         this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
     }
 
+    @JsonIgnore
     public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
         cloudFoundryPlatformInfo.fetchInfo();
         return cloudFoundryPlatformInfo;
