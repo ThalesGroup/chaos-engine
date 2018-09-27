@@ -21,18 +21,17 @@ public class ChaosScheduler implements Scheduler {
     }
 
     private Instant calculateNextChaosTime () {
-        nextChaosTime = getTimeAfterWorkingMillis(lastChaosTime, (long) (getRandomScalingFactor() * averageMillisBetweenExperiments));
+        nextChaosTime = getInstantAfterWorkingMillis(lastChaosTime, (long) (getRandomScalingFactor() * averageMillisBetweenExperiments));
         return nextChaosTime;
+    }
+
+    private Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
+        return holidayManager.getInstantAfterWorkingMillis(start, workingMillis);
     }
 
     private Instant calculateFirstChaosTime () {
-        nextChaosTime = getTimeAfterWorkingMillis((long) (Math.sqrt(getRandomScalingFactor()) * averageMillisBetweenExperiments));
+        nextChaosTime = getInstantAfterWorkingMillis((long) (Math.sqrt(getRandomScalingFactor()) * averageMillisBetweenExperiments));
         return nextChaosTime;
-    }
-
-    private Instant getTimeAfterWorkingMillis (Instant start, long workingMillis) {
-        // TODO Implement
-        return null;
     }
 
     private static double getRandomScalingFactor () {
@@ -43,8 +42,8 @@ public class ChaosScheduler implements Scheduler {
         return Math.log(1 - gaussian) / Math.log(0.5);
     }
 
-    private Instant getTimeAfterWorkingMillis (long workingMillis) {
-        return getTimeAfterWorkingMillis(Instant.now(), workingMillis); // TODO Implement
+    private Instant getInstantAfterWorkingMillis (long workingMillis) {
+        return getInstantAfterWorkingMillis(Instant.now(), workingMillis); // TODO Implement
     }
 
     public void startAttack () {

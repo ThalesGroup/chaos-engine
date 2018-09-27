@@ -109,4 +109,8 @@ public class HolidayManager {
         long endOfDayEpoch = endOfDay.toInstant().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
         return endOfDayEpoch - startOfDayEpoch;
     }
+
+    public Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
+        return null;
+    }
 }
