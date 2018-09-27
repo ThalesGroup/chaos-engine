@@ -77,6 +77,8 @@ public interface HolidayCalendar {
         return linkedDays;
     }
 
+    @SuppressWarnings("MagicConstant")
+    // Easter Algorithm depends on math, and therefore, calendar is set with n-1 instead of Calendar.MARCH or Calendar.APRIL
     default Integer getEaster (int year) {
         // Computus calculation from https://en.wikipedia.org/wiki/Computus
         int a = year % 19;
@@ -97,6 +99,22 @@ public interface HolidayCalendar {
         calendar.clear();
         calendar.set(year, n - 1, p + 1);
         return calendar.get(Calendar.DAY_OF_YEAR);
+    }
+
+    default boolean isBeforeWorkingHours (Calendar from) {
+        Instant time = from.toInstant();
+        ZonedDateTime zdt = time.atZone(getTimeZoneId());
+        DayOfWeek dow = zdt.getDayOfWeek();
+        if (dow == DayOfWeek.SUNDAY || dow == DayOfWeek.SATURDAY) {
+            return false;
+        }
+        int hour = zdt.getHour();
+        return hour < getStartOfDay();
+    }
+
+    default boolean isWeekend (Calendar from) {
+        int dayOfWeek = from.get(Calendar.DAY_OF_WEEK);
+        return dayOfWeek == Calendar.SUNDAY || dayOfWeek == Calendar.SATURDAY;
     }
 }
 

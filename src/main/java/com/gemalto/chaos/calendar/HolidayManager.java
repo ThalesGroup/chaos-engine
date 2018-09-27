@@ -50,17 +50,42 @@ public class HolidayManager {
         return getMillisLeftInDay(holidayCalendar.getToday());
     }
 
+    public Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
+        Calendar calendar = GregorianCalendar.from(ZonedDateTime.ofInstant(start, holidayCalendar.getTimeZoneId()));
+        long millisLeftInDay;
+        boolean looper = true;
+        do {
+            millisLeftInDay = getMillisLeftInDay(calendar);
+            if (millisLeftInDay < workingMillis) {
+                incrementCalendarToMidnight(calendar);
+                workingMillis -= millisLeftInDay;
+            } else {
+                looper = false;
+            }
+        } while (looper);
+        return calendar.toInstant().plusMillis(workingMillis);
+    }
+
     private long getMillisLeftInDay (Calendar from) {
-        if (isHoliday(from) || isOutsideWorkingHours(from)) {
+        if (isHoliday(from) || isWeekend(from)) {
             return 0;
+        }
+        if (isBeforeStartOfWork(from)) {
+            from.set(Calendar.HOUR_OF_DAY, holidayCalendar.getStartOfDay());
         }
         Calendar endOfDay = (Calendar) from.clone();
         endOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
+        endOfDay.set(Calendar.MINUTE, 0);
+        endOfDay.set(Calendar.MILLISECOND, 0);
         Instant end = endOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
         if (from.toInstant().isAfter(end)) {
             return 0;
         }
-        return from.toInstant().toEpochMilli() - end.toEpochMilli();
+        return end.toEpochMilli() - from.toInstant().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
+    }
+
+    private boolean isWeekend (Calendar from) {
+        return holidayCalendar.isWeekend(from);
     }
 
     private boolean isHoliday (Calendar day) {
@@ -69,10 +94,6 @@ public class HolidayManager {
 
     public boolean isOutsideWorkingHours () {
         return !isWorkingHours(holidayCalendar.getCurrentTime());
-    }
-
-    private boolean isOutsideWorkingHours (Calendar from) {
-        return !isWorkingHours(from.toInstant());
     }
 
     private boolean isWorkingHours (Instant now) {
@@ -120,19 +141,7 @@ public class HolidayManager {
         return endOfDayEpoch - startOfDayEpoch;
     }
 
-    public Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
-        Calendar calendar = GregorianCalendar.from(ZonedDateTime.ofInstant(start, holidayCalendar.getTimeZoneId()));
-        long millisLeftInDay;
-        boolean looper = true;
-        do {
-            millisLeftInDay = getMillisLeftInDay(calendar);
-            if (millisLeftInDay > workingMillis) {
-                incrementCalendarToMidnight(calendar);
-                workingMillis -= millisLeftInDay;
-            } else {
-                looper = false;
-            }
-        } while (looper);
-        return calendar.toInstant().plusMillis(workingMillis);
+    private boolean isBeforeStartOfWork (Calendar from) {
+        return holidayCalendar.isBeforeWorkingHours(from);
     }
 }

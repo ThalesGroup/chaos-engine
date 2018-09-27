@@ -43,7 +43,7 @@ public class ChaosScheduler implements Scheduler {
     }
 
     private Instant getInstantAfterWorkingMillis (long workingMillis) {
-        return getInstantAfterWorkingMillis(Instant.now(), workingMillis); // TODO Implement
+        return getInstantAfterWorkingMillis(Instant.now(), workingMillis);
     }
 
     public void startAttack () {
