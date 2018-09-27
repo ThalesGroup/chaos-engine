@@ -77,7 +77,7 @@ public class AttackManager {
         activeAttacks.removeAll(finishedAttacks);
     }
 
-    @Scheduled(cron = "${schedule:0 0 * * * *}")
+    @Scheduled(fixedDelay = 1000 * 15)
     void startAttacks () {
         startAttacks(false);
     }

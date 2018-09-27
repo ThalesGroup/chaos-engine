@@ -109,18 +109,12 @@ public class HolidayManager {
         return Duration.between(startOfDay, lastWorkingDay.toInstant()).toMillis();
     }
 
-    public Instant getStartOfDay () {
-        Calendar startOfDay = holidayCalendar.getToday();
-        startOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getStartOfDay());
-        return startOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
-    }
-
     public long getWorkingMillisInDuration (Duration duration) {
         Instant startTime = Instant.now().minus(duration);
         return getWorkingMillisSinceInstant(startTime);
     }
 
-    public long getWorkingMillisSinceInstant (Instant startTime) {
+    private long getWorkingMillisSinceInstant (Instant startTime) {
         Calendar startDay = GregorianCalendar.from(ZonedDateTime.ofInstant(startTime, holidayCalendar.getTimeZoneId()));
         long millis = 0;
         while (startDay.before(getStartOfDay())) {
@@ -130,7 +124,13 @@ public class HolidayManager {
         return millis;
     }
 
-    public long getTotalMillisInDay () {
+    private Instant getStartOfDay () {
+        Calendar startOfDay = holidayCalendar.getToday();
+        startOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getStartOfDay());
+        return startOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
+    }
+
+    private long getTotalMillisInDay () {
         if (isHoliday()) {
             return 0;
         }
