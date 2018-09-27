@@ -82,11 +82,11 @@ public class AttackManager {
         startAttacks(false);
     }
 
-    synchronized void startAttacks (final boolean force) {
+    synchronized Queue<Attack> startAttacks (final boolean force) {
         if (activeAttacks.isEmpty() && newAttackQueue.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
-                return;
+                return null;
             }
             List<Platform> eligiblePlatforms = platformManager.getPlatforms()
                                                               .parallelStream()
@@ -95,20 +95,24 @@ public class AttackManager {
                                                               .collect(Collectors.toList());
             if (eligiblePlatforms.isEmpty()) {
                 log.info("No platforms eligible for experiments");
-                return;
+                return null;
             }
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
             List<Container> roster = chosenPlatform.startAttack().generateExperimentRoster();
-            if (roster.isEmpty()) return;
+            if (roster.isEmpty()) {
+                return null;
+            }
             Set<Container> containersToAttack;
             do {
                 containersToAttack = roster.parallelStream().filter(Container::canAttack).collect(Collectors.toSet());
             } while (force && containersToAttack.isEmpty());
             containersToAttack.stream()
-                        .map(Container::createAttack)
-                        .map(this::addAttack)
-                        .forEach(attack -> log.info("Attack {}, {} added to the queue", attack.getId(), attack));
+                              .map(Container::createAttack)
+                              .map(this::addAttack)
+                              .forEach(attack -> log.info("Attack {}, {} added to the queue", attack.getId(), attack));
+            return newAttackQueue;
         }
+        return null;
     }
 
     Set<Attack> getActiveAttacks () {

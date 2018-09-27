@@ -32,8 +32,8 @@ public class AttackController {
     }
 
     @PostMapping("/start")
-    public void startAttacks () {
-        attackManager.startAttacks(true);
+    public Queue<Attack> startAttacks () {
+        return attackManager.startAttacks(true);
     }
 
     @PostMapping("/start/{id}")
