@@ -29,7 +29,7 @@ public abstract class Platform implements AttackableObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
     private static final double DEFAULT_PROBABILITY = 0.2D;
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-    private long averageMillisPerAttack = 14400000L;
+    private long averageMillisPerExperiment = 14400000L;
     private Scheduler scheduler;
     private List<AttackType> supportedAttackTypes;
     private Expiring<List<Container>> roster;
@@ -38,8 +38,9 @@ public abstract class Platform implements AttackableObject {
     @Lazy
     private HolidayManager holidayManager;
 
-    public void setAverageMillisPerAttack (long averageMillisPerAttack) {
-        this.averageMillisPerAttack = averageMillisPerAttack;
+    public void setAverageMillisPerExperiment (long averageMillisPerExperiment) {
+        log.info("Setting average time between failure for {} to {} ms", this, averageMillisPerExperiment);
+        this.averageMillisPerExperiment = averageMillisPerExperiment;
         this.scheduler = null;
     }
     void expireCachedRoster () {
@@ -99,8 +100,7 @@ public abstract class Platform implements AttackableObject {
     }
 
     private void initScheduler () {
-        scheduler = ChaosScheduler.builder()
-                                  .withAverageMillisBetweenExperiments(averageMillisPerAttack)
+        scheduler = ChaosScheduler.builder().withAverageMillisBetweenExperiments(averageMillisPerExperiment)
                                   .withHolidayManager(holidayManager)
                                   .build();
     }

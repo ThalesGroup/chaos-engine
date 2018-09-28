@@ -16,6 +16,7 @@ import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -26,6 +27,7 @@ import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECU
 
 @Component
 @ConditionalOnProperty("aws.ec2")
+@ConfigurationProperties("aws.ec2")
 public class AwsEC2Platform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
