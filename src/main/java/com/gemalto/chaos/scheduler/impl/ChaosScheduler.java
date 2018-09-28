@@ -11,7 +11,11 @@ public class ChaosScheduler implements Scheduler {
     private Instant nextChaosTime;
     private Instant lastChaosTime;
     private HolidayManager holidayManager;
+    private Random random;
 
+    public static ChaosSchedulerBuilder builder () {
+        return ChaosSchedulerBuilder.aChaosScheduler();
+    }
 
     @Override
     public Instant getNextChaosTime () {
@@ -25,19 +29,19 @@ public class ChaosScheduler implements Scheduler {
         return nextChaosTime;
     }
 
-    private Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
-        return holidayManager.getInstantAfterWorkingMillis(start, workingMillis);
-    }
-
     private Instant calculateFirstChaosTime () {
         nextChaosTime = getInstantAfterWorkingMillis((long) (Math.sqrt(getRandomScalingFactor()) * averageMillisBetweenExperiments));
         return nextChaosTime;
     }
 
-    private static double getRandomScalingFactor () {
+    private Instant getInstantAfterWorkingMillis (Instant start, long workingMillis) {
+        return holidayManager.getInstantAfterWorkingMillis(start, workingMillis);
+    }
+
+    private double getRandomScalingFactor () {
         double gaussian;
         do {
-            gaussian = new Random().nextGaussian() + 0.5;
+            gaussian = random.nextGaussian() + 0.5;
         } while (gaussian <= 0 || gaussian > 1);
         return Math.log(1 - gaussian) / Math.log(0.5);
     }
@@ -52,14 +56,11 @@ public class ChaosScheduler implements Scheduler {
         nextChaosTime = null;
     }
 
-    public static ChaosSchedulerBuilder builder () {
-        return ChaosSchedulerBuilder.aChaosScheduler();
-    }
-
     public static final class ChaosSchedulerBuilder {
         private long averageMillisBetweenExperiments;
         private Instant lastChaosTime;
         private HolidayManager holidayManager;
+        private Random random = new Random();
 
         private ChaosSchedulerBuilder () {
         }
@@ -83,11 +84,17 @@ public class ChaosScheduler implements Scheduler {
             return this;
         }
 
+        public ChaosSchedulerBuilder withRandom (Random random) {
+            this.random = random;
+            return this;
+        }
+
         public ChaosScheduler build () {
             ChaosScheduler chaosScheduler = new ChaosScheduler();
             chaosScheduler.lastChaosTime = this.lastChaosTime;
             chaosScheduler.averageMillisBetweenExperiments = this.averageMillisBetweenExperiments;
             chaosScheduler.holidayManager = this.holidayManager;
+            chaosScheduler.random = this.random;
             return chaosScheduler;
         }
     }
