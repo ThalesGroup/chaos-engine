@@ -77,7 +77,7 @@ public class AttackManager {
         activeAttacks.removeAll(finishedAttacks);
     }
 
-    @Scheduled(cron = "${schedule:0 0 * * * *}")
+    @Scheduled(fixedDelay = 1000 * 15)
     void startAttacks () {
         startAttacks(false);
     }
@@ -92,6 +92,7 @@ public class AttackManager {
                                                               .parallelStream()
                                                               .peek(platform -> platform.usingHolidayManager(holidayManager))
                                                               .filter(platform1 -> force || platform1.canAttack())
+                                                              .filter(platform1 -> !platform1.getRoster().isEmpty())
                                                               .collect(Collectors.toList());
             if (eligiblePlatforms.isEmpty()) {
                 log.info("No platforms eligible for experiments");

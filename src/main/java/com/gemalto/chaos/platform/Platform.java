@@ -8,17 +8,18 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.scheduler.Scheduler;
+import com.gemalto.chaos.scheduler.impl.ChaosScheduler;
 import com.gemalto.chaos.util.Expiring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,17 +28,21 @@ import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_SELF_HEALING_I
 public abstract class Platform implements AttackableObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
     private static final double DEFAULT_PROBABILITY = 0.2D;
-    private static final int MIN_ATTACKS_PER_PERIOD = 3;
-    private static final int MAX_ATTACKS_PER_PERIOD = 5;
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    private long averageMillisPerExperiment = 14400000L;
+    private Scheduler scheduler;
     private List<AttackType> supportedAttackTypes;
     private Expiring<List<Container>> roster;
-    private TemporalUnit attackPeriod = ChronoUnit.DAYS;
     private Set<Instant> attackTimes = new HashSet<>();
-    private Instant lastAttackTime = Instant.now();
+    @Autowired
+    @Lazy
     private HolidayManager holidayManager;
-    private Double destructionThreshold;
 
+    public void setAverageMillisPerExperiment (long averageMillisPerExperiment) {
+        log.info("Setting average time between failure for {} to {} ms", this, averageMillisPerExperiment);
+        this.averageMillisPerExperiment = averageMillisPerExperiment;
+        this.scheduler = null;
+    }
     void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
@@ -67,10 +72,6 @@ public abstract class Platform implements AttackableObject {
         return supportedAttackTypes;
     }
 
-    static double calculateMTBFPercentile (float millisSinceLastAttack, float averageTimeBetweenAttacks) {
-        return 1 - Math.pow(0.5, millisSinceLastAttack / averageTimeBetweenAttacks);
-    }
-
     public synchronized List<Container> getRoster () {
         List<Container> returnValue;
         if (roster == null || roster.value() == null) {
@@ -86,79 +87,31 @@ public abstract class Platform implements AttackableObject {
         return returnValue;
     }
 
-    @Override
-    public synchronized boolean canAttack () {
-        if (holidayManager.isOutsideWorkingHours() || holidayManager.isHoliday()) return false;
-        if (belowMinAttacks()) {
-            log.info("{} is below its experiment quota. Eligible for experiment.", this.getClass().getSimpleName());
-            return true;
-        } else if (aboveMaxAttacks()) {
-            log.info("{} is above its experiment quota. Not eligible for experiment..", this.getClass()
-                                                                                            .getSimpleName());
-            return false;
-        }
-        double attackChance = getAttackChance();
-        if (destructionThreshold == null) {
-            generateDestructionThreshold();
-        }
-        if (attackChance > destructionThreshold) {
-            log.info("Experiment threshold reached for {}", this);
-            return true;
-        }
-        log.debug("Still not yet at experiment threshold: {}/{}", attackChance, destructionThreshold);
-        return false;
-    }
-
-    private boolean belowMinAttacks () {
-        return getAttacksInPeriod() < MIN_ATTACKS_PER_PERIOD;
-    }
-
-    private boolean aboveMaxAttacks () {
-        return getAttacksInPeriod() >= MAX_ATTACKS_PER_PERIOD;
-    }
-
-    private double getAttackChance () {
-        long millisSinceLastAttack;
-        long averageTimeBetweenAttacks;
-        if (attackPeriod.getDuration().toMillis() > ChronoUnit.DAYS.getDuration().toMillis()) {
-            // Handle if probability is in weeks/months
-            averageTimeBetweenAttacks = holidayManager.getWorkingMillisInDuration(attackPeriod.getDuration()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
-            millisSinceLastAttack = holidayManager.getWorkingMillisSinceInstant(lastAttackTime);
-        } else {
-            averageTimeBetweenAttacks = Math.min(attackPeriod.getDuration()
-                                                             .toMillis(), holidayManager.getTotalMillisInDay()) / ((MAX_ATTACKS_PER_PERIOD + MIN_ATTACKS_PER_PERIOD) / 2);
-            long now = Instant.now().toEpochMilli();
-            Instant startOfDay = holidayManager.getStartOfDay();
-            long lastAttackTimeMillis = lastAttackTime.toEpochMilli();
-            millisSinceLastAttack = now - lastAttackTimeMillis - (lastAttackTime.isBefore(startOfDay) ? holidayManager.getOvernightMillis() : 0);
-            if (millisSinceLastAttack <= 0) return 0;
-        }
-        return calculateMTBFPercentile(millisSinceLastAttack, averageTimeBetweenAttacks);
-    }
-
     protected abstract List<Container> generateRoster ();
 
-    private int getAttacksInPeriod () {
-        Instant beginningOfAttackPeriod;
-        if (holidayManager != null && attackPeriod == ChronoUnit.DAYS) {
-            // If we're dealing in days, we need prune this down to working days.
-            beginningOfAttackPeriod = holidayManager.getPreviousWorkingDay();
-        } else {
-            beginningOfAttackPeriod = Instant.now().minus(1, attackPeriod);
-        }
-        return (int) attackTimes.stream().filter(instant -> instant.isAfter(beginningOfAttackPeriod)).count();
+    @Override
+    public synchronized boolean canAttack () {
+        return getScheduler().getNextChaosTime().isBefore(Instant.now());
     }
 
-    private void generateDestructionThreshold () {
-        do {
-            destructionThreshold = (new Random().nextGaussian() / 4.0F) + 0.5;
-        } while (destructionThreshold <= 0.1 || destructionThreshold >= 0.9);
+    private Scheduler getScheduler () {
+        if (scheduler == null) initScheduler();
+        return scheduler;
+    }
+
+    private void initScheduler () {
+        scheduler = ChaosScheduler.builder().withAverageMillisBetweenExperiments(averageMillisPerExperiment)
+                                  .withHolidayManager(holidayManager)
+                                  .build();
+    }
+
+    public Instant getNextChaosTime () {
+        return getScheduler().getNextChaosTime();
     }
 
     public Platform startAttack () {
-        lastAttackTime = Instant.now();
-        destructionThreshold = null;
-        attackTimes.add(lastAttackTime);
+        getScheduler().startAttack();
+        attackTimes.add(Instant.now());
         return this;
     }
 

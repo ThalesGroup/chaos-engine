@@ -17,6 +17,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
+@ConfigurationProperties("cf")
 public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
     private ContainerManager containerManager;

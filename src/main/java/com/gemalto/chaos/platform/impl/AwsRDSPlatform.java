@@ -18,9 +18,9 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,6 +34,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
 @ConditionalOnProperty("aws.rds")
+@ConfigurationProperties("aws.rds")
 @Component
 public class AwsRDSPlatform extends Platform {
     @Autowired
@@ -45,6 +46,7 @@ public class AwsRDSPlatform extends Platform {
 
     @Autowired
     public AwsRDSPlatform () {
+        log.info("Created AWS RDS Platform");
     }
 
     AwsRDSPlatform (AmazonRDS amazonRDS, AmazonEC2 amazonEC2) {
@@ -196,10 +198,6 @@ public class AwsRDSPlatform extends Platform {
         return UNDER_ATTACK;
     }
 
-    @PostConstruct
-    private void postConstruct () {
-        log.info("Created AmazonRDS Platform");
-    }
 
     public void failoverCluster (String dbClusterIdentifier) {
         amazonRDS.failoverDBCluster(new FailoverDBClusterRequest().withDBClusterIdentifier(dbClusterIdentifier));

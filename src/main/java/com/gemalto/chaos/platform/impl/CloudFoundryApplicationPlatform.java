@@ -22,6 +22,7 @@ import org.cloudfoundry.operations.routes.MapRouteRequest;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -33,6 +34,7 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
+@ConfigurationProperties("cf")
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryClient cloudFoundryClient;
