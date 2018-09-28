@@ -59,6 +59,13 @@ public class ChaosSchedulerTest {
         assertEquals(now.plusMillis(Millis1), scheduler.getNextChaosTime()); // Two asserts to test caching.
     }
 
+    @Test
+    public void testScalingFactorBoundaries () {
+        doReturn(-1D, 2 * Math.sqrt(2) - 0.9, 0D).when(random).nextGaussian();
+        scheduler.getNextChaosTime();
+        verify(random, times(3)).nextGaussian();
+    }
+
     @Configuration
     static class ChaosSchedulerTestConfig {
         @Autowired
