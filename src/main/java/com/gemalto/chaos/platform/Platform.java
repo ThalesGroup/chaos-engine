@@ -38,6 +38,10 @@ public abstract class Platform implements AttackableObject {
     @Lazy
     private HolidayManager holidayManager;
 
+    public void setAverageMillisPerAttack (long averageMillisPerAttack) {
+        this.averageMillisPerAttack = averageMillisPerAttack;
+        this.scheduler = null;
+    }
     void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
