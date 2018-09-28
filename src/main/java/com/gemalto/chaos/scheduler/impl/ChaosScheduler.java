@@ -41,7 +41,7 @@ public class ChaosScheduler implements Scheduler {
     private double getRandomScalingFactor () {
         double gaussian;
         do {
-            gaussian = random.nextGaussian() + 0.5;
+            gaussian = (random.nextGaussian() + 1) * 0.5 / Math.sqrt(2);
         } while (gaussian <= 0 || gaussian > 1);
         return Math.log(1 - gaussian) / Math.log(0.5);
     }
