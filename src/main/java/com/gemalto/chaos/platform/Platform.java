@@ -38,10 +38,6 @@ public abstract class Platform implements AttackableObject {
     @Lazy
     private HolidayManager holidayManager;
 
-    static double calculateMTBFPercentile (float millisSinceLastAttack, float averageTimeBetweenAttacks) {
-        return 1 - Math.pow(0.5, millisSinceLastAttack / averageTimeBetweenAttacks);
-    }
-
     void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
