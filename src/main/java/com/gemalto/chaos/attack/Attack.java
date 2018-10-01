@@ -166,11 +166,6 @@ public abstract class Attack {
             case UNDER_ATTACK:
             default:
                 doSelfHealing();
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
-                                                               .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("Attack not yet finished.")
-                                                               .build());
                 return AttackState.STARTED;
         }
     }
@@ -184,9 +179,7 @@ public abstract class Attack {
                     StringBuilder message = new StringBuilder();
                     message.append("The attack has gone on too long, invoking self-healing.");
                     if (selfHealingCounter.incrementAndGet() > 1) {
-                        message.append("This is self healing attempt number ")
-                               .append(selfHealingCounter.get())
-                               .append(".");
+                        message.append("This is self healing attempt number ").append(selfHealingCounter.get()).append(".");
                     }
                     chaosEvent = ChaosEvent.builder()
                                            .fromAttack(this)
@@ -216,6 +209,12 @@ public abstract class Attack {
                                                                .withMessage("An exception occurred while running self-healing.")
                                                                .build());
             }
+        } else {
+            notificationManager.sendNotification(ChaosEvent.builder()
+                                                           .fromAttack(this)
+                                                           .withNotificationLevel(NotificationLevel.WARN)
+                                                           .withMessage("Attack not yet finished.")
+                                                           .build());
         }
     }
 
