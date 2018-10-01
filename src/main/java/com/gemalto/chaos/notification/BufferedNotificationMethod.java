@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.gemalto.chaos.constants.Math.PHI;
+import static com.gemalto.chaos.constants.MathUtils.PHI;
 
 public abstract class BufferedNotificationMethod implements NotificationMethods {
     private static final Integer FORCED_FLUSH_SIZE = 50;

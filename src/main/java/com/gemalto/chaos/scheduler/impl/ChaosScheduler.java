@@ -1,6 +1,7 @@
 package com.gemalto.chaos.scheduler.impl;
 
 import com.gemalto.chaos.calendar.HolidayManager;
+import com.gemalto.chaos.constants.MathUtils;
 import com.gemalto.chaos.scheduler.Scheduler;
 
 import java.time.Instant;
@@ -41,7 +42,7 @@ public class ChaosScheduler implements Scheduler {
     private double getRandomScalingFactor () {
         double gaussian;
         do {
-            gaussian = (random.nextGaussian() + 1) * 0.5 / Math.sqrt(2);
+            gaussian = (random.nextGaussian() + 1) * 0.5 / MathUtils.RAMANUJAN_SOLDNER_CONSTANT;
         } while (gaussian <= 0.01 || gaussian >= 0.99999);
         return Math.log(1 - gaussian) / Math.log(0.5);
     }
