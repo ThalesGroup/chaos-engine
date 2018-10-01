@@ -32,7 +32,7 @@ public class ChaosSchedulerTest {
 
     @Test
     public void getNextChaosTime () {
-        final long Millis1 = 11424173L;
+        final long Millis1 = 11240648L;
         final double Gauss1 = 0D;
         doReturn(Gauss1).when(random).nextGaussian();
         doReturn(now.plusMillis(Millis1)).when(holidayManager)
@@ -50,7 +50,7 @@ public class ChaosSchedulerTest {
                                   .withRandom(random)
                                   .withLastChaosTime(now)
                                   .build();
-        final long Millis1 = 9063314L;
+        final long Millis1 = 8774457L;
         final double Gauss1 = 0D;
         doReturn(Gauss1).when(random).nextGaussian();
         doReturn(now.plusMillis(Millis1)).when(holidayManager).getInstantAfterWorkingMillis(eq(now), eq(Millis1));
