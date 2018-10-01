@@ -39,6 +39,7 @@ public abstract class Platform implements AttackableObject {
     private HolidayManager holidayManager;
 
     public void setAverageMillisPerExperiment (long averageMillisPerExperiment) {
+        if (averageMillisPerExperiment == this.averageMillisPerExperiment) return;
         log.info("Setting average time between failure for {} to {} ms", this, averageMillisPerExperiment);
         this.averageMillisPerExperiment = averageMillisPerExperiment;
         this.scheduler = null;
