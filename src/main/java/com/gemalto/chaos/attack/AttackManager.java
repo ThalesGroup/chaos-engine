@@ -88,8 +88,7 @@ public class AttackManager {
                 log.warn("There are no platforms enabled");
                 return null;
             }
-            List<Platform> eligiblePlatforms = platformManager.getPlatforms()
-                                                              .parallelStream()
+            List<Platform> eligiblePlatforms = platformManager.getPlatforms().stream()
                                                               .peek(platform -> platform.usingHolidayManager(holidayManager))
                                                               .filter(platform1 -> force || platform1.canAttack())
                                                               .filter(platform1 -> !platform1.getRoster().isEmpty())
