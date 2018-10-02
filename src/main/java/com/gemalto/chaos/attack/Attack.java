@@ -142,6 +142,35 @@ public abstract class Attack {
     }
 
     private synchronized AttackState checkAttackState () {
+        switch (checkContainerHealth()) {
+            case NORMAL:
+                if (isFinalizable()) {
+                    log.info("Attack {} complete", id);
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .fromAttack(this)
+                                                                   .withNotificationLevel(NotificationLevel.GOOD)
+                                                                   .withMessage("Attack finished. Container recovered from the attack")
+                                                                   .build());
+                    finalizeAttack();
+                    return AttackState.FINISHED;
+                }
+                return AttackState.STARTED;
+            case DOES_NOT_EXIST:
+                log.info("Attack {} no longer maps to existing container", id);
+                notificationManager.sendNotification(ChaosEvent.builder()
+                                                               .fromAttack(this)
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withMessage("Container no longer exists.")
+                                                               .build());
+                return AttackState.FINISHED;
+            case UNDER_ATTACK:
+            default:
+                doSelfHealing();
+                return AttackState.STARTED;
+        }
+    }
+
+    private void doSelfHealing () {
         if (isOverDuration()) {
             try {
                 log.warn("The attack {} has gone on too long, invoking self-healing. \n{}", id, this);
@@ -180,38 +209,15 @@ public abstract class Attack {
                                                                .withMessage("An exception occurred while running self-healing.")
                                                                .build());
             }
-        }
-        switch (checkContainerHealth()) {
-            case NORMAL:
-                if (isFinalizable()) {
-                    log.info("Attack {} complete", id);
-                    notificationManager.sendNotification(ChaosEvent.builder()
-                                                                   .fromAttack(this)
-                                                                   .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Attack finished. Container recovered from the attack")
-                                                                   .build());
-                    finalizeAttack();
-                    return AttackState.FINISHED;
-                }
-                return AttackState.STARTED;
-            case DOES_NOT_EXIST:
-                log.info("Attack {} no longer maps to existing container", id);
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Container no longer exists.")
-                                                               .build());
-                return AttackState.FINISHED;
-            case UNDER_ATTACK:
-            default:
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
-                                                               .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("Attack not yet finished.")
-                                                               .build());
-                return AttackState.STARTED;
+        } else {
+            notificationManager.sendNotification(ChaosEvent.builder()
+                                                           .fromAttack(this)
+                                                           .withNotificationLevel(NotificationLevel.WARN)
+                                                           .withMessage("Attack not yet finished.")
+                                                           .build());
         }
     }
+
 
     private boolean isOverDuration () {
         return Instant.now().isAfter(startTime.plus(duration));
