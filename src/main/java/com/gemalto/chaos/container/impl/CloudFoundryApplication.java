@@ -43,6 +43,11 @@ public class CloudFoundryApplication extends Container {
         return null;
     };
 
+    @Override
+    public String getUniqueIdentifier () {
+        return name;
+    }
+
     public Integer getOriginalContainerInstances () {
         return originalContainerInstances;
     }

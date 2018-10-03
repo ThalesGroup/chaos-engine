@@ -62,6 +62,11 @@ public class CloudFoundryContainer extends Container {
         return name + " - (" + instance + ")";
     }
 
+    @Override
+    public String getUniqueIdentifier () {
+        return name + " (" + instance + ")";
+    }
+
     @StateAttack
     public void restartContainer (Attack attack) {
         attack.setSelfHealingMethod(restageApplication);

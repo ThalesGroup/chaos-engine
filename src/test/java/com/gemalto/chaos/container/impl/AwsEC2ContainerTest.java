@@ -116,4 +116,9 @@ public class AwsEC2ContainerTest {
         attack.getSelfHealingMethod().call();
         Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
+
+    @Test
+    public void getUniqueIdentifier () {
+        assertEquals(INSTANCE_ID, awsEC2Container.getUniqueIdentifier());
+    }
 }

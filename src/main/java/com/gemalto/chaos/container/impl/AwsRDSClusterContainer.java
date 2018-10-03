@@ -38,6 +38,11 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return getDbClusterIdentifier();
     }
 
+    @Override
+    public String getUniqueIdentifier () {
+        return dbClusterIdentifier;
+    }
+
     public String getDbClusterIdentifier () {
         return dbClusterIdentifier;
     }

@@ -37,6 +37,11 @@ public class ContainerTest {
         public String getSimpleName () {
             return null;
         }
+
+        @Override
+        public String getUniqueIdentifier () {
+            return null;
+        }
     };
     private Container testContainer2 = new Container() {
         @StateAttack
@@ -59,6 +64,11 @@ public class ContainerTest {
 
         @Override
         public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public String getUniqueIdentifier () {
             return null;
         }
     };

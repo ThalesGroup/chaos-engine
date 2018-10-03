@@ -109,4 +109,9 @@ public class AwsRDSClusterContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).failoverCluster(dbClusterIdentifier);
     }
+
+    @Test
+    public void getUniqueIdentifier () {
+        assertEquals(dbClusterIdentifier, awsRDSClusterContainer.getUniqueIdentifier());
+    }
 }

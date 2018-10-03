@@ -174,4 +174,6 @@ public abstract class Container implements AttackableObject {
     public Duration getMinimumSelfHealingInterval () {
         return getPlatform().getMinimumSelfHealingInterval();
     }
+
+    public abstract String getUniqueIdentifier();
 }

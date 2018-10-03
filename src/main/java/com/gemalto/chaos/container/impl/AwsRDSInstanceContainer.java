@@ -41,6 +41,11 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
     }
 
+    @Override
+    public String getUniqueIdentifier () {
+        return dbInstanceIdentifier;
+    }
+
     @NetworkAttack
     public void removeSecurityGroups (Attack attack) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);

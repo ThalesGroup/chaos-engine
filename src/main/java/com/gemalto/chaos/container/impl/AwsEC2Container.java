@@ -51,6 +51,11 @@ public class AwsEC2Container extends AwsContainer {
         return String.format("%s (%s) [%s]", name, keyName, instanceId);
     }
 
+    @Override
+    public String getUniqueIdentifier () {
+        return instanceId;
+    }
+
     @StateAttack
     public void stopContainer (Attack attack) {
         awsEC2Platform.stopInstance(instanceId);

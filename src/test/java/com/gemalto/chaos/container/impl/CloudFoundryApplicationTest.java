@@ -175,4 +175,9 @@ public class CloudFoundryApplicationTest {
     public void getSimpleName () {
         assertEquals(name, cloudFoundryApplication.getSimpleName());
     }
+
+    @Test
+    public void getUniqueIdentifier () {
+        assertEquals(name, cloudFoundryApplication.getUniqueIdentifier());
+    }
 }

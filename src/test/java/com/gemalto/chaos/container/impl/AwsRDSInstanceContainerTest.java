@@ -53,4 +53,9 @@ public class AwsRDSInstanceContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).restartInstance(dbInstanceIdentifier);
     }
+
+    @Test
+    public void getUniqueIdentifier () {
+        assertEquals(dbInstanceIdentifier, awsRDSInstanceContainer.getUniqueIdentifier());
+    }
 }

@@ -128,4 +128,9 @@ public class CloudFoundryContainerTest {
         doReturn(ContainerHealth.NORMAL).when(cloudFoundryContainerPlatform).checkHealth(applicationId, instance);
         assertEquals(ContainerHealth.NORMAL, cloudFoundryContainer.updateContainerHealthImpl(AttackType.STATE));
     }
+
+    @Test
+    public void getUniqueIdentifier () {
+        assertEquals(name + " (" + instance + ")", cloudFoundryContainer.getUniqueIdentifier());
+    }
 }
