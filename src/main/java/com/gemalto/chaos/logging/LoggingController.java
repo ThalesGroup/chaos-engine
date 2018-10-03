@@ -18,14 +18,14 @@ public class LoggingController {
 
     @ApiOperation(value = "Set Base Logging Level", notes = "Sets the logging level for the com.gemalto class.")
     @PostMapping
-    public String setLogLevel (@ApiParam(value = "The new logging level to use (i.e., DEBUG, INFO, WARN, ERROR)", required = true) @RequestParam LoggingLevel loggingLevel) {
+    public String setLogLevel (@ApiParam(value = "The new logging level to use", required = true) @RequestParam LoggingLevel loggingLevel) {
         setLogLevel(loggingLevel, GEMALTO_CLASS);
         return "ok";
     }
 
     @ApiOperation(value = "Set Class Logging Level", notes = "Sets the logging level for a specific Java Class Path.")
     @PostMapping("/{loggingClass}")
-    public String setLogLevel (@ApiParam(value = "The new logging level to use (i.e., DEBUG, INFO, WARN, ERROR)") @RequestParam LoggingLevel loggingLevel, @ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.gemalto, com.gemalto.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
+    public String setLogLevel (@ApiParam(value = "The new logging level to use") @RequestParam LoggingLevel loggingLevel, @ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.gemalto, com.gemalto.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
         Logger logger = (Logger) LoggerFactory.getLogger(loggingClass);
         logger.setLevel(Level.valueOf(loggingLevel.toString()));
         logger.info(ALWAYS, "Logging level changed to {}", loggingLevel);
