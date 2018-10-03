@@ -73,6 +73,40 @@ public class AttackManagerTest {
         verify(container2, times(0)).createAttack();
     }
 
+    //SCT-6233
+    public void noAttacksOnHolidays () {
+        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
+        List<Container> containerListApps = new ArrayList<>();
+        containerListApps.add(container1);
+        containerListApps.add(container2);
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(pcfApplicationPlatform);
+        when(platformManager.getPlatforms()).thenReturn(platforms);
+        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(pcfApplicationPlatform.canAttack()).thenReturn(true);
+        when(container1.canAttack()).thenReturn(true);
+        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container2.canAttack()).thenReturn(true);
+        when(container2.createAttack()).thenReturn(attack2);
+        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(attack1.startAttack(notificationManager)).thenReturn(true);
+        when(attack2.startAttack(notificationManager)).thenReturn(true);
+        when(attack1.getContainer()).thenReturn(container1);
+        when(attack2.getContainer()).thenReturn(container2);
+        when(holidayManager.isHoliday()).thenReturn(false);
+        when(holidayManager.isOutsideWorkingHours()).thenReturn(true);
+        attackManager.startAttacks();
+        Queue<Attack> attacks = attackManager.getNewAttackQueue();
+        int scheduledAttacks = attacks.size();
+        attackManager.updateAttackStatus();
+        Set<Attack> activeAttacks = attackManager.getActiveAttacks();
+        int activeAttacksCount = activeAttacks.size();
+        assertEquals(0, activeAttacksCount);
+    }
+
     //SCT-5854
     @Test
     public void avoidOverlappingAttacks () {
