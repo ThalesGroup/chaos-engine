@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform;
 
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,11 +27,13 @@ public class PlatformController {
         this.platformManager = platformManager;
     }
 
+    @ApiOperation(value = "Get Platforms", notes = "Returns a list of all platforms registered with the Chaos Engine, including their rosters and attack history.")
     @GetMapping
     public Collection<Platform> getPlatforms () {
         return platformManager.getPlatforms();
     }
 
+    @ApiOperation(value = "Get Platform Health", notes = "Returns the aggregate health level of each Platform Level (i.e., IaaS, PaaS, SaaS), and an overall health level.")
     @GetMapping("/health")
     public Map<PlatformLevel, PlatformHealth> getPlatformHealth () {
         EnumMap<PlatformLevel, PlatformHealth> returnValue;
@@ -42,6 +45,7 @@ public class PlatformController {
         return returnValue;
     }
 
+    @ApiOperation(value = "Refresh Platform Rosters", notes = "Triggers all the platforms to expire their cached roster of containers, triggering them to be recreated on next call.")
     @PostMapping("/refresh")
     public void expirePlatformRosterCache () {
         platformManager.expirePlatformCachedRosters();
