@@ -5,6 +5,7 @@ import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
@@ -63,8 +64,8 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
-    public String getUniqueIdentifier () {
-        return name + " (" + instance + ")";
+    public DataDogIdentifier getDataDogIdentifier () {
+        return DataDogIdentifier.dataDogIdentifier().withValue(name + "-" + instance);
     }
 
     @StateAttack

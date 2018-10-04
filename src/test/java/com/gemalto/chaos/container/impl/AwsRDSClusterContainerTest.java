@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,7 +112,8 @@ public class AwsRDSClusterContainerTest {
     }
 
     @Test
-    public void getUniqueIdentifier () {
-        assertEquals(dbClusterIdentifier, awsRDSClusterContainer.getUniqueIdentifier());
+    public void getDataDogIdentifier () {
+        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("dbClusterIdentifier")
+                .withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
     }
 }

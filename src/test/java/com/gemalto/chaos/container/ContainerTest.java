@@ -4,6 +4,7 @@ import com.gemalto.chaos.attack.annotations.NetworkAttack;
 import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import org.hamcrest.collection.IsEmptyIterable;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
@@ -39,7 +40,7 @@ public class ContainerTest {
         }
 
         @Override
-        public String getUniqueIdentifier () {
+        public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }
     };
@@ -68,7 +69,7 @@ public class ContainerTest {
         }
 
         @Override
-        public String getUniqueIdentifier () {
+        public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }
     };
