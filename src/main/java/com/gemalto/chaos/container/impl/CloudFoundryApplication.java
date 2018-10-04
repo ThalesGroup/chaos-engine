@@ -7,6 +7,7 @@ import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
@@ -44,8 +45,9 @@ public class CloudFoundryApplication extends Container {
     };
 
     @Override
-    public String getUniqueIdentifier () {
-        return name;
+    public DataDogIdentifier getDataDogIdentifier () {
+        return DataDogIdentifier.dataDogIdentifier().withKey("application")
+                .withValue(name);
     }
 
     public Integer getOriginalContainerInstances () {

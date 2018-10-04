@@ -6,6 +6,7 @@ import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
+import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class AwsEC2Container extends AwsContainer {
     private String instanceId;
@@ -52,8 +54,8 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @Override
-    public String getUniqueIdentifier () {
-        return instanceId;
+    public DataDogIdentifier getDataDogIdentifier () {
+        return dataDogIdentifier().withValue(instanceId);
     }
 
     @StateAttack

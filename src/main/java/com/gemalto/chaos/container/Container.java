@@ -7,6 +7,7 @@ import com.gemalto.chaos.attack.AttackableObject;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,5 +176,5 @@ public abstract class Container implements AttackableObject {
         return getPlatform().getMinimumSelfHealingInterval();
     }
 
-    public abstract String getUniqueIdentifier();
+    public abstract DataDogIdentifier getDataDogIdentifier ();
 }

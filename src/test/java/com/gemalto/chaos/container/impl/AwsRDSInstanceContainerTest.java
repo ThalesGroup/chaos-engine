@@ -1,6 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,9 @@ public class AwsRDSInstanceContainerTest {
     }
 
     @Test
-    public void getUniqueIdentifier () {
-        assertEquals(dbInstanceIdentifier, awsRDSInstanceContainer.getUniqueIdentifier());
+    public void getDataDogIdentifier () {
+        assertEquals(DataDogIdentifier.dataDogIdentifier()
+                .withKey("dbinstanceidentifier")
+                .withValue(dbInstanceIdentifier), awsRDSInstanceContainer.getDataDogIdentifier());
     }
 }

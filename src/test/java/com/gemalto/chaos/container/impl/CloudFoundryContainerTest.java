@@ -3,6 +3,7 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
@@ -130,7 +131,9 @@ public class CloudFoundryContainerTest {
     }
 
     @Test
-    public void getUniqueIdentifier () {
-        assertEquals(name + " (" + instance + ")", cloudFoundryContainer.getUniqueIdentifier());
+    public void getDataDogIdentifier () {
+        assertEquals(DataDogIdentifier.dataDogIdentifier()
+                                      .withKey("Host")
+                                      .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
     }
 }

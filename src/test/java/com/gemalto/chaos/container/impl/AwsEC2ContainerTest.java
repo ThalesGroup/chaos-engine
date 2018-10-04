@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.attack.Attack;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,7 +119,9 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    public void getUniqueIdentifier () {
-        assertEquals(INSTANCE_ID, awsEC2Container.getUniqueIdentifier());
+    public void getDataDogIdentifier () {
+        assertEquals(DataDogIdentifier.dataDogIdentifier()
+                                      .withValue(INSTANCE_ID)
+                                      .withKey("Host"), awsEC2Container.getDataDogIdentifier());
     }
 }

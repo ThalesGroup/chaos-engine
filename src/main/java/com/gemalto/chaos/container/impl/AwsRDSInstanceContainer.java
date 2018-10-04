@@ -6,10 +6,13 @@ import com.gemalto.chaos.attack.annotations.StateAttack;
 import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
 import java.util.Collection;
+
+import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
     private String dbInstanceIdentifier;
@@ -42,8 +45,8 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     }
 
     @Override
-    public String getUniqueIdentifier () {
-        return dbInstanceIdentifier;
+    public DataDogIdentifier getDataDogIdentifier () {
+        return dataDogIdentifier().withKey("dbinstanceidentifier").withValue(dbInstanceIdentifier);
     }
 
     @NetworkAttack
