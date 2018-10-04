@@ -2,6 +2,8 @@ package com.gemalto.chaos.notification.datadog;
 
 import com.gemalto.chaos.constants.DataDogConstants;
 
+import static com.gemalto.chaos.util.StringUtils.addQuotesIfNecessary;
+
 public class DataDogIdentifier {
     private String key = DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY;
     private String value;
@@ -45,5 +47,10 @@ public class DataDogIdentifier {
     public DataDogIdentifier withValue (String value) {
         this.value = value;
         return this;
+    }
+
+    @Override
+    public String toString () {
+        return addQuotesIfNecessary(key) + "=" + addQuotesIfNecessary(value);
     }
 }
