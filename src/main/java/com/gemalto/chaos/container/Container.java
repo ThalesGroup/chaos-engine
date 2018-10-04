@@ -176,5 +176,6 @@ public abstract class Container implements AttackableObject {
         return getPlatform().getMinimumSelfHealingInterval();
     }
 
+    @JsonIgnore
     public abstract DataDogIdentifier getDataDogIdentifier ();
 }
