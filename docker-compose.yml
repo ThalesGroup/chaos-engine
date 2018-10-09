@@ -8,11 +8,26 @@ services:
     env_file: .env
     depends_on:
     - vault
+    - datadog
+    labels:
+      com.datadoghq.ad.logs: |
+        [
+          {
+            "source":"Chaos Engine",
+            "service": "chaosengine"
+          }
+        ]
   datadog:
     image: datadog/agent:latest
     environment:
       DD_LOGS_ENABLED: "true"
       DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_AC_EXCLUDE: "image:datadog/agent image:vault"
+      DD_ENABLE_PAYLOADS_EVENTS: "false"
+      DD_ENABLE_PAYLOADS_SERIES: "false"
+      DD_ENABLE_PAYLOADS_SERVICE_CHECKS: "false"
+      DD_ENABLE_PAYLOADS_SKETCHES: "false"
+    env_file: .datadog_api_key
     volumes:
     - type: bind
       source: /var/run/docker.sock
