@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    <logger name="org.springframework" level="WARN"/>
     <logger name="com.gemalto" level="DEBUG"/>
-    <logger name="org.apache" level="WARN"/>
-    <logger name="net.schmizz" level="OFF"/>
+    <logger name="org.springframework" level="WARN" />
 
+    <appender name="Chaos" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"env":"prod"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="OFF">
+        <appender-ref ref="Chaos"/>
+    </root>
     <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
         <Name>ALWAYS</Name>
         <Marker>ALWAYS</Marker>
