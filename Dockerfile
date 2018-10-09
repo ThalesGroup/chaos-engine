@@ -5,7 +5,11 @@ RUN mvn dependency:go-offline -Dsilent=true
 ADD src /chaosengine/src
 RUN cd /chaosengine && mvn clean test package
 
-FROM openjdk:8-jre-alpine
+FROM openjdk:8-jre-alpine AS test
 EXPOSE 8080
 COPY --from=build-env /chaosengine/target/chaosengine.jar /
+ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/chaosengine.jar"]
+
+FROM test
+ENV DEPLOYMENT_ENVIRONMENT=PROD
