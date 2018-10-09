@@ -9,6 +9,7 @@ FROM openjdk:8-jre-alpine AS test
 EXPOSE 8080
 COPY --from=build-env /chaosengine/target/chaosengine.jar /
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
+LABEL com.datadoghq.ad.logs="[ { \"source\":\"Chaos Engine\", \"service\": \"chaosengine\" } ]"
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/chaosengine.jar"]
 
 FROM test

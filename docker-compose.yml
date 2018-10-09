@@ -13,14 +13,6 @@ services:
     depends_on:
     - vault
     - datadog
-    labels:
-      com.datadoghq.ad.logs: |
-        [
-          {
-            "source":"Chaos Engine",
-            "service": "chaosengine"
-          }
-        ]
   datadog:
     image: datadog/agent:latest
     environment:
