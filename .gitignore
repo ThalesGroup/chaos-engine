@@ -21,3 +21,4 @@ buildNumber.properties
 *.iws
 
 .env
+.datadog_api_key
