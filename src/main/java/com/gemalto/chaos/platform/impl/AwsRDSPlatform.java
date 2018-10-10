@@ -30,6 +30,7 @@ import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
@@ -204,14 +205,11 @@ public class AwsRDSPlatform extends Platform {
     }
 
     public void restartInstance (String... dbInstanceIdentifiers) {
-        for (String dbInstanceIdentifier : dbInstanceIdentifiers) {
-            restartInstance(dbInstanceIdentifier, dbInstanceIdentifiers.length > 1);
-        }
+        asList(dbInstanceIdentifiers).parallelStream().forEach(this::restartInstance);
     }
 
-    private void restartInstance (String dbInstanceIdentifier, Boolean failover) {
-        amazonRDS.rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
-                                                                .withForceFailover(failover));
+    private void restartInstance (String dbInstanceIdentifier) {
+        amazonRDS.rebootDBInstance(new RebootDBInstanceRequest(dbInstanceIdentifier));
     }
 
     public Set<String> getClusterInstances (String dbClusterIdentifier) {
