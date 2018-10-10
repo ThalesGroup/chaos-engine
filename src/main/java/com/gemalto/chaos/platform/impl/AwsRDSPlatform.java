@@ -18,7 +18,9 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -47,12 +49,16 @@ public class AwsRDSPlatform extends Platform {
 
     @Autowired
     public AwsRDSPlatform () {
-        log.info("Created AWS RDS Platform");
     }
 
     AwsRDSPlatform (AmazonRDS amazonRDS, AmazonEC2 amazonEC2) {
         this.amazonRDS = amazonRDS;
         this.amazonEC2 = amazonEC2;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    private void applicationReadyEvent () {
+        log.info("Created AWS RDS Platform");
     }
 
     @Override
