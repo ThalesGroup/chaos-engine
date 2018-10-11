@@ -57,10 +57,6 @@ public class CloudFoundryPlatformTest {
     @Before
     public void setUp () {
         cfp = new CloudFoundryPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo) {
-            @Override
-            void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
-                super.setCloudFoundrySelfAwareness(cloudFoundrySelfAwareness);
-            }
         };
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
