@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public abstract class Platform implements ExperimentalObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
@@ -111,6 +112,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public Platform startAttack () {
+        log.info("Starting an experiment on {}", keyValue("platform", this));
         getScheduler().startAttack();
         attackTimes.add(Instant.now());
         return this;
