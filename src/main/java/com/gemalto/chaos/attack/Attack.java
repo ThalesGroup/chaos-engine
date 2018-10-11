@@ -105,7 +105,7 @@ public abstract class Attack {
 
     boolean startAttack (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
-        if (!AdminManager.canRunAttacks()) {
+        if (!AdminManager.canRunExperiments()) {
             log.info("Cannot start attacks right now, system is {}", AdminManager.getAdminState());
             return false;
         }

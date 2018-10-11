@@ -9,7 +9,7 @@ public enum AdminState {
     PAUSED,
     DRAIN;
 
-    public static Set<AdminState> getAttackStates () {
+    public static Set<AdminState> geExperimentStates () {
         return EnumSet.of(STARTED);
     }
 

@@ -37,8 +37,8 @@ public class AdminManager {
         return Duration.between(stateTimer, Instant.now());
     }
 
-    public static boolean canRunAttacks () {
-        return AdminState.getAttackStates().contains(adminState);
+    public static boolean canRunExperiments () {
+        return AdminState.geExperimentStates().contains(adminState);
     }
 
     public static boolean canRunSelfHealing () {
