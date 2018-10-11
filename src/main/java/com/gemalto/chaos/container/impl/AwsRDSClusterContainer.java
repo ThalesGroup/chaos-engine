@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
     private String dbClusterIdentifier;
@@ -130,6 +131,9 @@ public class AwsRDSClusterContainer extends AwsContainer {
             awsRDSClusterContainer.dbClusterIdentifier = this.dbClusterIdentifier;
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
+            DataDogIdentifier dataDogIdentifier = awsRDSClusterContainer.getDataDogIdentifier();
+            awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container {}", value(dataDogIdentifier.getKey(), dataDogIdentifier
+                    .getValue()));
             return awsRDSClusterContainer;
         }
     }

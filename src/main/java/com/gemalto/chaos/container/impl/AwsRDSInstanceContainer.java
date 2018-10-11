@@ -13,6 +13,7 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import java.util.Collection;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
     private String dbInstanceIdentifier;
@@ -103,6 +104,9 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             awsRDSInstanceContainer.engine = this.engine;
             awsRDSInstanceContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSInstanceContainer.availabilityZone = this.availabilityZone;
+            DataDogIdentifier dataDogIdentifier = awsRDSInstanceContainer.getDataDogIdentifier();
+            awsRDSInstanceContainer.log.info("Created AWS RDS Instance Container {}", value(dataDogIdentifier.getKey(), dataDogIdentifier
+                    .getValue()));
             return awsRDSInstanceContainer;
         }
     }
