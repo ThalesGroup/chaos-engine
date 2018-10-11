@@ -18,7 +18,7 @@ import java.util.List;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
-public class CloudFoundryPlatform extends Platform {
+public abstract class CloudFoundryPlatform extends Platform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
@@ -29,12 +29,6 @@ public class CloudFoundryPlatform extends Platform {
         this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
     }
 
-    public CloudFoundryPlatform () {
-    }
-
-    public static CloudFoundryPlatformBuilder getBuilder () {
-        return CloudFoundryPlatformBuilder.builder();
-    }
 
     @Autowired(required = false)
     void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
@@ -98,39 +92,4 @@ public class CloudFoundryPlatform extends Platform {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
     }
 
-    public static final class CloudFoundryPlatformBuilder {
-        private CloudFoundryOperations cloudFoundryOperations;
-        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
-
-        private CloudFoundryPlatformBuilder () {
-        }
-
-        private static CloudFoundryPlatformBuilder builder () {
-            return new CloudFoundryPlatformBuilder();
-        }
-
-        CloudFoundryPlatformBuilder withCloudFoundryOperations (CloudFoundryOperations cloudFoundryOperations) {
-            this.cloudFoundryOperations = cloudFoundryOperations;
-            return this;
-        }
-
-        CloudFoundryPlatformBuilder withCloudFoundryPlatformInfo (CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
-            this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
-            return this;
-        }
-
-        CloudFoundryPlatformBuilder withCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
-            this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
-            return this;
-        }
-
-        public CloudFoundryPlatform build () {
-            CloudFoundryPlatform cloudFoundryPlatform = new CloudFoundryPlatform();
-            cloudFoundryPlatform.cloudFoundrySelfAwareness = this.cloudFoundrySelfAwareness;
-            cloudFoundryPlatform.cloudFoundryOperations = this.cloudFoundryOperations;
-            cloudFoundryPlatform.cloudFoundryPlatformInfo = this.cloudFoundryPlatformInfo;
-            return cloudFoundryPlatform;
-        }
-    }
 }
