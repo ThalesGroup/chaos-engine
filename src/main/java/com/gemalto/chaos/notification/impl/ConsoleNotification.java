@@ -2,6 +2,7 @@ package com.gemalto.chaos.notification.impl;
 
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationMethods;
+import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ public class ConsoleNotification implements NotificationMethods {
 
     @Override
     public void logEvent (ChaosEvent event) {
-        log.debug("{}", event);
+        log.debug("{}", StructuredArguments.value("chaos event", event));
     }
 }
 
