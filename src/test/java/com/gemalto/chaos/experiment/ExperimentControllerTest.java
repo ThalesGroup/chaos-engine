@@ -43,14 +43,14 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void getAttacks () throws Exception {
+    public void getExperiments () throws Exception {
         when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isOk());
         //assertThat(attackController.getExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1, experiment2));
     }
 
     @Test
-    public void getAttackById () throws Exception {
+    public void getExperimentById () throws Exception {
         String UUID1 = randomUUID().toString();
         String UUID2 = randomUUID().toString();
         when(experimentManager.getExperimentByUUID(UUID1)).thenReturn(experiment1);
@@ -66,10 +66,10 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void getAttackQueue () throws Exception {
-        Queue<Experiment> attackQueue = new LinkedBlockingDeque<>();
-        attackQueue.add(experiment1);
-        when(experimentManager.getNewExperimentQueue()).thenReturn(attackQueue);
+    public void getExperimentQueue () throws Exception {
+        Queue<Experiment> experimentQueue = new LinkedBlockingDeque<>();
+        experimentQueue.add(experiment1);
+        when(experimentManager.getNewExperimentQueue()).thenReturn(experimentQueue);
         mvc.perform(get("/experiment/queue").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$[0].experimentType", is("STATE")))
@@ -77,13 +77,13 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void startAttacks () throws Exception {
+    public void startExperiments () throws Exception {
         mvc.perform(post("/experiment/start").contentType(APPLICATION_JSON)).andExpect(status().isOk());
         verify(experimentManager, times(1)).startExperiments(true);
     }
 
     @Test
-    public void attackContainerWithId () throws Exception {
+    public void experimentContainerWithId () throws Exception {
         Long containerId = new Random().nextLong();
         mvc.perform(post("/experiment/start/" + containerId)).andExpect(status().isOk());
         verify(experimentManager, times(1)).experimentContainerId(containerId);

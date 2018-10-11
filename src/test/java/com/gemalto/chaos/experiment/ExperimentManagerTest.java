@@ -39,11 +39,11 @@ public class ExperimentManagerTest {
     @MockBean
     private HolidayManager holidayManager;
     @Mock
-    private Experiment attack1;
+    private Experiment experiment1;
     @Mock
-    private Experiment attack2;
+    private Experiment experiment2;
     @Mock
-    private Experiment attack3;
+    private Experiment experiment3;
     @Mock
     private Container container1;
     @Mock
@@ -55,7 +55,7 @@ public class ExperimentManagerTest {
 
 
     @Test
-    public void startAttacks () {
+    public void startExperiments () {
         List<Container> containerList = new ArrayList<>();
         containerList.add(container1);
         containerList.add(container2);
@@ -65,16 +65,16 @@ public class ExperimentManagerTest {
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canExperiment()).thenReturn(true);
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.createAttack()).thenReturn(experiment1);
         when(container2.canExperiment()).thenReturn(false);
         experimentManager.startExperiments();
-        assertThat(experimentManager.getNewExperimentQueue(), hasItem(attack1));
+        assertThat(experimentManager.getNewExperimentQueue(), hasItem(experiment1));
         verify(container2, times(1)).canExperiment();
         verify(container2, times(0)).createAttack();
     }
 
     //SCT-6233
-    public void noAttacksOnHolidays () {
+    public void noExperimentsOnHolidays () {
         CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
         List<Container> containerListApps = new ArrayList<>();
         containerListApps.add(container1);
@@ -87,29 +87,28 @@ public class ExperimentManagerTest {
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.createAttack()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(attack2);
+        when(container2.createAttack()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
-        when(attack1.startExperiment(notificationManager)).thenReturn(true);
-        when(attack2.startExperiment(notificationManager)).thenReturn(true);
-        when(attack1.getContainer()).thenReturn(container1);
-        when(attack2.getContainer()).thenReturn(container2);
+        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.getContainer()).thenReturn(container1);
+        when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(true);
         experimentManager.startExperiments();
-        Queue<Experiment> attacks = experimentManager.getNewExperimentQueue();
-        int scheduledAttacks = attacks.size();
+        Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeAttacks = experimentManager.getActiveExperiments();
-        int activeAttacksCount = activeAttacks.size();
-        assertEquals(0, activeAttacksCount);
+        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        int activeExperimentsCount = activeExperiments.size();
+        assertEquals(0, activeExperimentsCount);
     }
 
     //SCT-5854
     @Test
-    public void avoidOverlappingAttacks () {
+    public void avoidOverlappingExperiments () {
         CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
         CloudFoundryContainerPlatform pcfContainerPlatform = mock(CloudFoundryContainerPlatform.class);
         List<Container> containerListApps = new ArrayList<>();
@@ -130,43 +129,44 @@ public class ExperimentManagerTest {
         when(pcfContainerPlatform.canExperiment()).thenReturn(true);
         when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.createAttack()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(attack2);
+        when(container2.createAttack()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container3.canExperiment()).thenReturn(true);
-        when(container3.createAttack()).thenReturn(attack3);
+        when(container3.createAttack()).thenReturn(experiment3);
         when(container3.getPlatform()).thenReturn(pcfContainerPlatform);
-        when(attack1.startExperiment(notificationManager)).thenReturn(true);
-        when(attack2.startExperiment(notificationManager)).thenReturn(true);
-        when(attack3.startExperiment(notificationManager)).thenReturn(true);
-        when(attack1.getContainer()).thenReturn(container1);
-        when(attack2.getContainer()).thenReturn(container2);
-        when(attack3.getContainer()).thenReturn(container3);
+        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment3.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.getContainer()).thenReturn(container1);
+        when(experiment2.getContainer()).thenReturn(container2);
+        when(experiment3.getContainer()).thenReturn(container3);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
         experimentManager.startExperiments();
-        Queue<Experiment> attacks = experimentManager.getNewExperimentQueue();
-        int scheduledAttack = attacks.size();
+        Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
+        int scheduledExperimentsCount = experiments.size();
         experimentManager.startExperiments();
-        Queue<Experiment> attacks2 = experimentManager.getNewExperimentQueue();
+        Queue<Experiment> experiments2 = experimentManager.getNewExperimentQueue();
         // new startExperiments invocation should not add new experiment until newAttackQueue is empty
-        assertEquals(attacks, attacks2);
+        assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeAttacks = experimentManager.getActiveExperiments();
-        int activeAttacksCount = activeAttacks.size();
-        //number active attacks should be equal to number of previously scheduled attacks
-        assertEquals(scheduledAttack, activeAttacksCount);
-        //all active attacks should belong to same platform layer
-        Platform attackPlatform = activeAttacks.iterator().next().getContainer().getPlatform();
-        assertEquals(1, activeAttacks.stream()
-                                     .collect(Collectors.groupingBy(attack -> attack.getContainer().getPlatform()))
+        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        int activeExperimentsCount = activeExperiments.size();
+        //number active experiments should be equal to number of previously scheduled experiments
+        assertEquals(scheduledExperimentsCount, activeExperimentsCount);
+        //all active experiments should belong to same platform layer
+        Platform experimentPlatform = activeExperiments.iterator().next().getContainer().getPlatform();
+        assertEquals(1, activeExperiments.stream()
+                                         .collect(Collectors.groupingBy(experiment -> experiment.getContainer()
+                                                                                                .getPlatform()))
                                      .size());
     }
 
     @Test
-    public void removeFinishedAttack () {
+    public void removeFinishedExperiments () {
         CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
         List<Container> containerListApps = new ArrayList<>();
         containerListApps.add(container1);
@@ -179,36 +179,36 @@ public class ExperimentManagerTest {
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(attack1);
+        when(container1.createAttack()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(attack2);
+        when(container2.createAttack()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
-        when(attack1.startExperiment(notificationManager)).thenReturn(true);
-        when(attack2.startExperiment(notificationManager)).thenReturn(true);
-        when(attack1.getContainer()).thenReturn(container1);
-        when(attack2.getContainer()).thenReturn(container2);
+        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.getContainer()).thenReturn(container1);
+        when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
-        //schedule attacks
+        //schedule experiments
         experimentManager.startExperiments();
         experimentManager.updateExperimentStatus();
         //check they are active
         assertEquals(2, experimentManager.getActiveExperiments().size());
-        when(attack1.getExperimentState()).thenReturn(ExperimentState.FINISHED);
-        when(attack2.getExperimentState()).thenReturn(ExperimentState.NOT_YET_STARTED);
+        when(experiment1.getExperimentState()).thenReturn(ExperimentState.FINISHED);
+        when(experiment2.getExperimentState()).thenReturn(ExperimentState.NOT_YET_STARTED);
         //one experiment to be removed
         experimentManager.updateExperimentStatus();
         assertEquals(1, experimentManager.getActiveExperiments().size());
-        when(attack2.getExperimentState()).thenReturn(ExperimentState.FINISHED);
+        when(experiment2.getExperimentState()).thenReturn(ExperimentState.FINISHED);
         experimentManager.updateExperimentStatus();
-        //all attacks should be removed
+        //all experiments should be removed
         assertEquals(0, experimentManager.getActiveExperiments().size());
     }
 
 
     @Test
-    public void attackContainerId () {
+    public void experimentContainerId () {
         Long containerId = new Random().nextLong();
         Collection<Platform> platforms = Collections.singleton(platform);
         List<Container> roster = new ArrayList<>();
@@ -218,14 +218,14 @@ public class ExperimentManagerTest {
         when(platform.getRoster()).thenReturn(roster);
         when(container1.getIdentity()).thenReturn(containerId);
         when(container2.getIdentity()).thenReturn(containerId + 1);
-        doReturn(attack1).when(container1).createAttack();
-        assertThat(experimentManager.experimentContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(attack1));
+        doReturn(experiment1).when(container1).createAttack();
+        assertThat(experimentManager.experimentContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1));
         verify(container1, times(1)).createAttack();
         verify(container2, times(0)).createAttack();
     }
 
     @Configuration
-    static class AttackManagerTestConfiguration {
+    static class ExperimentManagerTestConfiguration {
         @Autowired
         private NotificationManager notificationManager;
         @Autowired
@@ -234,7 +234,7 @@ public class ExperimentManagerTest {
         private HolidayManager holidayManager;
 
         @Bean
-        ExperimentManager attackManager () {
+        ExperimentManager experimentManager () {
             return new ExperimentManager(notificationManager, platformManager, holidayManager);
         }
     }

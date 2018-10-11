@@ -18,7 +18,7 @@ public class ExperimentalObjectTest {
     }
 
     @Test
-    public void canAttack () {
+    public void canExperiment () {
         assertFalse(experimentalObject.canExperiment());
     }
 }
