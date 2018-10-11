@@ -7,6 +7,7 @@ import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -119,7 +120,7 @@ public class AwsRDSPlatform extends Platform {
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
-        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value("platform", this), value("availabilityZone", randomAvailabilityZone));
+        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value("platform", this), value(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
         List<Container> chosenSet = new ArrayList<>();
         chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
         chosenSet.addAll(availabilityZoneMap.get(NO_AZ_INFORMATION));
