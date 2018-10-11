@@ -56,11 +56,12 @@ public class CloudFoundryPlatformTest {
 
     @Before
     public void setUp () {
-        cfp = CloudFoundryPlatform.getBuilder()
-                                  .withCloudFoundryOperations(cloudFoundryOperations)
-                                  .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
-                                  .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                  .build();
+        cfp = new CloudFoundryPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo) {
+            @Override
+            void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
+                super.setCloudFoundrySelfAwareness(cloudFoundrySelfAwareness);
+            }
+        };
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
                                                       .applicationID(APPLICATION_ID)
