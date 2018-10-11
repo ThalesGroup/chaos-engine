@@ -217,7 +217,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private void restartInstance (String dbInstanceIdentifier) {
-        log.info("Initiating Reboot Database Instance reqquest for {}", keyValue(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
+        log.info("Initiating Reboot Database Instance request for {}", keyValue(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
         amazonRDS.rebootDBInstance(new RebootDBInstanceRequest(dbInstanceIdentifier));
     }
 
