@@ -128,8 +128,9 @@ public class ChaosEvent {
             return this;
         }
 
-        public void withAttackId (String attackId) {
+        public ChaosEventBuilder withAttackId (String attackId) {
             this.attackId = attackId;
+            return this;
         }
 
         public ChaosEvent build () {
