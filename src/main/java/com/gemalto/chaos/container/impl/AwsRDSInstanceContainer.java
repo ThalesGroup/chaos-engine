@@ -53,6 +53,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     @NetworkExperiment
     public void removeSecurityGroups (Experiment attack) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
+        log.info("Existing security groups for {} are {}", value(getDataDogIdentifier().getKey(), getDataDogIdentifier().getValue()), value("securityGroups", existingSecurityGroups));
         attack.setSelfHealingMethod(() -> {
             awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);
             return null;

@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -49,6 +50,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return dbClusterIdentifier;
     }
 
+    @JsonIgnore
     public Set<String> getMembers () {
         return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
@@ -64,6 +66,15 @@ public class AwsRDSClusterContainer extends AwsContainer {
      * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
      */
     Set<String> getSomeMembers () {
+        Set<String> someMembers = getSomeMembers_inner();
+        log.info("Experiment using cluster members {}", value("experimentMembers", someMembers));
+        return someMembers;
+    }
+
+    /**
+     * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
+     */
+    Set<String> getSomeMembers_inner () {
         Set<String> returnSet;
         // Make members a List instead of Set so it can be sorted.
         List<String> members = new ArrayList<>(getMembers());
@@ -74,7 +85,8 @@ public class AwsRDSClusterContainer extends AwsContainer {
         } else if (members.size() == 2) {
             // If there are exactly 2 members, the only valid subset is of size 1. Since the set is shuffled,
             // we can just return index 0 (as a set).
-            return Collections.singleton(members.get(0));
+            String member = members.get(0);
+            return Collections.singleton(member);
         }
         returnSet = new HashSet<>();
         // Offsetting -1/+1 to ensure that a minimum of 1 item is set. nextInt is exclusive on upper bound,
