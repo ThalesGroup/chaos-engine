@@ -29,13 +29,16 @@ public class AwsEC2Container extends AwsContainer {
         return null;
     };
     private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
-
     private AwsEC2Container () {
         super();
     }
 
     public static AwsEC2ContainerBuilder builder () {
         return AwsEC2ContainerBuilder.anAwsEC2Container();
+    }
+
+    public String getInstanceId () {
+        return instanceId;
     }
 
     @Override
