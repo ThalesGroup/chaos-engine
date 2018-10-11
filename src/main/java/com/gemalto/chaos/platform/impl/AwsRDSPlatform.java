@@ -119,7 +119,7 @@ public class AwsRDSPlatform extends Platform {
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
-        log.debug("Experiment on Platform={} will use AvailabilityZone={}", this, randomAvailabilityZone);
+        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value("platform", this), value("availabilityZone", randomAvailabilityZone));
         List<Container> chosenSet = new ArrayList<>();
         chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
         chosenSet.addAll(availabilityZoneMap.get(NO_AZ_INFORMATION));
