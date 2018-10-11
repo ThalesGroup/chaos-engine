@@ -124,7 +124,7 @@ public abstract class Experiment {
             notificationManager.sendNotification(ChaosEvent.builder()
                                                            .fromAttack(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("Starting a new experiment")
+                                                           .withMessage("Starting new experiment")
                                                            .build());
             container.attackContainer(this);
             experimentState = ExperimentState.STARTED;

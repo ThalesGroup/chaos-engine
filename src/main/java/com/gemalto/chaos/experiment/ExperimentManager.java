@@ -95,7 +95,7 @@ public class ExperimentManager {
                                                               .filter(platform1 -> !platform1.getRoster().isEmpty())
                                                               .collect(Collectors.toList());
             if (eligiblePlatforms.isEmpty()) {
-                log.info("No platforms eligible for experiments");
+                log.debug("No platforms eligible for experiments");
                 return null;
             }
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
