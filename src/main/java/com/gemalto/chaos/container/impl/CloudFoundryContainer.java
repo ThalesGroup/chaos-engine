@@ -1,10 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
@@ -54,7 +54,7 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
-    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
     }
 
@@ -68,8 +68,8 @@ public class CloudFoundryContainer extends Container {
         return DataDogIdentifier.dataDogIdentifier().withValue(name + "-" + instance);
     }
 
-    @StateAttack
-    public void restartContainer (Attack attack) {
+    @StateExperiment
+    public void restartContainer (Experiment attack) {
         attack.setSelfHealingMethod(restageApplication);
         attack.setCheckContainerHealth(isInstanceRunning);
         cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
@@ -84,15 +84,15 @@ public class CloudFoundryContainer extends Container {
         return restartApplicationInstanceRequest;
     }
 
-    @StateAttack
-    public void forkBomb (Attack attack) {
+    @StateExperiment
+    public void forkBomb (Experiment attack) {
         attack.setSelfHealingMethod(restartContainer);
         attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
         cloudFoundryContainerPlatform.sshAttack(new ForkBomb(), this);
     }
 
-    @StateAttack
-    public void terminateProcess (Attack attack) {
+    @StateExperiment
+    public void terminateProcess (Experiment attack) {
         attack.setSelfHealingMethod(restartContainer);
         attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
         cloudFoundryContainerPlatform.sshAttack(new RandomProcessTermination(), this);

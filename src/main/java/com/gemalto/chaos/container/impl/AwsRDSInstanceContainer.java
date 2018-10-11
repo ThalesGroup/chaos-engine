@@ -1,11 +1,11 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.NetworkAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
@@ -29,7 +29,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     }
 
     @Override
-    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier);
     }
 
@@ -38,8 +38,8 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return getDbInstanceIdentifier();
     }
 
-    @StateAttack
-    public void restartInstance (Attack attack) {
+    @StateExperiment
+    public void restartInstance (Experiment attack) {
         attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
     }
@@ -49,8 +49,8 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return dataDogIdentifier().withKey("dbinstanceidentifier").withValue(dbInstanceIdentifier);
     }
 
-    @NetworkAttack
-    public void removeSecurityGroups (Attack attack) {
+    @NetworkExperiment
+    public void removeSecurityGroups (Experiment attack) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
         attack.setSelfHealingMethod(() -> {
             awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);

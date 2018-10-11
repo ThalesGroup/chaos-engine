@@ -1,10 +1,10 @@
 package com.gemalto.chaos.platform;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.gemalto.chaos.attack.AttackableObject;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.experiment.ExperimentalObject;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
@@ -25,13 +25,13 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
 
-public abstract class Platform implements AttackableObject {
+public abstract class Platform implements ExperimentalObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
     private static final double DEFAULT_PROBABILITY = 0.2D;
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private long averageMillisPerExperiment = 14400000L;
     private Scheduler scheduler;
-    private List<AttackType> supportedAttackTypes;
+    private List<ExperimentType> supportedExperimentTypes;
     private Expiring<List<Container>> roster;
     private Set<Instant> attackTimes = new HashSet<>();
     @Autowired
@@ -62,15 +62,15 @@ public abstract class Platform implements AttackableObject {
         return this.getClass().getSimpleName();
     }
 
-    List<AttackType> getSupportedAttackTypes () {
-        if (supportedAttackTypes == null) {
-            supportedAttackTypes = getRoster().stream()
-                                              .map(Container::getSupportedAttackTypes)
-                                              .flatMap(List::stream)
-                                              .distinct()
-                                              .collect(Collectors.toList());
+    List<ExperimentType> getSupportedExperimentTypes () {
+        if (supportedExperimentTypes == null) {
+            supportedExperimentTypes = getRoster().stream()
+                                                  .map(Container::getSupportedExperimentTypes)
+                                                  .flatMap(List::stream)
+                                                  .distinct()
+                                                  .collect(Collectors.toList());
         }
-        return supportedAttackTypes;
+        return supportedExperimentTypes;
     }
 
     public synchronized List<Container> getRoster () {
@@ -91,7 +91,7 @@ public abstract class Platform implements AttackableObject {
     protected abstract List<Container> generateRoster ();
 
     @Override
-    public synchronized boolean canAttack () {
+    public synchronized boolean canExperiment () {
         return getScheduler().getNextChaosTime().isBefore(Instant.now());
     }
 

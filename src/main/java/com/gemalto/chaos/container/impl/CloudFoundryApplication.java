@@ -1,12 +1,12 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.NetworkAttack;
-import com.gemalto.chaos.attack.annotations.ResourceAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
+import com.gemalto.chaos.experiment.annotations.ResourceExperiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
@@ -59,7 +59,7 @@ public class CloudFoundryApplication extends Container {
     }
 
     private transient Callable<Void> noRecovery = () -> {
-        log.warn("There is no recovery method for this kind of attack.");
+        log.warn("There is no recovery method for this kind of experiment.");
         return null;
     };
     private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
@@ -82,7 +82,7 @@ public class CloudFoundryApplication extends Container {
     }
 
     @Override
-    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return cloudFoundryApplicationPlatform.checkPlatformHealth();
     }
 
@@ -91,8 +91,8 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    @ResourceAttack
-    public void scaleApplication (Attack attack) {
+    @ResourceExperiment
+    public void scaleApplication (Experiment attack) {
         attack.setSelfHealingMethod(rescaleApplicationToDefault);
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setFinalizeMethod(rescaleApplicationToDefault);
@@ -106,22 +106,22 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
 
-    @StateAttack
-    public void restartApplication (Attack attack) {
+    @StateExperiment
+    public void restartApplication (Experiment attack) {
         attack.setSelfHealingMethod(restageApplication);
         attack.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
-    @StateAttack
-    public void restageApplication (Attack attack) {
+    @StateExperiment
+    public void restageApplication (Experiment attack) {
         attack.setCheckContainerHealth(isAppHealthy);
         attack.setSelfHealingMethod(noRecovery);
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
 
-    @NetworkAttack
-    public void unmapRoute (Attack attack) {
+    @NetworkExperiment
+    public void unmapRoute (Experiment attack) {
         attack.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {
             Random rand = new Random();
@@ -134,7 +134,7 @@ public class CloudFoundryApplication extends Container {
         } else {
             attack.setFinalizationDuration(Duration.ZERO);
             attack.setSelfHealingMethod(noRecovery);
-            log.warn("Application {} has no routes set, skipping the attack {}", name, attack.getId());
+            log.warn("Application {} has no routes set, skipping the experiment {}", name, attack.getId());
         }
     }
 

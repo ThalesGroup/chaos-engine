@@ -1,8 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
@@ -36,7 +36,7 @@ public class CloudFoundryApplicationTest {
     private static final int instance = new Random().nextInt(100);
     private static final String name = UUID.randomUUID().toString();
     @Spy
-    private Attack attack = new Attack() {
+    private Experiment attack = new Experiment() {
     };
     @MockBean
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
@@ -151,15 +151,15 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void createAttack () {
-        Attack attack = cloudFoundryApplication.createAttack(AttackType.RESOURCE);
+        Experiment attack = cloudFoundryApplication.createAttack(ExperimentType.RESOURCE);
         assertEquals(cloudFoundryApplication, attack.getContainer());
-        assertEquals(AttackType.RESOURCE, attack.getAttackType());
+        assertEquals(ExperimentType.RESOURCE, attack.getExperimentType());
     }
 
     @Test
     public void updateContainerHealthImpl () {
         doReturn(ContainerHealth.NORMAL).when(cloudFoundryApplicationPlatform).checkPlatformHealth();
-        assertEquals(ContainerHealth.NORMAL, cloudFoundryApplication.updateContainerHealthImpl(AttackType.STATE));
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryApplication.updateContainerHealthImpl(ExperimentType.STATE));
     }
 
     @Test

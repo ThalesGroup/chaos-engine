@@ -1,4 +1,4 @@
-package com.gemalto.chaos.attack;
+package com.gemalto.chaos.experiment;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -8,17 +8,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.assertFalse;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AttackableObjectTest {
-    private AttackableObject attackableObject;
+public class ExperimentalObjectTest {
+    private ExperimentalObject experimentalObject;
 
     @Before
     public void setUp () {
-        attackableObject = new AttackableObject() {
+        experimentalObject = new ExperimentalObject() {
         };
     }
 
     @Test
     public void canAttack () {
-        assertFalse(attackableObject.canAttack());
+        assertFalse(experimentalObject.canExperiment());
     }
 }

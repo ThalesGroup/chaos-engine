@@ -1,11 +1,11 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.NetworkAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
@@ -44,7 +44,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @Override
-    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return awsEC2Platform.checkHealth(instanceId);
     }
 
@@ -58,15 +58,15 @@ public class AwsEC2Container extends AwsContainer {
         return dataDogIdentifier().withValue(instanceId);
     }
 
-    @StateAttack
-    public void stopContainer (Attack attack) {
+    @StateExperiment
+    public void stopContainer (Experiment attack) {
         awsEC2Platform.stopInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
         attack.setCheckContainerHealth(checkContainerStartedMethod);
     }
 
-    @StateAttack
-    public void restartContainer (Attack attack) {
+    @StateExperiment
+    public void restartContainer (Experiment attack) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsEC2Platform.restartInstance(instanceId);
         attack.setSelfHealingMethod(startContainerMethod);
@@ -74,8 +74,8 @@ public class AwsEC2Container extends AwsContainer {
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
-    @NetworkAttack
-    public void removeSecurityGroups (Attack attack) {
+    @NetworkExperiment
+    public void removeSecurityGroups (Experiment attack) {
         List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupId()));
         attack.setCheckContainerHealth(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));

@@ -1,7 +1,7 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.ChaosException;
-import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
@@ -94,7 +94,7 @@ public class AwsRDSClusterContainerTest {
     public void restartInstances () {
         String instanceId1 = UUID.randomUUID().toString();
         String instanceId2 = UUID.randomUUID().toString();
-        Attack attack = mock(Attack.class);
+        Experiment attack = mock(Experiment.class);
         Set<String> members = new HashSet<>(Arrays.asList(instanceId1, instanceId2));
         doReturn(members).when(awsRDSClusterContainer).getSomeMembers();
         awsRDSClusterContainer.restartInstances(attack);
@@ -104,7 +104,7 @@ public class AwsRDSClusterContainerTest {
 
     @Test
     public void initiateFailover () {
-        Attack attack = mock(Attack.class);
+        Experiment attack = mock(Experiment.class);
         doReturn(null).when(awsRDSClusterContainer).getSomeMembers();
         awsRDSClusterContainer.initiateFailover(attack);
         verify(attack, times(1)).setCheckContainerHealth(any());

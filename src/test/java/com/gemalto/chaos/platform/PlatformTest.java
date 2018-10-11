@@ -1,7 +1,7 @@
 package com.gemalto.chaos.platform;
 
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
@@ -55,10 +55,10 @@ public class PlatformTest {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     public void getSupportedAttackTypes () {
-        doReturn(Collections.singletonList(AttackType.STATE)).when(container).getSupportedAttackTypes();
-        assertThat(platform.getSupportedAttackTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(AttackType.STATE));
-        assertThat(platform.getSupportedAttackTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(AttackType.STATE));
-        Mockito.verify(container, times(1)).getSupportedAttackTypes();
+        doReturn(Collections.singletonList(ExperimentType.STATE)).when(container).getSupportedExperimentTypes();
+        assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));
+        assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));
+        Mockito.verify(container, times(1)).getSupportedExperimentTypes();
     }
 
     @Test

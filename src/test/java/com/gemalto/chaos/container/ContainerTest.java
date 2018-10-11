@@ -1,9 +1,9 @@
 package com.gemalto.chaos.container;
 
-import com.gemalto.chaos.attack.annotations.NetworkAttack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import org.hamcrest.collection.IsEmptyIterable;
@@ -30,7 +30,7 @@ public class ContainerTest {
         }
 
         @Override
-        protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
             return ContainerHealth.NORMAL;
         }
 
@@ -45,11 +45,11 @@ public class ContainerTest {
         }
     };
     private Container testContainer2 = new Container() {
-        @StateAttack
+        @StateExperiment
         private void nullStateMethod () {
         }
 
-        @NetworkAttack
+        @NetworkExperiment
         private void nullNetworkMethod () {
         }
 
@@ -59,7 +59,7 @@ public class ContainerTest {
         }
 
         @Override
-        protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
             return ContainerHealth.UNDER_ATTACK;
         }
 
@@ -83,30 +83,30 @@ public class ContainerTest {
     public void canAttack () {
         // TODO : Mock the random class inside the container.
         doReturn(1D).when(platform).getDestructionProbability();
-        assertFalse(testContainer.canAttack());
+        assertFalse(testContainer.canExperiment());
         doReturn(0D).when(platform).getDestructionProbability();
-        assertFalse(testContainer.canAttack());
+        assertFalse(testContainer.canExperiment());
 
         doReturn(1D).when(platform).getDestructionProbability();
-        assertTrue(testContainer2.canAttack());
+        assertTrue(testContainer2.canExperiment());
         doReturn(0D).when(platform).getDestructionProbability();
-        assertFalse(testContainer2.canAttack());
+        assertFalse(testContainer2.canExperiment());
     }
 
     @Test
     public void getSupportedAttackTypes () {
-        assertThat(testContainer.getSupportedAttackTypes(), IsEmptyIterable.emptyIterableOf(AttackType.class));
-        assertThat(testContainer2.getSupportedAttackTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(AttackType.STATE, AttackType.NETWORK));
+        assertThat(testContainer.getSupportedExperimentTypes(), IsEmptyIterable.emptyIterableOf(ExperimentType.class));
+        assertThat(testContainer2.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE, ExperimentType.NETWORK));
     }
 
     @Test
     public void supportsAttackType () {
-        assertFalse(testContainer.supportsAttackType(AttackType.STATE));
-        assertFalse(testContainer.supportsAttackType(AttackType.NETWORK));
-        assertFalse(testContainer.supportsAttackType(AttackType.RESOURCE));
-        assertTrue(testContainer2.supportsAttackType(AttackType.STATE));
-        assertTrue(testContainer2.supportsAttackType(AttackType.NETWORK));
-        assertFalse(testContainer2.supportsAttackType(AttackType.RESOURCE));
+        assertFalse(testContainer.supportsAttackType(ExperimentType.STATE));
+        assertFalse(testContainer.supportsAttackType(ExperimentType.NETWORK));
+        assertFalse(testContainer.supportsAttackType(ExperimentType.RESOURCE));
+        assertTrue(testContainer2.supportsAttackType(ExperimentType.STATE));
+        assertTrue(testContainer2.supportsAttackType(ExperimentType.NETWORK));
+        assertFalse(testContainer2.supportsAttackType(ExperimentType.RESOURCE));
     }
 
     @Test

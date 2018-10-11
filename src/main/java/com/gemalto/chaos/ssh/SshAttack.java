@@ -25,12 +25,12 @@ public abstract class SshAttack {
             }
         }
         if (shellHasRequiredCapabilities()) {
-            log.debug("Starting {} attack.", getAttackName());
+            log.debug("Starting {} experiment.", getAttackName());
             sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
-            log.debug("Attack {} deployed.", getAttackName());
+            log.debug("Experiment {} deployed.", getAttackName());
             return true;
         } else {
-            log.warn("Cannot execute SSH attack {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, detectedCapabilities);
+            log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, detectedCapabilities);
         }
         return false;
     }
@@ -68,7 +68,7 @@ public abstract class SshAttack {
     }
 
     public boolean shellHasRequiredCapabilities () {
-        log.debug("Checking SSH attack required capabilities");
+        log.debug("Checking SSH experiment required capabilities");
         for (ShellSessionCapability required : requiredCapabilities) {
             if (!requiredCapabilityMet(required)) {
                 log.debug("SSH Session does not have capability: {}", required);

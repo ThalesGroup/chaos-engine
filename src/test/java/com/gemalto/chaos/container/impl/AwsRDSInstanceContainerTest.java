@@ -1,6 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.attack.Attack;
+import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
@@ -49,7 +49,7 @@ public class AwsRDSInstanceContainerTest {
 
     @Test
     public void restartInstance () {
-        Attack attack = mock(Attack.class);
+        Experiment attack = mock(Experiment.class);
         awsRDSInstanceContainer.restartInstance(attack);
         verify(attack, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).restartInstance(dbInstanceIdentifier);

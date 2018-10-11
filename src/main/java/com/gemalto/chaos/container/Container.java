@@ -2,11 +2,11 @@ package com.gemalto.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.AttackableObject;
-import com.gemalto.chaos.attack.enums.AttackType;
-import com.gemalto.chaos.attack.impl.GenericContainerAttack;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.ExperimentalObject;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
+import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
@@ -24,31 +24,31 @@ import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 
-public abstract class Container implements AttackableObject {
+public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
-    private final List<AttackType> supportedAttackTypes = new ArrayList<>();
+    private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
     private Method lastAttackMethod;
-    private Attack currentAttack;
+    private Experiment currentAttack;
 
     protected Container () {
-        for (AttackType attackType : AttackType.values()) {
-            if (!getMethodsWithAnnotation(this.getClass(), attackType.getAnnotation()).isEmpty()) {
-                supportedAttackTypes.add(attackType);
+        for (ExperimentType experimentType : ExperimentType.values()) {
+            if (!getMethodsWithAnnotation(this.getClass(), experimentType.getAnnotation()).isEmpty()) {
+                supportedExperimentTypes.add(experimentType);
             }
         }
     }
 
     @Override
-    public boolean canAttack () {
-        return !supportedAttackTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability();
+    public boolean canExperiment () {
+        return !supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability();
     }
 
     @JsonIgnore
     public abstract Platform getPlatform ();
 
-    public List<AttackType> getSupportedAttackTypes () {
-        return supportedAttackTypes;
+    public List<ExperimentType> getSupportedExperimentTypes () {
+        return supportedExperimentTypes;
     }
 
     @Override
@@ -112,50 +112,50 @@ public abstract class Container implements AttackableObject {
         return output.toString();
     }
 
-    public boolean supportsAttackType (AttackType attackType) {
-        return supportedAttackTypes.contains(attackType);
+    public boolean supportsAttackType (ExperimentType experimentType) {
+        return supportedExperimentTypes.contains(experimentType);
     }
 
-    public ContainerHealth getContainerHealth (AttackType attackType) {
-        updateContainerHealth(attackType);
+    public ContainerHealth getContainerHealth (ExperimentType experimentType) {
+        updateContainerHealth(experimentType);
         return containerHealth;
     }
 
-    private void updateContainerHealth (AttackType attackType) {
-        containerHealth = updateContainerHealthImpl(attackType);
+    private void updateContainerHealth (ExperimentType experimentType) {
+        containerHealth = updateContainerHealthImpl(experimentType);
     }
 
-    protected abstract ContainerHealth updateContainerHealthImpl (AttackType attackType);
+    protected abstract ContainerHealth updateContainerHealthImpl (ExperimentType experimentType);
 
-    public Attack createAttack () {
-        currentAttack = createAttack(supportedAttackTypes.get(new Random().nextInt(supportedAttackTypes.size())));
+    public Experiment createAttack () {
+        currentAttack = createAttack(supportedExperimentTypes.get(new Random().nextInt(supportedExperimentTypes.size())));
         return currentAttack;
     }
 
-    public Attack createAttack (AttackType attackType) {
-        return GenericContainerAttack.builder().withAttackType(attackType).withContainer(this).build();
+    public Experiment createAttack (ExperimentType experimentType) {
+        return GenericContainerExperiment.builder().withExperimentType(experimentType).withContainer(this).build();
     }
 
-    public void attackContainer (Attack attack) {
+    public void attackContainer (Experiment attack) {
         containerHealth = ContainerHealth.UNDER_ATTACK;
-        log.info("Starting a attack {} against container {}", attack.getId(), this);
+        log.info("Starting a experiment {} against container {}", attack.getId(), this);
         attackWithAnnotation(attack);
     }
 
     @SuppressWarnings("unchecked")
-    private void attackWithAnnotation (Attack attack) {
+    private void attackWithAnnotation (Experiment attack) {
         try {
-            lastAttackMethod = attack.getAttackMethod();
+            lastAttackMethod = attack.getExperimentMethod();
             lastAttackMethod.invoke(this, attack);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            log.error("Failed to run attack {} on container {}: {}", attack.getId(), this, e);
+            log.error("Failed to run experiment {} on container {}: {}", attack.getId(), this, e);
             throw new ChaosException(e);
         }
     }
 
-    public void repeatAttack (Attack attack) {
+    public void repeatAttack (Experiment attack) {
         if (lastAttackMethod == null) {
-            throw new ChaosException("Trying to repeat an attack without having a prior one");
+            throw new ChaosException("Trying to repeat an experiment without having a prior one");
         }
         containerHealth = ContainerHealth.UNDER_ATTACK;
         try {

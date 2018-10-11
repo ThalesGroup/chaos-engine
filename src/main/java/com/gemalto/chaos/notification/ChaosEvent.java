@@ -1,8 +1,8 @@
 package com.gemalto.chaos.notification;
 
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 
 import java.lang.reflect.Field;
@@ -15,7 +15,7 @@ public class ChaosEvent {
     private Date chaosTime;
     private String attackId;
     private String message;
-    private AttackType attackType;
+    private ExperimentType experimentType;
     private String attackLayer;
     private String attackMethod;
     private NotificationLevel notificationLevel;
@@ -24,8 +24,8 @@ public class ChaosEvent {
         return ChaosEventBuilder.builder();
     }
 
-    public AttackType getAttackType () {
-        return attackType;
+    public ExperimentType getExperimentType () {
+        return experimentType;
     }
 
     public NotificationLevel getNotificationLevel () {
@@ -76,7 +76,7 @@ public class ChaosEvent {
         private Date chaosTime;
         private String attackId;
         private String message;
-        private AttackType attackType;
+        private ExperimentType experimentType;
         private String attackLayer;
         private String attackMethod;
         private NotificationLevel notificationLevel;
@@ -88,13 +88,13 @@ public class ChaosEvent {
             return new ChaosEventBuilder();
         }
 
-        public ChaosEventBuilder fromAttack (Attack attack) {
+        public ChaosEventBuilder fromAttack (Experiment attack) {
             this.chaosTime = Date.from(attack.getStartTime());
             this.targetContainer = attack.getContainer();
-            this.attackType = attack.getAttackType();
+            this.experimentType = attack.getExperimentType();
             this.attackId = attack.getId();
-            this.attackLayer = attack.getAttackLayer().getPlatformType();
-            this.attackMethod = attack.getAttackMethod().getName();
+            this.attackLayer = attack.getExperimentLayer().getPlatformType();
+            this.attackMethod = attack.getExperimentMethod().getName();
             return this;
         }
 
@@ -113,8 +113,8 @@ public class ChaosEvent {
             return this;
         }
 
-        public ChaosEventBuilder withAttackType (AttackType attackType) {
-            this.attackType = attackType;
+        public ChaosEventBuilder withAttackType (ExperimentType experimentType) {
+            this.experimentType = experimentType;
             return this;
         }
 
@@ -133,7 +133,7 @@ public class ChaosEvent {
             chaosEvent.message = this.message;
             chaosEvent.chaosTime = this.chaosTime;
             chaosEvent.attackId = this.attackId;
-            chaosEvent.attackType = this.attackType;
+            chaosEvent.experimentType = this.experimentType;
             chaosEvent.attackLayer = this.attackLayer;
             chaosEvent.attackMethod = this.attackMethod;
             chaosEvent.notificationLevel = this.notificationLevel;

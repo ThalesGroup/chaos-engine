@@ -27,7 +27,7 @@ public class PlatformController {
         this.platformManager = platformManager;
     }
 
-    @ApiOperation(value = "Get Platforms", notes = "Returns a list of all platforms registered with the Chaos Engine, including their rosters and attack history.")
+    @ApiOperation(value = "Get Platforms", notes = "Returns a list of all platforms registered with the Chaos Engine, including their rosters and experiment history.")
     @GetMapping
     public Collection<Platform> getPlatforms () {
         return platformManager.getPlatforms();

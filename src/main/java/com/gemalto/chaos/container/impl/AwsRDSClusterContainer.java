@@ -1,11 +1,11 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.ChaosException;
-import com.gemalto.chaos.attack.Attack;
-import com.gemalto.chaos.attack.annotations.StateAttack;
-import com.gemalto.chaos.attack.enums.AttackType;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
@@ -30,7 +30,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
     }
 
     @Override
-    protected ContainerHealth updateContainerHealthImpl (AttackType attackType) {
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return awsRDSPlatform.getInstanceStatus(getMembers().toArray(new String[0]));
     }
 
@@ -52,8 +52,8 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
 
-    @StateAttack
-    public void restartInstances (Attack attack) {
+    @StateExperiment
+    public void restartInstances (Experiment attack) {
         final String[] dbInstanceIdentifiers = getSomeMembers().toArray(new String[0]);
         attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
         awsRDSPlatform.restartInstance(dbInstanceIdentifiers);
@@ -85,8 +85,8 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return returnSet;
     }
 
-    @StateAttack
-    public void initiateFailover (Attack attack) {
+    @StateExperiment
+    public void initiateFailover (Experiment attack) {
         final String[] members = getMembers().toArray(new String[0]);
         attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(members));
         awsRDSPlatform.failoverCluster(dbClusterIdentifier);

@@ -1,4 +1,4 @@
-package com.gemalto.chaos.attack;
+package com.gemalto.chaos.experiment;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -9,42 +9,42 @@ import java.util.Queue;
 import java.util.Set;
 
 @RestController
-@RequestMapping(value = "/attack", produces = "application/json; charset=utf-8")
-public class AttackController {
-    private AttackManager attackManager;
+@RequestMapping(value = "/experiment", produces = "application/json; charset=utf-8")
+public class ExperimentController {
+    private ExperimentManager experimentManager;
 
     @Autowired
-    public AttackController (AttackManager attackManager) {
-        this.attackManager = attackManager;
+    public ExperimentController (ExperimentManager experimentManager) {
+        this.experimentManager = experimentManager;
     }
 
     @ApiOperation(value = "Get Experiments", notes = "Returns a list of all active experiments.")
     @GetMapping
-    public Set<Attack> getAttacks () {
-        return attackManager.getActiveAttacks();
+    public Set<Experiment> getExperiments () {
+        return experimentManager.getActiveExperiments();
     }
 
     @ApiOperation(value = "Get Specific Experiment", notes = "Returns metadata of a specific experiment.")
     @GetMapping("/{uuid}")
-    public Attack getAttackById (@ApiParam(value = "The UUID of the specific attack to retrieve metadata off.", required = true) @PathVariable String uuid) {
-        return attackManager.getAttackByUUID(uuid);
+    public Experiment getExperimentById (@ApiParam(value = "The UUID of the specific experiment to retrieve metadata off.", required = true) @PathVariable String uuid) {
+        return experimentManager.getExperimentByUUID(uuid);
     }
 
     @ApiOperation(value = "Get Experiment Queue", notes = "Returns metadata about all experiments queued up to start at the next experiment start interval.")
     @GetMapping("/queue")
-    public Queue<Attack> getAttackQueue () {
-        return attackManager.getNewAttackQueue();
+    public Queue<Experiment> getExperimentQueue () {
+        return experimentManager.getNewExperimentQueue();
     }
 
     @ApiOperation(value = "Start Random Experiment", notes = "Starts a new experiment immediately. This ignores scheduling, and ensures at least one container in the chosen platform is used for experimentation.")
     @PostMapping("/start")
-    public Queue<Attack> startAttacks () {
-        return attackManager.startAttacks(true);
+    public Queue<Experiment> startExperiments () {
+        return experimentManager.startExperiments(true);
     }
 
     @ApiOperation(value = "Start Experiment on Specific Container", notes = "Creates an experiment for a specific container.")
     @PostMapping("/start/{id}")
-    public Set<Attack> attackContainerWithId (@ApiParam(value = "The identity value of the container to perform an experiment on.", required = true) @PathVariable long id) {
-        return attackManager.attackContainerId(id);
+    public Set<Experiment> experimentContainerWithId (@ApiParam(value = "The identity value of the container to perform an experiment on.", required = true) @PathVariable long id) {
+        return experimentManager.experimentContainerId(id);
     }
 }
