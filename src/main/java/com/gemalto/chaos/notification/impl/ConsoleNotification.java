@@ -17,7 +17,7 @@ public class ConsoleNotification implements NotificationMethods {
 
     @Override
     public void logEvent (ChaosEvent event) {
-        log.debug("{}", StructuredArguments.value("chaos event", event));
+        log.debug("{}", StructuredArguments.value("ChaosEvent", event));
     }
 }
 
