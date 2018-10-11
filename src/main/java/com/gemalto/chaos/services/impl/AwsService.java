@@ -7,6 +7,8 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "aws")
 @ConditionalOnProperty({ "aws.accessKeyId", "aws.secretAccessKey", "aws.region" })
 public class AwsService {
+    private static final Logger log = LoggerFactory.getLogger(AwsService.class);
     private String accessKeyId;
     private String secretAccessKey;
     private String region;
@@ -36,12 +39,14 @@ public class AwsService {
     @Bean
     @RefreshScope
     AWSStaticCredentialsProvider awsStaticCredentialsProvider () {
+        log.info("Creating AWS Credentials Provider");
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey));
     }
 
     @Bean
     @RefreshScope
     AmazonRDS amazonRDS (AWSStaticCredentialsProvider awsStaticCredentialsProvider) {
+        log.info("Creating AWS RDS Client");
         return AmazonRDSClientBuilder.standard()
                                      .withRegion(region)
                                      .withCredentials(awsStaticCredentialsProvider)
@@ -51,6 +56,7 @@ public class AwsService {
     @Bean
     @RefreshScope
     AmazonEC2 amazonEC2 (AWSCredentialsProvider awsStaticCredentialsProvider) {
+        log.info("Creating AWS EC2 Client");
         return AmazonEC2ClientBuilder.standard()
                                      .withCredentials(awsStaticCredentialsProvider)
                                      .withRegion(region)

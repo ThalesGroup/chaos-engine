@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -14,6 +15,8 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
+import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
     private String dbClusterIdentifier;
@@ -41,13 +44,16 @@ public class AwsRDSClusterContainer extends AwsContainer {
 
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
-        return DataDogIdentifier.dataDogIdentifier().withKey("dbClusterIdentifier").withValue(dbClusterIdentifier);
+        return DataDogIdentifier.dataDogIdentifier()
+                                .withKey(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER)
+                                .withValue(dbClusterIdentifier);
     }
 
     public String getDbClusterIdentifier () {
         return dbClusterIdentifier;
     }
 
+    @JsonIgnore
     public Set<String> getMembers () {
         return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
@@ -63,6 +69,15 @@ public class AwsRDSClusterContainer extends AwsContainer {
      * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
      */
     Set<String> getSomeMembers () {
+        Set<String> someMembers = getSomeMembersInner();
+        log.info("Experiment using cluster members {}", value("experimentMembers", someMembers));
+        return someMembers;
+    }
+
+    /**
+     * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
+     */
+    Set<String> getSomeMembersInner () {
         Set<String> returnSet;
         // Make members a List instead of Set so it can be sorted.
         List<String> members = new ArrayList<>(getMembers());
@@ -73,7 +88,8 @@ public class AwsRDSClusterContainer extends AwsContainer {
         } else if (members.size() == 2) {
             // If there are exactly 2 members, the only valid subset is of size 1. Since the set is shuffled,
             // we can just return index 0 (as a set).
-            return Collections.singleton(members.get(0));
+            String member = members.get(0);
+            return Collections.singleton(member);
         }
         returnSet = new HashSet<>();
         // Offsetting -1/+1 to ensure that a minimum of 1 item is set. nextInt is exclusive on upper bound,
@@ -130,6 +146,9 @@ public class AwsRDSClusterContainer extends AwsContainer {
             awsRDSClusterContainer.dbClusterIdentifier = this.dbClusterIdentifier;
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
+            DataDogIdentifier dataDogIdentifier = awsRDSClusterContainer.getDataDogIdentifier();
+            awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container {}", value(dataDogIdentifier.getKey(), dataDogIdentifier
+                    .getValue()));
             return awsRDSClusterContainer;
         }
     }
