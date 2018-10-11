@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
+import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
@@ -43,7 +44,9 @@ public class AwsRDSClusterContainer extends AwsContainer {
 
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
-        return DataDogIdentifier.dataDogIdentifier().withKey("dbClusterIdentifier").withValue(dbClusterIdentifier);
+        return DataDogIdentifier.dataDogIdentifier()
+                                .withKey(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER)
+                                .withValue(dbClusterIdentifier);
     }
 
     public String getDbClusterIdentifier () {
@@ -66,7 +69,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
      * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
      */
     Set<String> getSomeMembers () {
-        Set<String> someMembers = getSomeMembers_inner();
+        Set<String> someMembers = getSomeMembersInner();
         log.info("Experiment using cluster members {}", value("experimentMembers", someMembers));
         return someMembers;
     }
@@ -74,7 +77,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
     /**
      * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
      */
-    Set<String> getSomeMembers_inner () {
+    Set<String> getSomeMembersInner () {
         Set<String> returnSet;
         // Make members a List instead of Set so it can be sorted.
         List<String> members = new ArrayList<>(getMembers());

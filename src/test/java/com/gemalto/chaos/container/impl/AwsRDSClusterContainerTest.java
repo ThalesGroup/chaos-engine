@@ -113,7 +113,8 @@ public class AwsRDSClusterContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("dbClusterIdentifier")
-                .withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
+        assertEquals(DataDogIdentifier.dataDogIdentifier()
+                                      .withKey("dbclusteridentifier")
+                                      .withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
     }
 }

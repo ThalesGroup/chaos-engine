@@ -29,12 +29,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
-import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_AVAILABLE;
-import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
+import static com.gemalto.chaos.constants.AwsRDSConstants.*;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 @ConditionalOnProperty("aws.rds")
 @ConfigurationProperties("aws.rds")
@@ -207,6 +208,7 @@ public class AwsRDSPlatform extends Platform {
 
 
     public void failoverCluster (String dbClusterIdentifier) {
+        log.info("Initiating failover request for {}", keyValue(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
         amazonRDS.failoverDBCluster(new FailoverDBClusterRequest().withDBClusterIdentifier(dbClusterIdentifier));
     }
 
@@ -215,10 +217,12 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private void restartInstance (String dbInstanceIdentifier) {
+        log.info("Initiating Reboot Database Instance reqquest for {}", keyValue(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
         amazonRDS.rebootDBInstance(new RebootDBInstanceRequest(dbInstanceIdentifier));
     }
 
     public Set<String> getClusterInstances (String dbClusterIdentifier) {
+        log.info("Getting cluster instances for {}", keyValue(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
         return amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier))
                         .getDBClusters()
                         .stream()
@@ -229,9 +233,19 @@ public class AwsRDSPlatform extends Platform {
     }
 
     public ContainerHealth getInstanceStatus (String... dbInstanceIdentifiers) {
+        log.info("Checking health of instances {}", value("dbInstanceIdentifiers", dbInstanceIdentifiers));
         Collection<ContainerHealth> containerHealthCollection = new HashSet<>();
         for (String dbInstanceIdentifier : dbInstanceIdentifiers) {
-            containerHealthCollection.add(getInstanceStatus(dbInstanceIdentifier));
+            ContainerHealth instanceStatus = getInstanceStatus(dbInstanceIdentifier);
+            containerHealthCollection.add(instanceStatus);
+            switch (instanceStatus) {
+                case NORMAL:
+                    break;
+                case DOES_NOT_EXIST:
+                case UNDER_ATTACK:
+                    log.warn("Container {} returned health {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value("ContainerHealth", instanceStatus));
+                    break;
+            }
         }
         if (containerHealthCollection.stream()
                                      .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.DOES_NOT_EXIST))) {
@@ -261,6 +275,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     public void setVpcSecurityGroupIds (String dbInstanceIdentifier, Collection<String> vpcSecurityGroupIds) {
+        log.info("Setting VPC Security Group ID for {} to {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value(AWS_RDS_VPC_SECURITY_GROUP_ID, vpcSecurityGroupIds));
         amazonRDS.modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
     }
 
@@ -270,6 +285,7 @@ public class AwsRDSPlatform extends Platform {
 
     public ContainerHealth checkVpcSecurityGroupIds (String dbInstanceIdentifier, Collection<String> vpcSecurityGroupIds) {
         Collection<String> actualVpcSecurityGroupIds = getVpcSecurityGroupIds(dbInstanceIdentifier);
+        log.info("Comparing VPC Security Group IDs for {}, {}, {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), keyValue("expectedVpcSecurityGroupIds", vpcSecurityGroupIds), keyValue("actualSecurityGroupIds", actualVpcSecurityGroupIds));
         return actualVpcSecurityGroupIds.containsAll(vpcSecurityGroupIds) && vpcSecurityGroupIds.containsAll(actualVpcSecurityGroupIds) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
     }
 
@@ -288,30 +304,36 @@ public class AwsRDSPlatform extends Platform {
     }
 
     void initChaosSecurityGroup () {
+        log.debug("Retrieving a VPC Security Group to use for Chaos");
         amazonEC2.describeSecurityGroups()
                  .getSecurityGroups()
                  .stream()
                  .filter(securityGroup -> securityGroup.getGroupName().equals(AWS_RDS_CHAOS_SECURITY_GROUP))
                  .findFirst()
-                 .ifPresent(securityGroup -> chaosSecurityGroup = securityGroup.getGroupId());
+                 .ifPresent(securityGroup -> {
+                     chaosSecurityGroup = securityGroup.getGroupId();
+                     log.info("Found existing VPC Security Group ID {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, chaosSecurityGroup));
+                 });
         if (chaosSecurityGroup == null) {
+            log.debug("No existing VPC Security Group for Chaos found");
             chaosSecurityGroup = createChaosSecurityGroup();
         }
     }
 
     private String createChaosSecurityGroup () {
-        amazonEC2.describeVpcs()
-                 .getVpcs()
-                 .stream()
-                 .filter(Vpc::isDefault)
-                 .findFirst()
-                 .ifPresent(vpc -> defaultVpcId = vpc.getVpcId());
+        log.debug("Creating a VPC Security Group for Chaos");
+        amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().ifPresent(vpc -> {
+            defaultVpcId = vpc.getVpcId();
+            log.debug("Using {}", keyValue("defaultVpcId", defaultVpcId));
+        });
         if (defaultVpcId == null) {
             throw new ChaosException("No Default VPC Found");
         }
-        return amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withVpcId(defaultVpcId)
-                                                                             .withDescription(AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
-                                                                             .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP))
-                        .getGroupId();
+        String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withVpcId(defaultVpcId)
+                                                                                       .withDescription(AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
+                                                                                       .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP))
+                                  .getGroupId();
+        log.info("Created VPC Security Group {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, groupId));
+        return groupId;
     }
 }
