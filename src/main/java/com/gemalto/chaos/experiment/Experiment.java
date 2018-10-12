@@ -3,7 +3,7 @@ package com.gemalto.chaos.experiment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
-import com.gemalto.chaos.constants.AttackConstants;
+import com.gemalto.chaos.constants.ExperimentConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
+import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
 
@@ -32,7 +32,7 @@ public abstract class Experiment {
     private final String id = randomUUID().toString();
     protected Container container;
     protected ExperimentType experimentType;
-    protected Duration duration = Duration.ofMinutes(AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES);
+    protected Duration duration = Duration.ofMinutes(ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private Platform experimentLayer;
     private Method experimentMethod;

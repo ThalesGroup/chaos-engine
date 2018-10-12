@@ -6,8 +6,8 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 
 import java.time.Duration;
 
-import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_ATTACK_DURATION_MINUTES;
-import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
+import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES;
+import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 
 public class GenericContainerExperiment extends Experiment {
     public static GenericContainerExperimentBuilder builder () {
@@ -17,7 +17,7 @@ public class GenericContainerExperiment extends Experiment {
     public static final class GenericContainerExperimentBuilder {
         protected Container container;
         private ExperimentType experimentType;
-        private Duration duration = Duration.ofMinutes(DEFAULT_ATTACK_DURATION_MINUTES);
+        private Duration duration = Duration.ofMinutes(DEFAULT_EXPERIMENT_DURATION_MINUTES);
         private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
 
         private GenericContainerExperimentBuilder () {

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.gemalto.chaos.constants.AttackConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
+import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public abstract class Platform implements ExperimentalObject {
