@@ -13,6 +13,7 @@ import com.gemalto.chaos.scheduler.impl.ChaosScheduler;
 import com.gemalto.chaos.util.Expiring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
@@ -75,18 +76,20 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public synchronized List<Container> getRoster () {
-        List<Container> returnValue;
-        if (roster == null || roster.value() == null) {
-            returnValue = generateRoster();
-            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
+        try (MDC.MDCCloseable ignored = MDC.putCloseable("platform", this.getPlatformType())) {
+            List<Container> returnValue;
+            if (roster == null || roster.value() == null) {
+                returnValue = generateRoster();
+                roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
+                return returnValue;
+            }
+            returnValue = roster.value();
+            if (returnValue == null) {
+                returnValue = generateRoster();
+                roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
+            }
             return returnValue;
         }
-        returnValue = roster.value();
-        if (returnValue == null) {
-            returnValue = generateRoster();
-            roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
-        }
-        return returnValue;
     }
 
     protected abstract List<Container> generateRoster ();

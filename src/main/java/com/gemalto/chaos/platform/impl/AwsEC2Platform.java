@@ -112,8 +112,7 @@ public class AwsEC2Platform extends Platform {
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
         while (!done) {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
-            describeInstancesResult.getReservations()
-                                   .parallelStream()
+            describeInstancesResult.getReservations().stream()
                                    .map(Reservation::getInstances)
                                    .flatMap(Collection::parallelStream)
                                    .filter(instance -> !awsEC2SelfAwareness.isMe(instance.getInstanceId()))
