@@ -83,8 +83,7 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> amazonRDS.describeDBInstances()
-                                                                           .getDBInstances()
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances()
                                                                            .stream()
                                                                            .map(DBInstance::getDBInstanceStatus);
         if (!dbInstanceStatusSupplier.get().allMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
@@ -121,7 +120,7 @@ public class AwsRDSPlatform extends Platform {
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
-        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value(DATADOG_PLATFORM_KEY, this.getPlatformType()), value(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
+        log.debug("Experiment on {} will use {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()), keyValue(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
         List<Container> chosenSet = new ArrayList<>();
         chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
         chosenSet.addAll(availabilityZoneMap.get(NO_AZ_INFORMATION));
@@ -157,6 +156,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private Container createContainerFromDBInstance (DBInstance dbInstance) {
+        log.debug("Creating RDS Instance Container object from {}", keyValue("dbInstance", dbInstance));
         return AwsRDSInstanceContainer.builder()
                                       .withAwsRDSPlatform(this).withAvailabilityZone(dbInstance.getAvailabilityZone())
                                       .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
@@ -165,6 +165,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private Container createContainerFromDBCluster (DBCluster dbCluster) {
+        log.debug("Creating RDS Cluster Container object from {}", keyValue("dbCluster", dbCluster));
         return AwsRDSClusterContainer.builder()
                                      .withAwsRDSPlatform(this)
                                      .withDbClusterIdentifier(dbCluster.getDBClusterIdentifier())
@@ -246,6 +247,7 @@ public class AwsRDSPlatform extends Platform {
             containerHealthCollection.add(instanceStatus);
             switch (instanceStatus) {
                 case NORMAL:
+                    log.debug("Container {} returned health {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value("ContainerHealth", instanceStatus));
                     break;
                 case DOES_NOT_EXIST:
                 case RUNNING_EXPERIMENT:
