@@ -70,15 +70,19 @@ public class ExperimentManager {
         log.info("Active experiments: {}", activeExperiments.size());
         Set<Experiment> finishedExperiments = new HashSet<>();
         activeExperiments.parallelStream().forEach(experiment -> {
-            try (MDC.MDCCloseable ignored = MDC.putCloseable(experiment.getContainer()
-                                                                       .getDataDogIdentifier()
-                                                                       .getKey(), experiment.getContainer()
-                                                                                            .getDataDogIdentifier()
-                                                                                            .getValue())) {
-                ExperimentState experimentState = experiment.getExperimentState();
-                if (experimentState == ExperimentState.FINISHED) {
-                    log.info("Removing experiment {} from active experiment roster", experiment.getId());
-                    finishedExperiments.add(experiment);
+            try (MDC.MDCCloseable ignored1 = MDC.putCloseable("platform", experiment.getContainer()
+                                                                                    .getPlatform()
+                                                                                    .getPlatformType())) {
+                try (MDC.MDCCloseable ignored = MDC.putCloseable(experiment.getContainer()
+                                                                           .getDataDogIdentifier()
+                                                                           .getKey(), experiment.getContainer()
+                                                                                                .getDataDogIdentifier()
+                                                                                                .getValue())) {
+                    ExperimentState experimentState = experiment.getExperimentState();
+                    if (experimentState == ExperimentState.FINISHED) {
+                        log.info("Removing experiment {} from active experiment roster", experiment.getId());
+                        finishedExperiments.add(experiment);
+                    }
                 }
             }
         });
