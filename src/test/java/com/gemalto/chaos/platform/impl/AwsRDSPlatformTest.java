@@ -75,26 +75,26 @@ public class AwsRDSPlatformTest {
         DescribeDBInstancesResult describeDBInstancesResult;
         // Case 1: Single normal instance.
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(normalDbInstance);
-        when(amazonRDS.describeDBInstances()).thenReturn(describeDBInstancesResult);
+        when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
         assertEquals(PlatformHealth.OK, awsRDSPlatform.getPlatformHealth());
         // Case 2: Many normal instances
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(normalDbInstance.clone(), normalDbInstance
                 .clone(), normalDbInstance.clone());
-        when(amazonRDS.describeDBInstances()).thenReturn(describeDBInstancesResult);
+        when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
         assertEquals(PlatformHealth.OK, awsRDSPlatform.getPlatformHealth());
         // Case 3: Mix of Normal and Failed
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(normalDbInstance.clone(), normalDbInstance
                 .clone(), failedDbInstance.clone(), failedDbInstance.clone());
-        when(amazonRDS.describeDBInstances()).thenReturn(describeDBInstancesResult);
+        when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
         assertEquals(PlatformHealth.DEGRADED, awsRDSPlatform.getPlatformHealth());
         // Case 4: One failed
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(failedDbInstance.clone());
-        when(amazonRDS.describeDBInstances()).thenReturn(describeDBInstancesResult);
+        when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
         assertEquals(PlatformHealth.FAILED, awsRDSPlatform.getPlatformHealth());
         // Case 5: Many failed
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(failedDbInstance.clone(), failedDbInstance
                 .clone(), failedDbInstance.clone());
-        when(amazonRDS.describeDBInstances()).thenReturn(describeDBInstancesResult);
+        when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
         assertEquals(PlatformHealth.FAILED, awsRDSPlatform.getPlatformHealth());
     }
 
