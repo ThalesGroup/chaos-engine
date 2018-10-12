@@ -131,7 +131,9 @@ public class AwsRDSPlatform extends Platform {
         Collection<DBInstance> dbInstances = new HashSet<>();
         DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
         DescribeDBInstancesResult describeDBInstancesResult;
+        int i = 0;
         do {
+            log.debug("Running describeDBInstances, page {}", ++i);
             describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
             dbInstances.addAll(describeDBInstancesResult.getDBInstances());
             describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
@@ -143,7 +145,9 @@ public class AwsRDSPlatform extends Platform {
         Collection<DBCluster> dbClusters = new HashSet<>();
         DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
         DescribeDBClustersResult describeDBClustersResult;
+        int i = 0;
         do {
+            log.debug("Running describeDBClusters, page {}", ++i);
             describeDBClustersResult = amazonRDS.describeDBClusters(describeDBClustersRequest);
             dbClusters.addAll(describeDBClustersResult.getDBClusters());
             describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
