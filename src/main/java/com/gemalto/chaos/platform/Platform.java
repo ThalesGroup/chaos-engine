@@ -115,7 +115,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public Platform startExperiment () {
-        log.info("Starting an experiment on {}", keyValue("platform", this));
+        log.info("Starting an experiment on {}", keyValue("platform", this.getPlatformType()));
         getScheduler().startExperiment();
         experimentTimes.add(Instant.now());
         return this;
