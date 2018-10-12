@@ -54,7 +54,7 @@ public class PlatformTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void getSupportedAttackTypes () {
+    public void getSupportedExperimentTypes () {
         doReturn(Collections.singletonList(ExperimentType.STATE)).when(container).getSupportedExperimentTypes();
         assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));
         assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));

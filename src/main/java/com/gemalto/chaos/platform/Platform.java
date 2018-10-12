@@ -34,7 +34,7 @@ public abstract class Platform implements ExperimentalObject {
     private Scheduler scheduler;
     private List<ExperimentType> supportedExperimentTypes;
     private Expiring<List<Container>> roster;
-    private Set<Instant> attackTimes = new HashSet<>();
+    private Set<Instant> experimentTimes = new HashSet<>();
     @Autowired
     @Lazy
     private HolidayManager holidayManager;
@@ -111,16 +111,16 @@ public abstract class Platform implements ExperimentalObject {
         return getScheduler().getNextChaosTime();
     }
 
-    public Platform startAttack () {
+    public Platform startExperiment () {
         log.info("Starting an experiment on {}", keyValue("platform", this));
-        getScheduler().startAttack();
-        attackTimes.add(Instant.now());
+        getScheduler().startExperiment();
+        experimentTimes.add(Instant.now());
         return this;
     }
 
     @SuppressWarnings("unused") // public get methods are consumed by Spring Rest.
-    public Set<Instant> getAttackTimes () {
-        return attackTimes;
+    public Set<Instant> getExperimentTimes () {
+        return experimentTimes;
     }
 
     public void usingHolidayManager (HolidayManager holidayManager) {

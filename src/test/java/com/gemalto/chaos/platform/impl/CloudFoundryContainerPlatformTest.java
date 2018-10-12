@@ -140,7 +140,7 @@ public class CloudFoundryContainerPlatformTest {
     }
 
     @Test
-    public void checkHealthUnderAttack () {
+    public void checkHealthUnderExperiment () {
         Integer INSTANCE_ID = 0;
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder()
@@ -188,7 +188,7 @@ public class CloudFoundryContainerPlatformTest {
     }
 
     @Test
-    public void sshAttackMergeCapabilities () {
+    public void sshExperimentMergeCapabilities () {
         ArrayList<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
         alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
         ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
