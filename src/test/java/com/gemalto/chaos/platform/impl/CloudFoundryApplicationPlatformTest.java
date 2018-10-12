@@ -229,7 +229,7 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
-        assertEquals(ContainerHealth.UNDER_ATTACK, cloudFoundryApplicationPlatform.checkPlatformHealth());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryApplicationPlatform.checkPlatformHealth());
     }
 
     @Test

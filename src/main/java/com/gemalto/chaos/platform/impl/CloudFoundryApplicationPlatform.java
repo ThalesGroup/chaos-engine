@@ -86,7 +86,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         } catch (NullPointerException e) {
             return ContainerHealth.DOES_NOT_EXIST;
         }
-        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
+        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 
     @Override

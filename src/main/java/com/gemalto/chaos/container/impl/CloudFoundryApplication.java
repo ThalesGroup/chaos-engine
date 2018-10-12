@@ -26,7 +26,7 @@ public class CloudFoundryApplication extends Container {
     private transient String applicationID;
     private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private transient List<CloudFoundryApplicationRoute> applicationRoutes;
-    private transient CloudFoundryApplicationRoute routeUnderAttack;
+    private transient CloudFoundryApplicationRoute routeUnderExperiment;
     private transient Callable<Void> rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
@@ -37,9 +37,9 @@ public class CloudFoundryApplication extends Container {
         return null;
     };
     private transient Callable<Void> mapApplicationRoute = () -> {
-        if (routeUnderAttack != null) {
-            log.debug("Mapping application route: {}", routeUnderAttack);
-            cloudFoundryApplicationPlatform.mapRoute(routeUnderAttack.getMapRouteRequest());
+        if (routeUnderExperiment != null) {
+            log.debug("Mapping application route: {}", routeUnderExperiment);
+            cloudFoundryApplicationPlatform.mapRoute(routeUnderExperiment.getMapRouteRequest());
         }
         return null;
     };
@@ -92,10 +92,10 @@ public class CloudFoundryApplication extends Container {
     }
 
     @ResourceExperiment
-    public void scaleApplication (Experiment attack) {
-        attack.setSelfHealingMethod(rescaleApplicationToDefault);
-        attack.setCheckContainerHealth(isAppHealthy);
-        attack.setFinalizeMethod(rescaleApplicationToDefault);
+    public void scaleApplication (Experiment experiment) {
+        experiment.setSelfHealingMethod(rescaleApplicationToDefault);
+        experiment.setCheckContainerHealth(isAppHealthy);
+        experiment.setFinalizeMethod(rescaleApplicationToDefault);
         Random rand = new Random();
         int newScale;
         do {
@@ -107,34 +107,34 @@ public class CloudFoundryApplication extends Container {
     }
 
     @StateExperiment
-    public void restartApplication (Experiment attack) {
-        attack.setSelfHealingMethod(restageApplication);
-        attack.setCheckContainerHealth(isAppHealthy);
+    public void restartApplication (Experiment experiment) {
+        experiment.setSelfHealingMethod(restageApplication);
+        experiment.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
     @StateExperiment
-    public void restageApplication (Experiment attack) {
-        attack.setCheckContainerHealth(isAppHealthy);
-        attack.setSelfHealingMethod(noRecovery);
+    public void restageApplication (Experiment experiment) {
+        experiment.setCheckContainerHealth(isAppHealthy);
+        experiment.setSelfHealingMethod(noRecovery);
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
 
     @NetworkExperiment
-    public void unmapRoute (Experiment attack) {
-        attack.setCheckContainerHealth(isAppHealthy);
+    public void unmapRoute (Experiment experiment) {
+        experiment.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {
             Random rand = new Random();
             int routeIndex = rand.nextInt(applicationRoutes.size());
-            this.routeUnderAttack = applicationRoutes.get(routeIndex);
-            attack.setSelfHealingMethod(mapApplicationRoute);
-            attack.setFinalizeMethod(mapApplicationRoute);
-            log.debug("Unmapping application route: {}", routeUnderAttack);
-            cloudFoundryApplicationPlatform.unmapRoute(routeUnderAttack.getUnmapRouteRequest());
+            this.routeUnderExperiment = applicationRoutes.get(routeIndex);
+            experiment.setSelfHealingMethod(mapApplicationRoute);
+            experiment.setFinalizeMethod(mapApplicationRoute);
+            log.debug("Unmapping application route: {}", routeUnderExperiment);
+            cloudFoundryApplicationPlatform.unmapRoute(routeUnderExperiment.getUnmapRouteRequest());
         } else {
-            attack.setFinalizationDuration(Duration.ZERO);
-            attack.setSelfHealingMethod(noRecovery);
-            log.warn("Application {} has no routes set, skipping the experiment {}", name, attack.getId());
+            experiment.setFinalizationDuration(Duration.ZERO);
+            experiment.setSelfHealingMethod(noRecovery);
+            log.warn("Application {} has no routes set, skipping the experiment {}", name, experiment.getId());
         }
     }
 

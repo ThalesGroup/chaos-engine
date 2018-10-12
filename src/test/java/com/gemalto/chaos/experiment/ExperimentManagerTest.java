@@ -65,12 +65,12 @@ public class ExperimentManagerTest {
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canExperiment()).thenReturn(true);
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(experiment1);
+        when(container1.createExperiment()).thenReturn(experiment1);
         when(container2.canExperiment()).thenReturn(false);
         experimentManager.startExperiments();
         assertThat(experimentManager.getNewExperimentQueue(), hasItem(experiment1));
         verify(container2, times(1)).canExperiment();
-        verify(container2, times(0)).createAttack();
+        verify(container2, times(0)).createExperiment();
     }
 
     //SCT-6233
@@ -87,10 +87,10 @@ public class ExperimentManagerTest {
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(experiment1);
+        when(container1.createExperiment()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(experiment2);
+        when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(experiment1.startExperiment(notificationManager)).thenReturn(true);
         when(experiment2.startExperiment(notificationManager)).thenReturn(true);
@@ -129,13 +129,13 @@ public class ExperimentManagerTest {
         when(pcfContainerPlatform.canExperiment()).thenReturn(true);
         when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(experiment1);
+        when(container1.createExperiment()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(experiment2);
+        when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container3.canExperiment()).thenReturn(true);
-        when(container3.createAttack()).thenReturn(experiment3);
+        when(container3.createExperiment()).thenReturn(experiment3);
         when(container3.getPlatform()).thenReturn(pcfContainerPlatform);
         when(experiment1.startExperiment(notificationManager)).thenReturn(true);
         when(experiment2.startExperiment(notificationManager)).thenReturn(true);
@@ -179,10 +179,10 @@ public class ExperimentManagerTest {
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
-        when(container1.createAttack()).thenReturn(experiment1);
+        when(container1.createExperiment()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
-        when(container2.createAttack()).thenReturn(experiment2);
+        when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
         when(experiment1.startExperiment(notificationManager)).thenReturn(true);
         when(experiment2.startExperiment(notificationManager)).thenReturn(true);
@@ -218,10 +218,10 @@ public class ExperimentManagerTest {
         when(platform.getRoster()).thenReturn(roster);
         when(container1.getIdentity()).thenReturn(containerId);
         when(container2.getIdentity()).thenReturn(containerId + 1);
-        doReturn(experiment1).when(container1).createAttack();
+        doReturn(experiment1).when(container1).createExperiment();
         assertThat(experimentManager.experimentContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1));
-        verify(container1, times(1)).createAttack();
-        verify(container2, times(0)).createAttack();
+        verify(container1, times(1)).createExperiment();
+        verify(container2, times(0)).createExperiment();
     }
 
     @Configuration

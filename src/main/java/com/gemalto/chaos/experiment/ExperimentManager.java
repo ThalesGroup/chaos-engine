@@ -109,8 +109,7 @@ public class ExperimentManager {
                                                .filter(Container::canExperiment)
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
-            containersToExperiment.stream()
-                                  .map(Container::createAttack)
+            containersToExperiment.stream().map(Container::createExperiment)
                                   .map(this::addExperiment)
                                   .forEach(experiment -> log.info("Experiment {}, {} added to the queue", experiment.getId(), experiment));
             return newExperimentQueue;
@@ -128,7 +127,8 @@ public class ExperimentManager {
                               .map(Platform::getRoster)
                               .flatMap(Collection::stream)
                               .filter(container -> container.getIdentity() == containerIdentity)
-                              .map(Container::createAttack).map(this::addExperiment)
+                              .map(Container::createExperiment)
+                              .map(this::addExperiment)
                               .collect(Collectors.toSet());
     }
 

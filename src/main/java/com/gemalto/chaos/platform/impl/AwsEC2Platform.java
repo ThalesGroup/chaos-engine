@@ -191,7 +191,7 @@ public class AwsEC2Platform extends Platform {
             log.error("Instance {} doesn't seem to exist anymore", instanceId, e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
-        return state.getCode() == AwsEC2Constants.AWS_RUNNING_CODE ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+        return state.getCode() == AwsEC2Constants.AWS_RUNNING_CODE ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public void stopInstance (String... instanceIds) {
@@ -262,7 +262,7 @@ public class AwsEC2Platform extends Platform {
 
     public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
         List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
-        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public List<String> getSecurityGroupIds (String instanceId) {

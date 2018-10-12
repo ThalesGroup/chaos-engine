@@ -59,9 +59,9 @@ public class AwsRDSClusterContainer extends AwsContainer {
     }
 
     @StateExperiment
-    public void restartInstances (Experiment attack) {
+    public void restartInstances (Experiment experiment) {
         final String[] dbInstanceIdentifiers = getSomeMembers().toArray(new String[0]);
-        attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
         awsRDSPlatform.restartInstance(dbInstanceIdentifiers);
     }
 
@@ -102,9 +102,9 @@ public class AwsRDSClusterContainer extends AwsContainer {
     }
 
     @StateExperiment
-    public void initiateFailover (Experiment attack) {
+    public void initiateFailover (Experiment experiment) {
         final String[] members = getMembers().toArray(new String[0]);
-        attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(members));
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(members));
         awsRDSPlatform.failoverCluster(dbClusterIdentifier);
     }
 

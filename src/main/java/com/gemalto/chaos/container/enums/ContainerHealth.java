@@ -2,6 +2,6 @@ package com.gemalto.chaos.container.enums;
 
 public enum ContainerHealth {
     NORMAL,
-    UNDER_ATTACK,
+    RUNNING_EXPERIMENT,
     DOES_NOT_EXIST
 }

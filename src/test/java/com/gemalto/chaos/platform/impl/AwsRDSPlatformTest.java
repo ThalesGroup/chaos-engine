@@ -156,7 +156,7 @@ public class AwsRDSPlatformTest {
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
         doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus("Bogus"))).when(amazonRDS)
                                                                                                                  .describeDBInstances(any(DescribeDBInstancesRequest.class));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
         doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)))
                 .when(amazonRDS)
                 .describeDBInstances(any(DescribeDBInstancesRequest.class));
@@ -178,7 +178,7 @@ public class AwsRDSPlatformTest {
         doReturn(new DescribeDBClustersResult().withDBClusters(new DBCluster().withStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER)))
                 .when(amazonRDS)
                 .describeDBClusters(any(DescribeDBClustersRequest.class));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
         doReturn(new DescribeDBClustersResult().withDBClusters(new DBCluster().withStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)))
                 .when(amazonRDS)
                 .describeDBClusters(any(DescribeDBClustersRequest.class));
@@ -253,13 +253,13 @@ public class AwsRDSPlatformTest {
                                  .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
         doReturn(abnormalInstance2).when(amazonRDS)
                                    .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
         reset(amazonRDS);
         doReturn(abnormalInstance1).when(amazonRDS)
                                    .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
         doReturn(normalInstance2).when(amazonRDS)
                                  .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
     }
 
     @Test
@@ -333,7 +333,7 @@ public class AwsRDSPlatformTest {
                         .stream()
                         .map(vpcIds -> new VpcSecurityGroupMembership().withVpcSecurityGroupId(vpcIds))
                         .collect(Collectors.toSet()))));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds
                 .iterator()
                 .next()));
         // Two equal sets
@@ -341,9 +341,9 @@ public class AwsRDSPlatformTest {
         // Second set is in different order
         assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, reverseOrderSet));
         // Second set has one more item
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, biggerSet));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, biggerSet));
         // Second set has one less item
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, smallerSet));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, smallerSet));
     }
 
     @Test

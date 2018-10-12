@@ -84,7 +84,7 @@ public class AwsEC2ContainerTest {
         attack.getSelfHealingMethod().call();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         await().atMost(4, TimeUnit.MINUTES)
-               .until(() -> ContainerHealth.UNDER_ATTACK == attack.getCheckContainerHealth().call());
+               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == attack.getCheckContainerHealth().call());
         attack.getCheckContainerHealth().call();
     }
 

@@ -28,8 +28,8 @@ public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
-    private Method lastAttackMethod;
-    private Experiment currentAttack;
+    private Method lastExperimentMethod;
+    private Experiment currentExperiment;
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -112,7 +112,7 @@ public abstract class Container implements ExperimentalObject {
         return output.toString();
     }
 
-    public boolean supportsAttackType (ExperimentType experimentType) {
+    public boolean supportsExperimentType (ExperimentType experimentType) {
         return supportedExperimentTypes.contains(experimentType);
     }
 
@@ -127,39 +127,39 @@ public abstract class Container implements ExperimentalObject {
 
     protected abstract ContainerHealth updateContainerHealthImpl (ExperimentType experimentType);
 
-    public Experiment createAttack () {
-        currentAttack = createAttack(supportedExperimentTypes.get(new Random().nextInt(supportedExperimentTypes.size())));
-        return currentAttack;
+    public Experiment createExperiment () {
+        currentExperiment = createExperiment(supportedExperimentTypes.get(new Random().nextInt(supportedExperimentTypes.size())));
+        return currentExperiment;
     }
 
-    public Experiment createAttack (ExperimentType experimentType) {
+    public Experiment createExperiment (ExperimentType experimentType) {
         return GenericContainerExperiment.builder().withExperimentType(experimentType).withContainer(this).build();
     }
 
-    public void attackContainer (Experiment attack) {
-        containerHealth = ContainerHealth.UNDER_ATTACK;
-        log.info("Starting a experiment {} against container {}", attack.getId(), this);
-        attackWithAnnotation(attack);
+    public void startExperiment (Experiment experiment) {
+        containerHealth = ContainerHealth.RUNNING_EXPERIMENT;
+        log.info("Starting a experiment {} against container {}", experiment.getId(), this);
+        experimentWithAnnotation(experiment);
     }
 
     @SuppressWarnings("unchecked")
-    private void attackWithAnnotation (Experiment attack) {
+    private void experimentWithAnnotation (Experiment experiment) {
         try {
-            lastAttackMethod = attack.getExperimentMethod();
-            lastAttackMethod.invoke(this, attack);
+            lastExperimentMethod = experiment.getExperimentMethod();
+            lastExperimentMethod.invoke(this, experiment);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            log.error("Failed to run experiment {} on container {}: {}", attack.getId(), this, e);
+            log.error("Failed to run experiment {} on container {}: {}", experiment.getId(), this, e);
             throw new ChaosException(e);
         }
     }
 
-    public void repeatAttack (Experiment attack) {
-        if (lastAttackMethod == null) {
+    public void repeatExperiment (Experiment experiment) {
+        if (lastExperimentMethod == null) {
             throw new ChaosException("Trying to repeat an experiment without having a prior one");
         }
-        containerHealth = ContainerHealth.UNDER_ATTACK;
+        containerHealth = ContainerHealth.RUNNING_EXPERIMENT;
         try {
-            lastAttackMethod.invoke(this, attack);
+            lastExperimentMethod.invoke(this, experiment);
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new ChaosException(e);
         }

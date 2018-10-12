@@ -181,7 +181,7 @@ public class AwsRDSPlatform extends Platform {
         } catch (IndexOutOfBoundsException e) {
             return DOES_NOT_EXIST;
         }
-        return dbInstance.getDBInstanceStatus().equals(AwsRDSConstants.AWS_RDS_AVAILABLE) ? NORMAL : UNDER_ATTACK;
+        return dbInstance.getDBInstanceStatus().equals(AwsRDSConstants.AWS_RDS_AVAILABLE) ? NORMAL : RUNNING_EXPERIMENT;
     }
 
     ContainerHealth getDBClusterHealth (AwsRDSClusterContainer awsRDSClusterContainer) {
@@ -198,13 +198,13 @@ public class AwsRDSPlatform extends Platform {
         } catch (IndexOutOfBoundsException e) {
             return DOES_NOT_EXIST;
         }
-        if (!dbCluster.getStatus().equals(AWS_RDS_AVAILABLE)) return UNDER_ATTACK;
+        if (!dbCluster.getStatus().equals(AWS_RDS_AVAILABLE)) return RUNNING_EXPERIMENT;
         if (dbCluster.getDBClusterMembers()
                      .stream()
                      .map(DBClusterMember::getDBInstanceIdentifier)
                      .map(this::getDBInstanceHealth)
                      .allMatch(containerHealth -> containerHealth.equals(ContainerHealth.NORMAL))) return NORMAL;
-        return UNDER_ATTACK;
+        return RUNNING_EXPERIMENT;
     }
 
 
@@ -243,7 +243,7 @@ public class AwsRDSPlatform extends Platform {
                 case NORMAL:
                     break;
                 case DOES_NOT_EXIST:
-                case UNDER_ATTACK:
+                case RUNNING_EXPERIMENT:
                     log.warn("Container {} returned health {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value("ContainerHealth", instanceStatus));
                     break;
             }
@@ -252,8 +252,8 @@ public class AwsRDSPlatform extends Platform {
                                      .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.DOES_NOT_EXIST))) {
             return ContainerHealth.DOES_NOT_EXIST;
         } else if (containerHealthCollection.stream()
-                                            .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.UNDER_ATTACK))) {
-            return ContainerHealth.UNDER_ATTACK;
+                                            .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.RUNNING_EXPERIMENT))) {
+            return ContainerHealth.RUNNING_EXPERIMENT;
         }
         return ContainerHealth.NORMAL;
     }
@@ -266,7 +266,7 @@ public class AwsRDSPlatform extends Platform {
         if (dbInstanceStatusSupplier.get().count() == 0) {
             return ContainerHealth.DOES_NOT_EXIST;
         } else if (dbInstanceStatusSupplier.get().noneMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
-            return ContainerHealth.UNDER_ATTACK;
+            return ContainerHealth.RUNNING_EXPERIMENT;
         }
         return ContainerHealth.NORMAL;
     }
@@ -287,7 +287,7 @@ public class AwsRDSPlatform extends Platform {
     public ContainerHealth checkVpcSecurityGroupIds (String dbInstanceIdentifier, Collection<String> vpcSecurityGroupIds) {
         Collection<String> actualVpcSecurityGroupIds = getVpcSecurityGroupIds(dbInstanceIdentifier);
         log.info("Comparing VPC Security Group IDs for {}, {}, {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), keyValue("expectedVpcSecurityGroupIds", vpcSecurityGroupIds), keyValue("actualSecurityGroupIds", actualVpcSecurityGroupIds));
-        return actualVpcSecurityGroupIds.containsAll(vpcSecurityGroupIds) && vpcSecurityGroupIds.containsAll(actualVpcSecurityGroupIds) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK;
+        return actualVpcSecurityGroupIds.containsAll(vpcSecurityGroupIds) && vpcSecurityGroupIds.containsAll(actualVpcSecurityGroupIds) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public Collection<String> getVpcSecurityGroupIds (String dbInstanceIdentifier) {

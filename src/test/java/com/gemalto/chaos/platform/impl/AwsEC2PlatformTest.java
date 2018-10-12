@@ -121,7 +121,7 @@ public class AwsEC2PlatformTest {
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
         when(instance.getState()).thenReturn(new InstanceState().withCode(0));
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.checkHealth(null));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.checkHealth(null));
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
         when(describeInstancesResult.getReservations()).thenReturn(Collections.EMPTY_LIST);
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsEC2Platform.checkHealth(null));
@@ -251,11 +251,11 @@ public class AwsEC2PlatformTest {
         doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier, groupIdentifier2)))
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
         doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.UNDER_ATTACK, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
     }
 
     @Configuration

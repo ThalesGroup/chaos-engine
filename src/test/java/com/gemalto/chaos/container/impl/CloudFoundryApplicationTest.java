@@ -151,7 +151,7 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void createAttack () {
-        Experiment attack = cloudFoundryApplication.createAttack(ExperimentType.RESOURCE);
+        Experiment attack = cloudFoundryApplication.createExperiment(ExperimentType.RESOURCE);
         assertEquals(cloudFoundryApplication, attack.getContainer());
         assertEquals(ExperimentType.RESOURCE, attack.getExperimentType());
     }

@@ -75,7 +75,7 @@ public class CloudFoundryContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
-               .sshAttack(any(ForkBomb.class), any(CloudFoundryContainer.class));
+               .sshExperiment(any(ForkBomb.class), any(CloudFoundryContainer.class));
         attack.getSelfHealingMethod().call();
     }
 
@@ -85,13 +85,13 @@ public class CloudFoundryContainerTest {
         verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
-               .sshAttack(any(RandomProcessTermination.class), any(CloudFoundryContainer.class));
+               .sshExperiment(any(RandomProcessTermination.class), any(CloudFoundryContainer.class));
         attack.getSelfHealingMethod().call();
     }
 
     @Test
     public void createAttack () {
-        Experiment attack = cloudFoundryContainer.createAttack(ExperimentType.STATE);
+        Experiment attack = cloudFoundryContainer.createExperiment(ExperimentType.STATE);
         assertEquals(cloudFoundryContainer, attack.getContainer());
         assertEquals(ExperimentType.STATE, attack.getExperimentType());
     }

@@ -69,9 +69,9 @@ public class CloudFoundryContainer extends Container {
     }
 
     @StateExperiment
-    public void restartContainer (Experiment attack) {
-        attack.setSelfHealingMethod(restageApplication);
-        attack.setCheckContainerHealth(isInstanceRunning);
+    public void restartContainer (Experiment experiment) {
+        experiment.setSelfHealingMethod(restageApplication);
+        experiment.setCheckContainerHealth(isInstanceRunning);
         cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
     }
 
@@ -85,17 +85,17 @@ public class CloudFoundryContainer extends Container {
     }
 
     @StateExperiment
-    public void forkBomb (Experiment attack) {
-        attack.setSelfHealingMethod(restartContainer);
-        attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
-        cloudFoundryContainerPlatform.sshAttack(new ForkBomb(), this);
+    public void forkBomb (Experiment experiment) {
+        experiment.setSelfHealingMethod(restartContainer);
+        experiment.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
+        cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
     @StateExperiment
-    public void terminateProcess (Experiment attack) {
-        attack.setSelfHealingMethod(restartContainer);
-        attack.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
-        cloudFoundryContainerPlatform.sshAttack(new RandomProcessTermination(), this);
+    public void terminateProcess (Experiment experiment) {
+        experiment.setSelfHealingMethod(restartContainer);
+        experiment.setCheckContainerHealth(isInstanceRunning); // TODO Real healtcheck
+        cloudFoundryContainerPlatform.sshExperiment(new RandomProcessTermination(), this);
     }
 
     private RestageApplicationRequest getRestageApplicationRequest () {

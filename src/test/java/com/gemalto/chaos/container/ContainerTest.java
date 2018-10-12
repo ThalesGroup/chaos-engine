@@ -60,7 +60,7 @@ public class ContainerTest {
 
         @Override
         protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-            return ContainerHealth.UNDER_ATTACK;
+            return ContainerHealth.RUNNING_EXPERIMENT;
         }
 
         @Override
@@ -101,17 +101,17 @@ public class ContainerTest {
 
     @Test
     public void supportsAttackType () {
-        assertFalse(testContainer.supportsAttackType(ExperimentType.STATE));
-        assertFalse(testContainer.supportsAttackType(ExperimentType.NETWORK));
-        assertFalse(testContainer.supportsAttackType(ExperimentType.RESOURCE));
-        assertTrue(testContainer2.supportsAttackType(ExperimentType.STATE));
-        assertTrue(testContainer2.supportsAttackType(ExperimentType.NETWORK));
-        assertFalse(testContainer2.supportsAttackType(ExperimentType.RESOURCE));
+        assertFalse(testContainer.supportsExperimentType(ExperimentType.STATE));
+        assertFalse(testContainer.supportsExperimentType(ExperimentType.NETWORK));
+        assertFalse(testContainer.supportsExperimentType(ExperimentType.RESOURCE));
+        assertTrue(testContainer2.supportsExperimentType(ExperimentType.STATE));
+        assertTrue(testContainer2.supportsExperimentType(ExperimentType.NETWORK));
+        assertFalse(testContainer2.supportsExperimentType(ExperimentType.RESOURCE));
     }
 
     @Test
     public void getContainerHealth () {
         assertEquals(ContainerHealth.NORMAL, testContainer.getContainerHealth(null));
-        assertEquals(ContainerHealth.UNDER_ATTACK, testContainer2.getContainerHealth(null));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
     }
 }

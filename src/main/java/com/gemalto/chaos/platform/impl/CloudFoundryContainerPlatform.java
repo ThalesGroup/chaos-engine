@@ -66,7 +66,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         } catch (NullPointerException e) {
             return ContainerHealth.DOES_NOT_EXIST;
         }
-        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.UNDER_ATTACK);
+        return (status.equals(CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public void sshAttack (SshAttack attack, CloudFoundryContainer container) {
+    public void sshExperiment (SshAttack attack, CloudFoundryContainer container) {
         CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
         if (ssh.connect(container)) {
             if (container.getDetectedCapabilities() != null) {

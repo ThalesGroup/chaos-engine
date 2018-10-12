@@ -41,8 +41,8 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     }
 
     @StateExperiment
-    public void restartInstance (Experiment attack) {
-        attack.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
+    public void restartInstance (Experiment experiment) {
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
     }
 
@@ -52,14 +52,14 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     }
 
     @NetworkExperiment
-    public void removeSecurityGroups (Experiment attack) {
+    public void removeSecurityGroups (Experiment experiment) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
         log.info("Existing security groups for {} are {}", value(getDataDogIdentifier().getKey(), getDataDogIdentifier().getValue()), value("securityGroups", existingSecurityGroups));
-        attack.setSelfHealingMethod(() -> {
+        experiment.setSelfHealingMethod(() -> {
             awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);
             return null;
         });
-        attack.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup());
     }
 

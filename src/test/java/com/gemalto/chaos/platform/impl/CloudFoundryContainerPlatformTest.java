@@ -160,7 +160,7 @@ public class CloudFoundryContainerPlatformTest {
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
-        assertEquals(ContainerHealth.UNDER_ATTACK, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
     @Test

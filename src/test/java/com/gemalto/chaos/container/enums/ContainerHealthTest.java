@@ -8,6 +8,6 @@ public class ContainerHealthTest {
     @Test
     public void ContainerHealthTestImpl () {
         assertNotEquals(ContainerHealth.valueOf("NORMAL"), null);
-        assertNotEquals(ContainerHealth.valueOf("UNDER_ATTACK"), null);
+        assertNotEquals(ContainerHealth.valueOf("RUNNING_EXPERIMENT"), null);
     }
 }

@@ -113,7 +113,7 @@ public abstract class Experiment {
             log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
             return false;
         }
-        if (container.supportsAttackType(experimentType)) {
+        if (container.supportsExperimentType(experimentType)) {
             List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType().getAnnotation());
             if (experimentMethods.isEmpty()) {
                 throw new ChaosException("Could not find an experiment vector");
@@ -126,7 +126,7 @@ public abstract class Experiment {
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("Starting new experiment")
                                                            .build());
-            container.attackContainer(this);
+            container.startExperiment(this);
             experimentState = ExperimentState.STARTED;
         }
         return true;
@@ -163,7 +163,7 @@ public abstract class Experiment {
                                                                .withMessage("Container no longer exists.")
                                                                .build());
                 return ExperimentState.FINISHED;
-            case UNDER_ATTACK:
+            case RUNNING_EXPERIMENT:
             default:
                 doSelfHealing();
                 return ExperimentState.STARTED;
