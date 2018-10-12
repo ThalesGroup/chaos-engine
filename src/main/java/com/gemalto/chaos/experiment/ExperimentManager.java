@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
@@ -70,9 +72,9 @@ public class ExperimentManager {
         log.info("Active experiments: {}", activeExperiments.size());
         Set<Experiment> finishedExperiments = new HashSet<>();
         activeExperiments.parallelStream().forEach(experiment -> {
-            try (MDC.MDCCloseable ignored1 = MDC.putCloseable("platform", experiment.getContainer()
-                                                                                    .getPlatform()
-                                                                                    .getPlatformType())) {
+            try (MDC.MDCCloseable ignored1 = MDC.putCloseable(DATADOG_PLATFORM_KEY, experiment.getContainer()
+                                                                                              .getPlatform()
+                                                                                              .getPlatformType())) {
                 try (MDC.MDCCloseable ignored = MDC.putCloseable(experiment.getContainer()
                                                                            .getDataDogIdentifier()
                                                                            .getKey(), experiment.getContainer()

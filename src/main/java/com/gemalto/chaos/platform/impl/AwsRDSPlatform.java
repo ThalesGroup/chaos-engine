@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.*;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
@@ -120,7 +121,7 @@ public class AwsRDSPlatform extends Platform {
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
-        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value("platform", this.getPlatformType()), value(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
+        log.debug("Experiment on Platform={} will use AvailabilityZone={}", value(DATADOG_PLATFORM_KEY, this.getPlatformType()), value(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
         List<Container> chosenSet = new ArrayList<>();
         chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
         chosenSet.addAll(availabilityZoneMap.get(NO_AZ_INFORMATION));

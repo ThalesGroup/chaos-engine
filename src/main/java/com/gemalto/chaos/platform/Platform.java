@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
@@ -41,6 +42,7 @@ public abstract class Platform implements ExperimentalObject {
     private HolidayManager holidayManager;
 
     public void setAverageMillisPerExperiment (long averageMillisPerExperiment) {
+
         if (averageMillisPerExperiment == this.averageMillisPerExperiment) return;
         log.info("Setting average time between failure for {} to {} ms", this, averageMillisPerExperiment);
         this.averageMillisPerExperiment = averageMillisPerExperiment;
@@ -76,7 +78,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public synchronized List<Container> getRoster () {
-        try (MDC.MDCCloseable ignored = MDC.putCloseable("platform", this.getPlatformType())) {
+        try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_PLATFORM_KEY, this.getPlatformType())) {
             List<Container> returnValue;
             if (roster == null || roster.value() == null) {
                 returnValue = generateRoster();
@@ -115,7 +117,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public Platform startExperiment () {
-        log.info("Starting an experiment on {}", keyValue("platform", this.getPlatformType()));
+        log.info("Starting an experiment on {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()));
         getScheduler().startExperiment();
         experimentTimes.add(Instant.now());
         return this;
