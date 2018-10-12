@@ -36,7 +36,7 @@ https://confluence.gemalto.com/display/CLS/Chaos+Engine+Scheduler
 
 ### Pausing Chaos
 
-The Chaos Engine can be paused and prevented from generating more attacks. This is useful if a major demonstration is in order and the usual risk associated with chaos is temporarily unacceptable.
+The Chaos Engine can be paused and prevented from generating more experiment. This is useful if a major demonstration is in order and the usual risk associated with chaos is temporarily unacceptable.
 
 To pause and resume Chaos, use the following `admin-controller` REST endpoint.
 
