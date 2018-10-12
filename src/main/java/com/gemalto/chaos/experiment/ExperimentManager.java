@@ -8,6 +8,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -69,10 +70,16 @@ public class ExperimentManager {
         log.info("Active experiments: {}", activeExperiments.size());
         Set<Experiment> finishedExperiments = new HashSet<>();
         activeExperiments.parallelStream().forEach(experiment -> {
-            ExperimentState experimentState = experiment.getExperimentState();
-            if (experimentState == ExperimentState.FINISHED) {
-                log.info("Removing experiment {} from active experiment roster", experiment.getId());
-                finishedExperiments.add(experiment);
+            try (MDC.MDCCloseable ignored = MDC.putCloseable(experiment.getContainer()
+                                                                       .getDataDogIdentifier()
+                                                                       .getKey(), experiment.getContainer()
+                                                                                            .getDataDogIdentifier()
+                                                                                            .getValue())) {
+                ExperimentState experimentState = experiment.getExperimentState();
+                if (experimentState == ExperimentState.FINISHED) {
+                    log.info("Removing experiment {} from active experiment roster", experiment.getId());
+                    finishedExperiments.add(experiment);
+                }
             }
         });
         activeExperiments.removeAll(finishedExperiments);

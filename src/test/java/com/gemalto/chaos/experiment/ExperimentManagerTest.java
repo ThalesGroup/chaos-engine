@@ -6,12 +6,15 @@ import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
+import com.gemalto.chaos.platform.impl.AwsEC2Platform;
+import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +25,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
@@ -50,8 +54,16 @@ public class ExperimentManagerTest {
     private Container container2;
     @Mock
     private Container container3;
-    @MockBean
+    @Mock
     private Platform platform;
+    @MockBean
+    private AwsRDSPlatform awsRDSPlatform;
+    @MockBean
+    private AwsEC2Platform awsEC2Platform;
+    @MockBean
+    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    @MockBean
+    private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
 
 
     @Test
@@ -109,34 +121,32 @@ public class ExperimentManagerTest {
     //SCT-5854
     @Test
     public void avoidOverlappingExperiments () {
-        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
-        CloudFoundryContainerPlatform pcfContainerPlatform = mock(CloudFoundryContainerPlatform.class);
         List<Container> containerListApps = new ArrayList<>();
         containerListApps.add(container1);
         containerListApps.add(container2);
         List<Container> containerListContainers = new ArrayList<>();
         containerListContainers.add(container3);
-        List<Platform> platforms = new ArrayList<>();
-        platforms.add(pcfApplicationPlatform);
-        platforms.add(pcfContainerPlatform);
-        when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
-        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
-        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
-        when(pcfContainerPlatform.startExperiment()).thenReturn(pcfContainerPlatform);
-        when(pcfContainerPlatform.getRoster()).thenReturn(containerListContainers);
-        when(pcfContainerPlatform.canExperiment()).thenReturn(true);
-        when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
+        doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
+        doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
+        doReturn(dataDogIdentifier()).when(container3).getDataDogIdentifier();
+        when(platformManager.getPlatforms()).thenReturn(Arrays.asList(cloudFoundryApplicationPlatform, cloudFoundryContainerPlatform));
+        when(cloudFoundryApplicationPlatform.startExperiment()).thenReturn(cloudFoundryApplicationPlatform);
+        when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(containerListApps);
+        when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
+        when(cloudFoundryContainerPlatform.startExperiment()).thenReturn(cloudFoundryContainerPlatform);
+        when(cloudFoundryContainerPlatform.getRoster()).thenReturn(containerListContainers);
+        when(cloudFoundryContainerPlatform.canExperiment()).thenReturn(true);
+        when(cloudFoundryContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container1.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
         when(container3.canExperiment()).thenReturn(true);
         when(container3.createExperiment()).thenReturn(experiment3);
-        when(container3.getPlatform()).thenReturn(pcfContainerPlatform);
+        when(container3.getPlatform()).thenReturn(cloudFoundryContainerPlatform);
         when(experiment1.startExperiment(notificationManager)).thenReturn(true);
         when(experiment2.startExperiment(notificationManager)).thenReturn(true);
         when(experiment3.startExperiment(notificationManager)).thenReturn(true);
@@ -167,23 +177,19 @@ public class ExperimentManagerTest {
 
     @Test
     public void removeFinishedExperiments () {
-        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
-        List<Container> containerListApps = new ArrayList<>();
-        containerListApps.add(container1);
-        containerListApps.add(container2);
-        List<Platform> platforms = new ArrayList<>();
-        platforms.add(pcfApplicationPlatform);
-        when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
-        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
-        when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
-        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
+        doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
+        doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
+        when(platformManager.getPlatforms()).thenReturn(Collections.singletonList(cloudFoundryApplicationPlatform));
+        when(cloudFoundryApplicationPlatform.startExperiment()).thenReturn(cloudFoundryApplicationPlatform);
+        when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(Arrays.asList(container1, container2));
+        when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
+        when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container1.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
         when(experiment1.startExperiment(notificationManager)).thenReturn(true);
         when(experiment2.startExperiment(notificationManager)).thenReturn(true);
         when(experiment1.getContainer()).thenReturn(container1);
@@ -235,7 +241,7 @@ public class ExperimentManagerTest {
 
         @Bean
         ExperimentManager experimentManager () {
-            return new ExperimentManager(notificationManager, platformManager, holidayManager);
+            return Mockito.spy(new ExperimentManager(notificationManager, platformManager, holidayManager));
         }
     }
 }
