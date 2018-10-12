@@ -45,6 +45,8 @@ public class ExperimentTest {
 
     @Before
     public void setUp () throws Exception {
+        AdminManager.setAdminState(AdminState.STARTED);
+
         stateExperiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                 .withExperimentType(STATE)
                                                                 .withContainer(stateContainer)
@@ -63,8 +65,7 @@ public class ExperimentTest {
     }
 
     @Test
-    public void getExperimentLayer () {
-        AdminManager.setAdminState(AdminState.STARTED);
+    public void experimentClassTest () {
         final Platform platform = mock(Platform.class);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
@@ -74,61 +75,6 @@ public class ExperimentTest {
         assertEquals(platform, stateExperiment.getExperimentLayer());
     }
 
-    @Test
-    public void getExperimentMethod () {
-    }
-
-    @Test
-    public void getSelfHealingMethod () {
-    }
-
-    @Test
-    public void getFinalizeMethod () {
-    }
-
-    @Test
-    public void setSelfHealingMethod () {
-    }
-
-    @Test
-    public void setFinalizeMethod () {
-    }
-
-    @Test
-    public void getCheckContainerHealth () {
-    }
-
-    @Test
-    public void setCheckContainerHealth () {
-    }
-
-    @Test
-    public void setFinalizationDuration () {
-    }
-
-    @Test
-    public void getId () {
-    }
-
-    @Test
-    public void getStartTime () {
-    }
-
-    @Test
-    public void getContainer () {
-    }
-
-    @Test
-    public void startExperiment () {
-    }
-
-    @Test
-    public void getExperimentType () {
-    }
-
-    @Test
-    public void getExperimentState () {
-    }
 
     private abstract class StateContainer extends Container {
         @StateExperiment
