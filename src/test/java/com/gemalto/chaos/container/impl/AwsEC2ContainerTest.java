@@ -34,7 +34,7 @@ public class AwsEC2ContainerTest {
     @MockBean
     private AwsEC2Platform awsEC2Platform;
     @Spy
-    private Experiment attack = new Experiment() {
+    private Experiment experiment = new Experiment() {
     };
 
     @Before
@@ -62,30 +62,30 @@ public class AwsEC2ContainerTest {
 
     @Test
     public void stopContainer () throws Exception {
-        awsEC2Container.stopContainer(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        awsEC2Container.stopContainer(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
-        attack.getCheckContainerHealth().call();
+        experiment.getCheckContainerHealth().call();
         Mockito.verify(awsEC2Platform, times(1)).checkHealth(INSTANCE_ID);
     }
 
     @Test
     public void restartContainer () throws Exception {
-        awsEC2Container.restartContainer(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        awsEC2Container.restartContainer(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         await().atMost(4, TimeUnit.MINUTES)
-               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == attack.getCheckContainerHealth().call());
-        attack.getCheckContainerHealth().call();
+               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
+        experiment.getCheckContainerHealth().call();
     }
 
     @Test
@@ -103,18 +103,18 @@ public class AwsEC2ContainerTest {
         doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupId();
         Mockito.verify(awsEC2Platform, times(0))
                .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
-        verify(attack, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(0)).setSelfHealingMethod(ArgumentMatchers.any());
-        awsEC2Container.removeSecurityGroups(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        verify(experiment, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(0)).setSelfHealingMethod(ArgumentMatchers.any());
+        awsEC2Container.removeSecurityGroups(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsEC2Platform, times(1))
                .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
         Mockito.verify(awsEC2Platform, times(0)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        attack.getCheckContainerHealth().call();
+        experiment.getCheckContainerHealth().call();
         Mockito.verify(awsEC2Platform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
         Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
 

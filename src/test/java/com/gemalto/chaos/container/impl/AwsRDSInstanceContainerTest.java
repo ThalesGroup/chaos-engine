@@ -49,9 +49,9 @@ public class AwsRDSInstanceContainerTest {
 
     @Test
     public void restartInstance () {
-        Experiment attack = mock(Experiment.class);
-        awsRDSInstanceContainer.restartInstance(attack);
-        verify(attack, times(1)).setCheckContainerHealth(any());
+        Experiment experiment = mock(Experiment.class);
+        awsRDSInstanceContainer.restartInstance(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).restartInstance(dbInstanceIdentifier);
     }
 

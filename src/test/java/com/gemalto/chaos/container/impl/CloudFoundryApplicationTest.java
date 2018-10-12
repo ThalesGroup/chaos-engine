@@ -36,7 +36,7 @@ public class CloudFoundryApplicationTest {
     private static final int instance = new Random().nextInt(100);
     private static final String name = UUID.randomUUID().toString();
     @Spy
-    private Experiment attack = new Experiment() {
+    private Experiment experiment = new Experiment() {
     };
     @MockBean
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
@@ -72,10 +72,10 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void scaleApplicationHealing () {
-        cloudFoundryApplication.scaleApplication(attack);
+        cloudFoundryApplication.scaleApplication(experiment);
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
         try {
-            attack.getSelfHealingMethod().call();
+            experiment.getSelfHealingMethod().call();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -84,10 +84,10 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void scaleApplicationFinalization () {
-        cloudFoundryApplication.scaleApplication(attack);
+        cloudFoundryApplication.scaleApplication(experiment);
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
         try {
-            attack.getFinalizeMethod().call();
+            experiment.getFinalizeMethod().call();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -96,39 +96,39 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void scaleApplication () {
-        cloudFoundryApplication.scaleApplication(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        verify(attack, times(1)).setFinalizeMethod(ArgumentMatchers.any());
+        cloudFoundryApplication.scaleApplication(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        verify(experiment, times(1)).setFinalizeMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
     }
 
     @Test
     public void restageApplication () throws Exception {
         RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
-        cloudFoundryApplication.restageApplication(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryApplication.restageApplication(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restageApplication(restageApplicationRequest);
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
     public void restartApplication () throws Exception {
-        cloudFoundryApplication.restartApplication(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryApplication.restartApplication(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restartApplication(name);
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
     public void unmapRoute () throws Exception {
-        cloudFoundryApplication.unmapRoute(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryApplication.unmapRoute(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).unmapRoute(ArgumentMatchers.any());
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
@@ -140,20 +140,20 @@ public class CloudFoundryApplicationTest {
                                                                      .applicationRoutes(new ArrayList<>())
                                                                      .platform(cloudFoundryApplicationPlatform)
                                                                      .build();
-        appNoRoutes.unmapRoute(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        verify(attack, times(0)).setFinalizeMethod(ArgumentMatchers.any());
-        verify(attack, times(1)).setFinalizationDuration(Duration.ZERO);
+        appNoRoutes.unmapRoute(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        verify(experiment, times(0)).setFinalizeMethod(ArgumentMatchers.any());
+        verify(experiment, times(1)).setFinalizationDuration(Duration.ZERO);
         Mockito.verify(cloudFoundryApplicationPlatform, times(0)).unmapRoute(ArgumentMatchers.any());
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
-    public void createAttack () {
-        Experiment attack = cloudFoundryApplication.createExperiment(ExperimentType.RESOURCE);
-        assertEquals(cloudFoundryApplication, attack.getContainer());
-        assertEquals(ExperimentType.RESOURCE, attack.getExperimentType());
+    public void createExperiment () {
+        Experiment experiment = cloudFoundryApplication.createExperiment(ExperimentType.RESOURCE);
+        assertEquals(cloudFoundryApplication, experiment.getContainer());
+        assertEquals(ExperimentType.RESOURCE, experiment.getExperimentType());
     }
 
     @Test

@@ -80,7 +80,7 @@ public class ContainerTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void canAttack () {
+    public void canExperiment () {
         // TODO : Mock the random class inside the container.
         doReturn(1D).when(platform).getDestructionProbability();
         assertFalse(testContainer.canExperiment());
@@ -94,13 +94,13 @@ public class ContainerTest {
     }
 
     @Test
-    public void getSupportedAttackTypes () {
+    public void getSupportedExperimentTypes () {
         assertThat(testContainer.getSupportedExperimentTypes(), IsEmptyIterable.emptyIterableOf(ExperimentType.class));
         assertThat(testContainer2.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE, ExperimentType.NETWORK));
     }
 
     @Test
-    public void supportsAttackType () {
+    public void supportsExperimentType () {
         assertFalse(testContainer.supportsExperimentType(ExperimentType.STATE));
         assertFalse(testContainer.supportsExperimentType(ExperimentType.NETWORK));
         assertFalse(testContainer.supportsExperimentType(ExperimentType.RESOURCE));

@@ -94,20 +94,20 @@ public class AwsRDSClusterContainerTest {
     public void restartInstances () {
         String instanceId1 = UUID.randomUUID().toString();
         String instanceId2 = UUID.randomUUID().toString();
-        Experiment attack = mock(Experiment.class);
+        Experiment experiment = mock(Experiment.class);
         Set<String> members = new HashSet<>(Arrays.asList(instanceId1, instanceId2));
         doReturn(members).when(awsRDSClusterContainer).getSomeMembers();
-        awsRDSClusterContainer.restartInstances(attack);
-        verify(attack, times(1)).setCheckContainerHealth(any());
+        awsRDSClusterContainer.restartInstances(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).restartInstance(members.toArray(new String[0]));
     }
 
     @Test
     public void initiateFailover () {
-        Experiment attack = mock(Experiment.class);
+        Experiment experiment = mock(Experiment.class);
         doReturn(null).when(awsRDSClusterContainer).getSomeMembers();
-        awsRDSClusterContainer.initiateFailover(attack);
-        verify(attack, times(1)).setCheckContainerHealth(any());
+        awsRDSClusterContainer.initiateFailover(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).failoverCluster(dbClusterIdentifier);
     }
 

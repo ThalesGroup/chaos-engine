@@ -36,7 +36,7 @@ public class CloudFoundryContainerTest {
     private static final String name = UUID.randomUUID().toString();
     private CloudFoundryContainer cloudFoundryContainer;
     @Spy
-    private Experiment attack = new Experiment() {
+    private Experiment experiment = new Experiment() {
     };
     @MockBean
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
@@ -61,39 +61,39 @@ public class CloudFoundryContainerTest {
 
     @Test
     public void restartContainer () throws Exception {
-        cloudFoundryContainer.restartContainer(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryContainer.restartContainer(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .restartInstance(any(RestartApplicationInstanceRequest.class));
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
     public void forkBomb () throws Exception {
-        cloudFoundryContainer.forkBomb(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryContainer.forkBomb(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .sshExperiment(any(ForkBomb.class), any(CloudFoundryContainer.class));
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
     public void terminateProcess () throws Exception {
-        cloudFoundryContainer.terminateProcess(attack);
-        verify(attack, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(attack, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        cloudFoundryContainer.terminateProcess(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .sshExperiment(any(RandomProcessTermination.class), any(CloudFoundryContainer.class));
-        attack.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().call();
     }
 
     @Test
-    public void createAttack () {
-        Experiment attack = cloudFoundryContainer.createExperiment(ExperimentType.STATE);
-        assertEquals(cloudFoundryContainer, attack.getContainer());
-        assertEquals(ExperimentType.STATE, attack.getExperimentType());
+    public void createExperiment () {
+        Experiment experiment = cloudFoundryContainer.createExperiment(ExperimentType.STATE);
+        assertEquals(cloudFoundryContainer, experiment.getContainer());
+        assertEquals(ExperimentType.STATE, experiment.getExperimentType());
     }
 
     @Test
