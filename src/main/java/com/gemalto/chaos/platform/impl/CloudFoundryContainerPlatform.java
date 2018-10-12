@@ -109,15 +109,15 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public void sshExperiment (SshAttack attack, CloudFoundryContainer container) {
+    public void sshExperiment (SshAttack sshExperiment, CloudFoundryContainer container) {
         CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
         if (ssh.connect(container)) {
             if (container.getDetectedCapabilities() != null) {
-                attack.setShellSessionCapabilities(container.getDetectedCapabilities());
+                sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
             }
-            attack.attack(ssh);
-            if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != attack.getShellSessionCapabilities()) {
-                container.setDetectedCapabilities(attack.getShellSessionCapabilities());
+            sshExperiment.attack(ssh);
+            if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
+                container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
             }
             ssh.disconnect();
         }

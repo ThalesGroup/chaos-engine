@@ -60,7 +60,7 @@ public class ExperimentManagerTest {
         containerList.add(container1);
         containerList.add(container2);
         when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
-        when(platform.startAttack()).thenReturn(platform);
+        when(platform.startExperiment()).thenReturn(platform);
         when(platform.generateExperimentRoster()).thenCallRealMethod();
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canExperiment()).thenReturn(true);
@@ -82,7 +82,7 @@ public class ExperimentManagerTest {
         List<Platform> platforms = new ArrayList<>();
         platforms.add(pcfApplicationPlatform);
         when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
@@ -120,11 +120,11 @@ public class ExperimentManagerTest {
         platforms.add(pcfApplicationPlatform);
         platforms.add(pcfContainerPlatform);
         when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
-        when(pcfContainerPlatform.startAttack()).thenReturn(pcfContainerPlatform);
+        when(pcfContainerPlatform.startExperiment()).thenReturn(pcfContainerPlatform);
         when(pcfContainerPlatform.getRoster()).thenReturn(containerListContainers);
         when(pcfContainerPlatform.canExperiment()).thenReturn(true);
         when(pcfContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
@@ -174,7 +174,7 @@ public class ExperimentManagerTest {
         List<Platform> platforms = new ArrayList<>();
         platforms.add(pcfApplicationPlatform);
         when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startAttack()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();

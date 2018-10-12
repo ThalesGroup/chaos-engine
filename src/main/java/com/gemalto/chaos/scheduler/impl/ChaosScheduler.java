@@ -52,7 +52,7 @@ public class ChaosScheduler implements Scheduler {
     }
 
     @Override
-    public void startAttack () {
+    public void startExperiment () {
         lastChaosTime = nextChaosTime;
         nextChaosTime = null;
     }

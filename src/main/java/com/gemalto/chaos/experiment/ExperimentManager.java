@@ -99,7 +99,7 @@ public class ExperimentManager {
                 return null;
             }
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
-            List<Container> roster = chosenPlatform.startAttack().generateExperimentRoster();
+            List<Container> roster = chosenPlatform.startExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
                 return null;
             }
