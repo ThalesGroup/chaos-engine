@@ -255,14 +255,9 @@ public class AwsRDSPlatform extends Platform {
                     break;
             }
         }
-        if (containerHealthCollection.stream()
-                                     .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.DOES_NOT_EXIST))) {
-            return ContainerHealth.DOES_NOT_EXIST;
-        } else if (containerHealthCollection.stream()
-                                            .anyMatch(containerHealth -> containerHealth.equals(ContainerHealth.RUNNING_EXPERIMENT))) {
-            return ContainerHealth.RUNNING_EXPERIMENT;
-        }
-        return ContainerHealth.NORMAL;
+        return containerHealthCollection.stream()
+                                        .max(Comparator.comparingInt(ContainerHealth::getHealthLevel))
+                                        .orElse(ContainerHealth.NORMAL);
     }
 
     private ContainerHealth getInstanceStatus (String dbInstanceIdentifier) {

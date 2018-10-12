@@ -1,7 +1,16 @@
 package com.gemalto.chaos.container.enums;
 
 public enum ContainerHealth {
-    NORMAL,
-    RUNNING_EXPERIMENT,
-    DOES_NOT_EXIST
+    NORMAL(0),
+    RUNNING_EXPERIMENT(1),
+    DOES_NOT_EXIST(2);
+    private int healthLevel;
+
+    ContainerHealth (int healthLevel) {
+        this.healthLevel = healthLevel;
+    }
+
+    public int getHealthLevel () {
+        return healthLevel;
+    }
 }
