@@ -1,13 +1,13 @@
-package com.gemalto.chaos.ssh.impl.attacks;
+package com.gemalto.chaos.ssh.impl.experiments;
 
 import com.gemalto.chaos.ssh.ShellSessionCapability;
-import com.gemalto.chaos.ssh.SshAttack;
+import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ForkBomb extends SshAttack {
+public class ForkBomb extends SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(ForkBomb.class);
 
     public ForkBomb () {
@@ -23,12 +23,12 @@ public class ForkBomb extends SshAttack {
     }
 
     @Override
-    protected String getAttackName () {
+    protected String getExperimentName () {
         return "Fork Bomb";
     }
 
     @Override
-    protected String getAttackCommand () {
+    protected String getExperimentCommand () {
         return "bomb() { bomb | bomb & }; bomb; sleep 60; exit;";
     }
 

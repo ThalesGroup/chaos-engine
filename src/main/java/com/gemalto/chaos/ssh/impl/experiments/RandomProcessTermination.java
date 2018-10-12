@@ -1,13 +1,13 @@
-package com.gemalto.chaos.ssh.impl.attacks;
+package com.gemalto.chaos.ssh.impl.experiments;
 
 import com.gemalto.chaos.ssh.ShellSessionCapability;
-import com.gemalto.chaos.ssh.SshAttack;
+import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RandomProcessTermination extends SshAttack {
+public class RandomProcessTermination extends SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(RandomProcessTermination.class);
 
     public RandomProcessTermination () {
@@ -28,12 +28,12 @@ public class RandomProcessTermination extends SshAttack {
     }
 
     @Override
-    protected String getAttackName () {
+    protected String getExperimentName () {
         return "Random Process Termination";
     }
 
     @Override
-    protected String getAttackCommand () {
+    protected String getExperimentCommand () {
         return "kill $(cd /proc;ls -1 | grep '[0-9]' |sort -R | head -1)";
     }
 

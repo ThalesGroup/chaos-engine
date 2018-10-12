@@ -5,15 +5,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-public abstract class SshAttack {
-    private static final Logger log = LoggerFactory.getLogger(SshAttack.class);
+public abstract class SshExperiment {
+    private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
     protected ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     protected ArrayList<ShellSessionCapability> detectedCapabilities;
     protected SshManager sshManager;
 
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean attack (SshManager sshManager) {
+    public boolean runExperiment (SshManager sshManager) {
         this.sshManager = sshManager;
         if (detectedCapabilities == null) {
             collectAvailableCapabilities();
@@ -25,12 +25,12 @@ public abstract class SshAttack {
             }
         }
         if (shellHasRequiredCapabilities()) {
-            log.debug("Starting {} experiment.", getAttackName());
-            sshManager.executeCommandInInteractiveShell(getAttackCommand(), getAttackName(), getSshSessionMaxDuration());
-            log.debug("Experiment {} deployed.", getAttackName());
+            log.debug("Starting {} experiment.", getExperimentName());
+            sshManager.executeCommandInInteractiveShell(getExperimentCommand(), getExperimentName(), getSshSessionMaxDuration());
+            log.debug("Experiment {} deployed.", getExperimentName());
             return true;
         } else {
-            log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getAttackName(), requiredCapabilities, detectedCapabilities);
+            log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
         }
         return false;
     }
@@ -78,9 +78,9 @@ public abstract class SshAttack {
         return true;
     }
 
-    protected abstract String getAttackName ();
+    protected abstract String getExperimentName ();
 
-    protected abstract String getAttackCommand ();
+    protected abstract String getExperimentCommand ();
 
     protected abstract int getSshSessionMaxDuration ();
 

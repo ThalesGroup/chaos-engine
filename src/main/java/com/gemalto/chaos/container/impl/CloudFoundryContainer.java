@@ -9,8 +9,8 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
-import com.gemalto.chaos.ssh.impl.attacks.ForkBomb;
-import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
+import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
+import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 

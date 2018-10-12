@@ -11,7 +11,7 @@ import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
-import com.gemalto.chaos.ssh.impl.attacks.RandomProcessTermination;
+import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
@@ -226,7 +226,7 @@ public class CloudFoundryContainerPlatformTest {
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
-        term.attack(sshManager);
+        term.runExperiment(sshManager);
         assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
         Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
     }

@@ -60,7 +60,7 @@ public class SshManager {
             InputStream stream = shell.getInputStream();
             //Interactive session must be ended by exit command or sshClient connection drop
             //ttl is there for security reasons when the library don't recognize disconnected channel
-            //can happen when aggressive attacks are performed
+            //can happen when aggressive experiments are performed
             int ttl = 0;
             while (sshClient.isConnected() && !shell.isEOF() && shell.isOpen() && !session.isEOF() && ttl < maxSessionDuration) {
                 try {

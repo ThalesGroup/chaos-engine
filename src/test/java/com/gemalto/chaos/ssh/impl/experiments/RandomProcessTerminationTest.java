@@ -1,4 +1,4 @@
-package com.gemalto.chaos.ssh.impl.attacks;
+package com.gemalto.chaos.ssh.impl.experiments;
 
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
@@ -54,18 +54,18 @@ public class RandomProcessTerminationTest {
     }
 
     @Test
-    public void canAttack () {
+    public void canExperiment () {
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        assertTrue(randomProcessTermination.attack(sshManager));
+        assertTrue(randomProcessTermination.runExperiment(sshManager));
     }
 
     @Test
-    public void cannotAttack () {
+    public void cannotExperiment () {
         when(resultShellCapability.getExitStatus()).thenReturn(0);
         when(resultShellCapability.getCommandOutput()).thenReturn("uknown");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        assertFalse(randomProcessTermination.attack(sshManager));
+        assertFalse(randomProcessTermination.runExperiment(sshManager));
     }
 
     @Test
@@ -73,18 +73,18 @@ public class RandomProcessTerminationTest {
         when(resultShellCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        assertFalse(randomProcessTermination.attack(sshManager));
+        assertFalse(randomProcessTermination.runExperiment(sshManager));
         randomProcessTermination = new RandomProcessTermination();
         when(resultShellCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
-        assertFalse(randomProcessTermination.attack(sshManager));
+        assertFalse(randomProcessTermination.runExperiment(sshManager));
         randomProcessTermination = new RandomProcessTermination();
         when(resultTypeCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
-        assertFalse(randomProcessTermination.attack(sshManager));
+        assertFalse(randomProcessTermination.runExperiment(sshManager));
         randomProcessTermination = new RandomProcessTermination();
         when(resultTypeCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
-        assertFalse(randomProcessTermination.attack(sshManager));
+        assertFalse(randomProcessTermination.runExperiment(sshManager));
     }
 }

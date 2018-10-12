@@ -1,4 +1,4 @@
-package com.gemalto.chaos.ssh.impl.attacks;
+package com.gemalto.chaos.ssh.impl.experiments;
 
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
@@ -20,23 +20,23 @@ public class ForkBombTest {
     SshCommandResult result;
 
     @Test
-    public void canAttack () {
+    public void canExperiment () {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("bash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();
-        assertTrue(bomb.attack(sshManager));
+        assertTrue(bomb.runExperiment(sshManager));
         when(result.getCommandOutput()).thenReturn("ash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        assertTrue(bomb.attack(sshManager));
+        assertTrue(bomb.runExperiment(sshManager));
         bomb = new ForkBomb();
         when(result.getCommandOutput()).thenReturn("sh");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        assertTrue(bomb.attack(sshManager));
+        assertTrue(bomb.runExperiment(sshManager));
         bomb = new ForkBomb();
         when(result.getCommandOutput()).thenReturn("BASH");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        assertTrue(bomb.attack(sshManager));
+        assertTrue(bomb.runExperiment(sshManager));
     }
 
     @Test
@@ -45,16 +45,16 @@ public class ForkBombTest {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("/bin/bash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        assertTrue(bomb.attack(sshManager));
+        assertTrue(bomb.runExperiment(sshManager));
     }
 
     @Test
-    public void cannotAttack () {
+    public void cannotExperiment () {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("uknown");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();
-        assertFalse(bomb.attack(sshManager));
+        assertFalse(bomb.runExperiment(sshManager));
     }
 
     @Test
@@ -62,10 +62,10 @@ public class ForkBombTest {
         when(result.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();
-        assertFalse(bomb.attack(sshManager));
+        assertFalse(bomb.runExperiment(sshManager));
         bomb = new ForkBomb();
         when(result.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        assertFalse(bomb.attack(sshManager));
+        assertFalse(bomb.runExperiment(sshManager));
     }
 }
