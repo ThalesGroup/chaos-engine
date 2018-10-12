@@ -121,8 +121,7 @@ public abstract class Experiment {
             int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
             setExperimentMethod(experimentMethods.get(index));
             setExperimentLayer(container.getPlatform());
-            notificationManager.sendNotification(ChaosEvent.builder()
-                                                           .fromAttack(this)
+            notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("Starting new experiment")
                                                            .build());
@@ -146,8 +145,7 @@ public abstract class Experiment {
             case NORMAL:
                 if (isFinalizable()) {
                     log.info("Experiment {} complete", id);
-                    notificationManager.sendNotification(ChaosEvent.builder()
-                                                                   .fromAttack(this)
+                    notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
                                                                    .withMessage("Experiment finished. Container recovered from the experiment")
                                                                    .build());
@@ -157,8 +155,7 @@ public abstract class Experiment {
                 return ExperimentState.STARTED;
             case DOES_NOT_EXIST:
                 log.info("Experiment {} no longer maps to existing container", id);
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
+                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("Container no longer exists.")
                                                                .build());
@@ -216,21 +213,18 @@ public abstract class Experiment {
                     if (selfHealingCounter.incrementAndGet() > 1) {
                         message.append("This is self healing attempt number ").append(selfHealingCounter.get()).append(".");
                     }
-                    chaosEvent = ChaosEvent.builder()
-                                           .fromAttack(this)
+                    chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(message.toString())
                                            .build();
                     callSelfHealing();
                 } else if (AdminManager.canRunSelfHealing()) {
-                    chaosEvent = ChaosEvent.builder()
-                                           .fromAttack(this)
+                    chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage("Cannot run self healing again yet")
                                            .build();
                 } else {
-                    chaosEvent = ChaosEvent.builder()
-                                           .fromAttack(this)
+                    chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage("System is paused and unable to run self healing")
                                            .build();
@@ -238,15 +232,13 @@ public abstract class Experiment {
                 notificationManager.sendNotification(chaosEvent);
             } catch (ChaosException e) {
                 log.error("Experiment {}: An exception occurred while running self-healing.", id, e);
-                notificationManager.sendNotification(ChaosEvent.builder()
-                                                               .fromAttack(this)
+                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("An exception occurred while running self-healing.")
                                                                .build());
             }
         } else {
-            notificationManager.sendNotification(ChaosEvent.builder()
-                                                           .fromAttack(this)
+            notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("Experiment not yet finished.")
                                                            .build());

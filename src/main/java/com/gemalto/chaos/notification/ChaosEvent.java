@@ -13,22 +13,22 @@ import java.util.Date;
 public class ChaosEvent {
     private Container targetContainer;
     private Date chaosTime;
-    private String attackId;
+    private String experimentId;
     private String message;
     private ExperimentType experimentType;
-    private String attackMethod;
+    private String experimentMethod;
     private NotificationLevel notificationLevel;
 
     public static ChaosEventBuilder builder () {
         return ChaosEventBuilder.builder();
     }
 
-    public String getAttackId () {
-        return attackId;
+    public String getExperimentId () {
+        return experimentId;
     }
 
-    public String getAttackMethod () {
-        return attackMethod;
+    public String getExperimentMethod () {
+        return experimentMethod;
     }
 
     public ExperimentType getExperimentType () {
@@ -81,10 +81,10 @@ public class ChaosEvent {
     public static final class ChaosEventBuilder {
         private Container targetContainer;
         private Date chaosTime;
-        private String attackId;
+        private String experimentId;
         private String message;
         private ExperimentType experimentType;
-        private String attackMethod;
+        private String experimentMethod;
         private NotificationLevel notificationLevel;
 
         private ChaosEventBuilder () {
@@ -94,12 +94,12 @@ public class ChaosEvent {
             return new ChaosEventBuilder();
         }
 
-        public ChaosEventBuilder fromAttack (Experiment attack) {
-            this.chaosTime = Date.from(attack.getStartTime());
-            this.targetContainer = attack.getContainer();
-            this.experimentType = attack.getExperimentType();
-            this.attackId = attack.getId();
-            this.attackMethod = attack.getExperimentMethod().getName();
+        public ChaosEventBuilder fromExperiment (Experiment experiment) {
+            this.chaosTime = Date.from(experiment.getStartTime());
+            this.targetContainer = experiment.getContainer();
+            this.experimentType = experiment.getExperimentType();
+            this.experimentId = experiment.getId();
+            this.experimentMethod = experiment.getExperimentMethod().getName();
             return this;
         }
 
@@ -118,7 +118,7 @@ public class ChaosEvent {
             return this;
         }
 
-        public ChaosEventBuilder withAttackType (ExperimentType experimentType) {
+        public ChaosEventBuilder withExperimentType (ExperimentType experimentType) {
             this.experimentType = experimentType;
             return this;
         }
@@ -128,8 +128,8 @@ public class ChaosEvent {
             return this;
         }
 
-        public ChaosEventBuilder withAttackId (String attackId) {
-            this.attackId = attackId;
+        public ChaosEventBuilder withExperimentId (String experimentId) {
+            this.experimentId = experimentId;
             return this;
         }
 
@@ -138,9 +138,9 @@ public class ChaosEvent {
             chaosEvent.targetContainer = this.targetContainer;
             chaosEvent.message = this.message;
             chaosEvent.chaosTime = this.chaosTime;
-            chaosEvent.attackId = this.attackId;
+            chaosEvent.experimentId = this.experimentId;
             chaosEvent.experimentType = this.experimentType;
-            chaosEvent.attackMethod = this.attackMethod;
+            chaosEvent.experimentMethod = this.experimentMethod;
             chaosEvent.notificationLevel = this.notificationLevel;
             return chaosEvent;
         }
