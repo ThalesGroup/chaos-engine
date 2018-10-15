@@ -160,7 +160,7 @@ public class ExperimentManagerTest {
         int scheduledExperimentsCount = experiments.size();
         experimentManager.startExperiments();
         Queue<Experiment> experiments2 = experimentManager.getNewExperimentQueue();
-        // new startExperiments invocation should not add new experiment until newAttackQueue is empty
+        // new startExperiments invocation should not add new experiment until newExperimentQueue is empty
         assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
         Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();

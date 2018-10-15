@@ -46,7 +46,6 @@ public class ExperimentControllerTest {
     public void getExperiments () throws Exception {
         when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isOk());
-        //assertThat(attackController.getExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1, experiment2));
     }
 
     @Test
