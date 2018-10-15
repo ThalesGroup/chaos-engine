@@ -104,8 +104,8 @@ public class ExperimentManagerTest {
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
-        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
-        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(true);
+        when(experiment2.startExperiment()).thenReturn(true);
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -147,9 +147,9 @@ public class ExperimentManagerTest {
         when(container3.canExperiment()).thenReturn(true);
         when(container3.createExperiment()).thenReturn(experiment3);
         when(container3.getPlatform()).thenReturn(cloudFoundryContainerPlatform);
-        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
-        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
-        when(experiment3.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(true);
+        when(experiment2.startExperiment()).thenReturn(true);
+        when(experiment3.startExperiment()).thenReturn(true);
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(experiment3.getContainer()).thenReturn(container3);
@@ -190,8 +190,8 @@ public class ExperimentManagerTest {
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
-        when(experiment1.startExperiment(notificationManager)).thenReturn(true);
-        when(experiment2.startExperiment(notificationManager)).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(true);
+        when(experiment2.startExperiment()).thenReturn(true);
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -241,7 +241,7 @@ public class ExperimentManagerTest {
 
         @Bean
         ExperimentManager experimentManager () {
-            return Mockito.spy(new ExperimentManager(notificationManager, platformManager, holidayManager));
+            return Mockito.spy(new ExperimentManager(platformManager, holidayManager));
         }
     }
 }

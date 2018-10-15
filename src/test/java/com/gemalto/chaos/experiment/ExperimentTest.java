@@ -1,5 +1,6 @@
 package com.gemalto.chaos.experiment;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.admin.enums.AdminState;
 import com.gemalto.chaos.container.Container;
@@ -7,6 +8,7 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.ResourceExperiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
+import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
@@ -15,6 +17,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -42,9 +46,11 @@ public class ExperimentTest {
     private ResourceContainer resourceContainer;
     @MockBean
     private NotificationManager notificationManager;
+    @Autowired
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @Before
-    public void setUp () throws Exception {
+    public void setUp () {
         AdminManager.setAdminState(AdminState.STARTED);
 
         stateExperiment = Mockito.spy(GenericContainerExperiment.builder()
@@ -62,6 +68,9 @@ public class ExperimentTest {
                                                                    .withContainer(resourceContainer)
                                                                    .withDuration(resourceDuration)
                                                                    .build());
+        autowireCapableBeanFactory.autowireBean(stateExperiment);
+        autowireCapableBeanFactory.autowireBean(networkExperiment);
+        autowireCapableBeanFactory.autowireBean(resourceExperiment);
     }
 
     @Test
@@ -71,10 +80,53 @@ public class ExperimentTest {
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
         doReturn(platform).when(stateContainer).getPlatform();
         assertNull(stateExperiment.getExperimentLayer());
-        assertTrue(stateExperiment.startExperiment(notificationManager));
+        assertTrue(stateExperiment.startExperiment());
         assertEquals(platform, stateExperiment.getExperimentLayer());
     }
 
+    @Test
+    public void cannotStartWhilePaused () {
+        AdminManager.setAdminState(AdminState.PAUSED);
+        assertFalse(stateExperiment.startExperiment());
+        assertFalse(networkExperiment.startExperiment());
+        assertFalse(resourceExperiment.startExperiment());
+        AdminManager.setAdminState(AdminState.DRAIN);
+        assertFalse(stateExperiment.startExperiment());
+        assertFalse(networkExperiment.startExperiment());
+        assertFalse(resourceExperiment.startExperiment());
+    }
+
+    @Test
+    public void containerNotStarted () {
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
+        doReturn(ContainerHealth.DOES_NOT_EXIST).when(networkContainer).getContainerHealth(NETWORK);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(resourceContainer).getContainerHealth(RESOURCE);
+        assertFalse(stateExperiment.startExperiment());
+        assertFalse(networkExperiment.startExperiment());
+        assertFalse(resourceExperiment.startExperiment());
+    }
+
+    @Test(expected = ChaosException.class)
+    public void containerWithNoTestMethods () {
+        Container container = mock(Container.class);
+        Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
+                                                                      .withExperimentType(STATE)
+                                                                      .withContainer(container)
+                                                                      .build());
+        doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
+        doReturn(true).when(container).supportsExperimentType(STATE);
+        doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
+        experiment.startExperiment();
+    }
+
+    @Test
+    public void experimentState () {
+        stateExperiment.setNotificationManager(notificationManager);
+        // No specific health check method, not finalizable
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        Mockito.reset(stateContainer);
+    }
 
     private abstract class StateContainer extends Container {
         @StateExperiment

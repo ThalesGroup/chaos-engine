@@ -99,7 +99,8 @@ public class ChaosEvent {
             this.targetContainer = experiment.getContainer();
             this.experimentType = experiment.getExperimentType();
             this.experimentId = experiment.getId();
-            this.experimentMethod = experiment.getExperimentMethod().getName();
+            this.experimentMethod = experiment.getExperimentMethod() != null ? experiment.getExperimentMethod()
+                                                                                         .getName() : "";
             return this;
         }
 

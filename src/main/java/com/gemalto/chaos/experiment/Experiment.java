@@ -14,6 +14,7 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -37,6 +38,7 @@ public abstract class Experiment {
     private Platform experimentLayer;
     private Method experimentMethod;
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
+    @Autowired
     private transient NotificationManager notificationManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
@@ -45,6 +47,10 @@ public abstract class Experiment {
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
+
+    void setNotificationManager (NotificationManager notificationManager) {
+        this.notificationManager = notificationManager;
+    }
 
     public Platform getExperimentLayer () {
         return experimentLayer;
@@ -67,12 +73,12 @@ public abstract class Experiment {
         return selfHealingMethod;
     }
 
-    public Callable<Void> getFinalizeMethod () {
-        return finalizeMethod;
-    }
-
     public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
+    }
+
+    public Callable<Void> getFinalizeMethod () {
+        return finalizeMethod;
     }
 
     public void setFinalizeMethod (Callable<Void> finalizeMethod) {
@@ -103,8 +109,8 @@ public abstract class Experiment {
         return container;
     }
 
-    boolean startExperiment (NotificationManager notificationManager) {
-        this.notificationManager = notificationManager;
+    boolean startExperiment () {
+
         if (!AdminManager.canRunExperiments()) {
             log.info("Cannot start experiments right now, system is {}", AdminManager.getAdminState());
             return false;
@@ -178,11 +184,7 @@ public abstract class Experiment {
         return container.getContainerHealth(experimentType);
     }
 
-    private boolean isOverDuration () {
-        return Instant.now().isAfter(startTime.plus(duration));
-    }
-
-    private boolean isFinalizable () {
+    boolean isFinalizable () {
         if (finalizationStartTime == null) {
             finalizationStartTime = Instant.now();
         }
@@ -243,6 +245,10 @@ public abstract class Experiment {
                                                            .withMessage("Experiment not yet finished.")
                                                            .build());
         }
+    }
+
+    private boolean isOverDuration () {
+        return Instant.now().isAfter(startTime.plus(duration));
     }
 
     private boolean canRunSelfHealing () {
