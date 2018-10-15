@@ -45,7 +45,10 @@ public class ExperimentControllerTest {
     @Test
     public void getExperiments () throws Exception {
         when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
-        mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$[0].id", is(experiment1.getId())))
+           .andExpect(jsonPath("$[1].id", is(experiment2.getId())));
     }
 
     @Test
