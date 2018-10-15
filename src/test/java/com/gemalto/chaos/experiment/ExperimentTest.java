@@ -188,6 +188,23 @@ public class ExperimentTest {
         Mockito.reset(stateContainer);
     }
 
+    @Test
+    public void doSelfHealing () {
+        // Is not over duration, should not evaluate canRunSelfHealing()
+        doReturn(false).when(stateExperiment).isOverDuration();
+        doCallRealMethod().when(stateExperiment).doSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(0)).canRunSelfHealing();
+        reset(stateExperiment);
+        // Is over duration and can run self healing. Verify doSelfHealing is called once.
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(true).when(stateExperiment).canRunSelfHealing();
+        doNothing().when(stateExperiment).doSelfHealing();
+        doCallRealMethod().when(stateExperiment).doSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(1)).doSelfHealing();
+    }
+
     private abstract class StateContainer extends Container {
         @StateExperiment
         public abstract void doAThing (Experiment experiment);

@@ -247,11 +247,11 @@ public abstract class Experiment {
         }
     }
 
-    private boolean isOverDuration () {
+    protected boolean isOverDuration () {
         return Instant.now().isAfter(startTime.plus(duration));
     }
 
-    private boolean canRunSelfHealing () {
+    protected boolean canRunSelfHealing () {
         boolean canRunSelfHealing = lastSelfHealingTime == null || lastSelfHealingTime.plus(getMinimumTimeBetweenSelfHealing())
                                                                                       .isBefore(Instant.now());
         return canRunSelfHealing && AdminManager.canRunSelfHealing();
