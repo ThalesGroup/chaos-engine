@@ -1,33 +1,42 @@
 package com.gemalto.chaos.health.impl;
 
 import com.gemalto.chaos.admin.AdminManager;
-import com.gemalto.chaos.admin.enums.AdminState;
 import com.gemalto.chaos.health.enums.SystemHealthState;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
-import static org.awaitility.Awaitility.await;
+import static com.gemalto.chaos.admin.enums.AdminState.STARTED;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AdminHealthTest {
-    private final AdminHealth adminHealth = new AdminHealth();
+    @MockBean
+    private AdminManager adminManager;
+    @Autowired
+    private AdminHealth adminHealth;
 
-    @Before
-    public void setUp () {
-        while (AdminManager.getAdminState() != AdminState.STARTED) {
-            AdminManager.setAdminState(AdminState.STARTED);
-            await().atMost(1, TimeUnit.SECONDS)
-                   .untilAsserted(() -> assertEquals(AdminState.STARTED, AdminManager.getAdminState()));
-        }
-    }
 
     @Test
     public void getHealth () {
+        doReturn(STARTED).when(adminManager).getAdminState();
+        doReturn(Duration.ZERO).when(adminManager).getTimeInState();
         assertEquals(SystemHealthState.OK, adminHealth.getHealth());
+    }
+
+    @Configuration
+    static class TestConfig {
+        @Bean
+        AdminHealth adminHealth () {
+            return Mockito.spy(new AdminHealth());
+        }
     }
 }

@@ -6,17 +6,20 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+    @Autowired
+    private AdminManager adminManager;
 
     @ApiOperation(value = "Get Running State", notes = "Get the current administrative state of the Chaos Engine")
     @GetMapping("/state")
     public AdminState getAdminState () {
-        return AdminManager.getAdminState();
+        return adminManager.getAdminState();
     }
 
     @ApiOperation(value = "Set Running State", notes = "Controls whether or not the Chaos Engine will take any action on endpoints. " + "In a STARTED state, all actions can be performed. In a DRAIN state, no new experiments can be created, but existing experiments can still self-heal and finalize. " + "In a PAUSED state, no activity is done.")
@@ -31,6 +34,6 @@ public class AdminController {
             log.error("Tried to set an invalid state", e);
             throw new ChaosException("Tried to set an invalid state", e);
         }
-        AdminManager.setAdminState(newAdminState);
+        adminManager.setAdminState(newAdminState);
     }
 }

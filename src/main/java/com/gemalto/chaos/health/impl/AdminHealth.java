@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 @ConditionalOnClass(AdminManager.class)
 public class AdminHealth implements SystemHealth {
     private static final Logger log = LoggerFactory.getLogger(AdminHealth.class);
+    @Autowired
+    private AdminManager adminManager;
 
     @Autowired
     AdminHealth () {
@@ -22,8 +24,8 @@ public class AdminHealth implements SystemHealth {
 
     @Override
     public SystemHealthState getHealth () {
-        boolean healthyState = AdminState.getHealthyStates().contains(AdminManager.getAdminState());
-        boolean longTimeInState = AdminManager.getTimeInState().getSeconds() > 60 * 5;
+        boolean healthyState = AdminState.getHealthyStates().contains(adminManager.getAdminState());
+        boolean longTimeInState = adminManager.getTimeInState().getSeconds() > 60 * 5;
         return (!healthyState) && longTimeInState ? SystemHealthState.ERROR : SystemHealthState.OK;
     }
 }

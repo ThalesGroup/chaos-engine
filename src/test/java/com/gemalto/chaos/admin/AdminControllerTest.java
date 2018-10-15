@@ -5,13 +5,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.gemalto.chaos.admin.enums.AdminState.STARTED;
-import static org.awaitility.Awaitility.await;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,13 +23,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AdminControllerTest {
     @Autowired
     private MockMvc mvc;
+    @MockBean
+    private AdminManager adminManager;
 
     @Before
     public void beforeEach () {
-        while (AdminManager.getAdminState() != STARTED) {
-            AdminManager.setAdminState(STARTED);
-            await().untilAsserted(() -> assertSame(STARTED, AdminManager.getAdminState()));
-        }
+        doReturn(STARTED).when(adminManager).getAdminState();
     }
 
     @Test

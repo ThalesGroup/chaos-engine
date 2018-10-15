@@ -14,6 +14,7 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -37,7 +38,10 @@ public abstract class Experiment {
     private Platform experimentLayer;
     private Method experimentMethod;
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
+    @Autowired
     private transient NotificationManager notificationManager;
+    @Autowired
+    private transient AdminManager adminManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
@@ -45,6 +49,10 @@ public abstract class Experiment {
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
+
+    void setNotificationManager (NotificationManager notificationManager) {
+        this.notificationManager = notificationManager;
+    }
 
     public Platform getExperimentLayer () {
         return experimentLayer;
@@ -67,12 +75,12 @@ public abstract class Experiment {
         return selfHealingMethod;
     }
 
-    public Callable<Void> getFinalizeMethod () {
-        return finalizeMethod;
-    }
-
     public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
+    }
+
+    public Callable<Void> getFinalizeMethod () {
+        return finalizeMethod;
     }
 
     public void setFinalizeMethod (Callable<Void> finalizeMethod) {
@@ -103,10 +111,9 @@ public abstract class Experiment {
         return container;
     }
 
-    boolean startExperiment (NotificationManager notificationManager) {
-        this.notificationManager = notificationManager;
-        if (!AdminManager.canRunExperiments()) {
-            log.info("Cannot start experiments right now, system is {}", AdminManager.getAdminState());
+    boolean startExperiment () {
+        if (!adminManager.canRunExperiments()) {
+            log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
             return false;
         }
         if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
@@ -178,11 +185,7 @@ public abstract class Experiment {
         return container.getContainerHealth(experimentType);
     }
 
-    private boolean isOverDuration () {
-        return Instant.now().isAfter(startTime.plus(duration));
-    }
-
-    private boolean isFinalizable () {
+    public boolean isFinalizable () {
         if (finalizationStartTime == null) {
             finalizationStartTime = Instant.now();
         }
@@ -202,7 +205,7 @@ public abstract class Experiment {
         }
     }
 
-    private void doSelfHealing () {
+    public void doSelfHealing () {
         if (isOverDuration()) {
             try {
                 log.warn("The experiment {} has gone on too long, invoking self-healing. \n{}", id, this);
@@ -218,7 +221,7 @@ public abstract class Experiment {
                                            .withMessage(message.toString())
                                            .build();
                     callSelfHealing();
-                } else if (AdminManager.canRunSelfHealing()) {
+                } else if (adminManager.canRunSelfHealing()) {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage("Cannot run self healing again yet")
@@ -245,10 +248,14 @@ public abstract class Experiment {
         }
     }
 
-    private boolean canRunSelfHealing () {
+    protected boolean isOverDuration () {
+        return Instant.now().isAfter(startTime.plus(duration));
+    }
+
+    protected boolean canRunSelfHealing () {
         boolean canRunSelfHealing = lastSelfHealingTime == null || lastSelfHealingTime.plus(getMinimumTimeBetweenSelfHealing())
                                                                                       .isBefore(Instant.now());
-        return canRunSelfHealing && AdminManager.canRunSelfHealing();
+        return canRunSelfHealing && adminManager.canRunSelfHealing();
     }
 
     private void callSelfHealing () {

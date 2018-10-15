@@ -3,13 +3,13 @@ package com.gemalto.chaos.experiment;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
-import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +24,13 @@ public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Set<Experiment> activeExperiments = new HashSet<>();
     private final Queue<Experiment> newExperimentQueue = new LinkedBlockingDeque<>();
-    private NotificationManager notificationManager;
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
+    @Autowired
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @Autowired
-    public ExperimentManager (NotificationManager notificationManager, PlatformManager platformManager, HolidayManager holidayManager) {
-        this.notificationManager = notificationManager;
+    public ExperimentManager (PlatformManager platformManager, HolidayManager holidayManager) {
         this.platformManager = platformManager;
         this.holidayManager = holidayManager;
     }
@@ -60,7 +60,8 @@ public class ExperimentManager {
         }
         Experiment experiment = newExperimentQueue.poll();
         while (experiment != null) {
-            if (experiment.startExperiment(notificationManager)) {
+            autowireCapableBeanFactory.autowireBean(experiment);
+            if (experiment.startExperiment()) {
                 activeExperiments.add(experiment);
             }
             experiment = newExperimentQueue.poll();
