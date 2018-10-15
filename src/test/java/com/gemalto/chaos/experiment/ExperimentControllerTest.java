@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static java.util.UUID.randomUUID;
+import static org.hamcrest.collection.IsIn.isIn;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -47,8 +48,8 @@ public class ExperimentControllerTest {
         when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
-           .andExpect(jsonPath("$[0].id", is(experiment1.getId())))
-           .andExpect(jsonPath("$[1].id", is(experiment2.getId())));
+           .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
+           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))));
     }
 
     @Test
