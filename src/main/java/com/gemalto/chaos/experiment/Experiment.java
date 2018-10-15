@@ -184,7 +184,7 @@ public abstract class Experiment {
         return container.getContainerHealth(experimentType);
     }
 
-    boolean isFinalizable () {
+    public boolean isFinalizable () {
         if (finalizationStartTime == null) {
             finalizationStartTime = Instant.now();
         }
@@ -204,7 +204,7 @@ public abstract class Experiment {
         }
     }
 
-    private void doSelfHealing () {
+    public void doSelfHealing () {
         if (isOverDuration()) {
             try {
                 log.warn("The experiment {} has gone on too long, invoking self-healing. \n{}", id, this);

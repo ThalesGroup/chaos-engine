@@ -24,11 +24,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Duration;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.experiment.enums.ExperimentType.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ExperimentTest {
@@ -121,10 +121,74 @@ public class ExperimentTest {
 
     @Test
     public void experimentState () {
-        stateExperiment.setNotificationManager(notificationManager);
-        // No specific health check method, not finalizable
+        // No specific health check method, back to normal, not finalizable (STARTED)
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        when(stateExperiment.isFinalizable()).thenReturn(false);
+        assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        Mockito.reset(stateContainer);
+        // No specific health check method, back to normal, is finalizable (FINISHED)
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        when(stateExperiment.isFinalizable()).thenReturn(true);
+        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        Mockito.reset(stateContainer);
+        // No specific health check method, container does not exist (FINISHED)
+        doReturn(ContainerHealth.DOES_NOT_EXIST).when(stateContainer).getContainerHealth(STATE);
+        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        Mockito.reset(stateContainer);
+        // No specific health check method, container under experiment (STARTED, self healing called)
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
+        doNothing().when(stateExperiment).doSelfHealing();
+        assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        verify(stateExperiment, times(1)).doSelfHealing();
+        Mockito.reset(stateContainer);
+    }
+
+    @Test
+    public void experimentStateWithCallable () {
+        // Specific Health Check method, back to normal, not finalizable;
+        stateExperiment.setCheckContainerHealth(() -> ContainerHealth.NORMAL);
+        when(stateExperiment.isFinalizable()).thenReturn(false);
+        assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        verify(stateContainer, times(0)).getContainerHealth(any());
+        Mockito.reset(stateContainer);
+    }
+
+    @Test
+    public void experimentStateWithCallableThrowingException () {
+        stateExperiment.setCheckContainerHealth(() -> {
+            throw new RuntimeException();
+        });
+        when(stateExperiment.isFinalizable()).thenReturn(false);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        verify(stateContainer, times(1)).getContainerHealth(STATE);
+        Mockito.reset(stateContainer);
+    }
+
+    @Test
+    public void experimentStateWithFinalizableCallable () {
+        Callable<Void> callable = mock(Callable.class);
+        stateExperiment.setFinalizeMethod(callable);
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        when(stateExperiment.isFinalizable()).thenReturn(true);
+        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        try {
+            verify(callable, times(1)).call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Mockito.reset(stateContainer);
+    }
+
+    @Test
+    public void experimentStateWithFinalizableCallableThrowingException () throws Exception {
+        Callable<Void> callable = mock(Callable.class);
+        stateExperiment.setFinalizeMethod(callable);
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        when(stateExperiment.isFinalizable()).thenReturn(true);
+        doThrow(new RuntimeException()).when(callable).call();
+        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        verify(callable, times(1)).call();
         Mockito.reset(stateContainer);
     }
 
