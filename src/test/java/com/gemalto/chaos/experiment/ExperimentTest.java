@@ -166,17 +166,13 @@ public class ExperimentTest {
     }
 
     @Test
-    public void experimentStateWithFinalizableCallable () {
+    public void experimentStateWithFinalizableCallable () throws Exception {
         Callable<Void> callable = mock(Callable.class);
         stateExperiment.setFinalizeMethod(callable);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(true);
         assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
-        try {
-            verify(callable, times(1)).call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        verify(callable, times(1)).call();
         Mockito.reset(stateContainer);
     }
 
