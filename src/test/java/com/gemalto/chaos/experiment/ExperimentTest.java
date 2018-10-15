@@ -2,7 +2,6 @@ package com.gemalto.chaos.experiment;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
-import com.gemalto.chaos.admin.enums.AdminState;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
@@ -20,17 +19,20 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Duration;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import static com.gemalto.chaos.admin.enums.AdminState.*;
 import static com.gemalto.chaos.experiment.enums.ExperimentType.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ExperimentTest {
     private final Duration stateDuration = Duration.ofMinutes(new Random().nextInt(5) + 5);
     private final Duration networkDuration = Duration.ofMinutes(new Random().nextInt(5) + 5);
@@ -46,12 +48,14 @@ public class ExperimentTest {
     private ResourceContainer resourceContainer;
     @MockBean
     private NotificationManager notificationManager;
+    @MockBean
+    private AdminManager adminManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @Before
     public void setUp () {
-        AdminManager.setAdminState(AdminState.STARTED);
+        doReturn(STARTED).when(adminManager).getAdminState();
 
         stateExperiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                 .withExperimentType(STATE)
@@ -71,6 +75,7 @@ public class ExperimentTest {
         autowireCapableBeanFactory.autowireBean(stateExperiment);
         autowireCapableBeanFactory.autowireBean(networkExperiment);
         autowireCapableBeanFactory.autowireBean(resourceExperiment);
+        doReturn(true).when(adminManager).canRunExperiments();
     }
 
     @Test
@@ -86,11 +91,11 @@ public class ExperimentTest {
 
     @Test
     public void cannotStartWhilePaused () {
-        AdminManager.setAdminState(AdminState.PAUSED);
+        doReturn(PAUSED).when(adminManager).getAdminState();
         assertFalse(stateExperiment.startExperiment());
         assertFalse(networkExperiment.startExperiment());
         assertFalse(resourceExperiment.startExperiment());
-        AdminManager.setAdminState(AdminState.DRAIN);
+        doReturn(DRAIN).when(adminManager).getAdminState();
         assertFalse(stateExperiment.startExperiment());
         assertFalse(networkExperiment.startExperiment());
         assertFalse(resourceExperiment.startExperiment());
@@ -113,6 +118,8 @@ public class ExperimentTest {
                                                                       .withExperimentType(STATE)
                                                                       .withContainer(container)
                                                                       .build());
+        autowireCapableBeanFactory.autowireBean(experiment);
+
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
         doReturn(true).when(container).supportsExperimentType(STATE);
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
@@ -166,6 +173,7 @@ public class ExperimentTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void experimentStateWithFinalizableCallable () throws Exception {
         Callable<Void> callable = mock(Callable.class);
         stateExperiment.setFinalizeMethod(callable);
@@ -177,6 +185,7 @@ public class ExperimentTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void experimentStateWithFinalizableCallableThrowingException () throws Exception {
         Callable<Void> callable = mock(Callable.class);
         stateExperiment.setFinalizeMethod(callable);

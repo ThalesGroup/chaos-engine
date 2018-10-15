@@ -40,6 +40,8 @@ public abstract class Experiment {
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
     @Autowired
     private transient NotificationManager notificationManager;
+    @Autowired
+    private transient AdminManager adminManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
@@ -110,9 +112,8 @@ public abstract class Experiment {
     }
 
     boolean startExperiment () {
-
-        if (!AdminManager.canRunExperiments()) {
-            log.info("Cannot start experiments right now, system is {}", AdminManager.getAdminState());
+        if (!adminManager.canRunExperiments()) {
+            log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
             return false;
         }
         if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
@@ -220,7 +221,7 @@ public abstract class Experiment {
                                            .withMessage(message.toString())
                                            .build();
                     callSelfHealing();
-                } else if (AdminManager.canRunSelfHealing()) {
+                } else if (adminManager.canRunSelfHealing()) {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage("Cannot run self healing again yet")
@@ -254,7 +255,7 @@ public abstract class Experiment {
     protected boolean canRunSelfHealing () {
         boolean canRunSelfHealing = lastSelfHealingTime == null || lastSelfHealingTime.plus(getMinimumTimeBetweenSelfHealing())
                                                                                       .isBefore(Instant.now());
-        return canRunSelfHealing && AdminManager.canRunSelfHealing();
+        return canRunSelfHealing && adminManager.canRunSelfHealing();
     }
 
     private void callSelfHealing () {
