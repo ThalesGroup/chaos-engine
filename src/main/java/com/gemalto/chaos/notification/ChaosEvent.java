@@ -78,6 +78,34 @@ public class ChaosEvent {
         return sb.toString();
     }
 
+    @Override
+    public int hashCode () {
+        int result = targetContainer != null ? targetContainer.hashCode() : 0;
+        result = 31 * result + (chaosTime != null ? chaosTime.hashCode() : 0);
+        result = 31 * result + (experimentId != null ? experimentId.hashCode() : 0);
+        result = 31 * result + (message != null ? message.hashCode() : 0);
+        result = 31 * result + (experimentType != null ? experimentType.hashCode() : 0);
+        result = 31 * result + (experimentMethod != null ? experimentMethod.hashCode() : 0);
+        result = 31 * result + (notificationLevel != null ? notificationLevel.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public boolean equals (Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChaosEvent that = (ChaosEvent) o;
+        if (targetContainer != null ? !targetContainer.equals(that.targetContainer) : that.targetContainer != null)
+            return false;
+        if (chaosTime != null ? !chaosTime.equals(that.chaosTime) : that.chaosTime != null) return false;
+        if (experimentId != null ? !experimentId.equals(that.experimentId) : that.experimentId != null) return false;
+        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (experimentType != that.experimentType) return false;
+        if (experimentMethod != null ? !experimentMethod.equals(that.experimentMethod) : that.experimentMethod != null)
+            return false;
+        return notificationLevel == that.notificationLevel;
+    }
+
     public static final class ChaosEventBuilder {
         private Container targetContainer;
         private Date chaosTime;
