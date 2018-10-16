@@ -296,6 +296,30 @@ public class ExperimentTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void callSelfHealing () throws Exception {
+        Instant start = Instant.now();
+        Callable<Void> callable = Mockito.mock(Callable.class);
+        stateExperiment.setSelfHealingMethod(callable);
+        doReturn(null).when(callable).call();
+        stateExperiment.callSelfHealing();
+        verify(callable, times(1)).call();
+        assertFalse(start.isAfter(stateExperiment.getLastSelfHealingTime()));
+    }
+
+    @Test(expected = ChaosException.class)
+    @SuppressWarnings("unchecked")
+    public void callSelfHealingException () throws Exception {
+        Instant start = Instant.now();
+        Callable<Void> callable = Mockito.mock(Callable.class);
+        stateExperiment.setSelfHealingMethod(callable);
+        doThrow(new Exception()).when(callable).call();
+        stateExperiment.callSelfHealing();
+        verify(callable, times(1)).call();
+        assertFalse(start.isAfter(stateExperiment.getLastSelfHealingTime()));
+    }
+
+    @Test
     public void startExperimentOutOfHours () {
         doReturn(false).when(adminManager).canRunExperiments();
         assertFalse(stateExperiment.startExperiment());
