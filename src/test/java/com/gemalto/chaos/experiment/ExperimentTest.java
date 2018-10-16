@@ -326,11 +326,21 @@ public class ExperimentTest {
         assertTrue(stateExperiment.canRunSelfHealing());
         assertFalse(stateExperiment.canRunSelfHealing());
         stateExperiment.callSelfHealing();
+        // Insufficient time passed
+        reset(stateContainer, adminManager);
         assertNotNull(stateExperiment.getLastSelfHealingTime());
         doReturn(Duration.ofDays(1)).when(stateContainer).getMinimumSelfHealingInterval();
         doReturn(true, false).when(adminManager).canRunSelfHealing();
         assertFalse(stateExperiment.canRunSelfHealing());
         assertFalse(stateExperiment.canRunSelfHealing());
+        // Sufficient time passed
+        reset(stateContainer, adminManager);
+        assertNotNull(stateExperiment.getLastSelfHealingTime());
+        doReturn(Duration.ofDays(-1)).when(stateContainer).getMinimumSelfHealingInterval();
+        doReturn(true, false).when(adminManager).canRunSelfHealing();
+        assertTrue(stateExperiment.canRunSelfHealing());
+        assertFalse(stateExperiment.canRunSelfHealing());
+
     }
 
     @Test
