@@ -39,9 +39,9 @@ public abstract class Experiment {
     private Method experimentMethod;
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
     @Autowired
-    private transient NotificationManager notificationManager;
+    private NotificationManager notificationManager;
     @Autowired
-    private transient AdminManager adminManager;
+    private AdminManager adminManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
@@ -50,8 +50,16 @@ public abstract class Experiment {
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
-    void setNotificationManager (NotificationManager notificationManager) {
+    NotificationManager getNotificationManager () {
+        return notificationManager;
+    }
+
+    public void setNotificationManager (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
+    }
+
+    public Instant getLastSelfHealingTime () {
+        return lastSelfHealingTime;
     }
 
     public Platform getExperimentLayer () {
@@ -103,10 +111,6 @@ public abstract class Experiment {
         return id;
     }
 
-    public Instant getStartTime () {
-        return startTime;
-    }
-
     public Container getContainer () {
         return container;
     }
@@ -134,7 +138,7 @@ public abstract class Experiment {
                                                            .build());
             container.startExperiment(this);
             experimentState = ExperimentState.STARTED;
-        }
+        } else return false;
         return true;
     }
 
@@ -186,10 +190,10 @@ public abstract class Experiment {
     }
 
     public boolean isFinalizable () {
-        if (finalizationStartTime == null) {
+        if (getFinalizationStartTime() == null) {
             finalizationStartTime = Instant.now();
         }
-        boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
+        boolean finalizable = Instant.now().isAfter(getFinalizationStartTime().plus(finalizationDuration));
         log.debug("Experiment {} is finalizable = {}", id, finalizable);
         return finalizable;
     }
@@ -212,9 +216,11 @@ public abstract class Experiment {
                 ChaosEvent chaosEvent;
                 if (canRunSelfHealing()) {
                     StringBuilder message = new StringBuilder();
-                    message.append("The experiment has gone on too long, invoking self-healing.");
+                    message.append(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING);
                     if (selfHealingCounter.incrementAndGet() > 1) {
-                        message.append("This is self healing attempt number ").append(selfHealingCounter.get()).append(".");
+                        message.append(ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER)
+                               .append(selfHealingCounter.get())
+                               .append(".");
                     }
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
@@ -224,12 +230,12 @@ public abstract class Experiment {
                 } else if (adminManager.canRunSelfHealing()) {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("Cannot run self healing again yet")
+                                           .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                            .build();
                 } else {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("System is paused and unable to run self healing")
+                                           .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
                                            .build();
                 }
                 notificationManager.sendNotification(chaosEvent);
@@ -237,7 +243,7 @@ public abstract class Experiment {
                 log.error("Experiment {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("An exception occurred while running self-healing.")
+                                                               .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
                                                                .build());
             }
         } else {
@@ -248,8 +254,12 @@ public abstract class Experiment {
         }
     }
 
+    public Instant getFinalizationStartTime () {
+        return finalizationStartTime;
+    }
+
     protected boolean isOverDuration () {
-        return Instant.now().isAfter(startTime.plus(duration));
+        return Instant.now().isAfter(getStartTime().plus(duration));
     }
 
     protected boolean canRunSelfHealing () {
@@ -258,7 +268,7 @@ public abstract class Experiment {
         return canRunSelfHealing && adminManager.canRunSelfHealing();
     }
 
-    private void callSelfHealing () {
+    public void callSelfHealing () {
         try {
             selfHealingMethod.call();
         } catch (Exception e) {
@@ -266,6 +276,10 @@ public abstract class Experiment {
         } finally {
             lastSelfHealingTime = Instant.now();
         }
+    }
+
+    public Instant getStartTime () {
+        return startTime;
     }
 
     private Duration getMinimumTimeBetweenSelfHealing () {
