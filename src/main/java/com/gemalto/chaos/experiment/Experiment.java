@@ -258,7 +258,7 @@ public abstract class Experiment {
         return canRunSelfHealing && adminManager.canRunSelfHealing();
     }
 
-    private void callSelfHealing () {
+    public void callSelfHealing () {
         try {
             selfHealingMethod.call();
         } catch (Exception e) {

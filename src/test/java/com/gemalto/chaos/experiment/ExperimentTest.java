@@ -9,7 +9,9 @@ import com.gemalto.chaos.experiment.annotations.ResourceExperiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
+import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
+import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.junit.Before;
 import org.junit.Test;
@@ -208,12 +210,32 @@ public class ExperimentTest {
         // Is over duration and can run self healing. Verify doSelfHealing is called once.
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(true).when(stateExperiment).canRunSelfHealing();
-        doNothing().when(stateExperiment).doSelfHealing();
+        doNothing().when(stateExperiment).callSelfHealing();
         doCallRealMethod().when(stateExperiment).doSelfHealing();
         stateExperiment.doSelfHealing();
-        verify(stateExperiment, times(1)).doSelfHealing();
+        verify(stateExperiment, times(1)).callSelfHealing();
+        reset(stateExperiment);
+        // Is in self healing backoff period
+        reset(notificationManager);
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(false).when(stateExperiment).canRunSelfHealing();
+        doReturn(true).when(adminManager).canRunSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(0)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage("Cannot run self healing again yet")
+                                                                         .build());
+        reset(stateExperiment);
+
     }
 
+    @Test
+    public void startExperimentOutOfHours () {
+        doReturn(false).when(adminManager).canRunExperiments();
+        assertFalse(stateExperiment.startExperiment());
+    }
     private abstract class StateContainer extends Container {
         @StateExperiment
         public abstract void doAThing (Experiment experiment);
