@@ -2,6 +2,7 @@ package com.gemalto.chaos.experiment;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
+import com.gemalto.chaos.constants.ExperimentConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
@@ -206,7 +207,9 @@ public class ExperimentTest {
         doCallRealMethod().when(stateExperiment).doSelfHealing();
         stateExperiment.doSelfHealing();
         verify(stateExperiment, times(0)).canRunSelfHealing();
+        reset(notificationManager);
         reset(stateExperiment);
+
         // Is over duration and can run self healing. Verify doSelfHealing is called once.
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(true).when(stateExperiment).canRunSelfHealing();
@@ -215,8 +218,8 @@ public class ExperimentTest {
         stateExperiment.doSelfHealing();
         verify(stateExperiment, times(1)).callSelfHealing();
         reset(stateExperiment);
-        // Is in self healing backoff period
         reset(notificationManager);
+        // Is in self healing backoff period
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(false).when(stateExperiment).canRunSelfHealing();
         doReturn(true).when(adminManager).canRunSelfHealing();
@@ -225,10 +228,33 @@ public class ExperimentTest {
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
                                                                          .withNotificationLevel(NotificationLevel.WARN)
-                                                                         .withMessage("Cannot run self healing again yet")
+                                                                         .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                                                          .build());
         reset(stateExperiment);
-
+        reset(notificationManager);
+        // System is paused and cannot run self healing
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(false).when(stateExperiment).canRunSelfHealing();
+        doReturn(false).when(adminManager).canRunSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(0)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
+                                                                         .build());
+        reset(stateExperiment);
+        reset(notificationManager);
+        // Exception thrown while running self healing
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doThrow(new ChaosException()).when(stateExperiment).canRunSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(0)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                         .build());
     }
 
     @Test

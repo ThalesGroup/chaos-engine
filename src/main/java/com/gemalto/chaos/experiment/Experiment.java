@@ -224,12 +224,12 @@ public abstract class Experiment {
                 } else if (adminManager.canRunSelfHealing()) {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("Cannot run self healing again yet")
+                                           .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                            .build();
                 } else {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage("System is paused and unable to run self healing")
+                                           .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
                                            .build();
                 }
                 notificationManager.sendNotification(chaosEvent);
@@ -237,7 +237,7 @@ public abstract class Experiment {
                 log.error("Experiment {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("An exception occurred while running self-healing.")
+                                                               .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
                                                                .build());
             }
         } else {
