@@ -39,9 +39,9 @@ public abstract class Experiment {
     private Method experimentMethod;
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
     @Autowired
-    private transient NotificationManager notificationManager;
+    private NotificationManager notificationManager;
     @Autowired
-    private transient AdminManager adminManager;
+    private AdminManager adminManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
