@@ -1,11 +1,14 @@
 package com.gemalto.chaos.experiment;
 
+import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
+import com.gemalto.chaos.notification.NotificationManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,6 +37,12 @@ public class ExperimentControllerTest {
     private MockMvc mvc;
     @MockBean
     private ExperimentManager experimentManager;
+    @MockBean
+    private NotificationManager notificationManager;
+    @MockBean
+    private AdminManager adminManager;
+    @Autowired
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
     private Experiment experiment1;
     private Experiment experiment2;
 
@@ -41,6 +50,8 @@ public class ExperimentControllerTest {
     public void setUp () {
         experiment1 = GenericContainerExperiment.builder().withExperimentType(ExperimentType.STATE).build();
         experiment2 = GenericContainerExperiment.builder().withExperimentType(ExperimentType.NETWORK).build();
+        autowireCapableBeanFactory.autowireBean(experiment1);
+        autowireCapableBeanFactory.autowireBean(experiment2);
     }
 
     @Test

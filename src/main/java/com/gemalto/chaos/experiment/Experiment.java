@@ -50,7 +50,7 @@ public abstract class Experiment {
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
-    void setNotificationManager (NotificationManager notificationManager) {
+    public void setNotificationManager (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
     }
 
