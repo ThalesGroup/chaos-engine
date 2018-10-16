@@ -31,6 +31,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.admin.enums.AdminState.*;
+import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
 import static com.gemalto.chaos.experiment.enums.ExperimentType.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -344,13 +345,34 @@ public class ExperimentTest {
     }
 
     @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+
     public void isOverDuration () {
-        // Value isn't really ignored, but IntelliJ seems to think it is.
-        //noinspection ResultOfMethodCallIgnored
         doReturn(Instant.now().minus(stateDuration).plus(Duration.ofMillis(500))).when(stateExperiment).getStartTime();
         await().atLeast(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
                .atMost(org.awaitility.Duration.ONE_SECOND)
                .until(() -> stateExperiment.isOverDuration());
+    }
+
+    @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void isFinalizable () {
+        assertNull(stateExperiment.getFinalizationStartTime());
+        assertFalse(stateExperiment.isFinalizable());
+        assertNotNull(stateExperiment.getFinalizationStartTime());
+        doReturn(Instant.now()
+                        .minus(Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS))
+                        .plus(Duration.ofMillis(500))).when(stateExperiment).getFinalizationStartTime();
+        await().atLeast(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
+               .atMost(org.awaitility.Duration.ONE_SECOND)
+               .until(() -> stateExperiment.isFinalizable());
+    }
+
+    @Test
+    public void setNotificationManager () {
+        assertNotNull(stateExperiment.getNotificationManager());
+        stateExperiment.setNotificationManager(null);
+        assertNull(stateExperiment.getNotificationManager());
     }
 
     @Test

@@ -50,16 +50,16 @@ public abstract class Experiment {
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
-    public Instant getLastSelfHealingTime () {
-        return lastSelfHealingTime;
-    }
-
-    public void setLastSelfHealingTime (Instant lastSelfHealingTime) {
-        this.lastSelfHealingTime = lastSelfHealingTime;
+    NotificationManager getNotificationManager () {
+        return notificationManager;
     }
 
     public void setNotificationManager (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
+    }
+
+    public Instant getLastSelfHealingTime () {
+        return lastSelfHealingTime;
     }
 
     public Platform getExperimentLayer () {
@@ -109,10 +109,6 @@ public abstract class Experiment {
 
     public String getId () {
         return id;
-    }
-
-    public Instant getStartTime () {
-        return startTime;
     }
 
     public Container getContainer () {
@@ -194,10 +190,10 @@ public abstract class Experiment {
     }
 
     public boolean isFinalizable () {
-        if (finalizationStartTime == null) {
+        if (getFinalizationStartTime() == null) {
             finalizationStartTime = Instant.now();
         }
-        boolean finalizable = Instant.now().isAfter(finalizationStartTime.plus(finalizationDuration));
+        boolean finalizable = Instant.now().isAfter(getFinalizationStartTime().plus(finalizationDuration));
         log.debug("Experiment {} is finalizable = {}", id, finalizable);
         return finalizable;
     }
@@ -258,6 +254,10 @@ public abstract class Experiment {
         }
     }
 
+    public Instant getFinalizationStartTime () {
+        return finalizationStartTime;
+    }
+
     protected boolean isOverDuration () {
         return Instant.now().isAfter(getStartTime().plus(duration));
     }
@@ -276,6 +276,10 @@ public abstract class Experiment {
         } finally {
             lastSelfHealingTime = Instant.now();
         }
+    }
+
+    public Instant getStartTime () {
+        return startTime;
     }
 
     private Duration getMinimumTimeBetweenSelfHealing () {
