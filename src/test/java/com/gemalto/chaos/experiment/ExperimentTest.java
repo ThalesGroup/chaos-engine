@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.admin.enums.AdminState.*;
 import static com.gemalto.chaos.experiment.enums.ExperimentType.*;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -340,7 +341,16 @@ public class ExperimentTest {
         doReturn(true, false).when(adminManager).canRunSelfHealing();
         assertTrue(stateExperiment.canRunSelfHealing());
         assertFalse(stateExperiment.canRunSelfHealing());
+    }
 
+    @Test
+    public void isOverDuration () {
+        // Value isn't really ignored, but IntelliJ seems to think it is.
+        //noinspection ResultOfMethodCallIgnored
+        doReturn(Instant.now().minus(stateDuration).plus(Duration.ofMillis(500))).when(stateExperiment).getStartTime();
+        await().atLeast(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
+               .atMost(org.awaitility.Duration.ONE_SECOND)
+               .until(() -> stateExperiment.isOverDuration());
     }
 
     @Test

@@ -259,7 +259,7 @@ public abstract class Experiment {
     }
 
     protected boolean isOverDuration () {
-        return Instant.now().isAfter(startTime.plus(duration));
+        return Instant.now().isAfter(getStartTime().plus(duration));
     }
 
     protected boolean canRunSelfHealing () {
