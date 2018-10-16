@@ -50,6 +50,14 @@ public abstract class Experiment {
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
 
+    public Instant getLastSelfHealingTime () {
+        return lastSelfHealingTime;
+    }
+
+    public void setLastSelfHealingTime (Instant lastSelfHealingTime) {
+        this.lastSelfHealingTime = lastSelfHealingTime;
+    }
+
     public void setNotificationManager (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
     }
@@ -212,9 +220,11 @@ public abstract class Experiment {
                 ChaosEvent chaosEvent;
                 if (canRunSelfHealing()) {
                     StringBuilder message = new StringBuilder();
-                    message.append("The experiment has gone on too long, invoking self-healing.");
+                    message.append(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING);
                     if (selfHealingCounter.incrementAndGet() > 1) {
-                        message.append("This is self healing attempt number ").append(selfHealingCounter.get()).append(".");
+                        message.append(ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER)
+                               .append(selfHealingCounter.get())
+                               .append(".");
                     }
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)

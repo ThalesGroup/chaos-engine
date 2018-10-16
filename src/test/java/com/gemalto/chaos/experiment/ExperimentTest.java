@@ -209,7 +209,6 @@ public class ExperimentTest {
         verify(stateExperiment, times(0)).canRunSelfHealing();
         reset(notificationManager);
         reset(stateExperiment);
-
         // Is over duration and can run self healing. Verify doSelfHealing is called once.
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(true).when(stateExperiment).canRunSelfHealing();
@@ -254,6 +253,29 @@ public class ExperimentTest {
                                                                          .fromExperiment(stateExperiment)
                                                                          .withNotificationLevel(NotificationLevel.ERROR)
                                                                          .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                         .build());
+    }
+
+    @Test
+    public void repeatedSelfHealing () {
+        // Repeated self healing
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(true).when(stateExperiment).canRunSelfHealing();
+        doNothing().when(stateExperiment).callSelfHealing();
+        doCallRealMethod().when(stateExperiment).doSelfHealing();
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(1)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
+                                                                         .build());
+        stateExperiment.doSelfHealing();
+        verify(stateExperiment, times(2)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING + ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER + "2.")
                                                                          .build());
     }
 
