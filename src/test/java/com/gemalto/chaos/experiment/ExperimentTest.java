@@ -320,6 +320,20 @@ public class ExperimentTest {
     }
 
     @Test
+    public void canRunSelfHealing () {
+        assertNull(stateExperiment.getLastSelfHealingTime());
+        doReturn(true, false).when(adminManager).canRunSelfHealing();
+        assertTrue(stateExperiment.canRunSelfHealing());
+        assertFalse(stateExperiment.canRunSelfHealing());
+        stateExperiment.callSelfHealing();
+        assertNotNull(stateExperiment.getLastSelfHealingTime());
+        doReturn(Duration.ofDays(1)).when(stateContainer).getMinimumSelfHealingInterval();
+        doReturn(true, false).when(adminManager).canRunSelfHealing();
+        assertFalse(stateExperiment.canRunSelfHealing());
+        assertFalse(stateExperiment.canRunSelfHealing());
+    }
+
+    @Test
     public void startExperimentOutOfHours () {
         doReturn(false).when(adminManager).canRunExperiments();
         assertFalse(stateExperiment.startExperiment());
