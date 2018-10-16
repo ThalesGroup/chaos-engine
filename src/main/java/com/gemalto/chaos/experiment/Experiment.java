@@ -142,7 +142,7 @@ public abstract class Experiment {
                                                            .build());
             container.startExperiment(this);
             experimentState = ExperimentState.STARTED;
-        }
+        } else return false;
         return true;
     }
 

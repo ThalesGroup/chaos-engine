@@ -26,6 +26,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -74,6 +75,7 @@ public class ExperimentTest {
                                                                    .withExperimentType(RESOURCE)
                                                                    .withContainer(resourceContainer)
                                                                    .withDuration(resourceDuration)
+                                                                   .withFinalzationDuration(Duration.ZERO)
                                                                    .build());
         autowireCapableBeanFactory.autowireBean(stateExperiment);
         autowireCapableBeanFactory.autowireBean(networkExperiment);
@@ -127,6 +129,20 @@ public class ExperimentTest {
         doReturn(true).when(container).supportsExperimentType(STATE);
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
         experiment.startExperiment();
+    }
+
+    @Test
+    public void startExperimentWithoutSupportedMethod () {
+        Container container = Mockito.mock(Container.class);
+        Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
+                                                                      .withExperimentType(STATE)
+                                                                      .withContainer(container)
+                                                                      .build());
+        autowireCapableBeanFactory.autowireBean(experiment);
+        doReturn(true).when(adminManager).canRunExperiments();
+        doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
+        doReturn(false).when(container).supportsExperimentType(STATE);
+        assertFalse(experiment.startExperiment());
     }
 
     @Test
