@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
+import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public abstract class Platform implements ExperimentalObject {
@@ -124,8 +126,9 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     @SuppressWarnings("unused") // public get methods are consumed by Spring Rest.
-    public Set<Instant> getExperimentTimes () {
-        return experimentTimes;
+    public Set<Date> getExperimentTimes () {
+        // Instant to String conversion is done due to Swagger which does not support java.time classes - SCT-6607
+        return experimentTimes.stream().map(instant -> Date.from(instant)).collect(toSet());
     }
 
     public void usingHolidayManager (HolidayManager holidayManager) {
