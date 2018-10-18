@@ -56,7 +56,7 @@ public class ContainerManagerTest {
     @Test
     @Repeat(10)
     public void threadSafe () {
-        ExecutorService service = Executors.newFixedThreadPool(10);
+        ExecutorService service = Executors.newFixedThreadPool(100);
         Stream.iterate(0, integer -> integer + 1)
               .limit(10000)
               .parallel()
