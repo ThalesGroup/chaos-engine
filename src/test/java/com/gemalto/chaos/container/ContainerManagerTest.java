@@ -2,15 +2,20 @@ package com.gemalto.chaos.container;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -46,6 +51,17 @@ public class ContainerManagerTest {
         verify(testContainerClass2, times(0)).compareUniqueIdentifier(randomUUID2);
 
 
+    }
+
+    @Test
+    @Repeat(10)
+    public void threadSafe () {
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        Stream.iterate(0, integer -> integer + 1)
+              .limit(10000)
+              .parallel()
+              .forEach(i -> service.execute(() -> containerManager.offer(Mockito.mock(Container.class))));
+        containerManager.getMatchingContainer(Mockito.mock(Container.class).getClass(), "");
     }
 
     @Configuration
