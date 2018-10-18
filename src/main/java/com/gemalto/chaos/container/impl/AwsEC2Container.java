@@ -10,6 +10,7 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -59,6 +60,11 @@ public class AwsEC2Container extends AwsContainer {
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return dataDogIdentifier().withValue(instanceId);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(instanceId);
     }
 
     @StateExperiment

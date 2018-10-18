@@ -5,9 +5,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
 
 @Component
 public class ContainerManager {
+    private Collection<Container> containers = new HashSet<>();
     private HashMap<Class<? extends Container>, HashMap<Long, Container>> containerMap = new HashMap<>();
 
     @Autowired
@@ -52,4 +55,18 @@ public class ContainerManager {
         containerTypeMap.putIfAbsent(container.getIdentity(), container);
         return containerTypeMap.get(container.getIdentity());
     }
+
+    public <T extends Container> T getMatchingContainer (Class<T> clazz, String uniqueIdentifier) {
+        Optional<T> match = containers.stream()
+                                      .filter(clazz::isInstance)
+                                      .map(clazz::cast)
+                                      .filter(container -> container.compareUniqueIdentifier(uniqueIdentifier))
+                                      .findFirst();
+        return match.orElse(null);
+    }
+
+    public void offer (Container container) {
+        containers.add(container);
+    }
+
 }

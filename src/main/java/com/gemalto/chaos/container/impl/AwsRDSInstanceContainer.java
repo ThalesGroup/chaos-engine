@@ -10,6 +10,7 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_INSTANCE_DATADOG_IDENTIFIER;
@@ -49,6 +50,11 @@ public class AwsRDSInstanceContainer extends AwsContainer {
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return dataDogIdentifier().withKey(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER).withValue(dbInstanceIdentifier);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(dbInstanceIdentifier);
     }
 
     @NetworkExperiment
