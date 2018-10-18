@@ -44,6 +44,8 @@ services:
       source: /sys/fs/cgroup/
       target: /host/sys/fs/cgroup
       read_only: true
+    ports:
+     - "8125:8125/udp"
   vault:
     image: vault:latest
     ports:
