@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
@@ -22,12 +21,17 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,33 +45,25 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CloudFoundryContainerPlatformTest {
-    @Mock
+    @MockBean
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @Mock
+    @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
-    @Mock
+    @MockBean
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
-    @Mock
+    @MockBean
     private CloudFoundryClient cloudFoundryClient;
-    @Mock
+    @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+    @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
     private String APPLICATION_ID = randomUUID().toString();
-
-    @Before
-    public void setUp () {
-        cloudFoundryContainerPlatform = CloudFoundryContainerPlatform.builder()
-                                                                     .withCloudFoundryClient(cloudFoundryClient)
-                                                                     .withCloudFoundryOperations(cloudFoundryOperations)
-                                                                     .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
-                                                                     .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                                                     .withContainerManager(containerManager)
-                                                                     .build();
-    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -100,8 +96,6 @@ public class CloudFoundryContainerPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary, stoppedApplicationSummary);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
-        when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
-                .getArguments()[0]);
         assertThat(cloudFoundryContainerPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
     }
 
@@ -229,5 +223,30 @@ public class CloudFoundryContainerPlatformTest {
         term.runExperiment(sshManager);
         assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
         Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
+    }
+
+    @Configuration
+    static class ContextConfiguration {
+        @Autowired
+        private CloudFoundryOperations cloudFoundryOperations;
+        @Autowired
+        private ContainerManager containerManager;
+        @Autowired
+        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+        @Autowired
+        private CloudFoundryClient cloudFoundryClient;
+        @Autowired
+        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
+        @Bean
+        CloudFoundryContainerPlatform cloudFoundryContainerPlatform () {
+            return CloudFoundryContainerPlatform.builder()
+                                                .withCloudFoundryClient(cloudFoundryClient)
+                                                .withCloudFoundryOperations(cloudFoundryOperations)
+                                                .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
+                                                .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
+                                                .withContainerManager(containerManager)
+                                                .build();
+        }
     }
 }

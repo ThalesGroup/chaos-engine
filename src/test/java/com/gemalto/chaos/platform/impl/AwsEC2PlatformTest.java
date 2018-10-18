@@ -16,7 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -89,8 +88,6 @@ public class AwsEC2PlatformTest {
         when(instance2.getInstanceId()).thenReturn(INSTANCE_ID_2);
         when(instance2.getKeyName()).thenReturn(INSTANCE_KEYNAME_2);
         when(instance2.getState()).thenReturn(instanceState);
-        when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
-                .getArguments()[0]);
         final List<Container> roster = awsEC2Platform.getRoster();
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
@@ -259,7 +256,7 @@ public class AwsEC2PlatformTest {
     }
 
     @Configuration
-    static class AwsEC2PlatformTestConfiguration {
+    static class ContextConfiguration {
         @Autowired
         private AmazonEC2 amazonEC2;
         @Autowired

@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
@@ -31,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
@@ -38,6 +42,8 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryClient cloudFoundryClient;
+    @Autowired
+    private ContainerManager containerManager;
 
     @Autowired
     public CloudFoundryApplicationPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryClient cloudFoundryClient, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
@@ -112,16 +118,21 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     }
 
     private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
-        CloudFoundryApplication application = CloudFoundryApplication.builder()
-                                                                     .platform(this)
-                                                                     .name(app.getName())
-                                                                     .applicationID(app.getId())
-                                                                     .containerInstances(containerInstances)
-                                                                     .applicationRoutes(gatherApplicationRoutes(app.getName(), app
-                                                                             .getId()))
-                                                                     .build();
-        containers.add(application);
-        log.info("Added application {}", application);
+        CloudFoundryApplication container = containerManager.getMatchingContainer(CloudFoundryApplication.class, app.getName());
+        if (container == null) {
+            container = CloudFoundryApplication.builder()
+                                               .platform(this)
+                                               .name(app.getName())
+                                               .applicationID(app.getId())
+                                               .containerInstances(containerInstances)
+                                               .applicationRoutes(gatherApplicationRoutes(app.getName(), app.getId()))
+                                               .build();
+            log.debug("Created Cloud Foundry Application Container {} from {}", v(DATADOG_CONTAINER_KEY, container), kv("ApplicationSummary", app));
+        } else {
+            log.debug("Found existing Cloud Foundry Application Container {}", v(DATADOG_CONTAINER_KEY, container));
+        }
+        containers.add(container);
+
     }
 
     private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {

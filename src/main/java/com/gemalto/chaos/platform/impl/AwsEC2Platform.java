@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty("aws.ec2")
@@ -137,12 +139,13 @@ public class AwsEC2Platform extends Platform {
      */
     private void createContainerFromInstance (List<Container> containerList, Instance instance) {
         if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return;
-        Container newContainer = createContainerFromInstance(instance);
-        Container container = containerManager.getOrCreatePersistentContainer(newContainer);
-        if (container != newContainer) {
-            log.debug("Found existing container {}", container);
+        Container container = containerManager.getMatchingContainer(AwsEC2Container.class, instance.getInstanceId());
+        if (container == null) {
+            container = createContainerFromInstance(instance);
+            log.info("Found new AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
+            containerManager.offer(container);
         } else {
-            log.info("Found new container {}", container);
+            log.debug("Found existing AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         containerList.add(container);
     }

@@ -10,6 +10,7 @@ import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
 import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
@@ -31,13 +32,13 @@ import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.*;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-import static net.logstash.logback.argument.StructuredArguments.value;
+import static net.logstash.logback.argument.StructuredArguments.*;
 
 @ConditionalOnProperty("aws.rds")
 @ConfigurationProperties("aws.rds")
@@ -47,6 +48,8 @@ public class AwsRDSPlatform extends Platform {
     private AmazonRDS amazonRDS;
     @Autowired
     private AmazonEC2 amazonEC2;
+    @Autowired
+    private ContainerManager containerManager;
     private String defaultVpcId;
     private String chaosSecurityGroup;
 
@@ -155,22 +158,39 @@ public class AwsRDSPlatform extends Platform {
         return dbClusters;
     }
 
-    private Container createContainerFromDBInstance (DBInstance dbInstance) {
-        log.debug("Creating RDS Instance Container object from {}", keyValue("dbInstance", dbInstance));
-        return AwsRDSInstanceContainer.builder()
-                                      .withAwsRDSPlatform(this).withAvailabilityZone(dbInstance.getAvailabilityZone())
-                                      .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
-                                      .withEngine(dbInstance.getEngine())
-                                      .build();
+    private AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
+        AwsRDSInstanceContainer container = containerManager.getMatchingContainer(AwsRDSInstanceContainer.class, dbInstance
+                .getDBInstanceIdentifier());
+        if (container == null) {
+            container = AwsRDSInstanceContainer.builder()
+                                               .withAwsRDSPlatform(this)
+                                               .withAvailabilityZone(dbInstance.getAvailabilityZone())
+                                               .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
+                                               .withEngine(dbInstance.getEngine())
+                                               .build();
+            log.debug("Creating RDS Instance Container {} from {}", v(DATADOG_CONTAINER_KEY, container), keyValue("dbInstance", dbInstance));
+            containerManager.offer(container);
+        } else {
+            log.debug("Found existing RDS Instance Container {}", v(DATADOG_CONTAINER_KEY, container));
+        }
+        return container;
     }
 
-    private Container createContainerFromDBCluster (DBCluster dbCluster) {
-        log.debug("Creating RDS Cluster Container object from {}", keyValue("dbCluster", dbCluster));
-        return AwsRDSClusterContainer.builder()
-                                     .withAwsRDSPlatform(this)
-                                     .withDbClusterIdentifier(dbCluster.getDBClusterIdentifier())
-                                     .withEngine(dbCluster.getEngine())
-                                     .build();
+    private AwsRDSClusterContainer createContainerFromDBCluster (DBCluster dbCluster) {
+        AwsRDSClusterContainer container = containerManager.getMatchingContainer(AwsRDSClusterContainer.class, dbCluster
+                .getDBClusterIdentifier());
+        if (container == null) {
+            container = AwsRDSClusterContainer.builder()
+                                              .withAwsRDSPlatform(this)
+                                              .withDbClusterIdentifier(dbCluster.getDBClusterIdentifier())
+                                              .withEngine(dbCluster.getEngine())
+                                              .build();
+            log.debug("Created RDS Cluster Container {} from {}", v(DATADOG_CONTAINER_KEY, container), keyValue("dbCluster", dbCluster));
+            containerManager.offer(container);
+        } else {
+            log.debug("Found existing RDS Cluster Container {}", v(DATADOG_CONTAINER_KEY, container));
+        }
+        return container;
     }
 
     ContainerHealth getDBInstanceHealth (AwsRDSInstanceContainer awsRDSInstanceContainer) {

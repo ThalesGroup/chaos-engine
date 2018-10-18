@@ -7,6 +7,7 @@ import com.amazonaws.services.rds.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
 import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
@@ -43,6 +44,8 @@ public class AwsRDSPlatformTest {
     private AmazonRDS amazonRDS;
     @MockBean
     private AmazonEC2 amazonEC2;
+    @MockBean
+    private ContainerManager containerManager;
     @Autowired
     private AwsRDSPlatform awsRDSPlatform;
 
@@ -480,7 +483,7 @@ public class AwsRDSPlatformTest {
     }
 
     @Configuration
-    static class TestConfig {
+    static class ContextConfiguration {
         @Autowired
         private AmazonRDS amazonRDS;
         @Autowired

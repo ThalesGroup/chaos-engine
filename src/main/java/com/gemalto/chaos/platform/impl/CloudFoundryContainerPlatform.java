@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
@@ -90,19 +92,19 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     }
 
     private void createContainerFromApp (List<Container> containers, ApplicationSummary app, Integer i) {
-        CloudFoundryContainer c = CloudFoundryContainer.builder()
-                                                       .applicationId(app.getId())
-                                                       .name(app.getName())
-                                                       .instance(i)
-                                                       .platform(this)
-                                                       .build();
-        Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-        containers.add(persistentContainer);
-        if (persistentContainer == c) {
-            log.info("Added container {}", persistentContainer);
+        CloudFoundryContainer container = containerManager.getMatchingContainer(CloudFoundryContainer.class, app.getName() + "-" + i);
+        if (container == null) {
+            container = CloudFoundryContainer.builder()
+                                             .applicationId(app.getId())
+                                             .name(app.getName())
+                                             .instance(i)
+                                             .platform(this)
+                                             .build();
+            log.debug("Created Cloud Foundry Container {} from {}", v(DATADOG_CONTAINER_KEY, container), v("ApplicationSummary", app));
         } else {
-            log.debug("Existing container found: {}", persistentContainer);
+            log.debug("Found existing Cloud Foundry Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
+        containers.add(container);
     }
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {

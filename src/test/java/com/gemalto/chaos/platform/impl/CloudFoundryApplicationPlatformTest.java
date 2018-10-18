@@ -26,7 +26,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +48,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CloudFoundryApplicationPlatformTest {
     private String APPLICATION_NAME = randomUUID().toString();
     private String APPLICATION_ID = randomUUID().toString();
@@ -72,6 +79,7 @@ public class CloudFoundryApplicationPlatformTest {
     private CloudFoundryClient cloudFoundryClient;
     @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+    @Autowired
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private Domain httpDomain = Domain.builder()
                                       .id("httpDomain")
@@ -92,7 +100,6 @@ public class CloudFoundryApplicationPlatformTest {
 
     @Before
     public void setUp () {
-        cloudFoundryApplicationPlatform = new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
         app1_httpRoute = CloudFoundryApplicationRoute.builder()
                                                      .route(httpRoute)
                                                      .domain(httpDomain)
@@ -285,5 +292,22 @@ public class CloudFoundryApplicationPlatformTest {
         cloudFoundryApplicationPlatform.unmapRoute(unmapRouteRequest);
         verify(routes, times(1)).unmap(unmapRouteRequest);
         verify(monoInt, times(1)).block();
+    }
+
+    @Configuration
+    static class ContextConfiguration {
+        @Autowired
+        private CloudFoundryOperations cloudFoundryOperations;
+        @Autowired
+        private CloudFoundryClient cloudFoundryClient;
+        @Autowired
+        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+        @Autowired
+        private ContainerManager containerManager;
+
+        @Bean
+        CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform () {
+            return new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
+        }
     }
 }
