@@ -101,6 +101,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                                              .platform(this)
                                              .build();
             log.debug("Created Cloud Foundry Container {} from {}", v(DATADOG_CONTAINER_KEY, container), v("ApplicationSummary", app));
+            containerManager.offer(container);
         } else {
             log.debug("Found existing Cloud Foundry Container {}", v(DATADOG_CONTAINER_KEY, container));
         }

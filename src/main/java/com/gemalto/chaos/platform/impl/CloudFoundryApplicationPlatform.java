@@ -128,6 +128,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                .applicationRoutes(gatherApplicationRoutes(app.getName(), app.getId()))
                                                .build();
             log.debug("Created Cloud Foundry Application Container {} from {}", v(DATADOG_CONTAINER_KEY, container), kv("ApplicationSummary", app));
+            containerManager.offer(container);
         } else {
             log.debug("Found existing Cloud Foundry Application Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
