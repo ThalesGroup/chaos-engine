@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -53,7 +54,7 @@ public class CloudFoundryContainerPlatformTest {
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
-    @MockBean
+    @SpyBean
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
@@ -240,13 +241,13 @@ public class CloudFoundryContainerPlatformTest {
 
         @Bean
         CloudFoundryContainerPlatform cloudFoundryContainerPlatform () {
-            return CloudFoundryContainerPlatform.builder()
-                                                .withCloudFoundryClient(cloudFoundryClient)
-                                                .withCloudFoundryOperations(cloudFoundryOperations)
-                                                .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
-                                                .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                                .withContainerManager(containerManager)
-                                                .build();
+            return spy(CloudFoundryContainerPlatform.builder()
+                                                    .withCloudFoundryClient(cloudFoundryClient)
+                                                    .withCloudFoundryOperations(cloudFoundryOperations)
+                                                    .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
+                                                    .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
+                                                    .withContainerManager(containerManager)
+                                                    .build());
         }
     }
 }
