@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -44,7 +45,7 @@ public class AwsRDSPlatformTest {
     private AmazonRDS amazonRDS;
     @MockBean
     private AmazonEC2 amazonEC2;
-    @MockBean
+    @SpyBean
     private ContainerManager containerManager;
     @Autowired
     private AwsRDSPlatform awsRDSPlatform;
