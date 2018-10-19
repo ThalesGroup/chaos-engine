@@ -114,11 +114,14 @@ public class AwsEC2Platform extends Platform {
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
         while (!done) {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
-            describeInstancesResult.getReservations().stream()
-                                   .map(Reservation::getInstances)
-                                   .flatMap(Collection::parallelStream)
-                                   .filter(instance -> !awsEC2SelfAwareness.isMe(instance.getInstanceId()))
-                                   .forEach(instance -> createContainerFromInstance(containerList, instance));
+            containerList.addAll(describeInstancesResult.getReservations()
+                                                        .stream()
+                                                        .map(Reservation::getInstances)
+                                                        .flatMap(Collection::parallelStream)
+                                                        .filter(instance -> !awsEC2SelfAwareness.isMe(instance.getInstanceId()))
+                                                        .map(this::createContainerFromInstance)
+                                                        .filter(Objects::nonNull)
+                                                        .collect(Collectors.toSet()));
             describeInstancesRequest.setNextToken(describeInstancesResult.getNextToken());
             if (describeInstancesRequest.getNextToken() == null) {
                 done = true;
@@ -134,20 +137,19 @@ public class AwsEC2Platform extends Platform {
     /**
      * Creates a Container object from an EC2 Instance and appends it to a provided list of containers.
      *
-     * @param containerList The list of containers to append the finalized container into
      * @param instance      An EC2 Instance object to have a container created.
      */
-    private void createContainerFromInstance (List<Container> containerList, Instance instance) {
-        if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return;
-        Container container = containerManager.getMatchingContainer(AwsEC2Container.class, instance.getInstanceId());
+    private AwsEC2Container createContainerFromInstance (Instance instance) {
+        if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return null;
+        AwsEC2Container container = containerManager.getMatchingContainer(AwsEC2Container.class, instance.getInstanceId());
         if (container == null) {
-            container = createContainerFromInstance(instance);
+            container = buildContainerFromInstance(instance);
             log.info("Found new AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
         } else {
             log.debug("Found existing AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
-        containerList.add(container);
+        return container;
     }
 
     /**
@@ -156,11 +158,13 @@ public class AwsEC2Platform extends Platform {
      * @param instance Instance to have the Container created from.
      * @return Container mapping to the instance.
      */
-    private Container createContainerFromInstance (Instance instance) {
-        String name;
-        Optional<Tag> nameTag = instance.getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
-        // Need to use an Optional for the name tag, as it may not be present.
-        name = nameTag.isPresent() ? nameTag.get().getValue() : "no-name";
+    private AwsEC2Container buildContainerFromInstance (Instance instance) {
+        String name = instance.getTags()
+                              .stream()
+                              .filter(tag -> tag.getKey().equals("Name"))
+                              .findFirst()
+                              .orElse(new Tag("Name", "no-name"))
+                              .getValue();
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(instance.getKeyName())
