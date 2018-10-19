@@ -58,9 +58,9 @@ public class DataDogNotification implements NotificationMethods {
         }
 
         public void send () {
-            StatsDClient statsd = new NonBlockingStatsDClient("", statsdHost, statsdPort, generateTags());
-            statsd.recordEvent(buildEvent());
-            statsd.close();
+            try (StatsDClient statsd = new NonBlockingStatsDClient("", statsdHost, statsdPort, generateTags())) {
+                statsd.recordEvent(buildEvent());
+            }
         }
 
         protected String[] generateTags () {
