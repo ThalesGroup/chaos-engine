@@ -125,7 +125,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                      .collect(Collectors.toList());
     }
 
-    private CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {
+    CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {
         CloudFoundryApplication container = containerManager.getMatchingContainer(CloudFoundryApplication.class, applicationSummary
                 .getName());
         if (container == null) {
@@ -145,7 +145,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         return container;
     }
 
-    private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {
+    List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {
         List<CloudFoundryApplicationRoute> routes = new ArrayList<>();
         ListApplicationRoutesRequest listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
                                                                                                 .applicationId(applicationId)

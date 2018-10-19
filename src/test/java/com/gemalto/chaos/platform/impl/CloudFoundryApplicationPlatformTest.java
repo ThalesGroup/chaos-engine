@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -39,11 +40,11 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -66,7 +67,7 @@ public class CloudFoundryApplicationPlatformTest {
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
-    @MockBean
+    @SpyBean
     private ContainerManager containerManager;
     @Mock
     private Applications applications;
@@ -183,6 +184,40 @@ public class CloudFoundryApplicationPlatformTest {
         List<Container> roster = cloudFoundryApplicationPlatform.getRoster();
         assertEquals(2, roster.size());
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
+    }
+
+    @Test
+    public void createApplicationFromApplicationSummary () {
+        ApplicationSummary applicationSummary;
+        CloudFoundryApplication container;
+        String applicationId = randomUUID().toString();
+        Integer containerInstances = new Random().nextInt(5) + 1;
+        String name = randomUUID().toString();
+        Integer diskQuota = new Random().nextInt();
+        Integer memoryLimit = new Random().nextInt();
+        String requestedState = randomUUID().toString();
+        applicationSummary = ApplicationSummary.builder()
+                                               .instances(containerInstances)
+                                               .name(name)
+                                               .id(applicationId)
+                                               .diskQuota(diskQuota)
+                                               .memoryLimit(memoryLimit)
+                                               .requestedState(requestedState)
+                                               .runningInstances(containerInstances)
+                                               .build();
+        doReturn(Collections.emptyList()).when(cloudFoundryApplicationPlatform).gatherApplicationRoutes(any(), any());
+        container = CloudFoundryApplication.builder()
+                                           .applicationID(applicationId)
+                                           .containerInstances(containerInstances)
+                                           .name(name)
+                                           .applicationRoutes(Collections.emptyList())
+                                           .build();
+        CloudFoundryApplication actualContainer = cloudFoundryApplicationPlatform.createApplicationFromApplicationSummary(applicationSummary);
+        assertEquals(container, actualContainer);
+        verify(containerManager, times(1)).offer(actualContainer);
+        reset(containerManager);
+        assertSame(actualContainer, cloudFoundryApplicationPlatform.createApplicationFromApplicationSummary(applicationSummary));
+        verify(containerManager, times(0)).offer(actualContainer);
     }
 
     @Test
@@ -307,7 +342,7 @@ public class CloudFoundryApplicationPlatformTest {
 
         @Bean
         CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform () {
-            return new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo);
+            return spy(new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo));
         }
     }
 }
