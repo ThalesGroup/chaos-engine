@@ -162,6 +162,11 @@ public class ChaosEvent {
             return this;
         }
 
+        public ChaosEventBuilder withExperimentMethod(String experimentMethod){
+            this.experimentMethod = experimentMethod;
+            return this;
+        }
+
         public ChaosEvent build () {
             ChaosEvent chaosEvent = new ChaosEvent();
             chaosEvent.targetContainer = this.targetContainer;
