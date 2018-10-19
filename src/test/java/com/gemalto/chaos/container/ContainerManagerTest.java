@@ -1,65 +1,80 @@
 package com.gemalto.chaos.container;
 
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Repeat;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ContainerManagerTest {
-    private static final long ROSTER_KEY = 31415936L;
-    private static final long SECOND_ROSTER_KEY = 985791891231L;
-    @Mock
-    private TestContainerClass container;
-    @Mock
-    private TestContainerClass2 secondContainer;
-    @Mock
-    private TestContainerClass2 thirdContainer;
-    private HashMap<Class<? extends Container>, HashMap<Long, Container>> testContainerMap = new HashMap<>();
+    @Autowired
+    private ContainerManager containerManager;
+    @Spy
+    private TestContainerClass testContainerClass;
+    @Spy
+    private TestContainerClass2 testContainerClass2;
 
-    @Before
-    public void setUp () {
-        HashMap<Long, Container> firstRoster = new HashMap<>();
-        HashMap<Long, Container> secondRoster = new HashMap<>();
-        testContainerMap.put(container.getClass(), firstRoster);
-        testContainerMap.put(secondContainer.getClass(), secondRoster);
-        firstRoster.put(ROSTER_KEY, container);
-        secondRoster.put(SECOND_ROSTER_KEY, secondContainer);
+
+    @Test
+    public void getMatchingContainer () {
+        String randomUUID = UUID.randomUUID().toString();
+        String randomUUID2 = UUID.randomUUID().toString();
+        containerManager.offer(testContainerClass);
+        doReturn(true).when(testContainerClass).compareUniqueIdentifier(randomUUID);
+        assertSame(testContainerClass, containerManager.getMatchingContainer(TestContainerClass.class, randomUUID));
+        verify(testContainerClass, times(1)).compareUniqueIdentifier(randomUUID);
+        verify(testContainerClass2, times(0)).compareUniqueIdentifier(randomUUID);
+        reset(testContainerClass, testContainerClass2);
+        // Two containers of different classes have the same identifier. Only return the class listed
+        doReturn(false).when(testContainerClass).compareUniqueIdentifier(randomUUID2);
+        doReturn(true).when(testContainerClass2).compareUniqueIdentifier(randomUUID2);
+        assertNull(containerManager.getMatchingContainer(TestContainerClass.class, randomUUID2));
+        verify(testContainerClass, times(1)).compareUniqueIdentifier(randomUUID2);
+        verify(testContainerClass2, times(0)).compareUniqueIdentifier(randomUUID2);
+
+
     }
 
     @Test
-    public void getRoster () {
-        ContainerManager containerManager = new ContainerManager(testContainerMap);
-        HashMap<Long, Container> expectedHashMap = new HashMap<>();
-        expectedHashMap.put(ROSTER_KEY, container);
-        HashMap<Long, Container> secondExpectedHashMap = new HashMap<>();
-        secondExpectedHashMap.put(SECOND_ROSTER_KEY, secondContainer);
-        Collection<Container> roster = containerManager.getRoster(container.getClass());
-        Collection<Container> secondRoster = containerManager.getRoster(secondContainer.getClass());
-        assertTrue(expectedHashMap.values().containsAll(roster));
-        assertTrue(roster.containsAll(expectedHashMap.values()));
-        assertTrue(secondExpectedHashMap.values().containsAll(secondRoster));
-        assertTrue(secondRoster.containsAll(secondExpectedHashMap.values()));
+    @Repeat(10)
+    public void threadSafe () {
+        ExecutorService service = Executors.newFixedThreadPool(100);
+        Stream.iterate(0, integer -> integer + 1)
+              .limit(10000)
+              .parallel()
+              .forEach(i -> service.execute(() -> containerManager.offer(Mockito.mock(Container.class))));
+        containerManager.getMatchingContainer(Mockito.mock(Container.class).getClass(), "");
     }
 
-    @Test
-    public void getOrCreatePersistentContainer () {
-        ContainerManager containerManager = new ContainerManager(testContainerMap);
-        when(thirdContainer.getIdentity()).thenReturn(SECOND_ROSTER_KEY);
-        Assert.assertEquals(secondContainer, containerManager.getOrCreatePersistentContainer(thirdContainer));
+    @Configuration
+    static class ContextConfiguration {
+        @Bean
+        ContainerManager containerManager () {
+            return new ContainerManager();
+        }
     }
 
-    private abstract class TestContainerClass extends Container {
+    abstract class TestContainerClass extends Container {
     }
 
-    private abstract class TestContainerClass2 extends Container {
+    abstract class TestContainerClass2 extends Container {
     }
 }

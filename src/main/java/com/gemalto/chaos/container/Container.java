@@ -12,12 +12,14 @@ import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.CRC32;
@@ -96,19 +98,20 @@ public abstract class Container implements ExperimentalObject {
         StringBuilder output = new StringBuilder();
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
-            try {
-                output.append("\n\t");
-                output.append(field.getName());
-                output.append(":\t");
-                output.append(field.get(this));
-            } catch (IllegalAccessException e) {
-                log.error("Could not read from field {}", field.getName(), e);
-            }
-        }
+        Arrays.stream(this.getClass().getDeclaredFields())
+              .filter(field -> !Modifier.isTransient(field.getModifiers()))
+              .filter(field -> !field.isSynthetic())
+              .forEachOrdered(field -> {
+                  field.setAccessible(true);
+                  try {
+                      output.append("\n\t");
+                      output.append(field.getName());
+                      output.append(":\t");
+                      output.append(field.get(this));
+                  } catch (IllegalAccessException e) {
+                      log.error("Could not read from field {}", field.getName(), e);
+                  }
+              });
         return output.toString();
     }
 
@@ -178,4 +181,10 @@ public abstract class Container implements ExperimentalObject {
 
     @JsonIgnore
     public abstract DataDogIdentifier getDataDogIdentifier ();
+
+    boolean compareUniqueIdentifier (String uniqueIdentifier) {
+        return uniqueIdentifier != null && compareUniqueIdentifierInner(uniqueIdentifier);
+    }
+
+    protected abstract boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier);
 }

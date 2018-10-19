@@ -16,9 +16,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -29,10 +29,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_TERMINATED_CODE;
 import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
@@ -48,7 +48,7 @@ public class AwsEC2PlatformTest {
     private Reservation reservation;
     @Mock
     private Instance instance;
-    @MockBean
+    @SpyBean
     private ContainerManager containerManager;
     @MockBean
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
@@ -89,8 +89,6 @@ public class AwsEC2PlatformTest {
         when(instance2.getInstanceId()).thenReturn(INSTANCE_ID_2);
         when(instance2.getKeyName()).thenReturn(INSTANCE_KEYNAME_2);
         when(instance2.getState()).thenReturn(instanceState);
-        when(containerManager.getOrCreatePersistentContainer(any(Container.class))).thenAnswer((Answer<Container>) invocation -> (Container) invocation
-                .getArguments()[0]);
         final List<Container> roster = awsEC2Platform.getRoster();
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
@@ -258,8 +256,51 @@ public class AwsEC2PlatformTest {
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
     }
 
+    @Test
+    public void createContainerFromInstance () {
+        String instanceId = UUID.randomUUID().toString();
+        // Should return null for a terminated instance
+        Instance instance = Mockito.spy(new Instance().withState(new InstanceState().withCode(AWS_TERMINATED_CODE)
+                                                                                    .withName(InstanceStateName.Terminated)));
+        assertNull(awsEC2Platform.createContainerFromInstance(instance));
+        verify(containerManager, times(0)).getMatchingContainer(any(), any());
+        reset(awsEC2Platform, containerManager);
+        // Container that hasn't been created before
+        instance = Mockito.spy(new Instance().withState(new InstanceState().withCode(0)
+                                                                           .withName(InstanceStateName.Running))
+                                             .withInstanceId(instanceId));
+        AwsEC2Container container = Mockito.spy(AwsEC2Container.builder().instanceId(instanceId).build());
+        doReturn(container).when(awsEC2Platform).buildContainerFromInstance(instance);
+        doCallRealMethod().when(awsEC2Platform).createContainerFromInstance(instance);
+        assertSame(container, awsEC2Platform.createContainerFromInstance(instance));
+        verify(containerManager, times(1)).offer(container);
+        // Container HAS been created before
+        reset(awsEC2Platform, containerManager);
+        doCallRealMethod().when(awsEC2Platform).createContainerFromInstance(instance);
+        assertSame(container, awsEC2Platform.createContainerFromInstance(instance));
+        verify(awsEC2Platform, times(0)).buildContainerFromInstance(instance);
+        verify(containerManager, times(0)).offer(container);
+    }
+
+    @Test
+    public void buildContainerFromInstance () {
+        String instanceId = UUID.randomUUID().toString();
+        String name = UUID.randomUUID().toString();
+        String keyName = UUID.randomUUID().toString();
+        Instance instance;
+        AwsEC2Container container;
+        // With Name
+        instance = new Instance().withInstanceId(instanceId).withTags(new Tag("Name", name)).withKeyName(keyName);
+        container = AwsEC2Container.builder().instanceId(instanceId).keyName(keyName).name(name).build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+        // With no name
+        instance = new Instance().withInstanceId(instanceId).withKeyName(keyName);
+        container = AwsEC2Container.builder().instanceId(instanceId).name("no-name").keyName(keyName).build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+    }
+
     @Configuration
-    static class AwsEC2PlatformTestConfiguration {
+    static class ContextConfiguration {
         @Autowired
         private AmazonEC2 amazonEC2;
         @Autowired

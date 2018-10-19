@@ -14,6 +14,7 @@ import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
@@ -66,6 +67,11 @@ public class CloudFoundryContainer extends Container {
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return DataDogIdentifier.dataDogIdentifier().withValue(name + "-" + instance);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(name + "-" + instance);
     }
 
     @StateExperiment

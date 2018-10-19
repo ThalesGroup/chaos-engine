@@ -11,6 +11,7 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -47,6 +48,11 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return DataDogIdentifier.dataDogIdentifier()
                                 .withKey(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER)
                                 .withValue(dbClusterIdentifier);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(dbClusterIdentifier);
     }
 
     public String getDbClusterIdentifier () {

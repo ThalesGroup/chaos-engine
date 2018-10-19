@@ -12,6 +12,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
@@ -48,6 +49,11 @@ public class CloudFoundryApplication extends Container {
     public DataDogIdentifier getDataDogIdentifier () {
         return DataDogIdentifier.dataDogIdentifier().withKey("application")
                 .withValue(name);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(name);
     }
 
     public Integer getOriginalContainerInstances () {

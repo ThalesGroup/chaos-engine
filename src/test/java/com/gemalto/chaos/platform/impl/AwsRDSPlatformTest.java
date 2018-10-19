@@ -7,6 +7,7 @@ import com.amazonaws.services.rds.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsRDSClusterContainer;
 import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -30,9 +32,9 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION;
+import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.anyOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -43,6 +45,8 @@ public class AwsRDSPlatformTest {
     private AmazonRDS amazonRDS;
     @MockBean
     private AmazonEC2 amazonEC2;
+    @SpyBean
+    private ContainerManager containerManager;
     @Autowired
     private AwsRDSPlatform awsRDSPlatform;
 
@@ -100,13 +104,13 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void generateRoster () {
-        String dbInstance1Identifier = UUID.randomUUID().toString();
-        String dbInstance2Identifier = UUID.randomUUID().toString();
-        String instance1AvailabilityZone = UUID.randomUUID().toString();
-        String instance2AvailabilityZone = UUID.randomUUID().toString();
-        String dbCluster1Identifier = UUID.randomUUID().toString();
-        String dbCluster2Identifier = UUID.randomUUID().toString();
-        String dbClusterInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstance1Identifier = randomUUID().toString();
+        String dbInstance2Identifier = randomUUID().toString();
+        String instance1AvailabilityZone = randomUUID().toString();
+        String instance2AvailabilityZone = randomUUID().toString();
+        String dbCluster1Identifier = randomUUID().toString();
+        String dbCluster2Identifier = randomUUID().toString();
+        String dbClusterInstanceIdentifier = randomUUID().toString();
         DBInstance dbInstance1 = new DBInstance().withDBInstanceIdentifier(dbInstance1Identifier)
                                                  .withDBClusterIdentifier(null)
                                                  .withAvailabilityZone(instance1AvailabilityZone);
@@ -118,8 +122,8 @@ public class AwsRDSPlatformTest {
                                                      .withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster1 = new DBCluster().withDBClusterIdentifier(dbCluster1Identifier);
         DBCluster dbCluster2 = new DBCluster().withDBClusterIdentifier(dbCluster2Identifier);
-        String marker1 = UUID.randomUUID().toString();
-        String marker2 = UUID.randomUUID().toString();
+        String marker1 = randomUUID().toString();
+        String marker2 = randomUUID().toString();
         doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)
                                                 .withMarker(marker1)).when(amazonRDS)
                                                                      .describeDBInstances(new DescribeDBInstancesRequest());
@@ -169,8 +173,8 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getDBClusterHealth () {
-        String memberId1 = UUID.randomUUID().toString();
-        String memberId2 = UUID.randomUUID().toString();
+        String memberId1 = randomUUID().toString();
+        String memberId2 = randomUUID().toString();
         AwsRDSClusterContainer awsRDSClusterContainer = mock(AwsRDSClusterContainer.class);
         doReturn(new DescribeDBClustersResult().withDBClusters()).when(amazonRDS)
                                                                  .describeDBClusters(any(DescribeDBClustersRequest.class));
@@ -197,15 +201,15 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void failoverCluster () {
-        String clusterIdentifier = UUID.randomUUID().toString();
+        String clusterIdentifier = randomUUID().toString();
         awsRDSPlatform.failoverCluster(clusterIdentifier);
         verify(amazonRDS, times(1)).failoverDBCluster(new FailoverDBClusterRequest().withDBClusterIdentifier(clusterIdentifier));
     }
 
     @Test
     public void restartInstance () {
-        String instanceId1 = UUID.randomUUID().toString();
-        String instanceId2 = UUID.randomUUID().toString();
+        String instanceId1 = randomUUID().toString();
+        String instanceId2 = randomUUID().toString();
         awsRDSPlatform.restartInstance(instanceId1);
         verify(amazonRDS, times(1)).rebootDBInstance(new RebootDBInstanceRequest().withDBInstanceIdentifier(instanceId1));
         Mockito.reset(amazonRDS);
@@ -216,9 +220,9 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getClusterInstances () {
-        String instanceId1 = UUID.randomUUID().toString();
-        String instanceId2 = UUID.randomUUID().toString();
-        String clusterId = UUID.randomUUID().toString();
+        String instanceId1 = randomUUID().toString();
+        String instanceId2 = randomUUID().toString();
+        String clusterId = randomUUID().toString();
         DescribeDBClustersResult dbClustersResult = new DescribeDBClustersResult().withDBClusters(new DBCluster().withDBClusterMembers(new DBClusterMember()
                 .withDBInstanceIdentifier(instanceId1), new DBClusterMember().withDBInstanceIdentifier(instanceId2)));
         doReturn(dbClustersResult).when(amazonRDS)
@@ -228,8 +232,8 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getInstanceStatus () {
-        String instanceId1 = UUID.randomUUID().toString();
-        String instanceId2 = UUID.randomUUID().toString();
+        String instanceId1 = randomUUID().toString();
+        String instanceId2 = randomUUID().toString();
         DescribeDBInstancesResult normalInstance1 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId1)
                                                                                                                     .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE));
         DescribeDBInstancesResult normalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
@@ -264,10 +268,10 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getVpcSecurityGroupIds () {
-        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
         Collection<String> expectedVpcIds = new HashSet<>();
         for (int x = 0; x < 100; x++) {
-            expectedVpcIds.add(UUID.randomUUID().toString());
+            expectedVpcIds.add(randomUUID().toString());
         }
         when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
                 .thenReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withVpcSecurityGroups(expectedVpcIds
@@ -280,8 +284,8 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void setVpcSecurityGroupIds () {
-        String dbInstanceIdentifier = UUID.randomUUID().toString();
-        String vpcSecurityGroupId = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
+        String vpcSecurityGroupId = randomUUID().toString();
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupId);
         verify(amazonRDS, times(1)).modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(Collections
                 .singleton(vpcSecurityGroupId)));
@@ -289,10 +293,10 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void setVpcSecurityGroupIds1 () {
-        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
         Collection<String> vpcSecurityGroupIds = new HashSet<>();
         for (int x = 0; x < 100; x++) {
-            vpcSecurityGroupIds.add(UUID.randomUUID().toString());
+            vpcSecurityGroupIds.add(randomUUID().toString());
         }
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, vpcSecurityGroupIds);
         verify(amazonRDS, times(1)).modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
@@ -300,9 +304,9 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void checkVpcSecurityGroupIds () {
-        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
         Collection<String> vpcSecurityGroupIds = new HashSet<>();
-        vpcSecurityGroupIds.add(UUID.randomUUID().toString());
+        vpcSecurityGroupIds.add(randomUUID().toString());
         when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
                 .thenReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withVpcSecurityGroups(vpcSecurityGroupIds
                         .stream()
@@ -315,17 +319,17 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void checkVpcSecurityGroupIds1 () {
-        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
         Collection<String> vpcSecurityGroupIds = new HashSet<>();
         List<String> reverseOrderSet = new ArrayList<>();
         for (int x = 0; x < 100; x++) {
-            String randomString = UUID.randomUUID().toString();
+            String randomString = randomUUID().toString();
             vpcSecurityGroupIds.add(randomString);
             reverseOrderSet.add(randomString);
         }
         Collections.reverse(reverseOrderSet);
         Collection<String> biggerSet = new HashSet<>(vpcSecurityGroupIds);
-        biggerSet.add(UUID.randomUUID().toString());
+        biggerSet.add(randomUUID().toString());
         Collection<String> smallerSet = new HashSet<>(vpcSecurityGroupIds);
         smallerSet.remove(vpcSecurityGroupIds.iterator().next());
         when(amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier)))
@@ -348,11 +352,11 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getChaosSecurityGroup () {
-        String defaultVpcId = UUID.randomUUID().toString();
-        String customVpcId = UUID.randomUUID().toString();
-        String defaultSecurityGroupID = UUID.randomUUID().toString();
-        String customSecurityGroupID = UUID.randomUUID().toString();
-        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        String defaultVpcId = randomUUID().toString();
+        String customVpcId = randomUUID().toString();
+        String defaultSecurityGroupID = randomUUID().toString();
+        String customSecurityGroupID = randomUUID().toString();
+        String chaosSecurityGroupID = randomUUID().toString();
         SecurityGroup chaosSecurityGroup = new SecurityGroup().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
                                                               .withVpcId(defaultVpcId)
                                                               .withGroupId(chaosSecurityGroupID);
@@ -372,11 +376,11 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getChaosSecurityGroup2 () {
-        String defaultVpcId = UUID.randomUUID().toString();
-        String customVpcId = UUID.randomUUID().toString();
-        String defaultSecurityGroupID = UUID.randomUUID().toString();
-        String customSecurityGroupID = UUID.randomUUID().toString();
-        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        String defaultVpcId = randomUUID().toString();
+        String customVpcId = randomUUID().toString();
+        String defaultSecurityGroupID = randomUUID().toString();
+        String customSecurityGroupID = randomUUID().toString();
+        String chaosSecurityGroupID = randomUUID().toString();
         SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
                                                                 .withVpcId(defaultVpcId)
                                                                 .withGroupId(defaultSecurityGroupID);
@@ -398,11 +402,11 @@ public class AwsRDSPlatformTest {
 
     @Test(expected = ChaosException.class)
     public void getChaosSecurityGroup3 () {
-        String defaultVpcId = UUID.randomUUID().toString();
-        String customVpcId = UUID.randomUUID().toString();
-        String defaultSecurityGroupID = UUID.randomUUID().toString();
-        String customSecurityGroupID = UUID.randomUUID().toString();
-        String chaosSecurityGroupID = UUID.randomUUID().toString();
+        String defaultVpcId = randomUUID().toString();
+        String customVpcId = randomUUID().toString();
+        String defaultSecurityGroupID = randomUUID().toString();
+        String customSecurityGroupID = randomUUID().toString();
+        String chaosSecurityGroupID = randomUUID().toString();
         SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
                                                                 .withVpcId(defaultVpcId)
                                                                 .withGroupId(defaultSecurityGroupID);
@@ -426,14 +430,14 @@ public class AwsRDSPlatformTest {
         Collection<Container> matchSet1 = new HashSet<>();
         Collection<Container> matchSet2 = new HashSet<>();
         DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult();
-        String availabilityZone1 = UUID.randomUUID().toString();
+        String availabilityZone1 = randomUUID().toString();
         String availabilityZone2;
         do {
-            availabilityZone2 = UUID.randomUUID().toString();
+            availabilityZone2 = randomUUID().toString();
         } while (availabilityZone1.equals(availabilityZone2));
         for (int i = 0; i < 25; i++) {
-            String dBInstanceIdentifier = UUID.randomUUID().toString();
-            String engine = UUID.randomUUID().toString();
+            String dBInstanceIdentifier = randomUUID().toString();
+            String engine = randomUUID().toString();
             DBInstance dbInstance = new DBInstance().withDBInstanceIdentifier(dBInstanceIdentifier)
                                                     .withAvailabilityZone(availabilityZone1)
                                                     .withEngine(engine);
@@ -446,8 +450,8 @@ public class AwsRDSPlatformTest {
                                                  .build());
         }
         for (int i = 0; i < 25; i++) {
-            String dBInstanceIdentifier = UUID.randomUUID().toString();
-            String engine = UUID.randomUUID().toString();
+            String dBInstanceIdentifier = randomUUID().toString();
+            String engine = randomUUID().toString();
             DBInstance dbInstance = new DBInstance().withDBInstanceIdentifier(dBInstanceIdentifier)
                                                     .withAvailabilityZone(availabilityZone2)
                                                     .withEngine(engine);
@@ -461,8 +465,8 @@ public class AwsRDSPlatformTest {
         }
         DescribeDBClustersResult describeDBClustersResult = new DescribeDBClustersResult();
         for (int i = 0; i < 15; i++) {
-            String dbClusterIdentifier = UUID.randomUUID().toString();
-            String engine = UUID.randomUUID().toString();
+            String dbClusterIdentifier = randomUUID().toString();
+            String engine = randomUUID().toString();
             DBCluster dbCluster = new DBCluster().withDBClusterIdentifier(dbClusterIdentifier).withEngine(engine);
             Container container = AwsRDSClusterContainer.builder()
                                                         .withAwsRDSPlatform(awsRDSPlatform)
@@ -479,8 +483,54 @@ public class AwsRDSPlatformTest {
                 .toArray(new Container[]{})), IsIterableContainingInAnyOrder.containsInAnyOrder(matchSet2.toArray(new Container[]{}))));
     }
 
+    @Test
+    public void createContainerFromDBInstance () {
+        DBInstance dbInstance;
+        AwsRDSInstanceContainer container;
+        String engine = randomUUID().toString();
+        String availabilityZone = randomUUID().toString();
+        String dbInstanceIdentifier = randomUUID().toString();
+        container = AwsRDSInstanceContainer.builder()
+                                           .withAvailabilityZone(availabilityZone)
+                                           .withDbInstanceIdentifier(dbInstanceIdentifier)
+                                           .withEngine(engine)
+                                           .build();
+        dbInstance = new DBInstance().withEngine(engine)
+                                     .withAvailabilityZone(availabilityZone)
+                                     .withDBInstanceIdentifier(dbInstanceIdentifier);
+        AwsRDSInstanceContainer actualContainer = awsRDSPlatform.createContainerFromDBInstance(dbInstance);
+        assertEquals(container, actualContainer);
+        verify(containerManager, times(1)).offer(any());
+        verify(containerManager, times(1)).getMatchingContainer(AwsRDSInstanceContainer.class, dbInstanceIdentifier);
+        reset(awsRDSPlatform, containerManager);
+        assertSame(actualContainer, awsRDSPlatform.createContainerFromDBInstance(dbInstance));
+        verify(containerManager, times(0)).offer(any());
+        verify(containerManager, times(1)).getMatchingContainer(AwsRDSInstanceContainer.class, dbInstanceIdentifier);
+    }
+
+    @Test
+    public void createContainerFromDBCluster () {
+        DBCluster dbCluster;
+        AwsRDSClusterContainer container;
+        String engine = randomUUID().toString();
+        String dbClusterIdentifier = randomUUID().toString();
+        container = AwsRDSClusterContainer.builder()
+                                          .withDbClusterIdentifier(dbClusterIdentifier)
+                                          .withEngine(engine)
+                                          .build();
+        dbCluster = new DBCluster().withEngine(engine).withDBClusterIdentifier(dbClusterIdentifier);
+        AwsRDSClusterContainer actualContainer = awsRDSPlatform.createContainerFromDBCluster(dbCluster);
+        assertEquals(container, actualContainer);
+        verify(containerManager, times(1)).offer(any());
+        verify(containerManager, times(1)).getMatchingContainer(AwsRDSClusterContainer.class, dbClusterIdentifier);
+        reset(awsRDSPlatform, containerManager);
+        assertSame(actualContainer, awsRDSPlatform.createContainerFromDBCluster(dbCluster));
+        verify(containerManager, times(0)).offer(any());
+        verify(containerManager, times(1)).getMatchingContainer(AwsRDSClusterContainer.class, dbClusterIdentifier);
+    }
+
     @Configuration
-    static class TestConfig {
+    static class ContextConfiguration {
         @Autowired
         private AmazonRDS amazonRDS;
         @Autowired

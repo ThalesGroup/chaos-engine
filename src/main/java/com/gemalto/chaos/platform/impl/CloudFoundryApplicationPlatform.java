@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
@@ -29,8 +30,13 @@ import reactor.core.publisher.Flux;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
@@ -38,6 +44,8 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     private CloudFoundryOperations cloudFoundryOperations;
     private CloudFoundryClient cloudFoundryClient;
+    @Autowired
+    private ContainerManager containerManager;
 
     @Autowired
     public CloudFoundryApplicationPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryClient cloudFoundryClient, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
@@ -91,40 +99,53 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
 
     @Override
     public List<Container> generateRoster () {
-        List<Container> containers = new ArrayList<>();
-        cloudFoundryOperations.applications()
-                              .list()
-                              .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
-                              .toIterable()
-                              .forEach(app -> {
-                                  Integer instances = app.getInstances();
-                                  if (instances <= 0) {
-                                      log.debug("Skipping {} which has {} container instances.", app.getName(), instances);
-                                  } else {
-                                      if (!isChaosEngine(app.getName())) {
-                                          createApplication(containers, app, instances);
-                                      } else {
-                                          log.debug("Skipping {} what appears to be me.", app.getName());
-                                      }
-                                  }
-                              });
-        return containers;
+        return cloudFoundryOperations.applications()
+                                     .list()
+                                     .toStream()
+                                     .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
+                                     .filter(applicationSummary -> {
+                                         Integer instances = applicationSummary.getInstances();
+                                         if (instances <= 0) {
+                                             log.debug("Skipping {} which has {} container instances.", applicationSummary
+                                                     .getName(), instances);
+                                             return false;
+                                         }
+                                         return true;
+                                     })
+                                     .filter(applicationSummary -> {
+                                         if (this.isChaosEngine(applicationSummary.getName())) {
+                                             log.debug("Skipping {} what appears to be me.", applicationSummary.getName());
+                                             return false;
+                                         }
+                                         return true;
+                                     })
+                                     .map(this::createApplicationFromApplicationSummary)
+                                     .filter(Objects::nonNull)
+                                     .distinct()
+                                     .collect(Collectors.toList());
     }
 
-    private void createApplication (List<Container> containers, ApplicationSummary app, Integer containerInstances) {
-        CloudFoundryApplication application = CloudFoundryApplication.builder()
-                                                                     .platform(this)
-                                                                     .name(app.getName())
-                                                                     .applicationID(app.getId())
-                                                                     .containerInstances(containerInstances)
-                                                                     .applicationRoutes(gatherApplicationRoutes(app.getName(), app
-                                                                             .getId()))
-                                                                     .build();
-        containers.add(application);
-        log.info("Added application {}", application);
+    CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {
+        CloudFoundryApplication container = containerManager.getMatchingContainer(CloudFoundryApplication.class, applicationSummary
+                .getName());
+        if (container == null) {
+            container = CloudFoundryApplication.builder()
+                                               .platform(this)
+                                               .name(applicationSummary.getName())
+                                               .applicationID(applicationSummary.getId())
+                                               .containerInstances(applicationSummary.getInstances())
+                                               .applicationRoutes(gatherApplicationRoutes(applicationSummary.getName(), applicationSummary
+                                                       .getId()))
+                                               .build();
+            log.debug("Created Cloud Foundry Application Container {} from {}", v(DATADOG_CONTAINER_KEY, container), kv("ApplicationSummary", applicationSummary));
+            containerManager.offer(container);
+        } else {
+            log.debug("Found existing Cloud Foundry Application Container {}", v(DATADOG_CONTAINER_KEY, container));
+        }
+        return container;
     }
 
-    private List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {
+    List<CloudFoundryApplicationRoute> gatherApplicationRoutes (String applicationName, String applicationId) {
         List<CloudFoundryApplicationRoute> routes = new ArrayList<>();
         ListApplicationRoutesRequest listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
                                                                                                 .applicationId(applicationId)

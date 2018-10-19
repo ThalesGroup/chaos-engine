@@ -20,11 +20,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty({ "cf.organization" })
@@ -71,38 +76,47 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
 
     @Override
     public List<Container> generateRoster () {
-        List<Container> containers = new ArrayList<>();
-        cloudFoundryOperations.applications()
-                              .list()
-                              .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
-                              .toIterable()
-                              .forEach(app -> {
-                                  Integer instances = app.getInstances();
-                                  if (!isChaosEngine(app.getName())) {
-                                      for (Integer i = 0; i < instances; i++) {
-                                          createContainerFromApp(containers, app, i);
-                                      }
-                                  } else {
-                                      log.debug("Skipping what appears to be me.");
-                                  }
-                              });
-        return containers;
+        return cloudFoundryOperations.applications()
+                                     .list()
+                                     .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
+                                     .toStream(Integer.MAX_VALUE)
+                                     .filter(applicationSummary -> {
+                                         if (isChaosEngine(applicationSummary.getName())) {
+                                             log.debug("Ignored what appears to be me: {}", v("ApplicationSummary", applicationSummary));
+                                             return false;
+                                         }
+                                         return true;
+                                     })
+                                     .map(this::createContainersFromApplicationSummary)
+                                     .flatMap(Collection::stream)
+                                     .collect(Collectors.toList());
+
     }
 
-    private void createContainerFromApp (List<Container> containers, ApplicationSummary app, Integer i) {
-        CloudFoundryContainer c = CloudFoundryContainer.builder()
-                                                       .applicationId(app.getId())
-                                                       .name(app.getName())
-                                                       .instance(i)
-                                                       .platform(this)
-                                                       .build();
-        Container persistentContainer = containerManager.getOrCreatePersistentContainer(c);
-        containers.add(persistentContainer);
-        if (persistentContainer == c) {
-            log.info("Added container {}", persistentContainer);
+    Collection<CloudFoundryContainer> createContainersFromApplicationSummary (ApplicationSummary applicationSummary) {
+        Integer instances = applicationSummary.getInstances();
+        return IntStream.range(0, instances)
+                        .mapToObj(i -> createSingleContainerFromApplicationSummary(applicationSummary, i))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+    }
+
+    CloudFoundryContainer createSingleContainerFromApplicationSummary (ApplicationSummary applicationSummary, Integer index) {
+        CloudFoundryContainer container = containerManager.getMatchingContainer(CloudFoundryContainer.class, applicationSummary
+                .getName() + "-" + index);
+        if (container == null) {
+            container = CloudFoundryContainer.builder()
+                                             .applicationId(applicationSummary.getId())
+                                             .name(applicationSummary.getName())
+                                             .instance(index)
+                                             .platform(this)
+                                             .build();
+            log.debug("Created Cloud Foundry Container {} from {}", v(DATADOG_CONTAINER_KEY, container), v("ApplicationSummary", applicationSummary));
+            containerManager.offer(container);
         } else {
-            log.debug("Existing container found: {}", persistentContainer);
+            log.debug("Found existing Cloud Foundry Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
+        return container;
     }
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {

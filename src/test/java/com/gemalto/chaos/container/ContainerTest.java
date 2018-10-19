@@ -14,6 +14,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.validation.constraints.NotNull;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 
@@ -43,6 +45,11 @@ public class ContainerTest {
         public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
     };
     private Container testContainer2 = new Container() {
         @StateExperiment
@@ -71,6 +78,11 @@ public class ContainerTest {
         @Override
         public DataDogIdentifier getDataDogIdentifier () {
             return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
         }
     };
 
