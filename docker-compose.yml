@@ -13,8 +13,6 @@ services:
     depends_on:
     - vault
     - datadog
-    links:
-     - "datadog:datadog"
   datadog:
     image: datadog/agent:latest
     environment:
