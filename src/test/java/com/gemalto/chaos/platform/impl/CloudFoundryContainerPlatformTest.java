@@ -38,6 +38,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
+import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
 import static java.util.UUID.randomUUID;
@@ -98,6 +101,32 @@ public class CloudFoundryContainerPlatformTest {
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
         assertThat(cloudFoundryContainerPlatform.getRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
+    }
+
+    @Test
+    public void createContainersFromApplicationSummary () {
+        ApplicationSummary applicationSummary;
+        String name = UUID.randomUUID().toString();
+        String applicationId = UUID.randomUUID().toString();
+        Integer instances = new Random().nextInt(5) + 5;
+        applicationSummary = ApplicationSummary.builder()
+                                               .instances(instances)
+                                               .name(name)
+                                               .id(applicationId)
+                                               .diskQuota(0)
+                                               .memoryLimit(0)
+                                               .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
+                                               .runningInstances(instances)
+                                               .build();
+        CloudFoundryContainer[] containerCollection = IntStream.range(0, instances)
+                                                               .mapToObj(instance -> CloudFoundryContainer.builder()
+                                                                                                          .name(name)
+                                                                                                          .applicationId(applicationId)
+                                                                                                          .instance(instance)
+                                                                                                          .build())
+                                                               .toArray(CloudFoundryContainer[]::new);
+        assertThat(cloudFoundryContainerPlatform.createContainersFromApplicationSummary(applicationSummary), IsIterableContainingInAnyOrder
+                .containsInAnyOrder(containerCollection));
     }
 
     @Test
