@@ -282,6 +282,23 @@ public class AwsEC2PlatformTest {
         verify(containerManager, times(0)).offer(container);
     }
 
+    @Test
+    public void buildContainerFromInstance () {
+        String instanceId = UUID.randomUUID().toString();
+        String name = UUID.randomUUID().toString();
+        String keyName = UUID.randomUUID().toString();
+        Instance instance;
+        AwsEC2Container container;
+        // With Name
+        instance = new Instance().withInstanceId(instanceId).withTags(new Tag("Name", name)).withKeyName(keyName);
+        container = AwsEC2Container.builder().instanceId(instanceId).keyName(keyName).name(name).build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+        // With no name
+        instance = new Instance().withInstanceId(instanceId).withKeyName(keyName);
+        container = AwsEC2Container.builder().instanceId(instanceId).name("no-name").keyName(keyName).build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired
