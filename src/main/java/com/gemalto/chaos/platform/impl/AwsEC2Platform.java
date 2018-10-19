@@ -139,7 +139,7 @@ public class AwsEC2Platform extends Platform {
      *
      * @param instance      An EC2 Instance object to have a container created.
      */
-    private AwsEC2Container createContainerFromInstance (Instance instance) {
+    AwsEC2Container createContainerFromInstance (Instance instance) {
         if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return null;
         AwsEC2Container container = containerManager.getMatchingContainer(AwsEC2Container.class, instance.getInstanceId());
         if (container == null) {
@@ -158,7 +158,7 @@ public class AwsEC2Platform extends Platform {
      * @param instance Instance to have the Container created from.
      * @return Container mapping to the instance.
      */
-    private AwsEC2Container buildContainerFromInstance (Instance instance) {
+    AwsEC2Container buildContainerFromInstance (Instance instance) {
         String name = instance.getTags()
                               .stream()
                               .filter(tag -> tag.getKey().equals("Name"))
