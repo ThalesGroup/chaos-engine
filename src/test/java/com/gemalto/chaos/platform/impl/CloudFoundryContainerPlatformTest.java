@@ -44,8 +44,7 @@ import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -127,6 +126,35 @@ public class CloudFoundryContainerPlatformTest {
                                                                .toArray(CloudFoundryContainer[]::new);
         assertThat(cloudFoundryContainerPlatform.createContainersFromApplicationSummary(applicationSummary), IsIterableContainingInAnyOrder
                 .containsInAnyOrder(containerCollection));
+    }
+
+    @Test
+    public void createSingleContainerFromApplicationSummary () {
+        ApplicationSummary applicationSummary;
+        String name = UUID.randomUUID().toString();
+        String applicationId = UUID.randomUUID().toString();
+        Integer instances = new Random().nextInt(5) + 5;
+        Integer index = new Random().nextInt(instances);
+        applicationSummary = ApplicationSummary.builder()
+                                               .instances(instances)
+                                               .name(name)
+                                               .id(applicationId)
+                                               .diskQuota(0)
+                                               .memoryLimit(0)
+                                               .requestedState(CLOUDFOUNDRY_APPLICATION_STARTED)
+                                               .runningInstances(instances)
+                                               .build();
+        CloudFoundryContainer expectedContainer = CloudFoundryContainer.builder()
+                                                                       .applicationId(applicationId)
+                                                                       .name(name)
+                                                                       .instance(index)
+                                                                       .build();
+        CloudFoundryContainer actualContainer = cloudFoundryContainerPlatform.createSingleContainerFromApplicationSummary(applicationSummary, index);
+        assertEquals(expectedContainer, actualContainer);
+        verify(containerManager, times(1)).offer(actualContainer);
+        reset(containerManager);
+        assertSame(actualContainer, cloudFoundryContainerPlatform.createSingleContainerFromApplicationSummary(applicationSummary, index));
+        verify(containerManager, times(0)).offer(actualContainer);
     }
 
     @Test
