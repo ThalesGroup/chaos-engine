@@ -158,7 +158,7 @@ public class AwsRDSPlatform extends Platform {
         return dbClusters;
     }
 
-    private AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
+    AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
         AwsRDSInstanceContainer container = containerManager.getMatchingContainer(AwsRDSInstanceContainer.class, dbInstance
                 .getDBInstanceIdentifier());
         if (container == null) {
@@ -176,7 +176,7 @@ public class AwsRDSPlatform extends Platform {
         return container;
     }
 
-    private AwsRDSClusterContainer createContainerFromDBCluster (DBCluster dbCluster) {
+    AwsRDSClusterContainer createContainerFromDBCluster (DBCluster dbCluster) {
         AwsRDSClusterContainer container = containerManager.getMatchingContainer(AwsRDSClusterContainer.class, dbCluster
                 .getDBClusterIdentifier());
         if (container == null) {
