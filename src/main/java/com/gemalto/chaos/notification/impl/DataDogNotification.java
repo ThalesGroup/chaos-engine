@@ -18,10 +18,11 @@ public class DataDogNotification implements NotificationMethods {
     private static final int statsdPort = 8125;
     private static final String statsdHost = "datadog";
     protected final Logger log = LoggerFactory.getLogger(getClass());
+    private DataDogEventFactory dataDogEventFactory;
 
     @Override
     public void logEvent (ChaosEvent event) {
-        DataDogEvent dataDogEvent = new DataDogEvent(event);
+        DataDogEvent dataDogEvent = dataDogEventFactory.getDataDogEvent(event);
         try {
             dataDogEvent.send();
         } catch (StatsDClientException ex) {
@@ -29,14 +30,43 @@ public class DataDogNotification implements NotificationMethods {
         }
     }
 
-    protected class DataDogEvent {
+    public DataDogNotification () {
+        dataDogEventFactory = new DataDogEventFactory();
+    }
+
+    DataDogNotification (DataDogEventFactory factory) {
+        dataDogEventFactory = factory;
+    }
+
+    class DataDogEventFactory {
+        DataDogEvent getDataDogEvent (ChaosEvent event) {
+            return new DataDogEvent(event);
+        }
+    }
+
+    class StatsDClientFactory{
+        StatsDClient getStatsDClient(String[] tags){
+           return new NonBlockingStatsDClient("", statsdHost, statsdPort, tags);
+        }
+    }
+
+    class DataDogEvent {
         private ChaosEvent chaosEvent;
-        protected final String eventPrefix="Chaos Event ";
-        public DataDogEvent (ChaosEvent event) {
+        private final String eventPrefix = "Chaos Event ";
+        private StatsDClientFactory factory;
+
+        DataDogEvent (ChaosEvent event) {
             this.chaosEvent = event;
+            factory = new StatsDClientFactory();
         }
 
-        protected Event buildEvent(){
+        DataDogEvent (ChaosEvent event, StatsDClientFactory statsDClientFactory) {
+            this.chaosEvent = event;
+            factory = statsDClientFactory;
+        }
+
+
+        Event buildEvent () {
             return Event.builder()
                         .withAggregationKey(chaosEvent.getExperimentId())
                         .withAlertType(mapLevel(chaosEvent.getNotificationLevel()))
@@ -46,7 +76,7 @@ public class DataDogNotification implements NotificationMethods {
                         .build();
         }
 
-        protected Event.AlertType mapLevel (NotificationLevel level) {
+        Event.AlertType mapLevel (NotificationLevel level) {
             switch (level) {
                 case ERROR:
                     return Event.AlertType.ERROR;
@@ -57,13 +87,17 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        public void send () {
-            try (StatsDClient statsd = new NonBlockingStatsDClient("", statsdHost, statsdPort, generateTags())) {
+        StatsDClient getStatsdClient (String[] tags) {
+            return factory.getStatsDClient(tags);
+        }
+
+        void send () {
+            try (StatsDClient statsd = getStatsdClient(generateTags())) {
                 statsd.recordEvent(buildEvent());
             }
         }
 
-        protected String[] generateTags () {
+        String[] generateTags () {
             String[] tags = new String[5];
             tags[0] = "service:chaosengine";
             tags[1] = "ExperimentId:" + chaosEvent.getExperimentId();
