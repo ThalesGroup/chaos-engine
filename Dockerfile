@@ -14,6 +14,7 @@ ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/chaosengin
 
 FROM test AS debug
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", "-jar", "/chaosengine.jar"]
+EXPOSE 5005
 
 FROM test
 ENV DEPLOYMENT_ENVIRONMENT=PROD
