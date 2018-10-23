@@ -1,0 +1,51 @@
+version: '3.4'
+services:
+  chaosengine:
+    build:
+      context: .
+      target: debug
+    ports:
+    - "8080:8080"
+    - "8081:8081"
+    - "5005:5005"
+    env_file: .env
+    environment:
+      VAULT_10: "true"
+    depends_on:
+    - vault
+    - datadog
+  datadog:
+    image: datadog/agent:latest
+    environment:
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_AC_EXCLUDE: "image:datadog/agent image:vault"
+      DD_ENABLE_PAYLOADS_EVENTS: "false"
+      DD_ENABLE_PAYLOADS_SERIES: "false"
+      DD_ENABLE_PAYLOADS_SERVICE_CHECKS: "false"
+      DD_ENABLE_PAYLOADS_SKETCHES: "false"
+    env_file: .datadog_api_key
+    volumes:
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      read_only: true
+    - type: bind
+      source: /proc
+      target: /host/proc
+      read_only: true
+    - type: bind
+      source: /opt/datadog-agent/run
+      target: /opt/datadog-agent/run
+    - type: bind
+      source: /sys/fs/cgroup/
+      target: /host/sys/fs/cgroup
+      read_only: true
+  vault:
+    image: vault:latest
+    ports:
+    - "8200:8200"
+    cap_add:
+    - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "00000000-0000-0000-0000-000000000000"

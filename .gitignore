@@ -16,6 +16,7 @@ buildNumber.properties
 
 .idea/*
 !/.idea/codeStyles/
+!/.idea/runConfigurations/
 
 *.iml
 *.iws
