@@ -18,6 +18,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 @Component
 public class ExperimentManager {
@@ -115,6 +116,7 @@ public class ExperimentManager {
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
             List<Container> roster = chosenPlatform.scheduleExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
+                log.debug("Platform {} has empty roster, no experiments scheduled", keyValue(DATADOG_PLATFORM_KEY, chosenPlatform.getPlatformType()));
                 return null;
             }
             Set<Container> containersToExperiment;
