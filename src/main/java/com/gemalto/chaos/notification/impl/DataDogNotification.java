@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
@@ -24,7 +27,9 @@ public class DataDogNotification implements NotificationMethods {
     public void logEvent (ChaosEvent event) {
         DataDogEvent dataDogEvent = dataDogEventFactory.getDataDogEvent(event);
         try {
+            log.debug("Sending DataDog notification", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
             dataDogEvent.send();
+            log.debug("DataDog notification send", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
         } catch (StatsDClientException ex) {
             log.warn("Cannot send DataDog event: {}", ex);
         }
