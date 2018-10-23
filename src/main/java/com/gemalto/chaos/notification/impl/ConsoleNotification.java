@@ -12,7 +12,7 @@ public class ConsoleNotification implements NotificationMethods {
     private static final Logger log = LoggerFactory.getLogger(ConsoleNotification.class);
 
     public ConsoleNotification () {
-        log.debug("Creating console logger");
+        log.info("Creating console logger");
     }
 
     @Override

@@ -32,6 +32,7 @@ public class DataDogNotification implements NotificationMethods {
 
     public DataDogNotification () {
         dataDogEventFactory = new DataDogEventFactory();
+        log.info("DataDog notification channel created");
     }
 
     DataDogNotification (DataDogEventFactory factory) {
