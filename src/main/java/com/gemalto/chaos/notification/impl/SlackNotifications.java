@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+import static com.gemalto.chaos.constants.DataDogConstants.SLACK_NOTIFICATION_SERVER_RESPONSE;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
@@ -92,6 +96,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private void sendSlackMessage (SlackMessage slackMessage) throws IOException {
         String payload = new Gson().toJson(slackMessage);
         try {
+            log.debug("Sending slack notification");
             URL url = new URL(webhookUri);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -106,7 +111,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 log.error("Unknown exception sending payload " + payload, e);
             }
             BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            log.debug("{}", response.readLine());
+            log.debug("Slack notification status: {}",keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE, response.readLine()) );
             if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
                 throw new IOException("Unexpected response from server");
             }
