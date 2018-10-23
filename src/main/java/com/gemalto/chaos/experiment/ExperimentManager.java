@@ -113,7 +113,7 @@ public class ExperimentManager {
                 return null;
             }
             Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
-            List<Container> roster = chosenPlatform.startExperiment().generateExperimentRoster();
+            List<Container> roster = chosenPlatform.scheduleExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
                 return null;
             }

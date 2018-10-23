@@ -75,7 +75,7 @@ public class ExperimentManagerTest {
         containerList.add(container1);
         containerList.add(container2);
         when(platformManager.getPlatforms()).thenReturn(Collections.singleton(platform));
-        when(platform.startExperiment()).thenReturn(platform);
+        when(platform.scheduleExperiment()).thenReturn(platform);
         when(platform.generateExperimentRoster()).thenCallRealMethod();
         when(platform.getRoster()).thenReturn(containerList);
         when(platform.canExperiment()).thenReturn(true);
@@ -97,7 +97,7 @@ public class ExperimentManagerTest {
         List<Platform> platforms = new ArrayList<>();
         platforms.add(pcfApplicationPlatform);
         when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.startExperiment()).thenReturn(pcfApplicationPlatform);
+        when(pcfApplicationPlatform.scheduleExperiment()).thenReturn(pcfApplicationPlatform);
         when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
@@ -133,11 +133,11 @@ public class ExperimentManagerTest {
         doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
         doReturn(dataDogIdentifier()).when(container3).getDataDogIdentifier();
         when(platformManager.getPlatforms()).thenReturn(Arrays.asList(cloudFoundryApplicationPlatform, cloudFoundryContainerPlatform));
-        when(cloudFoundryApplicationPlatform.startExperiment()).thenReturn(cloudFoundryApplicationPlatform);
+        when(cloudFoundryApplicationPlatform.scheduleExperiment()).thenReturn(cloudFoundryApplicationPlatform);
         when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
-        when(cloudFoundryContainerPlatform.startExperiment()).thenReturn(cloudFoundryContainerPlatform);
+        when(cloudFoundryContainerPlatform.scheduleExperiment()).thenReturn(cloudFoundryContainerPlatform);
         when(cloudFoundryContainerPlatform.getRoster()).thenReturn(containerListContainers);
         when(cloudFoundryContainerPlatform.canExperiment()).thenReturn(true);
         when(cloudFoundryContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
@@ -183,7 +183,7 @@ public class ExperimentManagerTest {
         doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
         doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
         when(platformManager.getPlatforms()).thenReturn(Collections.singletonList(cloudFoundryApplicationPlatform));
-        when(cloudFoundryApplicationPlatform.startExperiment()).thenReturn(cloudFoundryApplicationPlatform);
+        when(cloudFoundryApplicationPlatform.scheduleExperiment()).thenReturn(cloudFoundryApplicationPlatform);
         when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(Arrays.asList(container1, container2));
         when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
         when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();

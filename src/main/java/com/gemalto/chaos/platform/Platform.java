@@ -118,8 +118,8 @@ public abstract class Platform implements ExperimentalObject {
         return getScheduler().getNextChaosTime();
     }
 
-    public Platform startExperiment () {
-        log.info("Starting an experiment on {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()));
+    public Platform scheduleExperiment () {
+        log.info("Scheduling an experiment on {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()));
         getScheduler().startExperiment();
         experimentTimes.add(Instant.now());
         return this;
