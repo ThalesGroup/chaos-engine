@@ -12,5 +12,9 @@ ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 LABEL com.datadoghq.ad.logs="[ { \"source\":\"java\", \"service\": \"chaosengine\" } ]"
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/chaosengine.jar"]
 
+FROM test AS debug
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", "-jar", "/chaosengine.jar"]
+EXPOSE 5005
+
 FROM test
 ENV DEPLOYMENT_ENVIRONMENT=PROD
