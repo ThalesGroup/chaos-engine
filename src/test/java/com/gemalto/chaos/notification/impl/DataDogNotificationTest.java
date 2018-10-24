@@ -6,6 +6,7 @@ import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
+import com.timgroup.statsd.StatsDClientException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +22,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -66,6 +68,18 @@ public class DataDogNotificationTest {
         DataDogNotification notif = new DataDogNotification(client);
         notif.logEvent(chaosEvent);
         verify(client,times(1)).recordEvent(ArgumentMatchers.any(),ArgumentMatchers.any());
+    }
+
+    @Test
+    public void logEventFailure(){
+        try {
+            StatsDClient client = Mockito.mock(StatsDClient.class);
+            doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
+            DataDogNotification notif = new DataDogNotification(client);
+            notif.logEvent(chaosEvent);
+        }catch (Exception ex){
+            fail(ex.getMessage());
+        }
     }
 
     @Test
