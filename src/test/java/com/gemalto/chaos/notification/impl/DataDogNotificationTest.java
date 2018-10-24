@@ -14,9 +14,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -34,6 +38,7 @@ public class DataDogNotificationTest {
     private String eventPrefix="Chaos Event ";
 
     private NotificationLevel level = NotificationLevel.WARN;
+    private ArrayList<String> expectedTags = new ArrayList<>();
     @Before
     public void setUp () {
         chaosEvent= ChaosEvent.builder()
@@ -45,26 +50,22 @@ public class DataDogNotificationTest {
                               .withExperimentMethod(experimentMethod)
                               .withExperimentType(ExperimentType.STATE)
                               .build();
-        when(container.getSimpleName()).thenReturn("");
+        when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
         dataDogEvent= new DataDogNotification().new DataDogEvent(chaosEvent);
+
+
+        expectedTags.add("ExperimentId:" + chaosEvent.getExperimentId());
+        expectedTags.add("Method:" + chaosEvent.getExperimentMethod());
+        expectedTags.add("Type:" + chaosEvent.getExperimentType().name());
+        expectedTags.add("Target:" + chaosEvent.getTargetContainer().getSimpleName());
 
     }
     @Test
     public void logEvent(){
         StatsDClient client = Mockito.mock(StatsDClient.class);
-        DataDogNotification.StatsDClientFactory statsDClientFactory = Mockito.mock(DataDogNotification.StatsDClientFactory.class);
-        doReturn(client).when(statsDClientFactory).getStatsDClient(ArgumentMatchers.any());
-
-        DataDogNotification.DataDogEventFactory dataDogEventFactory = Mockito.mock(DataDogNotification.DataDogEventFactory.class);
-
-        DataDogNotification.DataDogEvent dataDogEvent=  new DataDogNotification(dataDogEventFactory).new DataDogEvent(chaosEvent,statsDClientFactory);
-
-        doReturn(dataDogEvent).when(dataDogEventFactory).getDataDogEvent(chaosEvent);
-
-        DataDogNotification notif = new DataDogNotification(dataDogEventFactory);
+        DataDogNotification notif = new DataDogNotification(client);
         notif.logEvent(chaosEvent);
-
-        verify(client,times(1)).recordEvent(ArgumentMatchers.any());
+        verify(client,times(1)).recordEvent(ArgumentMatchers.any(),ArgumentMatchers.any());
     }
 
     @Test
@@ -90,11 +91,7 @@ public class DataDogNotificationTest {
 
     @Test
     public void getTags(){
-        String tags[] =dataDogEvent.generateTags();
-        assertEquals("service:chaosengine",tags[0]);
-        assertEquals("ExperimentId:" + chaosEvent.getExperimentId(),tags[1]);
-        assertEquals("Method:" + chaosEvent.getExperimentMethod(),tags[2]);
-        assertEquals("Type:" + chaosEvent.getExperimentType().name(),tags[3]);
-        assertEquals("Target:" + chaosEvent.getTargetContainer().getSimpleName(),tags[4]);
+        ArrayList<String> actualTags= new ArrayList<>(Arrays.asList(dataDogEvent.generateTags()));
+        assertThat(expectedTags,is(actualTags));
     }
 }
