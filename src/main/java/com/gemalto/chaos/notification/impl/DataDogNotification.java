@@ -4,13 +4,15 @@ import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationMethods;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.timgroup.statsd.Event;
-import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
@@ -18,14 +20,14 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
-    private static final int statsdPort = 8125;
-    private static final String statsdHost = "datadog";
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private DataDogEventFactory dataDogEventFactory;
+
+    @Autowired
+    private StatsDClient statsDClient;
 
     @Override
     public void logEvent (ChaosEvent event) {
-        DataDogEvent dataDogEvent = dataDogEventFactory.getDataDogEvent(event);
+        DataDogEvent dataDogEvent = new DataDogEvent(event);
         try {
             log.debug("Sending DataDog notification", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
             dataDogEvent.send();
@@ -36,41 +38,20 @@ public class DataDogNotification implements NotificationMethods {
     }
 
     public DataDogNotification () {
-        dataDogEventFactory = new DataDogEventFactory();
         log.info("DataDog notification channel created");
     }
 
-    DataDogNotification (DataDogEventFactory factory) {
-        dataDogEventFactory = factory;
-    }
-
-    class DataDogEventFactory {
-        DataDogEvent getDataDogEvent (ChaosEvent event) {
-            return new DataDogEvent(event);
-        }
-    }
-
-    class StatsDClientFactory{
-        StatsDClient getStatsDClient(String[] tags){
-           return new NonBlockingStatsDClient("", statsdHost, statsdPort, tags);
-        }
+    DataDogNotification(StatsDClient statsDClient){
+        this.statsDClient=statsDClient;
     }
 
     class DataDogEvent {
         private ChaosEvent chaosEvent;
         private final String eventPrefix = "Chaos Event ";
-        private StatsDClientFactory factory;
 
         DataDogEvent (ChaosEvent event) {
             this.chaosEvent = event;
-            factory = new StatsDClientFactory();
         }
-
-        DataDogEvent (ChaosEvent event, StatsDClientFactory statsDClientFactory) {
-            this.chaosEvent = event;
-            factory = statsDClientFactory;
-        }
-
 
         Event buildEvent () {
             return Event.builder()
@@ -93,24 +74,17 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        StatsDClient getStatsdClient (String[] tags) {
-            return factory.getStatsDClient(tags);
-        }
-
         void send () {
-            try (StatsDClient statsd = getStatsdClient(generateTags())) {
-                statsd.recordEvent(buildEvent());
-            }
+            statsDClient.recordEvent(buildEvent(),generateTags());
         }
 
         String[] generateTags () {
-            String[] tags = new String[5];
-            tags[0] = "service:chaosengine";
-            tags[1] = "ExperimentId:" + chaosEvent.getExperimentId();
-            tags[2] = "Method:" + chaosEvent.getExperimentMethod();
-            tags[3] = "Type:" + chaosEvent.getExperimentType().name();
-            tags[4] = "Target:" + chaosEvent.getTargetContainer().getSimpleName();
-            return tags;
+            ArrayList<String> tags = new ArrayList<>();
+            tags.add("ExperimentId:" + chaosEvent.getExperimentId());
+            tags.add("Method:" + chaosEvent.getExperimentMethod());
+            tags.add("Type:" + chaosEvent.getExperimentType().name());
+            tags.add("Target:" + chaosEvent.getTargetContainer().getSimpleName());
+            return tags.toArray(new String[0]);
         }
     }
 }
