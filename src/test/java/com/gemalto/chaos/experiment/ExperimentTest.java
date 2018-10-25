@@ -148,6 +148,21 @@ public class ExperimentTest {
     }
 
     @Test
+    public void startExperimentFailedToStart(){
+        Container container = Mockito.mock(Container.class);
+        Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
+                                                                      .withExperimentType(STATE)
+                                                                      .withContainer(container)
+                                                                      .build());
+        doThrow(ChaosException.class).when(container).startExperiment(experiment);
+        autowireCapableBeanFactory.autowireBean(experiment);
+        doReturn(true).when(adminManager).canRunExperiments();
+        doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
+        doReturn(false).when(container).supportsExperimentType(STATE);
+        assertFalse(experiment.startExperiment());
+    }
+
+    @Test
     public void experimentState () {
         // No specific health check method, back to normal, not finalizable (STARTED)
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
