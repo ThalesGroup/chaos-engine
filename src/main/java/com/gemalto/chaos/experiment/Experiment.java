@@ -136,7 +136,15 @@ public abstract class Experiment {
                                                            .withNotificationLevel(NotificationLevel.WARN)
                                                            .withMessage("Starting new experiment")
                                                            .build());
-            container.startExperiment(this);
+            try{
+                container.startExperiment(this);
+            }catch (ChaosException ex){
+                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
+                                                               .withNotificationLevel(NotificationLevel.ERROR)
+                                                               .withMessage("Failed to start experiment "+ex.getMessage())
+                                                               .build());
+                return false;
+            }
             experimentState = ExperimentState.STARTED;
         } else return false;
         return true;
