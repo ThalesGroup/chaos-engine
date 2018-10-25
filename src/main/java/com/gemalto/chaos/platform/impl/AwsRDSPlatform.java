@@ -359,4 +359,6 @@ public class AwsRDSPlatform extends Platform {
         log.info("Created VPC Security Group {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, groupId));
         return groupId;
     }
+
+    private void snapshotBackup(String dbInstanceIdentifier) {}
 }
