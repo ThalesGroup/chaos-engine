@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.gemalto.chaos.admin.enums.AdminState.*;
 import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
@@ -168,20 +169,31 @@ public class ExperimentTest {
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(false);
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        verify(stateExperiment, times(0)).doSelfHealing();
         Mockito.reset(stateContainer);
         // No specific health check method, back to normal, is finalizable (FINISHED)
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(true);
         assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        verify(stateExperiment, times(0)).doSelfHealing();
         Mockito.reset(stateContainer);
         // No specific health check method, container does not exist (FAILED)
         doReturn(ContainerHealth.DOES_NOT_EXIST).when(stateContainer).getContainerHealth(STATE);
         assertEquals(ExperimentState.FAILED, stateExperiment.getExperimentState());
+        verify(stateExperiment, times(0)).doSelfHealing();
         Mockito.reset(stateContainer);
         // No specific health check method, container under experiment (STARTED, self healing called)
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
-        doNothing().when(stateExperiment).doSelfHealing();
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+        verify(stateExperiment, times(1)).doSelfHealing();
+        Mockito.reset(stateContainer);
+        // No specific health check method, container under experiment (STARTED, self healing max retires reached)
+        Mockito.reset(stateExperiment);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
+        stateExperiment.setSelfHealingCounter(new AtomicInteger(ExperimentConstants.DEFAULT_MAXIMUM_SELF_HEALING_RETRIES+1));
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(true).when(stateExperiment).canRunSelfHealing();
+        assertEquals(ExperimentState.FAILED, stateExperiment.getExperimentState());
         verify(stateExperiment, times(1)).doSelfHealing();
         Mockito.reset(stateContainer);
     }
@@ -238,7 +250,7 @@ public class ExperimentTest {
         // Is not over duration, should not evaluate canRunSelfHealing()
         doReturn(false).when(stateExperiment).isOverDuration();
         doCallRealMethod().when(stateExperiment).doSelfHealing();
-        stateExperiment.doSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).canRunSelfHealing();
         reset(notificationManager);
         reset(stateExperiment);
@@ -247,7 +259,7 @@ public class ExperimentTest {
         doReturn(true).when(stateExperiment).canRunSelfHealing();
         doNothing().when(stateExperiment).callSelfHealing();
         doCallRealMethod().when(stateExperiment).doSelfHealing();
-        stateExperiment.doSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(1)).callSelfHealing();
         reset(stateExperiment);
         reset(notificationManager);
@@ -255,7 +267,7 @@ public class ExperimentTest {
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(false).when(stateExperiment).canRunSelfHealing();
         doReturn(true).when(adminManager).canRunSelfHealing();
-        stateExperiment.doSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
@@ -268,7 +280,7 @@ public class ExperimentTest {
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(false).when(stateExperiment).canRunSelfHealing();
         doReturn(false).when(adminManager).canRunSelfHealing();
-        stateExperiment.doSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
@@ -280,12 +292,25 @@ public class ExperimentTest {
         // Exception thrown while running self healing
         doReturn(true).when(stateExperiment).isOverDuration();
         doThrow(new ChaosException()).when(stateExperiment).canRunSelfHealing();
-        stateExperiment.doSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
                                                                          .withNotificationLevel(NotificationLevel.ERROR)
                                                                          .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                         .build());
+        reset(stateExperiment);
+        reset(notificationManager);
+        // Maximum self healing retries reached
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(true).when(stateExperiment).canRunSelfHealing();
+        stateExperiment.setSelfHealingCounter(new AtomicInteger(ExperimentConstants.DEFAULT_MAXIMUM_SELF_HEALING_RETRIES+1));
+        assertEquals(ExperimentState.FAILED,stateExperiment.doSelfHealing());
+        verify(stateExperiment, times(0)).callSelfHealing();
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage(ExperimentConstants.MAXIMUM_SELF_HEALING_RETRIES_REACHED)
                                                                          .build());
     }
 
