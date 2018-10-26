@@ -361,11 +361,12 @@ public class AwsRDSPlatform extends Platform {
         return groupId;
     }
 
-    private DBSnapshot snapshotBackup (String dbInstanceIdentifier) {
-        DBSnapshot dbSnapshot;
+    private DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
         try {
-            dbSnapshot = amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
-                                                                                 .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
+            return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
+                                                                                              .withValue("chaos"))
+                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                           .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
         } catch (DBSnapshotAlreadyExistsException e) {
             log.error("A snapshot by that name already exists", e);
             throw new ChaosException(e);
@@ -382,7 +383,6 @@ public class AwsRDSPlatform extends Platform {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
         }
-        return dbSnapshot;
     }
 
     private static String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
