@@ -212,18 +212,18 @@ public abstract class Experiment {
                 log.info("Finalizing experiment {} on container {}", id, container.getSimpleName());
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("Running experiment finalization method.")
+                                                               .withMessage("Running experiment finalization method")
                                                                .build());
                 finalizeMethod.call();
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.GOOD)
-                                                               .withMessage("Experiment finalization done.")
+                                                               .withMessage("Experiment finalization done")
                                                                .build());
             } catch (Exception e) {
                 log.error("Error while finalizing experiment {} on container {}", id, container.getSimpleName());
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Error while finalizing experiment.")
+                                                               .withMessage("Error while finalizing experiment")
                                                                .build());
             }
         }
