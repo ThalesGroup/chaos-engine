@@ -701,6 +701,27 @@ public class AwsRDSPlatformTest {
         assertTrue("Snapshot given time in the future", !after.isBefore(i));
     }
 
+    @Test
+    public void cleanOldSnapshots1 () {
+        doNothing().when(awsRDSPlatform).cleanupOldClusterSnapshots(60);
+        doNothing().when(awsRDSPlatform).cleanupOldInstanceSnapshots(60);
+        doCallRealMethod().when(awsRDSPlatform).cleanupOldSnapshots();
+        awsRDSPlatform.cleanupOldSnapshots();
+        verify(awsRDSPlatform, times(1)).cleanupOldInstanceSnapshots(60);
+        verify(awsRDSPlatform, times(1)).cleanupOldClusterSnapshots(60);
+    }
+
+    @Test
+    public void cleanOldSnapshots2 () {
+        int olderThanMinutes = new Random().nextInt(1000) + 1;
+        doNothing().when(awsRDSPlatform).cleanupOldClusterSnapshots(olderThanMinutes);
+        doNothing().when(awsRDSPlatform).cleanupOldInstanceSnapshots(olderThanMinutes);
+        doCallRealMethod().when(awsRDSPlatform).cleanupOldSnapshots(olderThanMinutes);
+        awsRDSPlatform.cleanupOldSnapshots(olderThanMinutes);
+        verify(awsRDSPlatform, times(1)).cleanupOldInstanceSnapshots(olderThanMinutes);
+        verify(awsRDSPlatform, times(1)).cleanupOldClusterSnapshots(olderThanMinutes);
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired

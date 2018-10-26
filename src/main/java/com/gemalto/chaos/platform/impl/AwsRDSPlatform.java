@@ -418,16 +418,16 @@ public class AwsRDSPlatform extends Platform {
 
     // Don't run for the first hour, but run every 15 minute afterwards/
     @Scheduled(initialDelay = 1000L * 60 * 60, fixedDelay = 1000L * 60 * 15)
-    private void cleanupOldSnapshots () {
+    void cleanupOldSnapshots () {
         cleanupOldSnapshots(60);
     }
 
-    private void cleanupOldSnapshots (int olderThanMinutes) {
+    void cleanupOldSnapshots (int olderThanMinutes) {
         cleanupOldInstanceSnapshots(olderThanMinutes);
         cleanupOldClusterSnapshots(olderThanMinutes);
     }
 
-    private void cleanupOldInstanceSnapshots (int olderThanMinutes) {
+    void cleanupOldInstanceSnapshots (int olderThanMinutes) {
         amazonRDS.describeDBSnapshots()
                  .getDBSnapshots()
                  .stream()
@@ -437,7 +437,7 @@ public class AwsRDSPlatform extends Platform {
                  .forEach(this::deleteInstanceSnapshot);
     }
 
-    private void cleanupOldClusterSnapshots (int olderThanMinutes) {
+    void cleanupOldClusterSnapshots (int olderThanMinutes) {
         amazonRDS.describeDBClusterSnapshots()
                  .getDBClusterSnapshots()
                  .stream()
