@@ -361,7 +361,7 @@ public class AwsRDSPlatform extends Platform {
         return groupId;
     }
 
-    private DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
+    DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
         try {
             return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
                                                                                               .withValue("chaos"))
@@ -385,7 +385,11 @@ public class AwsRDSPlatform extends Platform {
         }
     }
 
-    private DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
+    String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
+        return String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, Instant.now());
+    }
+
+    DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
         try {
             return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag().withKey("source")
                                                                                                             .withValue("chaos"))
@@ -410,9 +414,5 @@ public class AwsRDSPlatform extends Platform {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
         }
-    }
-
-    private static String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
-        return String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, Instant.now());
     }
 }

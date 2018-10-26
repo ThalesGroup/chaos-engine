@@ -1,8 +1,10 @@
 package com.gemalto.chaos.util;
 
 import java.util.Calendar;
+import java.util.regex.Pattern;
 
 public class CalendarUtils {
+    public static final Pattern datePattern = Pattern.compile(".*([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{0,3}Z).*");
     private CalendarUtils () {
     }
 

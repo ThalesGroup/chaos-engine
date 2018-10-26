@@ -4,6 +4,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.amazonaws.services.rds.model.Tag;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
@@ -14,6 +15,7 @@ import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.util.CalendarUtils;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +29,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
@@ -527,6 +531,202 @@ public class AwsRDSPlatformTest {
         assertSame(actualContainer, awsRDSPlatform.createContainerFromDBCluster(dbCluster));
         verify(containerManager, times(0)).offer(any());
         verify(containerManager, times(1)).getMatchingContainer(AwsRDSClusterContainer.class, dbClusterIdentifier);
+    }
+
+    @Test
+    public void createDBInstanceSnapshot () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        DBSnapshot dbSnapshot = mock(DBSnapshot.class);
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doReturn(dbSnapshot).when(amazonRDS)
+                            .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
+                                                                                              .withValue("chaos"))
+                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                           .withDBSnapshotIdentifier(snapshotName));
+        assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceDBSnapshotAlreadyExistsException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new DBSnapshotAlreadyExistsException("Test")).when(amazonRDS)
+                                                             .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
+                                                                     .withKey("source")
+                                                                     .withValue("chaos"))
+                                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                                            .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceSnapshotInvalidDBInstanceStateException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new InvalidDBInstanceStateException("Test")).when(amazonRDS)
+                                                            .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
+                                                                    .withKey("source")
+                                                                    .withValue("chaos"))
+                                                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                                           .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceSnapshotDBInstanceNotFoundException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS)
+                                                        .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
+                                                                .withKey("source")
+                                                                .withValue("chaos"))
+                                                                                                       .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                                       .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceSnapshotQuotaExceededException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new SnapshotQuotaExceededException("Test")).when(amazonRDS)
+                                                           .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
+                                                                   .withKey("source")
+                                                                   .withValue("chaos"))
+                                                                                                          .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                                          .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceSnapshotRuntimeException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new RuntimeException("Test")).when(amazonRDS)
+                                             .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
+                                                                                                               .withValue("chaos"))
+                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                            .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
+    @Test
+    public void snapshotDBCluster () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doReturn(dbClusterSnapshot).when(amazonRDS)
+                                   .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag().withKey("source")
+                                                                                                                   .withValue("chaos"))
+                                                                                                .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                                .withDBClusterSnapshotIdentifier(snapshotName));
+        assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterDBClusterSnapshotAlreadyExistsException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new DBClusterSnapshotAlreadyExistsException("Test")).when(amazonRDS)
+                                                                    .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
+                                                                            .withTags(new Tag().withKey("source")
+                                                                                               .withValue("chaos"))
+                                                                            .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                            .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterInvalidDBClusterStateException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new InvalidDBClusterStateException("Test")).when(amazonRDS)
+                                                           .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
+                                                                   .withTags(new Tag().withKey("source")
+                                                                                      .withValue("chaos"))
+                                                                   .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                   .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterDBClusterNotFoundException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new DBClusterNotFoundException("Test")).when(amazonRDS)
+                                                       .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag()
+                                                               .withKey("source")
+                                                               .withValue("chaos"))
+                                                                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterSnapshotQuotaExceededException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new SnapshotQuotaExceededException("Test")).when(amazonRDS)
+                                                           .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
+                                                                   .withTags(new Tag().withKey("source")
+                                                                                      .withValue("chaos"))
+                                                                   .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                   .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterInvalidDBClusterSnapshotStateException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new InvalidDBClusterSnapshotStateException("Test")).when(amazonRDS)
+                                                                   .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
+                                                                           .withTags(new Tag().withKey("source")
+                                                                                              .withValue("chaos"))
+                                                                           .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                           .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterRuntimeException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new RuntimeException("Test")).when(amazonRDS)
+                                             .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag()
+                                                     .withKey("source")
+                                                     .withValue("chaos"))
+                                                                                                          .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                                          .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test
+    public void getDBSnapshotIdentifier () {
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        Instant before = Instant.now();
+        String actual = awsRDSPlatform.getDBSnapshotIdentifier(dbInstanceIdentifier);
+        Instant after = Instant.now();
+        Matcher m = CalendarUtils.datePattern.matcher(actual);
+        assertTrue("Could not extract date-time from snapshot identifier", m.find());
+        String dateSection = m.group(1);
+        Instant i = Instant.parse(dateSection);
+        assertEquals(actual, String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, dateSection));
+        assertTrue("Snapshot given timestamp in the past", before.isBefore(i));
+        assertTrue("Snapshot given time in the future", after.isAfter(i));
     }
 
     @Configuration
