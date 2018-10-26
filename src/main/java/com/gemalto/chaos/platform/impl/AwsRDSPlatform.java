@@ -18,16 +18,20 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.util.CalendarUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -363,9 +367,7 @@ public class AwsRDSPlatform extends Platform {
 
     DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
         try {
-            return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
-                                                                                              .withValue("chaos"))
-                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+            return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                            .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
         } catch (DBSnapshotAlreadyExistsException e) {
             log.error("A snapshot by that name already exists", e);
@@ -391,9 +393,7 @@ public class AwsRDSPlatform extends Platform {
 
     DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
         try {
-            return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag().withKey("source")
-                                                                                                            .withValue("chaos"))
-                                                                                         .withDBClusterIdentifier(dbClusterIdentifier)
+            return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                          .withDBClusterSnapshotIdentifier(getDBSnapshotIdentifier(dbClusterIdentifier)));
         } catch (DBClusterSnapshotAlreadyExistsException e) {
             log.error("A cluster snapshot by that name already exists", e);
@@ -414,5 +414,55 @@ public class AwsRDSPlatform extends Platform {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
         }
+    }
+
+    // Don't run for the first hour, but run every 15 minute afterwards/
+    @Scheduled(initialDelay = 1000L * 60 * 60, fixedDelay = 1000L * 60 * 15)
+    private void cleanupOldSnapshots () {
+        cleanupOldSnapshots(60);
+    }
+
+    private void cleanupOldSnapshots (int olderThanMinutes) {
+        cleanupOldInstanceSnapshots(olderThanMinutes);
+        cleanupOldClusterSnapshots(olderThanMinutes);
+    }
+
+    private void cleanupOldInstanceSnapshots (int olderThanMinutes) {
+        amazonRDS.describeDBSnapshots()
+                 .getDBSnapshots()
+                 .stream()
+                 .filter(dbSnapshot -> snapshotIsOlderThan(dbSnapshot.getDBSnapshotIdentifier(), olderThanMinutes))
+                 .peek(dbSnapshot -> log.info("Deleting snapshot {} since it is out of date", v("dbSnapshot", dbSnapshot)))
+                 .parallel()
+                 .forEach(this::deleteInstanceSnapshot);
+    }
+
+    private void cleanupOldClusterSnapshots (int olderThanMinutes) {
+        amazonRDS.describeDBClusterSnapshots()
+                 .getDBClusterSnapshots()
+                 .stream()
+                 .filter(dbClusterSnapshot -> snapshotIsOlderThan(dbClusterSnapshot.getDBClusterIdentifier(), olderThanMinutes))
+                 .peek(dbClusterSnapshot -> log.info("Deleting cluster snapshot {} since it is out of date", v("dbClusterSnapshot", dbClusterSnapshot)))
+                 .parallel()
+                 .forEach(this::deleteClusterSnapshot);
+    }
+
+    private boolean snapshotIsOlderThan (String dbSnapshotName, int olderThanMinutes) {
+        Matcher m = CalendarUtils.datePattern.matcher(dbSnapshotName);
+        if (m.find()) {
+            String dateSection = m.group(1);
+            Instant snapshotTime = Instant.parse(dateSection);
+            return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isAfter(Instant.now());
+        }
+        return false;
+    }
+
+    private void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
+        amazonRDS.deleteDBSnapshot(new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(dbSnapshot.getDBSnapshotIdentifier()));
+    }
+
+    private void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
+        amazonRDS.deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dbClusterSnapshot
+                .getDBClusterSnapshotIdentifier()));
     }
 }

@@ -4,7 +4,6 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
-import com.amazonaws.services.rds.model.Tag;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
@@ -540,9 +539,7 @@ public class AwsRDSPlatformTest {
         DBSnapshot dbSnapshot = mock(DBSnapshot.class);
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doReturn(dbSnapshot).when(amazonRDS)
-                            .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
-                                                                                              .withValue("chaos"))
-                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+                            .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                            .withDBSnapshotIdentifier(snapshotName));
         assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier));
     }
@@ -553,9 +550,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new DBSnapshotAlreadyExistsException("Test")).when(amazonRDS)
-                                                             .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
-                                                                     .withKey("source")
-                                                                     .withValue("chaos"))
+                                                             .createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                             .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                             .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -567,9 +562,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new InvalidDBInstanceStateException("Test")).when(amazonRDS)
-                                                            .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
-                                                                    .withKey("source")
-                                                                    .withValue("chaos"))
+                                                            .createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                            .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -580,10 +573,7 @@ public class AwsRDSPlatformTest {
         String snapshotName = UUID.randomUUID().toString();
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
-        doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS)
-                                                        .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
-                                                                .withKey("source")
-                                                                .withValue("chaos"))
+        doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS).createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                        .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                        .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -595,9 +585,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new SnapshotQuotaExceededException("Test")).when(amazonRDS)
-                                                           .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag()
-                                                                   .withKey("source")
-                                                                   .withValue("chaos"))
+                                                           .createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                           .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -609,9 +597,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new RuntimeException("Test")).when(amazonRDS)
-                                             .createDBSnapshot(new CreateDBSnapshotRequest().withTags(new Tag().withKey("source")
-                                                                                                               .withValue("chaos"))
-                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                             .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                             .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
@@ -623,9 +609,7 @@ public class AwsRDSPlatformTest {
         DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doReturn(dbClusterSnapshot).when(amazonRDS)
-                                   .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag().withKey("source")
-                                                                                                                   .withValue("chaos"))
-                                                                                                .withDBClusterIdentifier(dbClusterIdentifier)
+                                   .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                 .withDBClusterSnapshotIdentifier(snapshotName));
         assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier));
     }
@@ -637,8 +621,6 @@ public class AwsRDSPlatformTest {
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new DBClusterSnapshotAlreadyExistsException("Test")).when(amazonRDS)
                                                                     .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                            .withTags(new Tag().withKey("source")
-                                                                                               .withValue("chaos"))
                                                                             .withDBClusterIdentifier(dbClusterIdentifier)
                                                                             .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -651,8 +633,6 @@ public class AwsRDSPlatformTest {
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new InvalidDBClusterStateException("Test")).when(amazonRDS)
                                                            .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                   .withTags(new Tag().withKey("source")
-                                                                                      .withValue("chaos"))
                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -664,9 +644,7 @@ public class AwsRDSPlatformTest {
         String dbClusterIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new DBClusterNotFoundException("Test")).when(amazonRDS)
-                                                       .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag()
-                                                               .withKey("source")
-                                                               .withValue("chaos"))
+                                                       .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                                                                     .withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                                     .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -679,8 +657,6 @@ public class AwsRDSPlatformTest {
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new SnapshotQuotaExceededException("Test")).when(amazonRDS)
                                                            .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                   .withTags(new Tag().withKey("source")
-                                                                                      .withValue("chaos"))
                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -693,8 +669,6 @@ public class AwsRDSPlatformTest {
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new InvalidDBClusterSnapshotStateException("Test")).when(amazonRDS)
                                                                    .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                           .withTags(new Tag().withKey("source")
-                                                                                              .withValue("chaos"))
                                                                            .withDBClusterIdentifier(dbClusterIdentifier)
                                                                            .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -706,9 +680,7 @@ public class AwsRDSPlatformTest {
         String dbClusterIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new RuntimeException("Test")).when(amazonRDS)
-                                             .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag()
-                                                     .withKey("source")
-                                                     .withValue("chaos"))
+                                             .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                                                           .withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                           .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -725,8 +697,8 @@ public class AwsRDSPlatformTest {
         String dateSection = m.group(1);
         Instant i = Instant.parse(dateSection);
         assertEquals(actual, String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, dateSection));
-        assertTrue("Snapshot given timestamp in the past", before.isBefore(i));
-        assertTrue("Snapshot given time in the future", after.isAfter(i));
+        assertTrue("Snapshot given timestamp in the past", !before.isAfter(i));
+        assertTrue("Snapshot given time in the future", !after.isBefore(i));
     }
 
     @Configuration
