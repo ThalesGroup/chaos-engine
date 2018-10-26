@@ -228,7 +228,7 @@ public class ExperimentTest {
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(true);
         doThrow(new RuntimeException()).when(callable).call();
-        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        assertEquals(ExperimentState.FAILED, stateExperiment.getExperimentState());
         verify(callable, times(1)).call();
         Mockito.reset(stateContainer);
     }

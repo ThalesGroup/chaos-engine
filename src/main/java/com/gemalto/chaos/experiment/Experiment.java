@@ -168,8 +168,8 @@ public abstract class Experiment {
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
                                                                    .withMessage("Experiment finished. Container recovered from the experiment")
                                                                    .build());
-                    finalizeExperiment();
-                    return ExperimentState.FINISHED;
+
+                    return finalizeExperiment();
                 }
                 return ExperimentState.STARTED;
             case DOES_NOT_EXIST:
@@ -206,7 +206,7 @@ public abstract class Experiment {
         return finalizable;
     }
 
-    private void finalizeExperiment () {
+    private ExperimentState finalizeExperiment () {
         if (finalizeMethod != null) {
             try {
                 log.info("Finalizing experiment {} on container {}", id, container.getSimpleName());
@@ -225,8 +225,10 @@ public abstract class Experiment {
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("Error while finalizing experiment")
                                                                .build());
+                return ExperimentState.FAILED;
             }
         }
+        return ExperimentState.FINISHED;
     }
 
     public void doSelfHealing () {
