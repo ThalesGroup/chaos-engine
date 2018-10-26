@@ -50,20 +50,15 @@ Notifications can be sent out through various methods when Chaos Events occur.
 
 ### DataDog
 
-#### Variables
-| Variable | Effect | Default |
-|----------|--------|--------|
-| *`datadog_apikey`* | API Key for DataDog access. | \<None\> |
+The Chaos Engine can report all the chaos events (events generated while running experiments) to DataDog. All the events can be analyzed and post-process in DataDog's event stream.
+
+https://confluence.gemalto.com/display/CLS/Chaos+Engine+DataDog+Notification+Channel
 
 ### Slack
 
 Notifications can be sent to a slack channel when a Chaos Event occurs. Configure a Slack Webhook and provide the URI as an argument.
 
-#### Variables
-| Variable | Effect | Default |
-|----------|--------|--------|
-| *`slack_webhookuri`* | Web Hook URI for pushing to Slack. | \<None\> |
-
+https://confluence.gemalto.com/display/CLS/Chaos+Engine+Slack+Notification+Channel
 
 ## Rest Controllers
 
