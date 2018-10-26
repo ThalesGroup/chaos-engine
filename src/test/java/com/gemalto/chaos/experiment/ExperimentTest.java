@@ -174,9 +174,9 @@ public class ExperimentTest {
         when(stateExperiment.isFinalizable()).thenReturn(true);
         assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
         Mockito.reset(stateContainer);
-        // No specific health check method, container does not exist (FINISHED)
+        // No specific health check method, container does not exist (FAILED)
         doReturn(ContainerHealth.DOES_NOT_EXIST).when(stateContainer).getContainerHealth(STATE);
-        assertEquals(ExperimentState.FINISHED, stateExperiment.getExperimentState());
+        assertEquals(ExperimentState.FAILED, stateExperiment.getExperimentState());
         Mockito.reset(stateContainer);
         // No specific health check method, container under experiment (STARTED, self healing called)
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);

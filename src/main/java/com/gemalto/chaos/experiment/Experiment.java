@@ -178,7 +178,7 @@ public abstract class Experiment {
                                                                .withNotificationLevel(NotificationLevel.ERROR)
                                                                .withMessage("Container no longer exists.")
                                                                .build());
-                return ExperimentState.FINISHED;
+                return ExperimentState.FAILED;
             case RUNNING_EXPERIMENT:
             default:
                 doSelfHealing();
