@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -360,5 +361,31 @@ public class AwsRDSPlatform extends Platform {
         return groupId;
     }
 
-    private void snapshotBackup(String dbInstanceIdentifier) {}
+    private DBSnapshot snapshotBackup (String dbInstanceIdentifier) {
+        DBSnapshot dbSnapshot;
+        try {
+            dbSnapshot = amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                 .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
+        } catch (DBSnapshotAlreadyExistsException e) {
+            log.error("A snapshot by that name already exists", e);
+            throw new ChaosException(e);
+        } catch (InvalidDBInstanceStateException e) {
+            log.error("Cannot snapshot database in an invalid state", e);
+            throw new ChaosException(e);
+        } catch (DBInstanceNotFoundException e) {
+            log.error("DB Instance not found to take snapshot", e);
+            throw new ChaosException(e);
+        } catch (SnapshotQuotaExceededException e) {
+            log.error("Exceeded snapshot quota", e);
+            throw new ChaosException(e);
+        } catch (RuntimeException e) {
+            log.error("Unknown error occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        }
+        return dbSnapshot;
+    }
+
+    private static String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
+        return String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, Instant.now());
+    }
 }
