@@ -91,9 +91,8 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances()
-                                                                           .stream()
-                                                                           .map(DBInstance::getDBInstanceStatus);
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances().stream()
+                                                                                     .map(DBInstance::getDBInstanceStatus);
         if (!dbInstanceStatusSupplier.get().allMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
             if (dbInstanceStatusSupplier.get().anyMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
                 return PlatformHealth.DEGRADED;
@@ -237,7 +236,6 @@ public class AwsRDSPlatform extends Platform {
                      .allMatch(containerHealth -> containerHealth.equals(ContainerHealth.NORMAL))) return NORMAL;
         return RUNNING_EXPERIMENT;
     }
-
 
     public void failoverCluster (String dbClusterIdentifier) {
         log.info("Initiating failover request for {}", keyValue(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
@@ -428,9 +426,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     void cleanupOldInstanceSnapshots (int olderThanMinutes) {
-        amazonRDS.describeDBSnapshots()
-                 .getDBSnapshots()
-                 .stream()
+        amazonRDS.describeDBSnapshots().getDBSnapshots().stream().filter(this::isChaosSnapshot)
                  .filter(dbSnapshot -> snapshotIsOlderThan(dbSnapshot.getDBSnapshotIdentifier(), olderThanMinutes))
                  .peek(dbSnapshot -> log.info("Deleting snapshot {} since it is out of date", v("dbSnapshot", dbSnapshot)))
                  .parallel()
@@ -438,9 +434,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     void cleanupOldClusterSnapshots (int olderThanMinutes) {
-        amazonRDS.describeDBClusterSnapshots()
-                 .getDBClusterSnapshots()
-                 .stream()
+        amazonRDS.describeDBClusterSnapshots().getDBClusterSnapshots().stream().filter(this::isChaosSnapshot)
                  .filter(dbClusterSnapshot -> snapshotIsOlderThan(dbClusterSnapshot.getDBClusterIdentifier(), olderThanMinutes))
                  .peek(dbClusterSnapshot -> log.info("Deleting cluster snapshot {} since it is out of date", v("dbClusterSnapshot", dbClusterSnapshot)))
                  .parallel()
@@ -455,6 +449,31 @@ public class AwsRDSPlatform extends Platform {
             return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isAfter(Instant.now());
         }
         return false;
+    }
+
+    private boolean isChaosSnapshot (DBSnapshot dbSnapshot) {
+        return isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier());
+    }
+
+    private boolean isChaosSnapshot (String snapshotName) {
+        Matcher matcher = chaosSnapshotPattern.matcher(snapshotName);
+        if (matcher.find()) {
+            if (log.isDebugEnabled()) {
+                try {
+                    String instanceName = matcher.group(1);
+                    Instant snapshotTime = Instant.parse(matcher.group(2));
+                    log.debug("Found snapshot for {} created at {}", instanceName, snapshotTime);
+                } catch (Exception e) {
+                    log.error("Error when creating complex logging statement", e);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isChaosSnapshot (DBClusterSnapshot dbClusterSnapshot) {
+        return isChaosSnapshot(dbClusterSnapshot.getDBClusterIdentifier());
     }
 
     private void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {

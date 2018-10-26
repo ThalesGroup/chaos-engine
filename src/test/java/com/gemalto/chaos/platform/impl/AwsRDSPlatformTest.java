@@ -722,6 +722,12 @@ public class AwsRDSPlatformTest {
         verify(awsRDSPlatform, times(1)).cleanupOldClusterSnapshots(olderThanMinutes);
     }
 
+    @Test
+    public void cleanupOldInstanceSnapshots () {
+        DescribeDBSnapshotsResult describeDBSnapshotsResult = mock(DescribeDBSnapshotsResult.class);
+        doReturn(describeDBSnapshotsResult).when(amazonRDS).describeDBSnapshots();
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired

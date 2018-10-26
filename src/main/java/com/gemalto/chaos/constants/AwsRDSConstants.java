@@ -1,5 +1,7 @@
 package com.gemalto.chaos.constants;
 
+import java.util.regex.Pattern;
+
 public abstract class AwsRDSConstants {
     public static final String AWS_RDS_AVAILABLE = "available";
     public static final String AWS_RDS_BACKING_UP = "backing-up";
@@ -10,7 +12,7 @@ public abstract class AwsRDSConstants {
     public static final String AWS_RDS_CLUSTER_DATADOG_IDENTIFIER = "dbclusteridentifier";
     public static final String AWS_RDS_INSTANCE_DATADOG_IDENTIFIER = "dbinstanceidentifier";
     public static final String AWS_RDS_VPC_SECURITY_GROUP_ID = "vpcSecurityGroupId";
-
+    public static final Pattern chaosSnapshotPattern = Pattern.compile("ChaosSnapshot-(.*)-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{0,3}Z)");
     private AwsRDSConstants () {
     }
     /*
