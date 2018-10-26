@@ -385,6 +385,33 @@ public class AwsRDSPlatform extends Platform {
         }
     }
 
+    private DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
+        try {
+            return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withTags(new Tag().withKey("source")
+                                                                                                            .withValue("chaos"))
+                                                                                         .withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                         .withDBClusterSnapshotIdentifier(getDBSnapshotIdentifier(dbClusterIdentifier)));
+        } catch (DBClusterSnapshotAlreadyExistsException e) {
+            log.error("A cluster snapshot by that name already exists", e);
+            throw new ChaosException(e);
+        } catch (InvalidDBClusterStateException e) {
+            log.error("DB Cluster is in invalid state for snapshot", e);
+            throw new ChaosException(e);
+        } catch (DBClusterNotFoundException e) {
+            log.error("DB Cluster not found to take snapshot", e);
+            throw new ChaosException(e);
+        } catch (SnapshotQuotaExceededException e) {
+            log.error("Exceeded snapshot quota", e);
+            throw new ChaosException(e);
+        } catch (InvalidDBClusterSnapshotStateException e) {
+            log.error("DB Cluster Snapshot in invalid state", e);
+            throw new ChaosException(e);
+        } catch (RuntimeException e) {
+            log.error("Unknown error occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        }
+    }
+
     private static String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
         return String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, Instant.now());
     }
