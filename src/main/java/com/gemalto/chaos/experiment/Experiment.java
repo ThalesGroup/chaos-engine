@@ -144,14 +144,14 @@ public abstract class Experiment {
             setExperimentLayer(container.getPlatform());
             notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("Starting new experiment")
+                                                           .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
                                                            .build());
             try{
                 container.startExperiment(this);
             }catch (ChaosException ex){
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Failed to start experiment "+ex.getMessage())
+                                                               .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
                                                                .build());
                 return false;
             }

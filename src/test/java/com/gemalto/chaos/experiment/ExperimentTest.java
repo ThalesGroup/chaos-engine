@@ -150,17 +150,26 @@ public class ExperimentTest {
 
     @Test
     public void startExperimentFailedToStart(){
-        Container container = Mockito.mock(Container.class);
         Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                       .withExperimentType(STATE)
-                                                                      .withContainer(container)
+                                                                      .withContainer(stateContainer)
                                                                       .build());
-        doThrow(ChaosException.class).when(container).startExperiment(experiment);
+        doThrow(ChaosException.class).when(stateContainer).startExperiment(experiment);
         autowireCapableBeanFactory.autowireBean(experiment);
         doReturn(true).when(adminManager).canRunExperiments();
-        doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
-        doReturn(false).when(container).supportsExperimentType(STATE);
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        doReturn(true).when(stateContainer).supportsExperimentType(STATE);
         assertFalse(experiment.startExperiment());
+        verify(notificationManager,times(1)).sendNotification(ChaosEvent.builder()
+                                                                        .fromExperiment(experiment)
+                                                                        .withNotificationLevel(NotificationLevel.WARN)
+                                                                        .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                        .build());
+        verify(notificationManager,times(1)).sendNotification(ChaosEvent.builder()
+                                                                        .fromExperiment(experiment)
+                                                                        .withNotificationLevel(NotificationLevel.ERROR)
+                                                                        .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
+                                                                        .build());
     }
 
     @Test

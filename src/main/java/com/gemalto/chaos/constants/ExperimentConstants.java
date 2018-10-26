@@ -11,6 +11,8 @@ public class ExperimentConstants {
     public static final String THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING = "The experiment has gone on too long, invoking self-healing.";
     public static final String THIS_IS_SELF_HEALING_ATTEMPT_NUMBER = " This is self healing attempt number ";
     public static final String MAXIMUM_SELF_HEALING_RETRIES_REACHED= "Maximum self healing retries reached";
+    public static final String STARTING_NEW_EXPERIMENT= "Starting new experiment";
+    public static final String FAILED_TO_START_EXPERIMENT= "Failed to start experiment";
 
     private ExperimentConstants () {
     }
