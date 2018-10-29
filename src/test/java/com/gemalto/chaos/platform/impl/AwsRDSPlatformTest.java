@@ -29,6 +29,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -765,6 +766,46 @@ public class AwsRDSPlatformTest {
         awsRDSPlatform.cleanupOldClusterSnapshots(60);
         verify(awsRDSPlatform, never()).deleteClusterSnapshot(any());
         reset(awsRDSPlatform);
+    }
+
+    @Test
+    public void snapshotIsOlderThan () {
+        int minutes = new Random().nextInt(23 * 60) + 30;
+        Instant baseTime = Instant.now().minus(Duration.ofMinutes(minutes));
+        Instant olderTime = baseTime.minus(Duration.ofMinutes(20));
+        Instant newerTime = baseTime.plus(Duration.ofMinutes(20));
+        String olderSnapshotName = String.format("ChaosSnapshot-%s-%s", randomUUID(), olderTime)
+                                         .replaceAll(":", "-")
+                                         .replaceAll(",", "-")
+                                         .replaceAll("\\.", "-")
+                                         .replaceAll("--", "-");
+        String newerSnapshotName = String.format("ChaosSnapshot-%s-%s", randomUUID(), newerTime)
+                                         .replaceAll(":", "-")
+                                         .replaceAll(",", "-")
+                                         .replaceAll("\\.", "-")
+                                         .replaceAll("--", "-");
+        String otherSnapshotName = randomUUID().toString();
+        assertTrue("This snapshot should be treated as old and deletable", awsRDSPlatform.snapshotIsOlderThan(olderSnapshotName, minutes));
+        assertFalse("This snapshot should be treated as new and not deletable", awsRDSPlatform.snapshotIsOlderThan(newerSnapshotName, minutes));
+        assertFalse("This snapshot doesn't belong to Chaos and should not be deletable", awsRDSPlatform.snapshotIsOlderThan(otherSnapshotName, minutes));
+    }
+
+    @Test
+    public void deleteInstanceSnapshot () {
+        String dBSnapshotIdentifier = randomUUID().toString();
+        DBSnapshot dbSnapshot = new DBSnapshot().withDBSnapshotIdentifier(dBSnapshotIdentifier);
+        doReturn(null).when(amazonRDS).deleteDBSnapshot(any());
+        awsRDSPlatform.deleteInstanceSnapshot(dbSnapshot);
+        verify(amazonRDS, times(1)).deleteDBSnapshot(new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(dBSnapshotIdentifier));
+    }
+
+    @Test
+    public void deleteClusterSnapshot () {
+        String dBClusterSnapshotIdentifier = randomUUID().toString();
+        DBClusterSnapshot dbClusterSnapshot = new DBClusterSnapshot().withDBClusterSnapshotIdentifier(dBClusterSnapshotIdentifier);
+        doReturn(null).when(amazonRDS).deleteDBClusterSnapshot(any());
+        awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
+        verify(amazonRDS, times(1)).deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dBClusterSnapshotIdentifier));
     }
 
     @Configuration

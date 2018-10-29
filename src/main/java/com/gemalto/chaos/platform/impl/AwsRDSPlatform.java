@@ -438,7 +438,7 @@ public class AwsRDSPlatform extends Platform {
                  .forEach(this::deleteInstanceSnapshot);
     }
 
-    private boolean snapshotIsOlderThan (String dbSnapshotName, int olderThanMinutes) {
+    boolean snapshotIsOlderThan (String dbSnapshotName, int olderThanMinutes) {
         Matcher m = CalendarUtils.datePattern.matcher(dbSnapshotName);
         if (m.find()) {
             String dateSection = m.group(1);
