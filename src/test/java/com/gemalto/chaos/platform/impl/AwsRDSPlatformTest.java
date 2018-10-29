@@ -726,8 +726,45 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void cleanupOldInstanceSnapshots () {
-        DescribeDBSnapshotsResult describeDBSnapshotsResult = mock(DescribeDBSnapshotsResult.class);
+        DBSnapshot dbSnapshot1 = new DBSnapshot().withDBSnapshotIdentifier("ChaosSnapshot-instance-1970-01-01T01-02-03Z");
+        DBSnapshot dbSnapshot2 = new DBSnapshot().withDBSnapshotIdentifier("ChaosSnapshot-instance-2199-01-01T01-02-03Z");
+        DBSnapshot dbSnapshot3 = new DBSnapshot().withDBSnapshotIdentifier("RegularSnapshot-instance-1970-01-01T01-02-03Z");
+        DescribeDBSnapshotsResult describeDBSnapshotsResult = Mockito.mock(DescribeDBSnapshotsResult.class);
+        doReturn(Arrays.asList(dbSnapshot1, dbSnapshot2, dbSnapshot3), Collections.singletonList(dbSnapshot2), Collections
+                .singletonList(dbSnapshot3)).when(describeDBSnapshotsResult).getDBSnapshots();
         doReturn(describeDBSnapshotsResult).when(amazonRDS).describeDBSnapshots();
+        doNothing().when(awsRDSPlatform).deleteInstanceSnapshot(any());
+        awsRDSPlatform.cleanupOldInstanceSnapshots(60);
+        verify(awsRDSPlatform, times(1)).deleteInstanceSnapshot(dbSnapshot1);
+        // Test that it doesn't call on snapshot2 with individual return lists.
+        reset(awsRDSPlatform);
+        awsRDSPlatform.cleanupOldInstanceSnapshots(60);
+        verify(awsRDSPlatform, never()).deleteInstanceSnapshot(any());
+        // Test that it doesn't call on snapshot3 with individual return lists.
+        reset(awsRDSPlatform);
+        awsRDSPlatform.cleanupOldInstanceSnapshots(60);
+        verify(awsRDSPlatform, never()).deleteInstanceSnapshot(any());
+    }
+
+    @Test
+    public void cleanupOldClusterSnapshots () {
+        DBClusterSnapshot dbClusterSnapshot1 = new DBClusterSnapshot().withDBClusterSnapshotIdentifier("ChaosSnapshot-instance-1970-01-01T01-02-03Z");
+        DBClusterSnapshot dbClusterSnapshot2 = new DBClusterSnapshot().withDBClusterSnapshotIdentifier("ChaosSnapshot-instance-2199-01-01T01-02-03Z");
+        DBClusterSnapshot dbClusterSnapshot3 = new DBClusterSnapshot().withDBClusterSnapshotIdentifier("RegularSnapshot-instance-1970-01-01T01-02-03Z");
+        DescribeDBClusterSnapshotsResult describeDBClusterSnapshotsResult = Mockito.mock(DescribeDBClusterSnapshotsResult.class);
+        doReturn(Arrays.asList(dbClusterSnapshot1, dbClusterSnapshot2, dbClusterSnapshot3), Collections.singletonList(dbClusterSnapshot2), Collections
+                .singletonList(dbClusterSnapshot3)).when(describeDBClusterSnapshotsResult).getDBClusterSnapshots();
+        doReturn(describeDBClusterSnapshotsResult).when(amazonRDS).describeDBClusterSnapshots();
+        doNothing().when(awsRDSPlatform).deleteClusterSnapshot(any());
+        awsRDSPlatform.cleanupOldClusterSnapshots(60);
+        verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot1);
+        reset(awsRDSPlatform);
+        awsRDSPlatform.cleanupOldClusterSnapshots(60);
+        verify(awsRDSPlatform, never()).deleteClusterSnapshot(any());
+        reset(awsRDSPlatform);
+        awsRDSPlatform.cleanupOldClusterSnapshots(60);
+        verify(awsRDSPlatform, never()).deleteClusterSnapshot(any());
+        reset(awsRDSPlatform);
     }
 
     @Configuration

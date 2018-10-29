@@ -428,19 +428,14 @@ public class AwsRDSPlatform extends Platform {
     }
 
     void cleanupOldInstanceSnapshots (int olderThanMinutes) {
-        amazonRDS.describeDBSnapshots().getDBSnapshots().stream().filter(this::isChaosSnapshot)
+        amazonRDS.describeDBSnapshots()
+                 .getDBSnapshots()
+                 .stream()
+                 .filter(dbSnapshot -> AwsRDSUtils.isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier()))
                  .filter(dbSnapshot -> snapshotIsOlderThan(dbSnapshot.getDBSnapshotIdentifier(), olderThanMinutes))
                  .peek(dbSnapshot -> log.info("Deleting snapshot {} since it is out of date", v("dbSnapshot", dbSnapshot)))
                  .parallel()
                  .forEach(this::deleteInstanceSnapshot);
-    }
-
-    void cleanupOldClusterSnapshots (int olderThanMinutes) {
-        amazonRDS.describeDBClusterSnapshots().getDBClusterSnapshots().stream().filter(this::isChaosSnapshot)
-                 .filter(dbClusterSnapshot -> snapshotIsOlderThan(dbClusterSnapshot.getDBClusterIdentifier(), olderThanMinutes))
-                 .peek(dbClusterSnapshot -> log.info("Deleting cluster snapshot {} since it is out of date", v("dbClusterSnapshot", dbClusterSnapshot)))
-                 .parallel()
-                 .forEach(this::deleteClusterSnapshot);
     }
 
     private boolean snapshotIsOlderThan (String dbSnapshotName, int olderThanMinutes) {
@@ -448,24 +443,27 @@ public class AwsRDSPlatform extends Platform {
         if (m.find()) {
             String dateSection = m.group(1);
             Instant snapshotTime = AwsRDSUtils.getInstantFromNameSegment(dateSection);
-            return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isAfter(Instant.now());
+            return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isBefore(Instant.now());
         }
         return false;
     }
 
-    private boolean isChaosSnapshot (DBSnapshot dbSnapshot) {
-        return AwsRDSUtils.isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier());
+    void cleanupOldClusterSnapshots (int olderThanMinutes) {
+        amazonRDS.describeDBClusterSnapshots()
+                 .getDBClusterSnapshots()
+                 .stream()
+                 .filter(dbClusterSnapshot -> AwsRDSUtils.isChaosSnapshot(dbClusterSnapshot.getDBClusterSnapshotIdentifier()))
+                 .filter(dbClusterSnapshot -> snapshotIsOlderThan(dbClusterSnapshot.getDBClusterSnapshotIdentifier(), olderThanMinutes))
+                 .peek(dbClusterSnapshot -> log.info("Deleting cluster snapshot {} since it is out of date", v("dbClusterSnapshot", dbClusterSnapshot)))
+                 .parallel()
+                 .forEach(this::deleteClusterSnapshot);
     }
 
-    private boolean isChaosSnapshot (DBClusterSnapshot dbClusterSnapshot) {
-        return AwsRDSUtils.isChaosSnapshot(dbClusterSnapshot.getDBClusterSnapshotIdentifier());
-    }
-
-    private void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
+    void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
         amazonRDS.deleteDBSnapshot(new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(dbSnapshot.getDBSnapshotIdentifier()));
     }
 
-    private void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
+    void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
         amazonRDS.deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dbClusterSnapshot
                 .getDBClusterSnapshotIdentifier()));
     }
