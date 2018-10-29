@@ -35,8 +35,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP;
-import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION;
+import static com.gemalto.chaos.constants.AwsRDSConstants.*;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.anyOf;
 import static org.junit.Assert.*;
@@ -837,6 +836,42 @@ public class AwsRDSPlatformTest {
         doReturn(null).when(amazonRDS).deleteDBClusterSnapshot(any());
         awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
         verify(amazonRDS, times(1)).deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dBClusterSnapshotIdentifier));
+    }
+
+    @Test
+    public void isInstanceSnapshotRunning () {
+        String dbInstanceIdentifier = randomUUID().toString();
+        DBInstance backingUpInstance = new DBInstance().withDBInstanceStatus(AWS_RDS_BACKING_UP)
+                                                       .withDBInstanceIdentifier(dbInstanceIdentifier);
+        DBInstance normalInstance = new DBInstance().withDBInstanceStatus(AWS_RDS_AVAILABLE);
+        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier);
+        DescribeDBInstancesResult describeDBInstancesResult1 = new DescribeDBInstancesResult().withDBInstances(backingUpInstance);
+        DescribeDBInstancesResult describeDBInstancesResult2 = new DescribeDBInstancesResult().withDBInstances(backingUpInstance, normalInstance);
+        DescribeDBInstancesResult describeDBInstancesResult3 = new DescribeDBInstancesResult().withDBInstances(normalInstance
+                .withDBInstanceIdentifier(dbInstanceIdentifier));
+        doReturn(describeDBInstancesResult1, describeDBInstancesResult2, describeDBInstancesResult3).when(amazonRDS)
+                                                                                                    .describeDBInstances(describeDBInstancesRequest);
+        assertTrue("Exactly one instance backing up should return true", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
+        assertTrue("Any instance backing up should return true", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
+        assertFalse("No instances backing up should return false", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
+    }
+
+    @Test
+    public void isClusterSnapshotRunning () {
+        String dbClusterIdentifier = randomUUID().toString();
+        DBCluster backingUpCluster = new DBCluster().withStatus(AWS_RDS_BACKING_UP)
+                                                    .withDBClusterIdentifier(dbClusterIdentifier);
+        DBCluster normalCluster = new DBCluster().withStatus(AWS_RDS_AVAILABLE);
+        DescribeDBClustersResult describeDBClustersResult1 = new DescribeDBClustersResult().withDBClusters(backingUpCluster);
+        DescribeDBClustersResult describeDBClustersResult2 = new DescribeDBClustersResult().withDBClusters(backingUpCluster, normalCluster);
+        DescribeDBClustersResult describeDBClustersResult3 = new DescribeDBClustersResult().withDBClusters(normalCluster
+                .withDBClusterIdentifier(dbClusterIdentifier));
+        DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier);
+        doReturn(describeDBClustersResult1, describeDBClustersResult2, describeDBClustersResult3).when(amazonRDS)
+                                                                                                 .describeDBClusters(describeDBClustersRequest);
+        assertTrue("Exactly one instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
+        assertTrue("Any instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
+        assertFalse("No instances backing up should return false", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
     }
 
     @Configuration

@@ -479,4 +479,18 @@ public class AwsRDSPlatform extends Platform {
         amazonRDS.deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dbClusterSnapshot
                 .getDBClusterSnapshotIdentifier()));
     }
+
+    boolean isInstanceSnapshotRunning (String dbInstanceIdentifier) {
+        return amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
+                        .getDBInstances()
+                        .stream()
+                        .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus().equals(AWS_RDS_BACKING_UP));
+    }
+
+    boolean isClusterSnapshotRunning (String dbClusterIdentifier) {
+        return amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier))
+                        .getDBClusters()
+                        .stream()
+                        .anyMatch(dbCluster -> dbCluster.getStatus().equals(AWS_RDS_BACKING_UP));
+    }
 }
