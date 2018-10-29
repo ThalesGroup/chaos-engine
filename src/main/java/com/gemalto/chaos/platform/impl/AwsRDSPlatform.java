@@ -18,6 +18,7 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.util.AwsRDSUtils;
 import com.gemalto.chaos.util.CalendarUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -386,7 +387,8 @@ public class AwsRDSPlatform extends Platform {
     }
 
     String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
-        return String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, Instant.now());
+        return AwsRDSUtils.generateSnapshotName(dbInstanceIdentifier);
+
     }
 
     DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
@@ -452,28 +454,11 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private boolean isChaosSnapshot (DBSnapshot dbSnapshot) {
-        return isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier());
-    }
-
-    private boolean isChaosSnapshot (String snapshotName) {
-        Matcher matcher = chaosSnapshotPattern.matcher(snapshotName);
-        if (matcher.find()) {
-            if (log.isDebugEnabled()) {
-                try {
-                    String instanceName = matcher.group(1);
-                    Instant snapshotTime = Instant.parse(matcher.group(2));
-                    log.debug("Found snapshot for {} created at {}", instanceName, snapshotTime);
-                } catch (Exception e) {
-                    log.error("Error when creating complex logging statement", e);
-                }
-            }
-            return true;
-        }
-        return false;
+        return AwsRDSUtils.isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier());
     }
 
     private boolean isChaosSnapshot (DBClusterSnapshot dbClusterSnapshot) {
-        return isChaosSnapshot(dbClusterSnapshot.getDBClusterIdentifier());
+        return AwsRDSUtils.isChaosSnapshot(dbClusterSnapshot.getDBClusterSnapshotIdentifier());
     }
 
     private void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
