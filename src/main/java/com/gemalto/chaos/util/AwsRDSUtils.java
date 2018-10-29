@@ -4,6 +4,7 @@ import com.gemalto.chaos.ChaosException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -25,7 +26,7 @@ public class AwsRDSUtils {
     private AwsRDSUtils () {
     }
 
-    public static String generateSnapshotName (String identifier) {
+    public static String generateSnapshotName (@NotNull String identifier) {
         String timestamp = Instant.now().toString();
         String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp)
                               .replaceAll(":", "-")
@@ -46,8 +47,8 @@ public class AwsRDSUtils {
         return output;
     }
 
-    private static boolean isValidSnapshotName (String s) {
-        return s != null && s.length() <= 255 && s.length() > 0 && !s.contains("--") && !s.endsWith("-");
+    static boolean isValidSnapshotName (@NotNull String s) {
+        return s.length() <= 255 && s.length() > 0 && !s.contains("--") && !s.endsWith("-");
     }
 
     public static boolean isChaosSnapshot (String snapshotIdentifier) {

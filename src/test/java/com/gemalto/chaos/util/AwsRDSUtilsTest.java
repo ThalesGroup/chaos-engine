@@ -1,5 +1,6 @@
 package com.gemalto.chaos.util;
 
+import com.gemalto.chaos.ChaosException;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -37,6 +38,11 @@ public class AwsRDSUtilsTest {
         });
     }
 
+    @Test(expected = ChaosException.class)
+    public void generateSnapshotNameException () {
+        AwsRDSUtils.generateSnapshotName("--");
+    }
+
     @Test
     public void rdsSnapshotNameConstraints () {
 
@@ -72,5 +78,24 @@ public class AwsRDSUtilsTest {
         assertEquals(Instant.ofEpochMilli(1540828376123L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-123Z"));
         assertEquals(Instant.ofEpochMilli(1540828376120L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-12Z"));
         assertEquals(Instant.ofEpochMilli(1540828376100L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-1Z"));
+    }
+
+    @Test
+    public void isChaosSnapshot () {
+        assertFalse("Should not pick up a normal snapshot", AwsRDSUtils.isChaosSnapshot("Just-another-everyday-snapshot"));
+        assertTrue("Should pick up a snapshot named correctly", AwsRDSUtils.isChaosSnapshot("ChaosSnapshot-ASJKLFJAK-2018-01-01T12-34-56-123Z"));
+    }
+
+    @Test
+    public void isValidSnapshotName () {
+        StringBuilder longString = new StringBuilder("ChaosSnapshot");
+        IntStream.range(0, 300).forEach(longString::append);
+        longString.append("2018-01-01T01-01-01Z");
+        assertFalse("Snapshot name is too long", AwsRDSUtils.isValidSnapshotName(longString.toString()));
+        assertFalse("Snapshot name is too short", AwsRDSUtils.isValidSnapshotName(""));
+        assertFalse("Snapshot name contains --", AwsRDSUtils.isValidSnapshotName("ChaosSnapshot--Instance-1970-01-01T01-01-01Z"));
+        assertFalse("Snapshot name ends with -", AwsRDSUtils.isValidSnapshotName("ChaosSnapshot-Instance-1970-01-01T01-01-01Z-"));
+        assertTrue("Expected good snapshot name", AwsRDSUtils.isValidSnapshotName("ChaosSnapshot-Instance-1970-01-01T01-01-01Z"));
+        assertTrue("Expected good snapshot name", AwsRDSUtils.isValidSnapshotName("ChaosSnapshot-Instance-1970-01-01T01-01-01-123Z"));
     }
 }
