@@ -2,6 +2,7 @@ package com.gemalto.chaos.util;
 
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -62,5 +63,14 @@ public class AwsRDSUtilsTest {
                                                                                                                   .matcher(s)
                                                                                                                   .matches());
                  });
+    }
+
+    @Test
+    public void getInstantFromNameSegment () {
+        assertEquals(Instant.EPOCH, AwsRDSUtils.getInstantFromNameSegment("1970-01-01T00-00-00Z"));
+        assertEquals(Instant.ofEpochSecond(1540828376), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56Z"));
+        assertEquals(Instant.ofEpochMilli(1540828376123L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-123Z"));
+        assertEquals(Instant.ofEpochMilli(1540828376120L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-12Z"));
+        assertEquals(Instant.ofEpochMilli(1540828376100L), AwsRDSUtils.getInstantFromNameSegment("2018-10-29T15-52-56-1Z"));
     }
 }
