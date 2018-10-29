@@ -14,6 +14,7 @@ import com.gemalto.chaos.container.impl.AwsRDSInstanceContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.util.AwsRDSUtils;
 import com.gemalto.chaos.util.CalendarUtils;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
@@ -694,8 +695,9 @@ public class AwsRDSPlatformTest {
         Instant after = Instant.now();
         Matcher m = CalendarUtils.datePattern.matcher(actual);
         assertTrue("Could not extract date-time from snapshot identifier", m.find());
+
         String dateSection = m.group(1);
-        Instant i = Instant.parse(dateSection);
+        Instant i = AwsRDSUtils.getInstantFromNameSegment(dateSection);
         assertEquals(actual, String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, dateSection));
         assertTrue("Snapshot given timestamp in the past", !before.isAfter(i));
         assertTrue("Snapshot given time in the future", !after.isBefore(i));

@@ -447,7 +447,7 @@ public class AwsRDSPlatform extends Platform {
         Matcher m = CalendarUtils.datePattern.matcher(dbSnapshotName);
         if (m.find()) {
             String dateSection = m.group(1);
-            Instant snapshotTime = Instant.parse(dateSection);
+            Instant snapshotTime = AwsRDSUtils.getInstantFromNameSegment(dateSection);
             return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isAfter(Instant.now());
         }
         return false;
