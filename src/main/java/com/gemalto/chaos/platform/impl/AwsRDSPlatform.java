@@ -364,7 +364,7 @@ public class AwsRDSPlatform extends Platform {
         return groupId;
     }
 
-    DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
+    DBSnapshot snapshotDBInstance (String dbInstanceIdentifier, boolean retry) {
         try {
             return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                            .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
@@ -378,8 +378,14 @@ public class AwsRDSPlatform extends Platform {
             log.error("DB Instance not found to take snapshot", e);
             throw new ChaosException(e);
         } catch (SnapshotQuotaExceededException e) {
-            log.error("Exceeded snapshot quota", e);
-            throw new ChaosException(e);
+            if (!retry) {
+                log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
+                cleanupOldSnapshots();
+                return snapshotDBInstance(dbInstanceIdentifier, true);
+            } else {
+                log.error("Exceeded snapshot quota", e);
+                throw new ChaosException(e);
+            }
         } catch (RuntimeException e) {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
@@ -391,7 +397,7 @@ public class AwsRDSPlatform extends Platform {
 
     }
 
-    DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
+    DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier, boolean retry) {
         try {
             return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                          .withDBClusterSnapshotIdentifier(getDBSnapshotIdentifier(dbClusterIdentifier)));
@@ -405,8 +411,14 @@ public class AwsRDSPlatform extends Platform {
             log.error("DB Cluster not found to take snapshot", e);
             throw new ChaosException(e);
         } catch (SnapshotQuotaExceededException e) {
-            log.error("Exceeded snapshot quota", e);
-            throw new ChaosException(e);
+            if (!retry) {
+                log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
+                cleanupOldSnapshots();
+                return snapshotDBCluster(dbClusterIdentifier, true);
+            } else {
+                log.error("Exceeded snapshot quota", e);
+                throw new ChaosException(e);
+            }
         } catch (InvalidDBClusterSnapshotStateException e) {
             log.error("DB Cluster Snapshot in invalid state", e);
             throw new ChaosException(e);
