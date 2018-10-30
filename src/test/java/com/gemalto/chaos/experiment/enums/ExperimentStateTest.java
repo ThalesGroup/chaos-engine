@@ -10,5 +10,6 @@ public class ExperimentStateTest {
         assertNotEquals(ExperimentState.valueOf("FINISHED"), null);
         assertNotEquals(ExperimentState.valueOf("STARTED"), null);
         assertNotEquals(ExperimentState.valueOf("NOT_YET_STARTED"), null);
+        assertNotEquals(ExperimentState.valueOf("FAILED"), null);
     }
 }

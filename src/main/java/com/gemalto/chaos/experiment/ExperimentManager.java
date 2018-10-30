@@ -83,7 +83,7 @@ public class ExperimentManager {
                                                                                                 .getDataDogIdentifier()
                                                                                                 .getValue())) {
                     ExperimentState experimentState = experiment.getExperimentState();
-                    if (experimentState == ExperimentState.FINISHED) {
+                    if (experimentState == ExperimentState.FINISHED||experimentState == ExperimentState.FAILED) {
                         log.info("Removing experiment {} from active experiment roster", experiment.getId());
                         finishedExperiments.add(experiment);
                     }
