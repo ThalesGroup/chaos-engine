@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.amazonaws.services.rds.model.DBSnapshot;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -67,6 +68,17 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         });
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup());
+    }
+
+    @StateExperiment
+    public void startSnapshot (Experiment experiment) {
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
+        final DBSnapshot dbSnapshot = awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+        experiment.setSelfHealingMethod(() -> {
+            awsRDSPlatform.deleteInstanceSnapshot(dbSnapshot);
+            return null;
+        });
+        experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
     }
 
     public static AwsRDSInstanceContainerBuilder builder () {

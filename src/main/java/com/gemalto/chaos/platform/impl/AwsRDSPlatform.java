@@ -135,20 +135,6 @@ public class AwsRDSPlatform extends Platform {
         return chosenSet;
     }
 
-    private Collection<DBInstance> getAllDBInstances () {
-        Collection<DBInstance> dbInstances = new HashSet<>();
-        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
-        DescribeDBInstancesResult describeDBInstancesResult;
-        int i = 0;
-        do {
-            log.debug("Running describeDBInstances, page {}", ++i);
-            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
-            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
-            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
-        } while (describeDBInstancesRequest.getMarker() != null);
-        return dbInstances;
-    }
-
     private Collection<DBCluster> getAllDBClusters () {
         Collection<DBCluster> dbClusters = new HashSet<>();
         DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
@@ -161,6 +147,20 @@ public class AwsRDSPlatform extends Platform {
             describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
         } while (describeDBClustersRequest.getMarker() != null);
         return dbClusters;
+    }
+
+    private Collection<DBInstance> getAllDBInstances () {
+        Collection<DBInstance> dbInstances = new HashSet<>();
+        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
+        DescribeDBInstancesResult describeDBInstancesResult;
+        int i = 0;
+        do {
+            log.debug("Running describeDBInstances, page {}", ++i);
+            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
+            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
+            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
+        } while (describeDBInstancesRequest.getMarker() != null);
+        return dbInstances;
     }
 
     AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
@@ -364,8 +364,13 @@ public class AwsRDSPlatform extends Platform {
         return groupId;
     }
 
-    DBSnapshot snapshotDBInstance (String dbInstanceIdentifier, boolean retry) {
+    public DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
+        return snapshotDBInstance(dbInstanceIdentifier, false);
+    }
+
+    private DBSnapshot snapshotDBInstance (String dbInstanceIdentifier, boolean retry) {
         try {
+            log.info("Creating a snapshot of {}", kv(DataDogConstants.RDS_INSTANCE_ID, dbInstanceIdentifier));
             return amazonRDS.createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                            .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier)));
         } catch (DBSnapshotAlreadyExistsException e) {
@@ -386,6 +391,9 @@ public class AwsRDSPlatform extends Platform {
                 log.error("Exceeded snapshot quota", e);
                 throw new ChaosException(e);
             }
+        } catch (AmazonRDSException e) {
+            log.error("AWS RDS Exception occurred while taking a snapshot", e);
+            throw new ChaosException(e);
         } catch (RuntimeException e) {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
@@ -397,7 +405,11 @@ public class AwsRDSPlatform extends Platform {
 
     }
 
-    DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier, boolean retry) {
+    public DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
+        return snapshotDBCluster(dbClusterIdentifier, false);
+    }
+
+    private DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier, boolean retry) {
         try {
             return amazonRDS.createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                          .withDBClusterSnapshotIdentifier(getDBSnapshotIdentifier(dbClusterIdentifier)));
@@ -422,6 +434,9 @@ public class AwsRDSPlatform extends Platform {
         } catch (InvalidDBClusterSnapshotStateException e) {
             log.error("DB Cluster Snapshot in invalid state", e);
             throw new ChaosException(e);
+        } catch (AmazonRDSException e) {
+            log.error("AWS RDS Exception occurred while taking a snapshot", e);
+            throw new ChaosException(e);
         } catch (RuntimeException e) {
             log.error("Unknown error occurred while taking a snapshot", e);
             throw new ChaosException(e);
@@ -431,6 +446,7 @@ public class AwsRDSPlatform extends Platform {
     // Don't run for the first hour, but run every 15 minute afterwards/
     @Scheduled(initialDelay = 1000L * 60 * 60, fixedDelay = 1000L * 60 * 15)
     void cleanupOldSnapshots () {
+        log.info("Cleaning up old snapshots");
         cleanupOldSnapshots(60);
     }
 
@@ -471,23 +487,23 @@ public class AwsRDSPlatform extends Platform {
                  .forEach(this::deleteClusterSnapshot);
     }
 
-    void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
+    public void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
         amazonRDS.deleteDBSnapshot(new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(dbSnapshot.getDBSnapshotIdentifier()));
     }
 
-    void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
+    public void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
         amazonRDS.deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dbClusterSnapshot
                 .getDBClusterSnapshotIdentifier()));
     }
 
-    boolean isInstanceSnapshotRunning (String dbInstanceIdentifier) {
+    public boolean isInstanceSnapshotRunning (String dbInstanceIdentifier) {
         return amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                         .getDBInstances()
                         .stream()
                         .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus().equals(AWS_RDS_BACKING_UP));
     }
 
-    boolean isClusterSnapshotRunning (String dbClusterIdentifier) {
+    public boolean isClusterSnapshotRunning (String dbClusterIdentifier) {
         return amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier))
                         .getDBClusters()
                         .stream()

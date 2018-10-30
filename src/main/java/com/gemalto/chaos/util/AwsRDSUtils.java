@@ -12,9 +12,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AwsRDSUtils {
-    private static final Pattern chaosSnapshotPattern = Pattern.compile("ChaosSnapshot-(.*)-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}(-[0-9]{0,3})?Z)");
+    private static final Pattern chaosSnapshotPattern = Pattern.compile("ChaosSnapshot-(.*)-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}(-[0-9]{0,3})?Z)", Pattern.CASE_INSENSITIVE);
     private static final Logger log = LoggerFactory.getLogger(AwsRDSUtils.class);
     private static final DateTimeFormatter reverseTimestampFormatter = new DateTimeFormatterBuilder().parseLenient()
+                                                                                                     .parseCaseInsensitive()
                                                                                                      .appendPattern("yyyy-MM-dd")
                                                                                                      .appendLiteral('T')
                                                                                                      .appendPattern("HH-mm-ss")

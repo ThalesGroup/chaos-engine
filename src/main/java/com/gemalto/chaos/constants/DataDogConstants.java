@@ -8,6 +8,7 @@ public class DataDogConstants {
     public static final String DATADOG_EXPERIMENTID_KEY="experimentid";
 
     public static final String SLACK_NOTIFICATION_SERVER_RESPONSE_KEY ="slack-server-response";
+    public static final String RDS_INSTANCE_ID = "instanceid";
 
     private DataDogConstants () {
     }

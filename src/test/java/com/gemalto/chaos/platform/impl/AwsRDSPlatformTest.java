@@ -542,7 +542,7 @@ public class AwsRDSPlatformTest {
         doReturn(dbSnapshot).when(amazonRDS)
                             .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                            .withDBSnapshotIdentifier(snapshotName));
-        assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false));
+        assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier));
     }
 
     @Test(expected = ChaosException.class)
@@ -554,7 +554,7 @@ public class AwsRDSPlatformTest {
                                                              .createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                             .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                             .withDBSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false);
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -566,7 +566,7 @@ public class AwsRDSPlatformTest {
                                                             .createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                            .withDBSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false);
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -577,7 +577,7 @@ public class AwsRDSPlatformTest {
         doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS).createDBSnapshot(new CreateDBSnapshotRequest()
                                                                                                        .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                        .withDBSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false);
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -590,7 +590,7 @@ public class AwsRDSPlatformTest {
                                                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                           .withDBSnapshotIdentifier(snapshotName));
         doNothing().when(awsRDSPlatform).cleanupOldSnapshots();
-        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false);
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
     @Test
@@ -604,7 +604,7 @@ public class AwsRDSPlatformTest {
                                                            .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                           .withDBSnapshotIdentifier(snapshotName));
         doNothing().when(awsRDSPlatform).cleanupOldSnapshots();
-        assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false));
+        assertSame(dbSnapshot, awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier));
     }
 
     @Test(expected = ChaosException.class)
@@ -615,7 +615,7 @@ public class AwsRDSPlatformTest {
         doThrow(new RuntimeException("Test")).when(amazonRDS)
                                              .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                             .withDBSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier, false);
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
     @Test
@@ -627,7 +627,7 @@ public class AwsRDSPlatformTest {
         doReturn(dbClusterSnapshot).when(amazonRDS)
                                    .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                 .withDBClusterSnapshotIdentifier(snapshotName));
-        assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false));
+        assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier));
     }
 
     @Test(expected = ChaosException.class)
@@ -639,7 +639,7 @@ public class AwsRDSPlatformTest {
                                                                     .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                             .withDBClusterIdentifier(dbClusterIdentifier)
                                                                             .withDBClusterSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -651,7 +651,7 @@ public class AwsRDSPlatformTest {
                                                            .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -663,7 +663,7 @@ public class AwsRDSPlatformTest {
                                                        .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                                                                     .withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                                     .withDBClusterSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -676,7 +676,7 @@ public class AwsRDSPlatformTest {
                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
         doNothing().when(awsRDSPlatform).cleanupOldSnapshots();
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test
@@ -691,7 +691,7 @@ public class AwsRDSPlatformTest {
                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
                                                                    .withDBClusterSnapshotIdentifier(snapshotName));
         doNothing().when(awsRDSPlatform).cleanupOldSnapshots();
-        assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false));
+        assertSame(dbClusterSnapshot, awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier));
     }
 
     @Test(expected = ChaosException.class)
@@ -703,7 +703,7 @@ public class AwsRDSPlatformTest {
                                                                    .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                            .withDBClusterIdentifier(dbClusterIdentifier)
                                                                            .withDBClusterSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test(expected = ChaosException.class)
@@ -715,7 +715,7 @@ public class AwsRDSPlatformTest {
                                              .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
                                                                                                           .withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                           .withDBClusterSnapshotIdentifier(snapshotName));
-        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier, false);
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
     @Test
@@ -736,12 +736,12 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void cleanOldSnapshots1 () {
-        doNothing().when(awsRDSPlatform).cleanupOldClusterSnapshots(60);
-        doNothing().when(awsRDSPlatform).cleanupOldInstanceSnapshots(60);
+        doNothing().when(awsRDSPlatform).cleanupOldClusterSnapshots(anyInt());
+        doNothing().when(awsRDSPlatform).cleanupOldInstanceSnapshots(anyInt());
         doCallRealMethod().when(awsRDSPlatform).cleanupOldSnapshots();
         awsRDSPlatform.cleanupOldSnapshots();
-        verify(awsRDSPlatform, times(1)).cleanupOldInstanceSnapshots(60);
-        verify(awsRDSPlatform, times(1)).cleanupOldClusterSnapshots(60);
+        verify(awsRDSPlatform, times(1)).cleanupOldInstanceSnapshots(anyInt());
+        verify(awsRDSPlatform, times(1)).cleanupOldClusterSnapshots(anyInt());
     }
 
     @Test
@@ -816,8 +816,14 @@ public class AwsRDSPlatformTest {
                                          .replaceAll("--", "-");
         String otherSnapshotName = randomUUID().toString();
         assertTrue("This snapshot should be treated as old and deletable", awsRDSPlatform.snapshotIsOlderThan(olderSnapshotName, minutes));
+        assertTrue("This snapshot should be treated as old and deletable", awsRDSPlatform.snapshotIsOlderThan(olderSnapshotName
+                .toLowerCase(), minutes));
         assertFalse("This snapshot should be treated as new and not deletable", awsRDSPlatform.snapshotIsOlderThan(newerSnapshotName, minutes));
+        assertFalse("This snapshot should be treated as new and not deletable", awsRDSPlatform.snapshotIsOlderThan(newerSnapshotName
+                .toLowerCase(), minutes));
         assertFalse("This snapshot doesn't belong to Chaos and should not be deletable", awsRDSPlatform.snapshotIsOlderThan(otherSnapshotName, minutes));
+        assertFalse("This snapshot doesn't belong to Chaos and should not be deletable", awsRDSPlatform.snapshotIsOlderThan(otherSnapshotName
+                .toLowerCase(), minutes));
     }
 
     @Test

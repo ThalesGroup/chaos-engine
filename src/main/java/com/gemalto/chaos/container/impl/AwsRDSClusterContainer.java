@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.AwsContainer;
@@ -69,6 +70,18 @@ public class AwsRDSClusterContainer extends AwsContainer {
         final String[] dbInstanceIdentifiers = getSomeMembers().toArray(new String[0]);
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
         awsRDSPlatform.restartInstance(dbInstanceIdentifiers);
+    }
+
+    @StateExperiment
+    public void snapshotCluster (Experiment experiment) {
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
+        final DBClusterSnapshot dbClusterSnapshot = awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+        experiment.setSelfHealingMethod(() -> {
+            awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
+            return null;
+        });
+        experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
+        // On finalize clean up the snapshot.
     }
 
     /**
