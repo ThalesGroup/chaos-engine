@@ -618,6 +618,17 @@ public class AwsRDSPlatformTest {
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
+    @Test(expected = ChaosException.class)
+    public void createDBInstanceSnapshotAmazonRDSRuntimeException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbInstanceIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
+        doThrow(new AmazonRDSException("Test")).when(amazonRDS)
+                                               .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                              .withDBSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
+    }
+
     @Test
     public void snapshotDBCluster () {
         String snapshotName = UUID.randomUUID().toString();
@@ -712,9 +723,19 @@ public class AwsRDSPlatformTest {
         String dbClusterIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new RuntimeException("Test")).when(amazonRDS)
-                                             .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                                                          .withDBClusterIdentifier(dbClusterIdentifier)
+                                             .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                           .withDBClusterSnapshotIdentifier(snapshotName));
+        awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+    }
+
+    @Test(expected = ChaosException.class)
+    public void snapshotDBClusterAmazonRDSRuntimeException () {
+        String snapshotName = UUID.randomUUID().toString();
+        String dbClusterIdentifier = UUID.randomUUID().toString();
+        doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
+        doThrow(new AmazonRDSException("Test")).when(amazonRDS)
+                                               .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                                            .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
 
