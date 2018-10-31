@@ -18,15 +18,22 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.util.AwsRDSUtils;
+import com.gemalto.chaos.util.CalendarUtils;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -86,9 +93,8 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances()
-                                                                           .stream()
-                                                                           .map(DBInstance::getDBInstanceStatus);
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances().stream()
+                                                                                     .map(DBInstance::getDBInstanceStatus);
         if (!dbInstanceStatusSupplier.get().allMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
             if (dbInstanceStatusSupplier.get().anyMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
                 return PlatformHealth.DEGRADED;
@@ -130,20 +136,6 @@ public class AwsRDSPlatform extends Platform {
         return chosenSet;
     }
 
-    private Collection<DBInstance> getAllDBInstances () {
-        Collection<DBInstance> dbInstances = new HashSet<>();
-        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
-        DescribeDBInstancesResult describeDBInstancesResult;
-        int i = 0;
-        do {
-            log.debug("Running describeDBInstances, page {}", ++i);
-            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
-            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
-            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
-        } while (describeDBInstancesRequest.getMarker() != null);
-        return dbInstances;
-    }
-
     private Collection<DBCluster> getAllDBClusters () {
         Collection<DBCluster> dbClusters = new HashSet<>();
         DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
@@ -156,6 +148,20 @@ public class AwsRDSPlatform extends Platform {
             describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
         } while (describeDBClustersRequest.getMarker() != null);
         return dbClusters;
+    }
+
+    private Collection<DBInstance> getAllDBInstances () {
+        Collection<DBInstance> dbInstances = new HashSet<>();
+        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
+        DescribeDBInstancesResult describeDBInstancesResult;
+        int i = 0;
+        do {
+            log.debug("Running describeDBInstances, page {}", ++i);
+            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
+            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
+            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
+        } while (describeDBInstancesRequest.getMarker() != null);
+        return dbInstances;
     }
 
     AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
@@ -232,7 +238,6 @@ public class AwsRDSPlatform extends Platform {
                      .allMatch(containerHealth -> containerHealth.equals(ContainerHealth.NORMAL))) return NORMAL;
         return RUNNING_EXPERIMENT;
     }
-
 
     public void failoverCluster (String dbClusterIdentifier) {
         log.info("Initiating failover request for {}", keyValue(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
@@ -358,5 +363,170 @@ public class AwsRDSPlatform extends Platform {
                                   .getGroupId();
         log.info("Created VPC Security Group {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, groupId));
         return groupId;
+    }
+
+    public DBSnapshot snapshotDBInstance (String dbInstanceIdentifier) {
+        return snapshotDBInstance(dbInstanceIdentifier, false);
+    }
+
+    private DBSnapshot snapshotDBInstance (String dbInstanceIdentifier, boolean retry) {
+        try {
+            CreateDBSnapshotRequest createDBSnapshotRequest = new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                           .withDBSnapshotIdentifier(getDBSnapshotIdentifier(dbInstanceIdentifier));
+            log.info("Requesting an instance snapshot {}", v("CreateDBSnapshotRequest", createDBSnapshotRequest));
+            return amazonRDS.createDBSnapshot(createDBSnapshotRequest);
+        } catch (DBSnapshotAlreadyExistsException e) {
+            log.error("A snapshot by that name already exists", e);
+            throw new ChaosException(e);
+        } catch (InvalidDBInstanceStateException e) {
+            log.error("Cannot snapshot database in an invalid state", e);
+            throw new ChaosException(e);
+        } catch (DBInstanceNotFoundException e) {
+            log.error("DB Instance not found to take snapshot", e);
+            throw new ChaosException(e);
+        } catch (SnapshotQuotaExceededException e) {
+            if (!retry) {
+                log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
+                cleanupOldSnapshots();
+                return snapshotDBInstance(dbInstanceIdentifier, true);
+            } else {
+                log.error("Exceeded snapshot quota", e);
+                throw new ChaosException(e);
+            }
+        } catch (AmazonRDSException e) {
+            log.error("AWS RDS Exception occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        } catch (RuntimeException e) {
+            log.error("Unknown error occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        }
+    }
+
+    String getDBSnapshotIdentifier (String dbInstanceIdentifier) {
+        String snapshotIdentifier = AwsRDSUtils.generateSnapshotName(dbInstanceIdentifier);
+        log.debug("{} will use {}", kv(DataDogConstants.RDS_INSTANCE_ID, dbInstanceIdentifier), kv(DataDogConstants.RDS_INSTANCE_SNAPSHOT, snapshotIdentifier));
+        return snapshotIdentifier;
+
+    }
+
+    public DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
+        return snapshotDBCluster(dbClusterIdentifier, false);
+    }
+
+    private DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier, boolean retry) {
+        try {
+            CreateDBClusterSnapshotRequest createDBClusterSnapshotRequest = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
+                                                                                                                .withDBClusterSnapshotIdentifier(getDBSnapshotIdentifier(dbClusterIdentifier));
+            log.info("Requesting a cluster snapshot {}", v("CreateDBClusterSnapshotRequest", createDBClusterSnapshotRequest));
+            return amazonRDS.createDBClusterSnapshot(createDBClusterSnapshotRequest);
+        } catch (DBClusterSnapshotAlreadyExistsException e) {
+            log.error("A cluster snapshot by that name already exists", e);
+            throw new ChaosException(e);
+        } catch (InvalidDBClusterStateException e) {
+            log.error("DB Cluster is in invalid state for snapshot", e);
+            throw new ChaosException(e);
+        } catch (DBClusterNotFoundException e) {
+            log.error("DB Cluster not found to take snapshot", e);
+            throw new ChaosException(e);
+        } catch (SnapshotQuotaExceededException e) {
+            if (!retry) {
+                log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
+                cleanupOldSnapshots();
+                return snapshotDBCluster(dbClusterIdentifier, true);
+            } else {
+                log.error("Exceeded snapshot quota", e);
+                throw new ChaosException(e);
+            }
+        } catch (InvalidDBClusterSnapshotStateException e) {
+            log.error("DB Cluster Snapshot in invalid state", e);
+            throw new ChaosException(e);
+        } catch (AmazonRDSException e) {
+            log.error("AWS RDS Exception occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        } catch (RuntimeException e) {
+            log.error("Unknown error occurred while taking a snapshot", e);
+            throw new ChaosException(e);
+        }
+    }
+
+    // Don't run for the first hour, but run every 15 minute afterwards/
+    @Scheduled(initialDelay = 1000L * 60 * 60, fixedDelay = 1000L * 60 * 15)
+    void cleanupOldSnapshots () {
+        try (MDC.MDCCloseable ignored = MDC.putCloseable(DataDogConstants.DATADOG_PLATFORM_KEY, this.getPlatformType())) {
+            log.info("Cleaning up old snapshots");
+            cleanupOldSnapshots(60);
+        }
+    }
+
+    void cleanupOldSnapshots (int olderThanMinutes) {
+        log.info("Clearing old chaos snapshots older than {}", v("oldSnapshotTime", Duration.ofMinutes(olderThanMinutes)));
+        cleanupOldInstanceSnapshots(olderThanMinutes);
+        cleanupOldClusterSnapshots(olderThanMinutes);
+    }
+
+    void cleanupOldInstanceSnapshots (int olderThanMinutes) {
+        amazonRDS.describeDBSnapshots()
+                 .getDBSnapshots()
+                 .stream()
+                 .filter(dbSnapshot -> AwsRDSUtils.isChaosSnapshot(dbSnapshot.getDBSnapshotIdentifier()))
+                 .filter(dbSnapshot -> snapshotIsOlderThan(dbSnapshot.getDBSnapshotIdentifier(), olderThanMinutes))
+                 .peek(dbSnapshot -> log.info("Deleting instance snapshot {} since it is out of date", v("dbSnapshot", dbSnapshot)))
+                 .parallel()
+                 .forEach(this::deleteInstanceSnapshot);
+    }
+
+    boolean snapshotIsOlderThan (String dbSnapshotName, int olderThanMinutes) {
+        Matcher m = CalendarUtils.datePattern.matcher(dbSnapshotName);
+        if (m.find()) {
+            String dateSection = m.group(1);
+            Instant snapshotTime = AwsRDSUtils.getInstantFromNameSegment(dateSection);
+            log.debug("Calculated snapshot {} has a timestamp of {}", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshotName), v("snapshotTime", snapshotTime));
+            return snapshotTime.plus(Duration.ofMinutes(olderThanMinutes)).isBefore(Instant.now());
+        }
+        log.warn("Could not extract a timestamp from {}.", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshotName));
+        return false;
+    }
+
+    void cleanupOldClusterSnapshots (int olderThanMinutes) {
+        amazonRDS.describeDBClusterSnapshots()
+                 .getDBClusterSnapshots()
+                 .stream()
+                 .filter(dbClusterSnapshot -> AwsRDSUtils.isChaosSnapshot(dbClusterSnapshot.getDBClusterSnapshotIdentifier()))
+                 .filter(dbClusterSnapshot -> snapshotIsOlderThan(dbClusterSnapshot.getDBClusterSnapshotIdentifier(), olderThanMinutes))
+                 .peek(dbClusterSnapshot -> log.info("Deleting cluster snapshot {} since it is out of date", v("dbClusterSnapshot", dbClusterSnapshot)))
+                 .parallel()
+                 .forEach(this::deleteClusterSnapshot);
+    }
+
+    public void deleteInstanceSnapshot (DBSnapshot dbSnapshot) {
+        log.info("Deleting RDS Instance Snapshot {}", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshot));
+        amazonRDS.deleteDBSnapshot(new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(dbSnapshot.getDBSnapshotIdentifier()));
+    }
+
+    public void deleteClusterSnapshot (DBClusterSnapshot dbClusterSnapshot) {
+        log.info("Deleting RDS Cluster Snapshot {}", v(DataDogConstants.RDS_CLUSTER_SNAPSHOT, dbClusterSnapshot));
+        amazonRDS.deleteDBClusterSnapshot(new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(dbClusterSnapshot
+                .getDBClusterSnapshotIdentifier()));
+    }
+
+    public boolean isInstanceSnapshotRunning (String dbInstanceIdentifier) {
+        log.debug("Evaluating if {} is backing up", kv(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
+        boolean snapshotRunning = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
+                                           .getDBInstances()
+                                           .stream()
+                                           .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus()
+                                                                             .equals(AWS_RDS_BACKING_UP));
+        log.info("{} is backing up = {}", kv(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), v("backupInProgress", snapshotRunning));
+        return snapshotRunning;
+    }
+
+    public boolean isClusterSnapshotRunning (String dbClusterIdentifier) {
+        log.debug("Evaluating if {} is backing up", kv(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
+        boolean snapshotRunning = amazonRDS.describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier))
+                                           .getDBClusters()
+                                           .stream()
+                                           .anyMatch(dbCluster -> dbCluster.getStatus().equals(AWS_RDS_BACKING_UP));
+        log.info("{} is backing up = {}", kv(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier), v("backupInProgress", snapshotRunning));
+        return snapshotRunning;
     }
 }

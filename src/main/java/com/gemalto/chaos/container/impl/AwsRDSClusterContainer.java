@@ -1,7 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
+import com.amazonaws.services.rds.model.DBClusterNotFoundException;
+import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -17,6 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER;
+import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
@@ -69,6 +73,22 @@ public class AwsRDSClusterContainer extends AwsContainer {
         final String[] dbInstanceIdentifiers = getSomeMembers().toArray(new String[0]);
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
         awsRDSPlatform.restartInstance(dbInstanceIdentifiers);
+    }
+
+    @StateExperiment
+    public void snapshotCluster (Experiment experiment) {
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
+        final DBClusterSnapshot dbClusterSnapshot = awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+        experiment.setSelfHealingMethod(() -> {
+            try {
+                awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
+            } catch (DBClusterNotFoundException e) {
+                log.warn("Tried to clean up cluster snapshot, but it was already deleted", v(DataDogConstants.RDS_CLUSTER_SNAPSHOT, dbClusterSnapshot), e);
+            }
+            return null;
+        });
+        experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
+        // On finalize clean up the snapshot.
     }
 
     /**

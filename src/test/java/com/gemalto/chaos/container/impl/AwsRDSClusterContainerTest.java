@@ -1,6 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
+import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
@@ -116,5 +118,26 @@ public class AwsRDSClusterContainerTest {
         assertEquals(DataDogIdentifier.dataDogIdentifier()
                                       .withKey("dbclusteridentifier")
                                       .withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
+    }
+
+    @Test
+    public void snapshotCluster () throws Exception {
+        Experiment experiment = spy(Experiment.class);
+        DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
+        doReturn(dbClusterSnapshot).when(awsRDSPlatform).snapshotDBCluster(dbClusterIdentifier);
+        awsRDSClusterContainer.snapshotCluster(experiment);
+        verify(awsRDSPlatform, times(1)).snapshotDBCluster(dbClusterIdentifier);
+        verify(experiment, times(1)).setFinalizeMethod(any());
+        verify(experiment, times(1)).setSelfHealingMethod(any());
+        verify(experiment, times(1)).setCheckContainerHealth(any());
+        experiment.getSelfHealingMethod().call();
+        verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
+        reset(awsRDSPlatform);
+        experiment.getFinalizeMethod().call();
+        verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
+        reset(awsRDSPlatform);
+        doReturn(true, false).when(awsRDSPlatform).isClusterSnapshotRunning(dbClusterIdentifier);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        assertEquals(ContainerHealth.NORMAL, experiment.getCheckContainerHealth().call());
     }
 }
