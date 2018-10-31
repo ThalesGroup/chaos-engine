@@ -31,17 +31,17 @@ public class AwsRDSUtils {
         String timestamp = Instant.now().toString();
         String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp)
                               .replaceAll(":", "-")
-                              .replaceAll(",", "-")
-                              .replaceAll("\\.", "-")
-                              .replaceAll("--", "-");
+                              .replaceAll(",", "-").replaceAll("\\.", "-").replaceAll("--+", "-");
         int identifierTrim = 0;
         while (!isValidSnapshotName(output)) {
             output = String.format("ChaosSnapshot-%s-%s", identifier.substring(0, identifier.length() - ++identifierTrim), timestamp)
                            .replaceAll(":", "-")
-                           .replaceAll(",", "-")
-                           .replaceAll("\\.", "-")
-                           .replaceAll("--", "-");
+                           .replaceAll(",", "-").replaceAll("\\.", "-").replaceAll("--+", "-");
             if (identifierTrim == identifier.length()) {
+                /*
+                I could not find a way to trigger this! Exception is here just in case, but I can't find a way to
+                make this happen.
+                */
                 throw new ChaosException("Could not shorten " + identifier + " to fit in a valid snapshot name");
             }
         }

@@ -1,6 +1,5 @@
 package com.gemalto.chaos.util;
 
-import com.gemalto.chaos.ChaosException;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -38,10 +37,6 @@ public class AwsRDSUtilsTest {
         });
     }
 
-    @Test(expected = ChaosException.class)
-    public void generateSnapshotNameException () {
-        AwsRDSUtils.generateSnapshotName("--");
-    }
 
     @Test
     public void rdsSnapshotNameConstraints () {
