@@ -9,6 +9,8 @@ public class DataDogConstants {
 
     public static final String SLACK_NOTIFICATION_SERVER_RESPONSE_KEY ="slack-server-response";
     public static final String RDS_INSTANCE_ID = "instanceid";
+    public static final String RDS_INSTANCE_SNAPSHOT = "dbsnapshot";
+    public static final String RDS_CLUSTER_SNAPSHOT = "dbclustersnapshot";
 
     private DataDogConstants () {
     }
