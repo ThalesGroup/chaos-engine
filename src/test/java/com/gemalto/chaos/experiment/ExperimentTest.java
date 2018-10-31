@@ -176,6 +176,7 @@ public class ExperimentTest {
     public void experimentState () {
         // No specific health check method, back to normal, not finalizable (STARTED)
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
         when(stateExperiment.isFinalizable()).thenReturn(false);
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
         verify(stateExperiment, times(0)).doSelfHealing();
@@ -223,6 +224,7 @@ public class ExperimentTest {
             throw new RuntimeException();
         });
         when(stateExperiment.isFinalizable()).thenReturn(false);
+        doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
         verify(stateContainer, times(1)).getContainerHealth(STATE);
@@ -233,6 +235,7 @@ public class ExperimentTest {
     @SuppressWarnings("unchecked")
     public void experimentStateWithFinalizableCallable () throws Exception {
         Callable<Void> callable = mock(Callable.class);
+        doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
         stateExperiment.setFinalizeMethod(callable);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(true);
@@ -245,6 +248,7 @@ public class ExperimentTest {
     @SuppressWarnings("unchecked")
     public void experimentStateWithFinalizableCallableThrowingException () throws Exception {
         Callable<Void> callable = mock(Callable.class);
+        doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
         stateExperiment.setFinalizeMethod(callable);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         when(stateExperiment.isFinalizable()).thenReturn(true);
@@ -256,14 +260,14 @@ public class ExperimentTest {
 
     @Test
     public void doSelfHealing () {
-        // Is not over duration, should not evaluate canRunSelfHealing()
+        // Is not over maximumDuration, should not evaluate canRunSelfHealing()
         doReturn(false).when(stateExperiment).isOverDuration();
         doCallRealMethod().when(stateExperiment).doSelfHealing();
         assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).canRunSelfHealing();
         reset(notificationManager);
         reset(stateExperiment);
-        // Is over duration and can run self healing. Verify doSelfHealing is called once.
+        // Is over maximumDuration and can run self healing. Verify doSelfHealing is called once.
         doReturn(true).when(stateExperiment).isOverDuration();
         doReturn(true).when(stateExperiment).canRunSelfHealing();
         doNothing().when(stateExperiment).callSelfHealing();

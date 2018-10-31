@@ -6,8 +6,7 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 
 import java.time.Duration;
 
-import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES;
-import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
+import static com.gemalto.chaos.constants.ExperimentConstants.*;
 
 public class GenericContainerExperiment extends Experiment {
     public static GenericContainerExperimentBuilder builder () {
@@ -17,7 +16,8 @@ public class GenericContainerExperiment extends Experiment {
     public static final class GenericContainerExperimentBuilder {
         protected Container container;
         private ExperimentType experimentType;
-        private Duration duration = Duration.ofMinutes(DEFAULT_EXPERIMENT_DURATION_MINUTES);
+        private Duration minimumDuration = Duration.ofSeconds(DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS);
+        private Duration maximumDuration = Duration.ofMinutes(DEFAULT_EXPERIMENT_DURATION_MINUTES);
         private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
 
         private GenericContainerExperimentBuilder () {
@@ -37,8 +37,13 @@ public class GenericContainerExperiment extends Experiment {
             return this;
         }
 
-        public GenericContainerExperimentBuilder withDuration (Duration duration) {
-            this.duration = duration;
+        public GenericContainerExperimentBuilder withDuration (Duration maximumDuration) {
+            this.maximumDuration = maximumDuration;
+            return this;
+        }
+
+        public GenericContainerExperimentBuilder withMinimumDuration (Duration minimumDuration) {
+            this.minimumDuration = minimumDuration;
             return this;
         }
 
@@ -51,7 +56,8 @@ public class GenericContainerExperiment extends Experiment {
             GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment();
             genericContainerExperiment.experimentType = this.experimentType;
             genericContainerExperiment.container = this.container;
-            genericContainerExperiment.duration = this.duration;
+            genericContainerExperiment.maximumDuration = this.maximumDuration;
+            genericContainerExperiment.minimumDuration = this.minimumDuration;
             genericContainerExperiment.finalizationDuration = this.finalizationDuration;
             return genericContainerExperiment;
         }

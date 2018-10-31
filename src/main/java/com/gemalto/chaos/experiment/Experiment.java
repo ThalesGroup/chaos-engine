@@ -24,9 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_MAXIMUM_SELF_HEALING_RETRIES;
-import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
-import static com.gemalto.chaos.constants.ExperimentConstants.MAXIMUM_SELF_HEALING_RETRIES_REACHED;
+import static com.gemalto.chaos.constants.ExperimentConstants.*;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
 
@@ -35,7 +33,8 @@ public abstract class Experiment {
     private final String id = randomUUID().toString();
     protected Container container;
     protected ExperimentType experimentType;
-    protected Duration duration = Duration.ofMinutes(ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES);
+    protected Duration minimumDuration = Duration.ofSeconds(ExperimentConstants.DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS);
+    protected Duration maximumDuration = Duration.ofMinutes(ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private Platform experimentLayer;
     private Method experimentMethod;
@@ -155,6 +154,7 @@ public abstract class Experiment {
                                                                .build());
                 return false;
             }
+            startTime = Instant.now();
             experimentState = ExperimentState.STARTED;
         } else return false;
         return true;
@@ -196,6 +196,10 @@ public abstract class Experiment {
     }
 
     private ContainerHealth checkContainerHealth () {
+        if (isBelowMinimumDuration()) {
+            log.debug("Experiment is too young to evaluate health.");
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        }
         if (checkContainerHealth != null) {
             try {
                 return checkContainerHealth.call();
@@ -204,6 +208,10 @@ public abstract class Experiment {
             }
         }
         return container.getContainerHealth(experimentType);
+    }
+
+    public boolean isBelowMinimumDuration () {
+        return Instant.now().isBefore(startTime.plus(minimumDuration));
     }
 
     public boolean isFinalizable () {
@@ -302,7 +310,7 @@ public abstract class Experiment {
     }
 
     protected boolean isOverDuration () {
-        return Instant.now().isAfter(getStartTime().plus(duration));
+        return Instant.now().isAfter(getStartTime().plus(maximumDuration));
     }
 
     protected boolean canRunSelfHealing () {
