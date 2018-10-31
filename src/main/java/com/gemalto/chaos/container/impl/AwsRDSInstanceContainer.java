@@ -1,6 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBSnapshot;
+import com.amazonaws.services.rds.model.DBSnapshotNotFoundException;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -16,6 +18,7 @@ import java.util.Collection;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_INSTANCE_DATADOG_IDENTIFIER;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
@@ -75,7 +78,11 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
         final DBSnapshot dbSnapshot = awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
         experiment.setSelfHealingMethod(() -> {
-            awsRDSPlatform.deleteInstanceSnapshot(dbSnapshot);
+            try {
+                awsRDSPlatform.deleteInstanceSnapshot(dbSnapshot);
+            } catch (DBSnapshotNotFoundException e) {
+                log.warn("Attempted to delete snapshot, but it was already deleted", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshot), e);
+            }
             return null;
         });
         experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
