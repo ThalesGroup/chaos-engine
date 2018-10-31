@@ -516,7 +516,7 @@ public class AwsRDSPlatform extends Platform {
                                            .stream()
                                            .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus()
                                                                              .equals(AWS_RDS_BACKING_UP));
-        log.info("{} is still backing-up", kv(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
+        log.info("{} is backing up = {}", kv(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), v("backupInProgress", snapshotRunning));
         return snapshotRunning;
     }
 
@@ -526,7 +526,7 @@ public class AwsRDSPlatform extends Platform {
                                            .getDBClusters()
                                            .stream()
                                            .anyMatch(dbCluster -> dbCluster.getStatus().equals(AWS_RDS_BACKING_UP));
-        log.info("{} is still backing-up", kv(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier));
+        log.info("{} is backing up = {}", kv(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier), v("backupInProgress", snapshotRunning));
         return snapshotRunning;
     }
 }
