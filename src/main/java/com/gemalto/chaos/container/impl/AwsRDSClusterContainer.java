@@ -32,6 +32,10 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return AwsRDSClusterContainerBuilder.anAwsRDSClusterContainer();
     }
 
+    public String getEngine () {
+        return engine;
+    }
+
     @Override
     public Platform getPlatform () {
         return awsRDSPlatform;
@@ -75,22 +79,6 @@ public class AwsRDSClusterContainer extends AwsContainer {
         awsRDSPlatform.restartInstance(dbInstanceIdentifiers);
     }
 
-    @StateExperiment
-    public void snapshotCluster (Experiment experiment) {
-        experiment.setCheckContainerHealth(() -> awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
-        final DBClusterSnapshot dbClusterSnapshot = awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
-        experiment.setSelfHealingMethod(() -> {
-            try {
-                awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
-            } catch (DBClusterNotFoundException e) {
-                log.warn("Tried to clean up cluster snapshot, but it was already deleted", v(DataDogConstants.RDS_CLUSTER_SNAPSHOT, dbClusterSnapshot), e);
-            }
-            return null;
-        });
-        experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
-        // On finalize clean up the snapshot.
-    }
-
     /**
      * @return A randomly generated subset of getMembers. This will always return at least 1, and at most N-1 entries.
      */
@@ -125,6 +113,22 @@ public class AwsRDSClusterContainer extends AwsContainer {
             returnSet.add(members.get(i));
         }
         return returnSet;
+    }
+
+    @StateExperiment
+    public void startSnapshot (Experiment experiment) {
+        experiment.setCheckContainerHealth(() -> awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
+        final DBClusterSnapshot dbClusterSnapshot = awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
+        experiment.setSelfHealingMethod(() -> {
+            try {
+                awsRDSPlatform.deleteClusterSnapshot(dbClusterSnapshot);
+            } catch (DBClusterNotFoundException e) {
+                log.warn("Tried to clean up cluster snapshot, but it was already deleted", v(DataDogConstants.RDS_CLUSTER_SNAPSHOT, dbClusterSnapshot), e);
+            }
+            return null;
+        });
+        experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
+        // On finalize clean up the snapshot.
     }
 
     @StateExperiment
