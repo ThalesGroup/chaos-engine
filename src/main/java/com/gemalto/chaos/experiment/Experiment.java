@@ -3,6 +3,7 @@ package com.gemalto.chaos.experiment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.constants.ExperimentConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -15,18 +16,23 @@ import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.*;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Experiment {
     private static final Logger log = LoggerFactory.getLogger(Experiment.class);
@@ -50,6 +56,13 @@ public abstract class Experiment {
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
+    @Value("${preferredExperiment:@null}")
+    private String preferredExperiment;
+
+    public void setPreferredExperiment (String preferredExperiment) {
+        this.preferredExperiment = preferredExperiment;
+    }
+
 
     NotificationManager getNotificationManager () {
         return notificationManager;
@@ -138,8 +151,20 @@ public abstract class Experiment {
             if (experimentMethods.isEmpty()) {
                 throw new ChaosException("Could not find an experiment vector");
             }
-            int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
-            setExperimentMethod(experimentMethods.get(index));
+            Method chosenMethod = null;
+            if (preferredExperiment != null && experimentMethods.stream()
+                                                                .map(Method::getName)
+                                                                .anyMatch(s -> s.equals(preferredExperiment))) {
+                Map<String, Method> stringMethodMap = experimentMethods.stream()
+                                                                       .collect(Collectors.toMap(Method::getName, method -> method));
+                chosenMethod = stringMethodMap.get(preferredExperiment);
+            }
+            if (chosenMethod == null) {
+                int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
+                chosenMethod = experimentMethods.get(index);
+            }
+            log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
+            setExperimentMethod(chosenMethod);
             setExperimentLayer(container.getPlatform());
             notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                            .withNotificationLevel(NotificationLevel.WARN)
@@ -208,10 +233,6 @@ public abstract class Experiment {
             }
         }
         return container.getContainerHealth(experimentType);
-    }
-
-    public boolean isBelowMinimumDuration () {
-        return Instant.now().isBefore(startTime.plus(minimumDuration));
     }
 
     public boolean isFinalizable () {
@@ -303,6 +324,10 @@ public abstract class Experiment {
                                                            .build());
         }
         return ExperimentState.STARTED;
+    }
+
+    public boolean isBelowMinimumDuration () {
+        return Instant.now().isBefore(startTime.plus(minimumDuration));
     }
 
     public Instant getFinalizationStartTime () {
