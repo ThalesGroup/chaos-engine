@@ -1,5 +1,6 @@
 package com.gemalto.chaos.ssh;
 
+import com.gemalto.chaos.ChaosException;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -31,13 +32,13 @@ public class SshManagerTest {
     Session.Command command;
 
     @Test
-    public void connect () {
+    public void connect ()  {
         when(sshClient.isConnected()).thenReturn(true);
         when(sshClient.isAuthenticated()).thenReturn(true);
         SshManager sshManager = new SshManager(host, String.valueOf(port));
         sshManager.setSshClient(sshClient);
-        boolean connected = sshManager.connect(username, passwd);
         try {
+        boolean connected = sshManager.connect(username, passwd);
             verify(sshClient, times(1)).connect(host, port);
             verify(sshClient, times(1)).authPassword(anyString(), anyString());
             verify(sshClient, times(1)).isConnected();
@@ -54,8 +55,9 @@ public class SshManagerTest {
         when(sshClient.isConnected()).thenReturn(false);
         SshManager sshManager = new SshManager(host, String.valueOf(port));
         sshManager.setSshClient(sshClient);
-        boolean connected = sshManager.connect(username, passwd);
         try {
+        boolean connected = sshManager.connect(username, passwd);
+
             verify(sshClient, times(1)).connect(host, port);
             verify(sshClient, times(1)).authPassword(anyString(), anyString());
             assertFalse(connected);
@@ -65,18 +67,14 @@ public class SshManagerTest {
         }
     }
 
-    @Test
-    public void connectionFailed () {
-        try {
+    @Test(expected = IOException.class)
+    public void connectionFailed () throws IOException {
             doThrow(new IOException()).when(sshClient).connect(host, port);
             SshManager sshManager = new SshManager(host, String.valueOf(port));
             sshManager.setSshClient(sshClient);
             boolean connected = sshManager.connect(username, passwd);
             verify(sshClient, times(1)).connect(host, port);
             assertFalse(connected);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
     }
 
     @Test
@@ -85,8 +83,9 @@ public class SshManagerTest {
         when(sshClient.isAuthenticated()).thenReturn(false);
         SshManager sshManager = new SshManager(host, String.valueOf(port));
         sshManager.setSshClient(sshClient);
-        boolean connected = sshManager.connect(username, passwd);
         try {
+        boolean connected = sshManager.connect(username, passwd);
+
             verify(sshClient, times(1)).connect(host, port);
             verify(sshClient, times(1)).authPassword(anyString(), anyString());
             verify(sshClient, times(1)).isConnected();
@@ -119,12 +118,11 @@ public class SshManagerTest {
         }
     }
 
-    @Test
-    public void executeCommandFailed () {
+    @Test(expected = IOException.class)
+    public void executeCommandFailed () throws IOException {
         String koString = "Fail";
         int koExitCode = -1;
         SshCommandResult expectedResult = new SshCommandResult(koString, koExitCode);
-        try {
             when(sshClient.startSession()).thenReturn(session);
             when(sshClient.isConnected()).thenReturn(true);
             when(sshClient.isAuthenticated()).thenReturn(true);
@@ -133,8 +131,5 @@ public class SshManagerTest {
             sshManager.setSshClient(sshClient);
             sshManager.connect(username, passwd);
             assertEquals(expectedResult.toString(), sshManager.executeCommand(script).toString());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
     }
 }

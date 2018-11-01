@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class ShellSessionCapabilityProvider {
@@ -24,12 +25,12 @@ public class ShellSessionCapabilityProvider {
         return capabilities;
     }
 
-    public void build () {
+    public void build () throws IOException {
         log.debug("Collecting shell session capabilities");
         getAvailableCapabilities();
     }
 
-    private void getAvailableCapabilities () {
+    private void getAvailableCapabilities () throws IOException {
         for (ShellSessionCapability requiredCapability : requiredCapabilities) {
             switch (requiredCapability.getCapabilityType()) {
                 case SHELL:
@@ -42,7 +43,7 @@ public class ShellSessionCapabilityProvider {
         }
     }
 
-    private void checkShellType () {
+    private void checkShellType () throws IOException {
         ShellSessionCapability capability;
         SshCommandResult result = sshManager.executeCommand(ShellCommand.SHELLTYPE.toString());
         if (result.getExitStatus() == 0 && result.getCommandOutput().length() > 0) {
@@ -59,7 +60,7 @@ public class ShellSessionCapabilityProvider {
         }
     }
 
-    private void checkBinaryPresent (ArrayList<ShellSessionCapabilityOption> binaryOptions) {
+    private void checkBinaryPresent (ArrayList<ShellSessionCapabilityOption> binaryOptions) throws IOException {
         ShellSessionCapability capability = new ShellSessionCapability(ShellCapabilityType.BINARY);
         for (ShellSessionCapabilityOption option : binaryOptions) {
             SshCommandResult result = sshManager.executeCommand(ShellCommand.BINARYEXISTS + option.getName());

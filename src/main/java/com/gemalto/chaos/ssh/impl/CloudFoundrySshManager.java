@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component
 @ConditionalOnBean(CloudFoundryPlatformInfoFactory.class)
 public class CloudFoundrySshManager extends SshManager {
@@ -24,12 +26,12 @@ public class CloudFoundrySshManager extends SshManager {
     }
 
     @Override
-    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) {
+    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) throws IOException {
         super.executeCommandInInteractiveShell(command, shellName + " : " + container.getName(), maxSessionDuration);
     }
 
     //https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
-    public boolean connect (CloudFoundryContainer container) {
+    public boolean connect (CloudFoundryContainer container) throws IOException {
         log.debug("Establishing ssh connection to app container {}, instance {}", container.getName(), container.getInstance());
         String cfContainerUsername = "cf:" + container.getApplicationId() + "/" + container.getInstance();
         this.container = container;

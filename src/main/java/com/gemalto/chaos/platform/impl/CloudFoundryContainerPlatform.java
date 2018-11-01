@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -20,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -124,16 +126,20 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     }
 
     public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
-        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
-        if (ssh.connect(container)) {
-            if (container.getDetectedCapabilities() != null) {
-                sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
+        try {
+            CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+            if (ssh.connect(container)) {
+                if (container.getDetectedCapabilities() != null) {
+                    sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
+                }
+                sshExperiment.runExperiment(ssh);
+                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
+                    container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
+                }
+                ssh.disconnect();
             }
-            sshExperiment.runExperiment(ssh);
-            if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
-                container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
-            }
-            ssh.disconnect();
+        } catch (IOException e) {
+           throw new ChaosException(e);
         }
     }
 

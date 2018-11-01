@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static org.junit.Assert.*;
@@ -27,7 +28,7 @@ public class ShellSessionCapabilityProviderTest {
                                                                                                     .addCapabilityOption(ShellSessionCapabilityOption.SORT);
 
     @Test
-    public void sessionHasShellCapability () {
+    public void sessionHasShellCapability () throws IOException {
         initCapabilities(capabilityBash);
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("bash");
@@ -45,7 +46,7 @@ public class ShellSessionCapabilityProviderTest {
     }
 
     @Test
-    public void sessionHasBinaryCapability () {
+    public void sessionHasBinaryCapability () throws IOException {
         initCapabilities(capabilityBinary);
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("test string");
@@ -58,7 +59,7 @@ public class ShellSessionCapabilityProviderTest {
     }
 
     @Test
-    public void sessionHasComplexCapabilityRequirements () {
+    public void sessionHasComplexCapabilityRequirements () throws IOException {
         ArrayList<ShellSessionCapability> complexRequiredCapabilities = new ArrayList<>();
         complexRequiredCapabilities.add(capabilityBash);
         complexRequiredCapabilities.add(capabilityBinary);
@@ -79,7 +80,7 @@ public class ShellSessionCapabilityProviderTest {
     }
 
     @Test
-    public void sessionShellCapabilityMissing () {
+    public void sessionShellCapabilityMissing () throws IOException {
         initCapabilities(capabilityBash);
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("UNKNOWN");
@@ -92,7 +93,7 @@ public class ShellSessionCapabilityProviderTest {
     }
 
     @Test
-    public void sessionBinaryCapabilityMissing () {
+    public void sessionBinaryCapabilityMissing () throws IOException {
         initCapabilities(capabilityBinary);
         when(result.getExitStatus()).thenReturn(1);
         when(ssh.executeCommand(any(String.class))).thenReturn(result);
@@ -101,7 +102,7 @@ public class ShellSessionCapabilityProviderTest {
     }
 
     @Test
-    public void commandExecutionHasFailed () {
+    public void commandExecutionHasFailed () throws IOException {
         initCapabilities(capabilityBash);
         when(result.getExitStatus()).thenReturn(-1);
         when(ssh.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);

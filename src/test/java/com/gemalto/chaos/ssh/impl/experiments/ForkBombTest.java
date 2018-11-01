@@ -8,6 +8,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -20,7 +22,7 @@ public class ForkBombTest {
     SshCommandResult result;
 
     @Test
-    public void canExperiment () {
+    public void canExperiment () throws IOException {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("bash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
@@ -40,7 +42,7 @@ public class ForkBombTest {
     }
 
     @Test
-    public void parseBinaryName () {
+    public void parseBinaryName () throws IOException {
         ForkBomb bomb = new ForkBomb();
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("/bin/bash");
@@ -49,7 +51,7 @@ public class ForkBombTest {
     }
 
     @Test
-    public void cannotExperiment () {
+    public void cannotExperiment () throws IOException {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("uknown");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
@@ -58,7 +60,7 @@ public class ForkBombTest {
     }
 
     @Test
-    public void cannotRetrieveCapabilities () {
+    public void cannotRetrieveCapabilities () throws IOException {
         when(result.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         ForkBomb bomb = new ForkBomb();

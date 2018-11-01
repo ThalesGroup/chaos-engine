@@ -3,6 +3,7 @@ package com.gemalto.chaos.ssh;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public abstract class SshExperiment {
@@ -13,7 +14,7 @@ public abstract class SshExperiment {
 
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean runExperiment (SshManager sshManager) {
+    public boolean runExperiment (SshManager sshManager) throws IOException {
         this.sshManager = sshManager;
         if (detectedCapabilities == null) {
             collectAvailableCapabilities();
@@ -35,7 +36,7 @@ public abstract class SshExperiment {
         return false;
     }
 
-    private void collectAvailableCapabilities () {
+    private void collectAvailableCapabilities () throws IOException {
         ShellSessionCapabilityProvider capProvider = new ShellSessionCapabilityProvider(sshManager, requiredCapabilities);
         capProvider.build();
         detectedCapabilities = capProvider.getCapabilities();
@@ -50,7 +51,7 @@ public abstract class SshExperiment {
         return false;
     }
 
-    private void updateAvailableCapabilities () {
+    private void updateAvailableCapabilities () throws IOException {
         log.debug("Updating shell capabilities");
         ArrayList<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
         ArrayList<ShellSessionCapability> additionalDetectedCapabilities;

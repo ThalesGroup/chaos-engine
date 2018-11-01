@@ -36,6 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -240,7 +241,7 @@ public class CloudFoundryContainerPlatformTest {
     }
 
     @Test
-    public void sshExperimentMergeCapabilities () {
+    public void sshExperimentMergeCapabilities () throws IOException {
         ArrayList<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
         alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
         ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();

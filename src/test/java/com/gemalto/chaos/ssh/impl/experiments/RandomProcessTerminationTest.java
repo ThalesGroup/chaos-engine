@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -32,7 +34,7 @@ public class RandomProcessTerminationTest {
     private SshCommandResult resultHeadCapability;
 
     @Before
-    public void setUp () {
+    public void setUp () throws IOException {
         when(resultShellCapability.getExitStatus()).thenReturn(0);
         when(resultShellCapability.getCommandOutput()).thenReturn("bash");
         when(resultTypeCapability.getExitStatus()).thenReturn(0);
@@ -54,13 +56,13 @@ public class RandomProcessTerminationTest {
     }
 
     @Test
-    public void canExperiment () {
+    public void canExperiment () throws IOException {
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
         assertTrue(randomProcessTermination.runExperiment(sshManager));
     }
 
     @Test
-    public void cannotExperiment () {
+    public void cannotExperiment () throws IOException {
         when(resultShellCapability.getExitStatus()).thenReturn(0);
         when(resultShellCapability.getCommandOutput()).thenReturn("uknown");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
@@ -69,7 +71,7 @@ public class RandomProcessTerminationTest {
     }
 
     @Test
-    public void cannotRetrieveCapabilities () {
+    public void cannotRetrieveCapabilities () throws IOException {
         when(resultShellCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();

@@ -2,8 +2,10 @@ package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.SSHException;
+import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
+import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import org.bouncycastle.util.Strings;
 import org.slf4j.Logger;
@@ -29,8 +31,7 @@ public class SshManager {
     void setSshClient (SSHClient sshClient) {
         this.sshClient = sshClient;
     }
-    public boolean connect (String userName, String password) {
-        try {
+    public boolean connect (String userName, String password) throws IOException{
             log.debug("Connecting to host {}", hostname);
             sshClient.connect(hostname, Integer.valueOf(port));
             sshClient.authPassword(userName, password);
@@ -40,14 +41,10 @@ public class SshManager {
             } else {
                 log.error("SSH Authentication failed.");
             }
-        } catch (IOException e) {
-            log.error("Unable to connect to {}: {}", hostname, e.getMessage());
-        }
         return false;
     }
 
-    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) {
-        try {
+    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) throws IOException{
             Session session = sshClient.startSession();
             session.allocateDefaultPTY();
             log.debug("Going to execute command {} in interactive shell session {}", command, shellName);
@@ -81,13 +78,9 @@ public class SshManager {
                 shell.close();
             }
             log.debug("Interactive shell session ended.");
-        } catch (IOException e) {
-            log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
-        }
     }
 
-    public SshCommandResult executeCommand (String command) {
-        try {
+    public SshCommandResult executeCommand (String command) throws IOException {
             Session session = sshClient.startSession();
             session.allocateDefaultPTY();
             log.debug("Going to execute command: {}", command);
@@ -97,19 +90,11 @@ public class SshManager {
             session.close();
             log.debug("Command execution finished with exit code: {}", cmd.getExitStatus());
             return result;
-        } catch (SSHException e) {
-            log.error("Unable to execute command '{}' on {}: {}", command, hostname, e.getMessage());
-        }
-        return new SshCommandResult(-1);
     }
 
-    public void disconnect () {
-        try {
+    public void disconnect () throws  IOException{
             if (sshClient.isConnected()) {
                 sshClient.disconnect();
             }
-        } catch (IOException e) {
-            log.error("Disconnect from {} failed: {}", hostname, e.getMessage());
-        }
     }
 }
