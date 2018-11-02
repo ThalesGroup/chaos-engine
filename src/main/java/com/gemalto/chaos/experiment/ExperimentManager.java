@@ -63,10 +63,12 @@ public class ExperimentManager {
         Experiment experiment = newExperimentQueue.poll();
         while (experiment != null) {
             autowireCapableBeanFactory.autowireBean(experiment);
-            if (experiment.startExperiment()) {
-                activeExperiments.add(experiment);
+            try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
+                if (experiment.startExperiment()) {
+                    activeExperiments.add(experiment);
+                }
+                experiment = newExperimentQueue.poll();
             }
-            experiment = newExperimentQueue.poll();
         }
     }
 
