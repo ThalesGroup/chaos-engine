@@ -56,7 +56,7 @@ public abstract class Experiment {
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
-    @Value("${preferredExperiment:@null}")
+    @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
 
     public void setPreferredExperiment (String preferredExperiment) {
