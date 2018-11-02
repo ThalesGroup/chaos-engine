@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.admin.enums.AdminState.*;
 import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
@@ -433,9 +434,35 @@ public class ExperimentTest {
         doReturn(false).when(adminManager).canRunExperiments();
         assertFalse(stateExperiment.startExperiment());
     }
+
+    @Test
+    public void preferredExperiment () {
+        // Since we're overriding random chance, this is repeated 100 times. 50/50 chance means if this functionality
+        // breaks, there is a 1 in 2^100 chance of this passing.
+        final String doAnotherThing = "doAnotherThing";
+        IntStream.range(0, 100).parallel().forEach(i -> {
+            SecondStateContainer mockContainer = mock(SecondStateContainer.class);
+            Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
+                                                                          .withContainer(mockContainer)
+                                                                          .withExperimentType(STATE)
+                                                                          .build());
+            experiment.setPreferredExperiment(doAnotherThing);
+            autowireCapableBeanFactory.autowireBean(experiment);
+            doReturn(ContainerHealth.NORMAL).when(mockContainer).getContainerHealth(STATE);
+            doReturn(true).when(mockContainer).supportsExperimentType(STATE);
+            experiment.startExperiment();
+            assertEquals(doAnotherThing, experiment.getExperimentMethod().getName());
+        });
+    }
+
     private abstract class StateContainer extends Container {
         @StateExperiment
         public abstract void doAThing (Experiment experiment);
+    }
+
+    private abstract class SecondStateContainer extends StateContainer {
+        @StateExperiment
+        public abstract void doAnotherThing (Experiment experiment);
     }
 
     private abstract class NetworkContainer extends Container {

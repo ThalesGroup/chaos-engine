@@ -125,7 +125,7 @@ public class AwsRDSClusterContainerTest {
         Experiment experiment = spy(Experiment.class);
         DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
         doReturn(dbClusterSnapshot).when(awsRDSPlatform).snapshotDBCluster(dbClusterIdentifier);
-        awsRDSClusterContainer.snapshotCluster(experiment);
+        awsRDSClusterContainer.startSnapshot(experiment);
         verify(awsRDSPlatform, times(1)).snapshotDBCluster(dbClusterIdentifier);
         verify(experiment, times(1)).setFinalizeMethod(any());
         verify(experiment, times(1)).setSelfHealingMethod(any());

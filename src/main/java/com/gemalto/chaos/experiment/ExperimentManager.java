@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
@@ -62,10 +63,12 @@ public class ExperimentManager {
         Experiment experiment = newExperimentQueue.poll();
         while (experiment != null) {
             autowireCapableBeanFactory.autowireBean(experiment);
-            if (experiment.startExperiment()) {
-                activeExperiments.add(experiment);
+            try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
+                if (experiment.startExperiment()) {
+                    activeExperiments.add(experiment);
+                }
+                experiment = newExperimentQueue.poll();
             }
-            experiment = newExperimentQueue.poll();
         }
     }
 
@@ -82,10 +85,12 @@ public class ExperimentManager {
                                                                            .getKey(), experiment.getContainer()
                                                                                                 .getDataDogIdentifier()
                                                                                                 .getValue())) {
-                    ExperimentState experimentState = experiment.getExperimentState();
-                    if (experimentState == ExperimentState.FINISHED||experimentState == ExperimentState.FAILED) {
-                        log.info("Removing experiment {} from active experiment roster", experiment.getId());
-                        finishedExperiments.add(experiment);
+                    try (MDC.MDCCloseable ignored2 = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
+                        ExperimentState experimentState = experiment.getExperimentState();
+                        if (experimentState == ExperimentState.FINISHED || experimentState == ExperimentState.FAILED) {
+                            log.info("Removing experiment {} from active experiment roster", experiment.getId());
+                            finishedExperiments.add(experiment);
+                        }
                     }
                 }
             }
