@@ -107,22 +107,24 @@ public class ExperimentManager {
         if (activeExperiments.isEmpty() && newExperimentQueue.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
-                return null;
+                return new LinkedBlockingDeque<>();
             }
-            List<Platform> eligiblePlatforms = platformManager.getPlatforms().stream()
-                                                              .peek(platform -> platform.usingHolidayManager(holidayManager))
-                                                              .filter(platform1 -> force || platform1.canExperiment())
-                                                              .filter(platform1 -> !platform1.getRoster().isEmpty())
-                                                              .collect(Collectors.toList());
-            if (eligiblePlatforms.isEmpty()) {
+            Optional<Platform> eligiblePlatform = platformManager.getPlatforms()
+                                                                 .stream()
+                                                                 .peek(platform -> platform.usingHolidayManager(holidayManager))
+                                                                 .filter(platform1 -> force || platform1.canExperiment())
+                                                                 .filter(platform1 -> !platform1.getRoster().isEmpty())
+                                                                 .min(Comparator.comparingLong(platform -> platform.getNextChaosTime()
+                                                                                                                   .toEpochMilli()));
+            if (!eligiblePlatform.isPresent()) {
                 log.debug("No platforms eligible for experiments");
-                return null;
+                return new LinkedBlockingDeque<>();
             }
-            Platform chosenPlatform = eligiblePlatforms.get(new Random().nextInt(eligiblePlatforms.size()));
+            Platform chosenPlatform = eligiblePlatform.get();
             List<Container> roster = chosenPlatform.scheduleExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
                 log.debug("Platform {} has empty roster, no experiments scheduled", keyValue(DATADOG_PLATFORM_KEY, chosenPlatform.getPlatformType()));
-                return null;
+                return new LinkedBlockingDeque<>();
             }
             Set<Container> containersToExperiment;
             do {
@@ -135,7 +137,7 @@ public class ExperimentManager {
                                   .forEach(experiment -> log.info("Experiment {}, {} added to the queue", experiment.getId(), experiment));
             return newExperimentQueue;
         }
-        return null;
+        return new LinkedBlockingDeque<>();
     }
 
     Set<Experiment> getActiveExperiments () {
