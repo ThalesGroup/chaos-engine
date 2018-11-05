@@ -7,10 +7,14 @@ import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.PlatformManager;
+import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.platform.enums.PlatformHealth;
+import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -137,10 +142,12 @@ public class ExperimentManagerTest {
         when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(containerListApps);
         when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
+        when(cloudFoundryApplicationPlatform.getNextChaosTime()).thenReturn(Instant.now());
         when(cloudFoundryContainerPlatform.scheduleExperiment()).thenReturn(cloudFoundryContainerPlatform);
         when(cloudFoundryContainerPlatform.getRoster()).thenReturn(containerListContainers);
         when(cloudFoundryContainerPlatform.canExperiment()).thenReturn(true);
         when(cloudFoundryContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(cloudFoundryContainerPlatform.getNextChaosTime()).thenReturn(Instant.now());
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
@@ -231,6 +238,220 @@ public class ExperimentManagerTest {
         assertThat(experimentManager.experimentContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1));
         verify(container1, times(1)).createExperiment();
         verify(container2, times(0)).createExperiment();
+    }
+
+    @Test
+    public void testPlatformsByOrder () {
+        Platform platform1 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform2 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform3 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform4 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();
+        doReturn(true).when(platform1).canExperiment();
+        doReturn(true).when(platform2).canExperiment();
+        doReturn(true).when(platform3).canExperiment();
+        doReturn(false).when(platform4).canExperiment();
+        doReturn(Collections.singletonList(container1)).when(platform1).getRoster();
+        doReturn(Collections.singletonList(container2)).when(platform2).getRoster();
+        doReturn(Collections.emptyList()).when(platform3).getRoster();
+        doReturn(Instant.now()).when(platform1).getNextChaosTime();
+        doReturn(Instant.now().plusSeconds(1)).when(platform2).getNextChaosTime();
+        experimentManager.startExperiments(false);
+        verify(platform4, never()).getRoster();
+        verify(platform1, times(1)).getNextChaosTime();
+        verify(platform2, times(1)).getNextChaosTime();
+        verify(platform3, times(0)).getNextChaosTime();
+        verify(platform4, times(0)).getNextChaosTime();
+        verify(platform1, times(1)).scheduleExperiment();
+        verify(platform2, never()).scheduleExperiment();
+        verify(platform3, never()).scheduleExperiment();
+        verify(platform4, never()).scheduleExperiment();
+    }
+
+    @Test
+    public void testPlatformsByOrderWithNoEligible () {
+        Platform platform1 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform2 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform3 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        Platform platform4 = Mockito.spy(new Platform() {
+            @Override
+            public ApiStatus getApiStatus () {
+                return null;
+            }
+
+            @Override
+            public PlatformLevel getPlatformLevel () {
+                return null;
+            }
+
+            @Override
+            public PlatformHealth getPlatformHealth () {
+                return null;
+            }
+
+            @Override
+            protected List<Container> generateRoster () {
+                return null;
+            }
+        });
+        doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();
+        doReturn(true).when(platform1).canExperiment();
+        doReturn(true).when(platform2).canExperiment();
+        doReturn(false).when(platform3).canExperiment();
+        doReturn(false).when(platform4).canExperiment();
+        doReturn(Collections.emptyList()).when(platform1).getRoster();
+        doReturn(Collections.emptyList()).when(platform2).getRoster();
+        assertThat(experimentManager.startExperiments(false), IsEmptyCollection.empty());
+        verify(platform3, never()).getRoster();
+        verify(platform4, never()).getRoster();
+        verify(platform1, never()).getNextChaosTime();
+        verify(platform2, never()).getNextChaosTime();
+        verify(platform3, never()).getNextChaosTime();
+        verify(platform4, never()).getNextChaosTime();
+        verify(platform1, never()).scheduleExperiment();
+        verify(platform2, never()).scheduleExperiment();
+        verify(platform3, never()).scheduleExperiment();
+        verify(platform4, never()).scheduleExperiment();
     }
 
     @Configuration
