@@ -313,6 +313,27 @@ public class ExperimentTest {
                                                                          .withNotificationLevel(NotificationLevel.ERROR)
                                                                          .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
                                                                          .build());
+
+        reset(stateExperiment);
+        reset(notificationManager);
+        stateExperiment.setSelfHealingCounter(new AtomicInteger(0));
+        // Exception thrown while invoking self healing - SCT-7040
+        doReturn(true).when(stateExperiment).isOverDuration();
+        doReturn(true).when(stateExperiment).canRunSelfHealing();
+        doReturn(true).when(adminManager).canRunSelfHealing();
+        doThrow(new ChaosException()).when(stateExperiment).callSelfHealing();
+        assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
+                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
+                                                                         .fromExperiment(stateExperiment)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                         .build());
+
         reset(stateExperiment);
         reset(notificationManager);
         // Maximum self healing retries reached

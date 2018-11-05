@@ -288,6 +288,7 @@ public abstract class Experiment {
                                                .withNotificationLevel(NotificationLevel.WARN)
                                                .withMessage(message.toString())
                                                .build();
+                        notificationManager.sendNotification(chaosEvent);
                         callSelfHealing();
                     }else{
                         chaosEvent = ChaosEvent.builder()
@@ -303,13 +304,16 @@ public abstract class Experiment {
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                            .build();
+
+                    notificationManager.sendNotification(chaosEvent);
                 } else {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
                                            .build();
+
+                    notificationManager.sendNotification(chaosEvent);
                 }
-                notificationManager.sendNotification(chaosEvent);
             } catch (ChaosException e) {
                 log.error("Experiment {}: An exception occurred while running self-healing.", id, e);
                 notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
