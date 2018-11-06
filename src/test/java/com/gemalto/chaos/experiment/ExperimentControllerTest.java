@@ -1,9 +1,15 @@
 package com.gemalto.chaos.experiment;
 
 import com.gemalto.chaos.admin.AdminManager;
+import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
+import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.NotificationManager;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
+import com.gemalto.chaos.platform.Platform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +20,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.validation.constraints.NotNull;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Queue;
@@ -45,11 +53,43 @@ public class ExperimentControllerTest {
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
     private Experiment experiment1;
     private Experiment experiment2;
+    private Container container = new Container() {
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return ContainerHealth.NORMAL;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
+    };
 
     @Before
     public void setUp () {
-        experiment1 = GenericContainerExperiment.builder().withExperimentType(ExperimentType.STATE).build();
-        experiment2 = GenericContainerExperiment.builder().withExperimentType(ExperimentType.NETWORK).build();
+        experiment1 = GenericContainerExperiment.builder()
+                                                .withContainer(container)
+                                                .withExperimentType(ExperimentType.STATE)
+                                                .build();
+        experiment2 = GenericContainerExperiment.builder()
+                                                .withContainer(container)
+                                                .withExperimentType(ExperimentType.NETWORK)
+                                                .build();
         autowireCapableBeanFactory.autowireBean(experiment1);
         autowireCapableBeanFactory.autowireBean(experiment2);
     }

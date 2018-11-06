@@ -76,8 +76,13 @@ public abstract class Experiment {
         return lastSelfHealingTime;
     }
 
+    @JsonIgnore
     public Platform getExperimentLayer () {
         return experimentLayer;
+    }
+
+    public String getExperimentLayerName(){
+        return container.getContainerType();
     }
 
     private void setExperimentLayer (Platform experimentLayer) {
@@ -109,6 +114,7 @@ public abstract class Experiment {
         this.selfHealingMethod = selfHealingMethod;
     }
 
+    @JsonIgnore
     public Callable<Void> getFinalizeMethod () {
         return finalizeMethod;
     }
@@ -117,6 +123,7 @@ public abstract class Experiment {
         this.finalizeMethod = finalizeMethod;
     }
 
+    @JsonIgnore
     public Callable<ContainerHealth> getCheckContainerHealth () {
         return checkContainerHealth;
     }
