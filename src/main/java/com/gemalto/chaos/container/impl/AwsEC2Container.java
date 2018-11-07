@@ -24,6 +24,7 @@ public class AwsEC2Container extends AwsContainer {
     private String instanceId;
     private String keyName;
     private String name;
+    private String groupIdentifier;
     private transient AwsEC2Platform awsEC2Platform;
     private final transient Callable<Void> startContainerMethod = () -> {
         awsEC2Platform.startInstance(instanceId);
@@ -40,6 +41,10 @@ public class AwsEC2Container extends AwsContainer {
 
     public String getInstanceId () {
         return instanceId;
+    }
+
+    public String getGroupIdentifier () {
+        return groupIdentifier;
     }
 
     @Override
@@ -100,6 +105,7 @@ public class AwsEC2Container extends AwsContainer {
         private String name;
         private AwsEC2Platform awsEC2Platform;
         private String availabilityZone;
+        private String groupIdentifier;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -133,6 +139,11 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
+        public AwsEC2ContainerBuilder groupIdentifier (String groupIdentifier) {
+            this.groupIdentifier = groupIdentifier;
+            return this;
+        }
+
 
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
@@ -141,6 +152,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.keyName = this.keyName;
             awsEC2Container.name = this.name;
             awsEC2Container.availabilityZone = this.availabilityZone;
+            awsEC2Container.groupIdentifier = this.groupIdentifier;
             return awsEC2Container;
         }
     }
