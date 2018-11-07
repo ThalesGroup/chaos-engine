@@ -119,6 +119,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public Platform scheduleExperiment () {
+        expireCachedRoster();
         log.info("Scheduling an experiment on {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()));
         getScheduler().startExperiment();
         experimentTimes.add(Instant.now());
