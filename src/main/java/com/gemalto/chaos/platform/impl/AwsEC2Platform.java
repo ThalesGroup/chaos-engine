@@ -230,6 +230,10 @@ public class AwsEC2Platform extends Platform {
         try {
             instance = result.getReservations().get(0).getInstances().get(0);
             state = instance.getState();
+            if (state.getCode() == 48) {
+                log.info("Instance {} is terminated", v(DataDogConstants.EC2_INSTANCE, instance));
+                return ContainerHealth.DOES_NOT_EXIST;
+            }
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             // If Index 0 in array doesn't exist, or we get an NPE, it's because the instance doesn't exist anymore.
             log.error("Instance {} doesn't seem to exist anymore", instanceId, e);
