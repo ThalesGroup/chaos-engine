@@ -221,7 +221,10 @@ public class AwsEC2Platform extends Platform {
                                                                              .getValue();
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
+                              .keyName(instance.getKeyName())
+                              .name(name)
+                              .groupIdentifier(Optional.ofNullable(groupIdentifier)
+                                                       .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER))
                               .build();
     }
 
