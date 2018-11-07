@@ -21,13 +21,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.validation.constraints.NotNull;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static com.gemalto.chaos.constants.ExperimentConstants.EXPERIMENT_METHOD_NOT_SET_YET;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.hamcrest.core.Is.is;
@@ -78,6 +78,14 @@ public class ExperimentControllerTest {
         protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
             return false;
         }
+
+        @StateExperiment
+        public void restart (Experiment experiment) {
+        }
+
+        @NetworkExperiment
+        public void latency (Experiment experiment) {
+        }
     };
 
     @Before
@@ -97,10 +105,23 @@ public class ExperimentControllerTest {
     @Test
     public void getExperiments () throws Exception {
         when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
+        //Scheduled experiments
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
-           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))));
+           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
+           .andExpect(jsonPath("$[0].experimentMethodName", is(EXPERIMENT_METHOD_NOT_SET_YET)))
+           .andExpect(jsonPath("$[1].experimentMethodName", is(EXPERIMENT_METHOD_NOT_SET_YET)));
+        //Running experiments
+        doReturn(true).when(adminManager).canRunExperiments();
+        experiment1.startExperiment();
+        experiment2.startExperiment();
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
+           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
+           .andExpect(jsonPath("$[0].experimentMethodName", isIn(Arrays.asList("restart", "latency"))))
+           .andExpect(jsonPath("$[1].experimentMethodName", isIn(Arrays.asList("restart", "latency"))));
     }
 
     @Test

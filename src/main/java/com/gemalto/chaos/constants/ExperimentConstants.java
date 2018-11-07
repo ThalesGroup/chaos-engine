@@ -13,6 +13,7 @@ public class ExperimentConstants {
     public static final String MAXIMUM_SELF_HEALING_RETRIES_REACHED= "Maximum self healing retries reached";
     public static final String STARTING_NEW_EXPERIMENT= "Starting new experiment";
     public static final String FAILED_TO_START_EXPERIMENT= "Failed to start experiment";
+    public static final String EXPERIMENT_METHOD_NOT_SET_YET="Experiment method not set yet";
     public static final int DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS = 30;
 
     private ExperimentConstants () {

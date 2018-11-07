@@ -102,6 +102,13 @@ public abstract class Experiment {
         return experimentMethod;
     }
 
+    public String getExperimentMethodName(){
+        if(experimentMethod!=null) {
+            return experimentMethod.getName();
+        }
+        return EXPERIMENT_METHOD_NOT_SET_YET;
+    }
+
     private void setExperimentMethod (Method experimentMethod) {
         this.experimentMethod = experimentMethod;
     }

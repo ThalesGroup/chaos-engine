@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.admin.enums.AdminState.*;
 import static com.gemalto.chaos.constants.ExperimentConstants.DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS;
+import static com.gemalto.chaos.constants.ExperimentConstants.EXPERIMENT_METHOD_NOT_SET_YET;
 import static com.gemalto.chaos.experiment.enums.ExperimentType.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -474,6 +475,20 @@ public class ExperimentTest {
             experiment.startExperiment();
             assertEquals(doAnotherThing, experiment.getExperimentMethod().getName());
         });
+    }
+
+    @Test
+    public void getExperimentMethodName(){
+        doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
+        doReturn(true).when(stateContainer).supportsExperimentType(STATE);
+        doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
+        doReturn(true).when(adminManager).canRunExperiments();
+        when(stateExperiment.isFinalizable()).thenReturn(false);
+        assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
+
+        assertEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
+        stateExperiment.startExperiment();
+        assertNotEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
     }
 
     private abstract class StateContainer extends Container {
