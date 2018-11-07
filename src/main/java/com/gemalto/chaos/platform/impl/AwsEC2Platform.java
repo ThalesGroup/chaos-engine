@@ -212,19 +212,18 @@ public class AwsEC2Platform extends Platform {
                               .findFirst()
                               .orElse(new Tag("Name", "no-name"))
                               .getValue();
-        final String groupIdentifier = groupingTags == null ? null : instance.getTags()
-                                                                             .stream()
-                                                                             .filter(tag -> groupingTags.contains(tag.getKey()))
-                                                                             .min(Comparator.comparingInt(tag -> groupingTags
+        final String groupIdentifier = Optional.ofNullable(groupingTags == null ? null : instance.getTags()
+                                                                                                 .stream()
+                                                                                                 .filter(tag -> groupingTags
+                                                                                                         .contains(tag.getKey()))
+                                                                                                 .min(Comparator.comparingInt(tag -> groupingTags
                                                                                      .indexOf(tag.getKey())))
-                                                                             .orElse(new Tag())
-                                                                             .getValue();
+                                                                                                 .orElse(new Tag())
+                                                                                                 .getValue())
+                                               .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER);
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName())
-                              .name(name)
-                              .groupIdentifier(Optional.ofNullable(groupIdentifier)
-                                                       .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER))
+                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
                               .build();
     }
 
