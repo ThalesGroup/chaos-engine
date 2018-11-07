@@ -37,6 +37,7 @@ public class AwsEC2Platform extends Platform {
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private String chaosSecurityGroupId;
     private Vpc defaultVpc;
+    private List<String> groupingTags;
 
     @Autowired
     AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
@@ -56,6 +57,11 @@ public class AwsEC2Platform extends Platform {
 
     private AwsEC2Platform () {
         log.info("AWS EC2 Platform created");
+    }
+
+    public void setGroupingTags (List<String> groupingTags) {
+        log.info("EC2 Instances will consider designated survivors based on the following tags: {}", v("groupingIdentifiers", groupingTags));
+        this.groupingTags = groupingTags;
     }
 
     /**
@@ -134,6 +140,18 @@ public class AwsEC2Platform extends Platform {
         return containerList;
     }
 
+    private Stream<Instance> getInstanceStream () {
+        return getInstanceStream(new DescribeInstancesRequest());
+    }
+
+    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
+        return amazonEC2.describeInstances(describeInstancesRequest)
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(List::stream);
+    }
+
     /**
      * Creates a Container object from an EC2 Instance and appends it to a provided list of containers.
      *
@@ -165,23 +183,17 @@ public class AwsEC2Platform extends Platform {
                               .findFirst()
                               .orElse(new Tag("Name", "no-name"))
                               .getValue();
+        final String groupIdentifier = groupingTags == null ? null : instance.getTags()
+                                                                             .stream()
+                                                                             .filter(tag -> groupingTags.contains(tag.getKey()))
+                                                                             .min(Comparator.comparingInt(tag -> groupingTags
+                                                                                     .indexOf(tag.getKey())))
+                                                                             .orElse(new Tag())
+                                                                             .getValue();
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName())
-                              .name(name)
+                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
                               .build();
-    }
-
-    private Stream<Instance> getInstanceStream () {
-        return getInstanceStream(new DescribeInstancesRequest());
-    }
-
-    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
-        return amazonEC2.describeInstances(describeInstancesRequest)
-                        .getReservations()
-                        .stream()
-                        .map(Reservation::getInstances)
-                        .flatMap(List::stream);
     }
 
     public ContainerHealth checkHealth (String instanceId) {

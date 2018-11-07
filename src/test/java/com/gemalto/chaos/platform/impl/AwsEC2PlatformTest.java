@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -297,6 +298,30 @@ public class AwsEC2PlatformTest {
         instance = new Instance().withInstanceId(instanceId).withKeyName(keyName);
         container = AwsEC2Container.builder().instanceId(instanceId).name("no-name").keyName(keyName).build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+        // With Grouping Tag
+        ReflectionTestUtils.setField(awsEC2Platform, "groupingTags", Arrays.asList("asg", "bosh", "somethingelse"));
+        instance = new Instance().withInstanceId(instanceId)
+                                 .withKeyName(keyName)
+                                 .withTags(new Tag("Name", name), new Tag("asg", "scalegroup"));
+        container = AwsEC2Container.builder()
+                                   .instanceId(instanceId)
+                                   .keyName(keyName)
+                                   .name(name)
+                                   .groupIdentifier("scalegroup")
+                                   .build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+        // With multiple grouping tags
+        instance = new Instance().withInstanceId(instanceId)
+                                 .withKeyName(keyName)
+                                 .withTags(new Tag("Name", name), new Tag("bosh", "boshgroup"), new Tag("asg", "scalegroup"));
+        container = AwsEC2Container.builder()
+                                   .instanceId(instanceId)
+                                   .keyName(keyName)
+                                   .name(name)
+                                   .groupIdentifier("scalegroup")
+                                   .build();
+        assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
+
     }
 
     @Configuration
