@@ -4,6 +4,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -53,6 +54,31 @@ public class AwsEC2Platform extends Platform {
         this.amazonEC2 = amazonEC2;
         this.containerManager = containerManager;
         this.awsEC2SelfAwareness = awsEC2SelfAwareness;
+    }
+
+    @Override
+    public List<Container> generateExperimentRoster () {
+        List<Container> roster = getRoster();
+        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream()
+                                                                 .map(AwsEC2Container.class::cast)
+                                                                 .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        List<Container> eligibleExperimentTargets = new ArrayList<>();
+        groupedRoster.forEach((k, v) -> {
+            // Anything that isn't in a managed group is eligible for experiments
+            if (k == null) eligibleExperimentTargets.addAll(v);
+            // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
+            if (v.size() < 2) {
+                log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
+            int designatedSurvivorIndex = new Random().nextInt(v.size());
+            AwsEC2Container survivor = v.remove(designatedSurvivorIndex);
+            log.debug("The container {} will be a designated survivor for this experiment", v(DataDogConstants.DATADOG_CONTAINER_KEY, survivor));
+            eligibleExperimentTargets.addAll(v);
+        });
+        log.info("The following containers will be eligible for experiments: {}", v("experimentRoster", eligibleExperimentTargets));
+        return eligibleExperimentTargets;
     }
 
     private AwsEC2Platform () {
