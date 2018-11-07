@@ -65,7 +65,10 @@ public class AwsEC2Platform extends Platform {
         List<Container> eligibleExperimentTargets = new ArrayList<>();
         groupedRoster.forEach((k, v) -> {
             // Anything that isn't in a managed group is eligible for experiments
-            if (k == null) eligibleExperimentTargets.addAll(v);
+            if (k.equals(AwsEC2Constants.NO_GROUPING_IDENTIFIER)) {
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
             // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
             if (v.size() < 2) {
                 log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));

@@ -12,6 +12,7 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
+import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -25,10 +26,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_TERMINATED_CODE;
 import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
@@ -322,6 +322,42 @@ public class AwsEC2PlatformTest {
                                    .build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
 
+    }
+
+    @Test
+    public void generateExperimentRoster () {
+        List<String> groupIdentifiers = IntStream.range(0, 4)
+                                                 .mapToObj(i -> randomUUID().toString())
+                                                 .collect(Collectors.toList());
+        List<Container> containers = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            containers.add(AwsEC2Container.builder()
+                                          .groupIdentifier(groupIdentifiers.get(i % groupIdentifiers.size()))
+                                          .name(randomUUID().toString())
+                                          .instanceId(randomUUID().toString())
+                                          .build());
+        }
+        // Container without a group
+        AwsEC2Container independentContainer = AwsEC2Container.builder()
+                                                              .name(randomUUID().toString())
+                                                              .instanceId(randomUUID().toString())
+                                                              .build();
+        containers.add(independentContainer);
+        // Container with no other group members.
+        AwsEC2Container lonelyScaledContainer = AwsEC2Container.builder()
+                                                               .name(randomUUID().toString())
+                                                               .instanceId(randomUUID().toString())
+                                                               .groupIdentifier(randomUUID().toString())
+                                                               .build();
+        containers.add(lonelyScaledContainer);
+        doReturn(containers).when(awsEC2Platform).getRoster();
+        Map<String, List<AwsEC2Container>> groupedContainers = containers.stream()
+                                                                         .map(AwsEC2Container.class::cast)
+                                                                         .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        List<Container> experimentRoster = awsEC2Platform.generateExperimentRoster();
+        assertThat(experimentRoster, IsIterableWithSize.iterableWithSize(8));
+        assertTrue("Should always contain container that is not grouped.", experimentRoster.contains(independentContainer));
+        assertTrue("Should always contain container that has no others in group.", experimentRoster.contains(lonelyScaledContainer));
     }
 
     @Configuration

@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -24,7 +25,7 @@ public class AwsEC2Container extends AwsContainer {
     private String instanceId;
     private String keyName;
     private String name;
-    private String groupIdentifier;
+    private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private transient AwsEC2Platform awsEC2Platform;
     private final transient Callable<Void> startContainerMethod = () -> {
         awsEC2Platform.startInstance(instanceId);
@@ -105,7 +106,7 @@ public class AwsEC2Container extends AwsContainer {
         private String name;
         private AwsEC2Platform awsEC2Platform;
         private String availabilityZone;
-        private String groupIdentifier;
+        private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
 
         private AwsEC2ContainerBuilder () {
         }
