@@ -1,6 +1,7 @@
 package com.gemalto.chaos.experiment;
 
 import com.gemalto.chaos.calendar.HolidayManager;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.platform.Platform;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @Component
 public class ExperimentManager {
@@ -86,10 +88,14 @@ public class ExperimentManager {
                                                                                                 .getDataDogIdentifier()
                                                                                                 .getValue())) {
                     try (MDC.MDCCloseable ignored2 = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
-                        ExperimentState experimentState = experiment.getExperimentState();
-                        if (experimentState == ExperimentState.FINISHED || experimentState == ExperimentState.FAILED) {
-                            log.info("Removing experiment {} from active experiment roster", experiment.getId());
-                            finishedExperiments.add(experiment);
+                        try (MDC.MDCCloseable ignored3 = MDC.putCloseable(DataDogConstants.DATADOG_EXPERIMENT_METHOD_KEY, experiment
+                                .getExperimentMethodName())) {
+                            ExperimentState experimentState = experiment.getExperimentState();
+                            if (experimentState == ExperimentState.FINISHED || experimentState == ExperimentState.FAILED) {
+                                log.info("Removing experiment from active experiment roster, {}", kv("finalExperimentDuration", experiment
+                                        .getDuration()));
+                                finishedExperiments.add(experiment);
+                            }
                         }
                     }
                 }
