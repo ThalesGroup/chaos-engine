@@ -11,6 +11,7 @@ public abstract class AwsEC2Constants {
     public static final String EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION = "(DO NOT USE) Security Group used by Chaos Engine to simulate random network failures.";
     public static final int AWS_EC2_HARD_REBOOT_TIMER_MINUTES = 4;
     public static final String NO_GROUPING_IDENTIFIER = "No Grouping Identifier Found";
+    public static final String AWS_ASG_NAME_TAG_KEY = "aws:autoscaling:groupName";
 
     private AwsEC2Constants () {
     }

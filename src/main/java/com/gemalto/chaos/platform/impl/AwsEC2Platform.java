@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
+import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -206,24 +206,31 @@ public class AwsEC2Platform extends Platform {
      * @return Container mapping to the instance.
      */
     AwsEC2Container buildContainerFromInstance (Instance instance) {
+        String groupIdentifier = null;
+        Boolean nativeAwsAutoscaling = null;
+
+
         String name = instance.getTags()
                               .stream()
                               .filter(tag -> tag.getKey().equals("Name"))
                               .findFirst()
                               .orElse(new Tag("Name", "no-name"))
                               .getValue();
-        final String groupIdentifier = Optional.ofNullable(groupingTags == null ? null : instance.getTags()
-                                                                                                 .stream()
-                                                                                                 .filter(tag -> groupingTags
-                                                                                                         .contains(tag.getKey()))
-                                                                                                 .min(Comparator.comparingInt(tag -> groupingTags
-                                                                                     .indexOf(tag.getKey())))
-                                                                                                 .orElse(new Tag())
-                                                                                                 .getValue())
-                                               .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER);
+        if (groupingTags != null) {
+            Tag groupingTag = instance.getTags()
+                                      .stream()
+                                      .filter(tag -> groupingTags.contains(tag.getKey()))
+                                      .min(Comparator.comparingInt(tag -> groupingTags.indexOf(tag.getKey())))
+                                      .orElse(new Tag().withValue(AwsEC2Constants.NO_GROUPING_IDENTIFIER));
+            groupIdentifier = groupingTag.getValue();
+            nativeAwsAutoscaling = AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
+        }
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
+                              .keyName(instance.getKeyName())
+                              .name(name)
+                              .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
+                              .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
                               .build();
     }
 

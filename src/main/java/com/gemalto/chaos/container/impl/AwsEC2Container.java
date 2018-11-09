@@ -26,12 +26,14 @@ public class AwsEC2Container extends AwsContainer {
     private String keyName;
     private String name;
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
+    private boolean nativeAwsAutoscaling = false;
     private transient AwsEC2Platform awsEC2Platform;
     private final transient Callable<Void> startContainerMethod = () -> {
         awsEC2Platform.startInstance(instanceId);
         return null;
     };
     private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
+
     private AwsEC2Container () {
         super();
     }
@@ -80,10 +82,6 @@ public class AwsEC2Container extends AwsContainer {
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(checkContainerStartedMethod));
     }
 
-    boolean isMemberOfScaledGroup () {
-        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
-    }
-
     Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
         return isMemberOfScaledGroup() ? () -> {
             if (awsEC2Platform.isContainerTerminated(instanceId)) {
@@ -91,6 +89,10 @@ public class AwsEC2Container extends AwsContainer {
             }
             return baseMethod.call();
         } : baseMethod;
+    }
+
+    boolean isMemberOfScaledGroup () {
+        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
 
     @StateExperiment
@@ -121,6 +123,7 @@ public class AwsEC2Container extends AwsContainer {
         private AwsEC2Platform awsEC2Platform;
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
+        private boolean nativeAwsAutoscaling = false;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -159,7 +162,10 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
-
+        public AwsEC2ContainerBuilder nativeAwsAutoscaling (boolean nativeAwsAutoscaling) {
+            this.nativeAwsAutoscaling = nativeAwsAutoscaling;
+            return this;
+        }
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -168,6 +174,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.name = this.name;
             awsEC2Container.availabilityZone = this.availabilityZone;
             awsEC2Container.groupIdentifier = this.groupIdentifier;
+            awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             return awsEC2Container;
         }
     }
