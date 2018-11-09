@@ -1,5 +1,8 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
@@ -39,6 +42,8 @@ public class AwsEC2Platform extends Platform {
     private String chaosSecurityGroupId;
     private Vpc defaultVpc;
     private List<String> groupingTags;
+    @Autowired
+    private AmazonAutoScaling amazonAutoScaling;
 
     @Autowired
     AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
@@ -341,5 +346,20 @@ public class AwsEC2Platform extends Platform {
                         .map(Reservation::getInstances)
                         .flatMap(Collection::stream)
                         .anyMatch(instance -> instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE);
+    }
+
+    public boolean isAutoscalingGroupAtDesiredInstances (String autoScalingGroupName) {
+        List<AutoScalingGroup> autoScalingGroups = amazonAutoScaling.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest()
+                .withAutoScalingGroupNames(autoScalingGroupName)).getAutoScalingGroups();
+        int desiredCapacity = autoScalingGroups.stream()
+                                               .findFirst()
+                                               .map(AutoScalingGroup::getDesiredCapacity)
+                                               .orElse(1);
+        int actualCapacity = (int) autoScalingGroups.stream()
+                                                    .map(AutoScalingGroup::getInstances)
+                                                    .flatMap(Collection::stream)
+                                                    .filter(instance -> instance.getHealthStatus().equals("Healthy"))
+                                                    .count();
+        return desiredCapacity == actualCapacity;
     }
 }

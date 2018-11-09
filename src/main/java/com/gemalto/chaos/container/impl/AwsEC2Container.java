@@ -85,6 +85,14 @@ public class AwsEC2Container extends AwsContainer {
     Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
         return isMemberOfScaledGroup() ? () -> {
             if (awsEC2Platform.isContainerTerminated(instanceId)) {
+                if (nativeAwsAutoscaling) {
+                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier))
+                        return ContainerHealth.NORMAL;
+                    else {
+                        log.info("Instance is terminated but scaling group is not at desired capacity");
+                        return ContainerHealth.RUNNING_EXPERIMENT;
+                    }
+                }
                 return ContainerHealth.NORMAL;
             }
             return baseMethod.call();

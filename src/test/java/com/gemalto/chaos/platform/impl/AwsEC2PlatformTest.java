@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.amazonaws.services.autoscaling.AmazonAutoScaling;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.constants.AwsEC2Constants;
@@ -53,6 +54,8 @@ public class AwsEC2PlatformTest {
     private ContainerManager containerManager;
     @MockBean
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
+    @MockBean
+    private AmazonAutoScaling amazonAutoScaling;
     @Autowired
     private AwsEC2Platform awsEC2Platform;
 

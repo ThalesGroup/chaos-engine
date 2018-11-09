@@ -3,6 +3,8 @@ package com.gemalto.chaos.services.impl;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.rds.AmazonRDS;
@@ -61,5 +63,15 @@ public class AwsService {
                                      .withCredentials(awsStaticCredentialsProvider)
                                      .withRegion(region)
                                      .build();
+    }
+
+    @Bean
+    @RefreshScope
+    AmazonAutoScaling amazonAutoScaling (AWSCredentialsProvider awsCredentialsProvider) {
+        log.info("Creating AWS AutoScaling Client");
+        return AmazonAutoScalingClientBuilder.standard()
+                                             .withCredentials(awsCredentialsProvider)
+                                             .withRegion(region)
+                                             .build();
     }
 }
