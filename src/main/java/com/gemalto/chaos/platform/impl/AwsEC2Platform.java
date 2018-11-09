@@ -221,9 +221,9 @@ public class AwsEC2Platform extends Platform {
                                       .stream()
                                       .filter(tag -> groupingTags.contains(tag.getKey()))
                                       .min(Comparator.comparingInt(tag -> groupingTags.indexOf(tag.getKey())))
-                                      .orElse(new Tag().withValue(AwsEC2Constants.NO_GROUPING_IDENTIFIER));
-            groupIdentifier = groupingTag.getValue();
-            nativeAwsAutoscaling = AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
+                                      .orElse(null);
+            groupIdentifier = groupingTag == null ? null : groupingTag.getValue();
+            nativeAwsAutoscaling = groupingTag != null && AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
         }
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
