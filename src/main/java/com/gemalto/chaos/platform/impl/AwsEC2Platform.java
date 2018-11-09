@@ -326,4 +326,13 @@ public class AwsEC2Platform extends Platform {
                         .map(GroupIdentifier::getGroupId)
                         .collect(Collectors.toList());
     }
+
+    public boolean isContainerTerminated (String instanceId) {
+        return amazonEC2.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(Collection::stream)
+                        .anyMatch(instance -> instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE);
+    }
 }

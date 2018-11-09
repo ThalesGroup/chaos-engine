@@ -73,6 +73,19 @@ public class AwsEC2Container extends AwsContainer {
         return uniqueIdentifier.equals(instanceId);
     }
 
+    Callable<ContainerHealth> autoscalingWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
+        return isMemberOfScaledGroup() ? () -> {
+            if (awsEC2Platform.isContainerTerminated(instanceId)) {
+                return ContainerHealth.NORMAL;
+            }
+            return baseMethod.call();
+        } : baseMethod;
+    }
+
+    boolean isMemberOfScaledGroup () {
+        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
+    }
+
     @StateExperiment
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
