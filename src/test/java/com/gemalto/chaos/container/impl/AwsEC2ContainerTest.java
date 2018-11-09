@@ -136,9 +136,9 @@ public class AwsEC2ContainerTest {
     public void autoscalingWrapperFramework () {
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         Callable<ContainerHealth> callable = mock(Callable.class);
-        assertNotEquals(callable, awsEC2Container.autoscalingWrapper(callable));
+        assertNotEquals(callable, awsEC2Container.autoscalingHealthcheckWrapper(callable));
         doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
-        assertEquals(callable, awsEC2Container.autoscalingWrapper(callable));
+        assertEquals(callable, awsEC2Container.autoscalingHealthcheckWrapper(callable));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class AwsEC2ContainerTest {
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         doReturn(true).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
-        assertEquals(ContainerHealth.NORMAL, awsEC2Container.autoscalingWrapper(callable).call());
+        assertEquals(ContainerHealth.NORMAL, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
         verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
         verify(callable, never()).call();
     }
@@ -160,7 +160,8 @@ public class AwsEC2ContainerTest {
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingWrapper(callable).call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
+                                                                        .call());
         verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
@@ -171,7 +172,8 @@ public class AwsEC2ContainerTest {
         Callable<ContainerHealth> callable = mock(Callable.class);
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingWrapper(callable).call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
+                                                                        .call());
         verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
