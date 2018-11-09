@@ -4,6 +4,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -37,6 +38,7 @@ public class AwsEC2Platform extends Platform {
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private String chaosSecurityGroupId;
     private Vpc defaultVpc;
+    private List<String> groupingTags;
 
     @Autowired
     AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
@@ -54,8 +56,41 @@ public class AwsEC2Platform extends Platform {
         this.awsEC2SelfAwareness = awsEC2SelfAwareness;
     }
 
+    @Override
+    public List<Container> generateExperimentRoster () {
+        List<Container> roster = getRoster();
+        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream()
+                                                                 .map(AwsEC2Container.class::cast)
+                                                                 .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        List<Container> eligibleExperimentTargets = new ArrayList<>();
+        groupedRoster.forEach((k, v) -> {
+            // Anything that isn't in a managed group is eligible for experiments
+            if (k.equals(AwsEC2Constants.NO_GROUPING_IDENTIFIER)) {
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
+            // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
+            if (v.size() < 2) {
+                log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
+            int designatedSurvivorIndex = new Random().nextInt(v.size());
+            AwsEC2Container survivor = v.remove(designatedSurvivorIndex);
+            log.debug("The container {} will be a designated survivor for this experiment", v(DataDogConstants.DATADOG_CONTAINER_KEY, survivor));
+            eligibleExperimentTargets.addAll(v);
+        });
+        log.info("The following containers will be eligible for experiments: {}", v("experimentRoster", eligibleExperimentTargets));
+        return eligibleExperimentTargets;
+    }
+
     private AwsEC2Platform () {
         log.info("AWS EC2 Platform created");
+    }
+
+    public void setGroupingTags (List<String> groupingTags) {
+        log.info("EC2 Instances will consider designated survivors based on the following tags: {}", v("groupingIdentifiers", groupingTags));
+        this.groupingTags = groupingTags;
     }
 
     /**
@@ -134,6 +169,18 @@ public class AwsEC2Platform extends Platform {
         return containerList;
     }
 
+    private Stream<Instance> getInstanceStream () {
+        return getInstanceStream(new DescribeInstancesRequest());
+    }
+
+    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
+        return amazonEC2.describeInstances(describeInstancesRequest)
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(List::stream);
+    }
+
     /**
      * Creates a Container object from an EC2 Instance and appends it to a provided list of containers.
      *
@@ -165,23 +212,19 @@ public class AwsEC2Platform extends Platform {
                               .findFirst()
                               .orElse(new Tag("Name", "no-name"))
                               .getValue();
+        final String groupIdentifier = Optional.ofNullable(groupingTags == null ? null : instance.getTags()
+                                                                                                 .stream()
+                                                                                                 .filter(tag -> groupingTags
+                                                                                                         .contains(tag.getKey()))
+                                                                                                 .min(Comparator.comparingInt(tag -> groupingTags
+                                                                                     .indexOf(tag.getKey())))
+                                                                                                 .orElse(new Tag())
+                                                                                                 .getValue())
+                                               .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER);
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName())
-                              .name(name)
+                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
                               .build();
-    }
-
-    private Stream<Instance> getInstanceStream () {
-        return getInstanceStream(new DescribeInstancesRequest());
-    }
-
-    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
-        return amazonEC2.describeInstances(describeInstancesRequest)
-                        .getReservations()
-                        .stream()
-                        .map(Reservation::getInstances)
-                        .flatMap(List::stream);
     }
 
     public ContainerHealth checkHealth (String instanceId) {
@@ -192,6 +235,10 @@ public class AwsEC2Platform extends Platform {
         try {
             instance = result.getReservations().get(0).getInstances().get(0);
             state = instance.getState();
+            if (state.getCode() == 48) {
+                log.info("Instance {} is terminated", v(DataDogConstants.EC2_INSTANCE, instance));
+                return ContainerHealth.DOES_NOT_EXIST;
+            }
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             // If Index 0 in array doesn't exist, or we get an NPE, it's because the instance doesn't exist anymore.
             log.error("Instance {} doesn't seem to exist anymore", instanceId, e);
