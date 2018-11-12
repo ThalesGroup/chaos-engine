@@ -1,7 +1,6 @@
 package com.gemalto.chaos.ssh;
 
 import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
@@ -9,10 +8,10 @@ import net.schmizz.sshj.xfer.FileSystemFile;
 import org.bouncycastle.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +33,11 @@ public class SshManager {
 
     public void uploadFile(File file,String destinationPath) throws IOException {
         sshClient.newSCPFileTransfer().upload(new FileSystemFile(file), destinationPath);
+
+    }
+
+    public void uploadResource(Resource resource,String destinationPath,boolean isExecutable) throws IOException {
+        sshClient.newSCPFileTransfer().upload(new JarResourceFile(resource,isExecutable), destinationPath);
     }
 
     public boolean connect (String userName, String password) throws IOException {
@@ -49,18 +53,18 @@ public class SshManager {
         return false;
     }
 
-    public void executeCommandInShell (String command, String shellName, int maxSessionDuration) throws IOException {
+    public void executeCommandInShell (String command, String shellName) throws IOException {
         Session session = sshClient.startSession();
         session.allocateDefaultPTY();
-        log.debug("Going to execute command {} in interactive shell session {}", command, shellName);
+        log.debug("Running command \'{}\' in shell session {}", command, shellName);
         Session.Shell shell = session.startShell();
         shell.setAutoExpand(true);
         OutputStream outputStream = shell.getOutputStream();
         //Interactive command must be ended by new line
         outputStream.write(Strings.toUTF8ByteArray(command + "\n"));
         outputStream.flush();
-
-        log.debug("Interactive SSH session {} has ended. Closing the shell", shellName);
+        outputStream.close();
+        log.debug("Shell session {} has ended.", shellName);
         if (shell.isOpen()) {
             shell.close();
         }
