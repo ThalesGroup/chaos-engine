@@ -9,6 +9,7 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -19,6 +20,7 @@ import org.cloudfoundry.operations.applications.RestartApplicationInstanceReques
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -43,12 +45,17 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private CloudFoundryClient cloudFoundryClient;
 
     @Autowired
-    public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
+    ShResourceService shResourceService;
+
+    @Autowired
+    public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo,
+                                          CloudFoundryClient cloudFoundryClient, ContainerManager containerManager, ShResourceService shResourceService) {
         super(cloudFoundryOperations, cloudFoundryPlatformInfo);
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
         this.cloudFoundryClient = cloudFoundryClient;
         this.containerManager = containerManager;
+        this.shResourceService=shResourceService;
     }
 
     public static CloudFoundryContainerPlatformBuilder builder () {
@@ -128,11 +135,13 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
         try {
             CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+            sshExperiment.setSshManager(ssh);
+            sshExperiment.setShResourceService(shResourceService);
             if (ssh.connect(container)) {
                 if (container.getDetectedCapabilities() != null) {
                     sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
                 }
-                sshExperiment.runExperiment(ssh);
+                sshExperiment.runExperiment();
                 if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
                     container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
                 }
@@ -149,6 +158,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         private CloudFoundryClient cloudFoundryClient;
         private ContainerManager containerManager;
         private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+
+        private ShResourceService resourcesService;
 
         private CloudFoundryContainerPlatformBuilder () {
         }
@@ -182,8 +193,15 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             return this;
         }
 
+        CloudFoundryContainerPlatformBuilder  withResourcesService (ShResourceService resourcesService) {
+            this.resourcesService = resourcesService;
+            return this;
+        }
+
+
         public CloudFoundryContainerPlatform build () {
-            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
+            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo,
+                    cloudFoundryClient, containerManager,resourcesService);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
             return cloudFoundryContainerPlatform;
         }
