@@ -1,21 +1,54 @@
 package com.gemalto.chaos.ssh;
 
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 
 public abstract class SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
+    private static final String DEFAULT_UPLOAD_PATH="/tmp/";
+    private  String experimentName;
+    private  String experimentScript;
     protected ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     protected ArrayList<ShellSessionCapability> detectedCapabilities;
     protected SshManager sshManager;
+    private ShResourceService shResourceService;
 
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean runExperiment (SshManager sshManager) throws IOException {
+    public String getExperimentName () {
+        return experimentName;
+    }
+
+
+    public  String getExperimentScript () {
+        return experimentScript;
+    }
+
+    protected SshExperiment(String experimentName,String experimentScript){
+        this.experimentName=experimentName;
+        this.experimentScript=experimentScript;
+    }
+
+
+    public SshExperiment setSshManager (SshManager sshManager) {
         this.sshManager = sshManager;
+        return this;
+    }
+
+    public SshExperiment setShResourceService (ShResourceService shResourceService) {
+        this.shResourceService = shResourceService;
+        return this;
+    }
+
+    public boolean runExperiment () throws IOException {
         if (detectedCapabilities == null) {
             collectAvailableCapabilities();
         } else {
@@ -26,9 +59,11 @@ public abstract class SshExperiment {
             }
         }
         if (shellHasRequiredCapabilities()) {
-            log.debug("Starting {} experiment.", getExperimentName());
-            sshManager.executeCommandInInteractiveShell(getExperimentCommand(), getExperimentName(), getSshSessionMaxDuration());
+            log.debug("Deploying {} experiment.", getExperimentName());
+            sshManager.uploadResource(shResourceService.getScriptResource(getExperimentScript()),DEFAULT_UPLOAD_PATH,true);
             log.debug("Experiment {} deployed.", getExperimentName());
+            String scriptExec=String.format("nohup %s%s &",DEFAULT_UPLOAD_PATH,getExperimentScript());
+            sshManager.executeCommandInShell(scriptExec, getExperimentName());
             return true;
         } else {
             log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
@@ -78,12 +113,6 @@ public abstract class SshExperiment {
         }
         return true;
     }
-
-    protected abstract String getExperimentName ();
-
-    protected abstract String getExperimentCommand ();
-
-    protected abstract int getSshSessionMaxDuration ();
 
     private boolean shellHasCapability (ShellSessionCapability requiredCap) {
         for (ShellSessionCapability actualCap : detectedCapabilities) {
