@@ -9,10 +9,22 @@ import java.io.*;
 
 public class JarResourceFile extends FileSystemFile {
     private static final Logger log = LoggerFactory.getLogger(JarResourceFile.class);
-    Resource resource;
-    public JarResourceFile (Resource resource) {
+    private Resource resource;
+    private boolean executable=false;
+
+    public JarResourceFile (Resource resource,boolean isExecutable) {
         super(resource.getFilename());
         this.resource=resource;
+        this.executable=isExecutable;
+    }
+
+    @Override
+    public int getPermissions()
+            throws IOException {
+        if(executable) {
+            return 0744;
+        }
+        return 0644;
     }
 
     @Override
