@@ -11,6 +11,7 @@ import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
@@ -67,6 +68,8 @@ public class CloudFoundryContainerPlatformTest {
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
+    @Mock
+    ShResourceService shResourceService;
     private String APPLICATION_ID = randomUUID().toString();
 
     @Test
@@ -279,7 +282,9 @@ public class CloudFoundryContainerPlatformTest {
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
-        term.runExperiment(sshManager);
+        term.setSshManager(sshManager);
+        term.setShResourceService(shResourceService);
+        term.runExperiment();
         assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
         Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
     }

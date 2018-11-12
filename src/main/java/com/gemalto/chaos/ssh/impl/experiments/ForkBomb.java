@@ -16,9 +16,6 @@ public class ForkBomb extends SshExperiment {
 
     @Override
     protected void buildRequiredCapabilities () {
-        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
-                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.ASH)
-                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.SH));
     }
 
 

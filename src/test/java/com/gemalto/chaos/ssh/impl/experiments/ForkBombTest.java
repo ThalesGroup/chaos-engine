@@ -3,6 +3,7 @@ package com.gemalto.chaos.ssh.impl.experiments;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +27,8 @@ public class ForkBombTest {
     @Mock
     SshCommandResult result;
     @Mock
+    private SshCommandResult resultTypeCapability;
+    @Mock
     Resource resource;
     @Mock
     ShResourceService shResourceService;
@@ -33,9 +36,13 @@ public class ForkBombTest {
     ForkBomb bomb = new ForkBomb();
 
     @Before
-    public void setUp () throws Exception {
+    public void setUp () throws IOException {
         when(shResourceService.getScriptResource(ForkBomb.EXPERIMENT_SCRIPT)).thenReturn(resource);
         bomb.setSshManager(sshManager).setShResourceService(shResourceService);
+
+        when(resultTypeCapability.getExitStatus()).thenReturn(0);
+        when(resultTypeCapability.getCommandOutput()).thenReturn("type");
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
     }
 
     @Test
@@ -43,9 +50,8 @@ public class ForkBombTest {
         when(result.getExitStatus()).thenReturn(0);
         when(result.getCommandOutput()).thenReturn("bash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-
-
         assertTrue(bomb.runExperiment());
+
         when(result.getCommandOutput()).thenReturn("ash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertTrue(bomb.runExperiment());
@@ -53,6 +59,7 @@ public class ForkBombTest {
         when(result.getCommandOutput()).thenReturn("sh");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         assertTrue(bomb.runExperiment());
+
         bomb = new ForkBomb();
         bomb.setSshManager(sshManager).setShResourceService(shResourceService);
         when(result.getCommandOutput()).thenReturn("BASH");

@@ -1,5 +1,7 @@
 package com.gemalto.chaos.ssh;
 
+import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +34,17 @@ public abstract class SshExperiment {
         return experimentScript;
     }
 
+    private void buildGenerallyRequiredCapabilities(){
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.ASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.SH));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
+    }
+
     protected SshExperiment(String experimentName,String experimentScript){
         this.experimentName=experimentName;
         this.experimentScript=experimentScript;
+        buildGenerallyRequiredCapabilities();
     }
 
 
