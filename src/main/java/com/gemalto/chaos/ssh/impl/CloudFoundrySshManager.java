@@ -26,8 +26,8 @@ public class CloudFoundrySshManager extends SshManager {
     }
 
     @Override
-    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) throws IOException {
-        super.executeCommandInInteractiveShell(command, shellName + " : " + container.getName(), maxSessionDuration);
+    public void executeCommandInShell (String command, String shellName) throws IOException {
+         super.executeCommandInShell(command, shellName + " : " + container.getName());
     }
 
     //https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
