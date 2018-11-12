@@ -4,14 +4,13 @@ import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ForkBomb extends SshExperiment {
-    private static final Logger log = LoggerFactory.getLogger(ForkBomb.class);
+    public static final String EXPERIMENT_NAME ="Fork Bomb";
+    public static final String EXPERIMENT_SCRIPT ="forkBomb.sh";
 
     public ForkBomb () {
-        super();
+        super(EXPERIMENT_NAME, EXPERIMENT_SCRIPT);
         buildRequiredCapabilities();
     }
 
@@ -22,18 +21,6 @@ public class ForkBomb extends SshExperiment {
                                                                                       .addCapabilityOption(ShellSessionCapabilityOption.SH));
     }
 
-    @Override
-    protected String getExperimentName () {
-        return "Fork Bomb";
-    }
 
-    @Override
-    protected String getExperimentCommand () {
-        return "bomb() { bomb | bomb & }; bomb; sleep 60; exit;";
-    }
 
-    @Override
-    protected int getSshSessionMaxDuration () {
-        return 60;
-    }
 }
