@@ -68,7 +68,7 @@ public class CloudFoundryContainerPlatformTest {
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    @Mock
+    @MockBean
     ShResourceService shResourceService;
     private String APPLICATION_ID = randomUUID().toString();
 

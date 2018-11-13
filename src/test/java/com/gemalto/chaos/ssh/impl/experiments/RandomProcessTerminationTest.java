@@ -1,5 +1,6 @@
 package com.gemalto.chaos.ssh.impl.experiments;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
@@ -10,17 +11,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RandomProcessTerminationTest {
+    @Mock
+    Resource resource;
+    @Mock
+    ShResourceService shResourceService;
     @Mock
     private SshManager sshManager;
     @Mock
@@ -35,10 +38,6 @@ public class RandomProcessTerminationTest {
     private SshCommandResult resultSortCapability;
     @Mock
     private SshCommandResult resultHeadCapability;
-    @Mock
-    Resource resource;
-    @Mock
-    ShResourceService shResourceService;
 
     @Before
     public void setUp () throws IOException {
@@ -66,20 +65,18 @@ public class RandomProcessTerminationTest {
     @Test
     public void canExperiment () throws IOException {
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        randomProcessTermination.setShResourceService(shResourceService)
-                                .setSshManager(sshManager);
-        assertTrue(randomProcessTermination.runExperiment());
+        randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
+        randomProcessTermination.runExperiment();
     }
 
-    @Test
+    @Test(expected = ChaosException.class)
     public void cannotExperiment () throws IOException {
         when(resultShellCapability.getExitStatus()).thenReturn(0);
         when(resultShellCapability.getCommandOutput()).thenReturn("uknown");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        randomProcessTermination.setShResourceService(shResourceService)
-                                .setSshManager(sshManager);
-        assertFalse(randomProcessTermination.runExperiment());
+        randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
+        randomProcessTermination.runExperiment();
     }
 
     @Test
@@ -87,20 +84,34 @@ public class RandomProcessTerminationTest {
         when(resultShellCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        randomProcessTermination.setShResourceService(shResourceService)
-                                .setSshManager(sshManager);
-        assertFalse(randomProcessTermination.runExperiment());
+        randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
+        try {
+            randomProcessTermination.runExperiment();
+            fail();
+        } catch (ChaosException ex) {
+        }
         when(resultShellCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
-        assertFalse(randomProcessTermination.runExperiment());
+        try {
+            randomProcessTermination.runExperiment();
+            fail();
+        } catch (ChaosException ex) {
+        }
         when(resultTypeCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
-        assertFalse(randomProcessTermination.runExperiment());
+        try {
+            randomProcessTermination.runExperiment();
+            fail();
+        } catch (ChaosException ex) {
+        }
         randomProcessTermination = new RandomProcessTermination();
-        randomProcessTermination.setShResourceService(shResourceService)
-                                .setSshManager(sshManager);
+        randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
         when(resultTypeCapability.getExitStatus()).thenReturn(1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
-        assertFalse(randomProcessTermination.runExperiment());
+        try {
+            randomProcessTermination.runExperiment();
+            fail();
+        } catch (ChaosException ex) {
+        }
     }
 }

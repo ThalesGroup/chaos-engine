@@ -1,23 +1,20 @@
 package com.gemalto.chaos.ssh;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 
 public abstract class SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
-    private static final String DEFAULT_UPLOAD_PATH="/tmp/";
-    private  String experimentName;
-    private  String experimentScript;
+    public static final String DEFAULT_UPLOAD_PATH = "/tmp/";
+    private String experimentName;
+    private String experimentScript;
     protected ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     protected ArrayList<ShellSessionCapability> detectedCapabilities;
     protected SshManager sshManager;
@@ -29,24 +26,22 @@ public abstract class SshExperiment {
         return experimentName;
     }
 
-
-    public  String getExperimentScript () {
+    public String getExperimentScript () {
         return experimentScript;
     }
 
-    private void buildGenerallyRequiredCapabilities(){
+    private void buildGenerallyRequiredCapabilities () {
         requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
                                                                                       .addCapabilityOption(ShellSessionCapabilityOption.ASH)
                                                                                       .addCapabilityOption(ShellSessionCapabilityOption.SH));
         requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
     }
 
-    protected SshExperiment(String experimentName,String experimentScript){
-        this.experimentName=experimentName;
-        this.experimentScript=experimentScript;
+    protected SshExperiment (String experimentName, String experimentScript) {
+        this.experimentName = experimentName;
+        this.experimentScript = experimentScript;
         buildGenerallyRequiredCapabilities();
     }
-
 
     public SshExperiment setSshManager (SshManager sshManager) {
         this.sshManager = sshManager;
@@ -58,7 +53,7 @@ public abstract class SshExperiment {
         return this;
     }
 
-    public boolean runExperiment () throws IOException {
+    public void runExperiment () throws IOException {
         if (detectedCapabilities == null) {
             collectAvailableCapabilities();
         } else {
@@ -70,15 +65,15 @@ public abstract class SshExperiment {
         }
         if (shellHasRequiredCapabilities()) {
             log.debug("Deploying {} experiment.", getExperimentName());
-            sshManager.uploadResource(shResourceService.getScriptResource(getExperimentScript()),DEFAULT_UPLOAD_PATH,true);
+            sshManager.uploadResource(shResourceService.getScriptResource(getExperimentScript()), DEFAULT_UPLOAD_PATH, true);
             log.debug("Experiment {} deployed.", getExperimentName());
-            String scriptExec=String.format("nohup %s%s &",DEFAULT_UPLOAD_PATH,getExperimentScript());
+            String scriptExec = String.format("nohup %s%s &", DEFAULT_UPLOAD_PATH, getExperimentScript());
             sshManager.executeCommandInShell(scriptExec, getExperimentName());
-            return true;
-        } else {
-            log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
+            sshManager.disconnect(); //TODO Test disconnect method invocation
+        }else {
+            log.error("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
+            throw new ChaosException("Cannot execute SSH experiment. Current shell session does not have all required capabilities");
         }
-        return false;
     }
 
     private void collectAvailableCapabilities () throws IOException {
