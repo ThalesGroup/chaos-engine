@@ -86,9 +86,13 @@ public class SshManager {
         return result;
     }
 
-    public void disconnect () throws IOException {
+    public void disconnect ()  {
         if (sshClient.isConnected()) {
-            sshClient.disconnect();
+            try {
+                sshClient.disconnect();
+            } catch (IOException e) {
+                log.error("Error while disconnecting: {}",e);
+            }
         }
     }
 }
