@@ -69,7 +69,7 @@ public abstract class SshExperiment {
             log.debug("Experiment {} deployed.", getExperimentName());
             String scriptExec = String.format("nohup %s%s &", DEFAULT_UPLOAD_PATH, getExperimentScript());
             sshManager.executeCommandInShell(scriptExec, getExperimentName());
-            sshManager.disconnect(); //TODO Test disconnect method invocation
+            sshManager.disconnect();
         }else {
             log.error("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
             throw new ChaosException("Cannot execute SSH experiment. Current shell session does not have all required capabilities");
@@ -139,11 +139,11 @@ public abstract class SshExperiment {
         return false;
     }
 
-    public ArrayList<ShellSessionCapability> getShellSessionCapabilities () {
+    public ArrayList<ShellSessionCapability> getDetectedShellSessionCapabilities () {
         return detectedCapabilities;
     }
 
-    public void setShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+    public void setDetectedShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
         this.detectedCapabilities = detectedCapabilities;
     }
 }

@@ -62,7 +62,6 @@ public class ForkBombTest {
         when(result.getCommandOutput()).thenReturn("BASH");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         bomb.runExperiment();
-        verify(sshManager, times(4)).disconnect();
     }
 
     @Test

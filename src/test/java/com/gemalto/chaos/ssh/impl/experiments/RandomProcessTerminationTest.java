@@ -69,7 +69,6 @@ public class RandomProcessTerminationTest {
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
         randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
         randomProcessTermination.runExperiment();
-        verify(sshManager, times(1)).disconnect();
     }
 
     @Test

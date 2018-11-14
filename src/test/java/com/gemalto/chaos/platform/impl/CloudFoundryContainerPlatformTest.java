@@ -257,7 +257,7 @@ public class CloudFoundryContainerPlatformTest {
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
         SshManager sshManager = mock(SshManager.class);
         RandomProcessTermination term = new RandomProcessTermination();
-        term.setShellSessionCapabilities(alreadyDetectedCapabilities);
+        term.setDetectedShellSessionCapabilities(alreadyDetectedCapabilities);
         SshCommandResult resultShellCapability = mock(SshCommandResult.class);
         SshCommandResult resultTypeCapability = mock(SshCommandResult.class);
         SshCommandResult resultGrepCapability = mock(SshCommandResult.class);
@@ -285,8 +285,8 @@ public class CloudFoundryContainerPlatformTest {
         term.setSshManager(sshManager);
         term.setShResourceService(shResourceService);
         term.runExperiment();
-        assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
-        Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
+        assertEquals(expectedCapabilities.size(), term.getDetectedShellSessionCapabilities().size());
+        Assert.assertEquals(expectedCapabilities, term.getDetectedShellSessionCapabilities());
     }
 
     @Configuration

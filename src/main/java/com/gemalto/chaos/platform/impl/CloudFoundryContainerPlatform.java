@@ -151,11 +151,11 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             sshExperiment.setShResourceService(shResourceService);
             if (ssh.connect(container)) {
                 if (container.getDetectedCapabilities() != null) {
-                    sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
+                    sshExperiment.setDetectedShellSessionCapabilities(container.getDetectedCapabilities());
                 }
                 sshExperiment.runExperiment();
-                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
-                    container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
+                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
+                    container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
                 }
                 ssh.disconnect();
             }
