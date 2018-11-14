@@ -30,13 +30,13 @@ public class CloudFoundrySshManager extends SshManager {
          super.executeCommandInShell(command, shellName + " : " + container.getName());
     }
 
+    //https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
     protected String composeUserName(){
-        log.debug("Establishing ssh connection to app container {}, instance {}", container.getName(), container.getInstance());
         return "cf:" + container.getApplicationId() + "/" + container.getInstance();
     }
-    //https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
     public boolean connect (CloudFoundryContainer container) throws IOException {
         this.container = container;
+        log.debug("Establishing ssh connection to app container {}, instance {}", container.getName(), container.getInstance());
         return super.connect(composeUserName(), cloudFoundryPlatformInfo.getSshCode());
     }
 }
