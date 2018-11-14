@@ -253,10 +253,16 @@ public abstract class Experiment {
             try {
                 return checkContainerHealth.call();
             } catch (Exception e) {
-                log.error("Issue while checking container health using specific method", e);
+                log.error("Issue while checking container health using specific method: {}", e.getMessage(),e.getCause());
+                return ContainerHealth.RUNNING_EXPERIMENT;
             }
         }
-        return container.getContainerHealth(experimentType);
+
+        try {
+            return container.getContainerHealth(experimentType);
+        }catch(Exception e){
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        }
     }
 
     public boolean isFinalizable () {
