@@ -119,6 +119,7 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public Platform scheduleExperiment () {
+        expireCachedRoster();
         log.info("Scheduling an experiment on {}", keyValue(DATADOG_PLATFORM_KEY, this.getPlatformType()));
         getScheduler().startExperiment();
         experimentTimes.add(Instant.now());
@@ -128,7 +129,7 @@ public abstract class Platform implements ExperimentalObject {
     @SuppressWarnings("unused") // public get methods are consumed by Spring Rest.
     public Set<Date> getExperimentTimes () {
         // Instant to String conversion is done due to Swagger which does not support java.time classes - SCT-6607
-        return experimentTimes.stream().map(instant -> Date.from(instant)).collect(toSet());
+        return experimentTimes.stream().map(Date::from).collect(toSet());
     }
 
     public void usingHolidayManager (HolidayManager holidayManager) {

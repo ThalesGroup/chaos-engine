@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,6 +54,7 @@ public abstract class Experiment {
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
+    private Instant endTime;
     private Instant finalizationStartTime;
     private Instant lastSelfHealingTime;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
@@ -81,12 +83,12 @@ public abstract class Experiment {
         return experimentLayer;
     }
 
-    public String getExperimentLayerName(){
-        return container.getContainerType();
-    }
-
     private void setExperimentLayer (Platform experimentLayer) {
         this.experimentLayer = experimentLayer;
+    }
+
+    public String getExperimentLayerName () {
+        return container.getContainerType();
     }
 
     public AtomicInteger getSelfHealingCounter () {
@@ -102,15 +104,15 @@ public abstract class Experiment {
         return experimentMethod;
     }
 
+    private void setExperimentMethod (Method experimentMethod) {
+        this.experimentMethod = experimentMethod;
+    }
+
     public String getExperimentMethodName(){
         if(experimentMethod!=null) {
             return experimentMethod.getName();
         }
         return EXPERIMENT_METHOD_NOT_SET_YET;
-    }
-
-    private void setExperimentMethod (Method experimentMethod) {
-        this.experimentMethod = experimentMethod;
     }
 
     public Callable<Void> getSelfHealingMethod () {
@@ -206,6 +208,9 @@ public abstract class Experiment {
 
     ExperimentState getExperimentState () {
         experimentState = checkExperimentState();
+        if (experimentState == ExperimentState.FAILED || experimentState == ExperimentState.FINISHED) {
+            setEndTime();
+        }
         return experimentState;
     }
 
@@ -233,6 +238,10 @@ public abstract class Experiment {
             default:
                 return doSelfHealing();
         }
+    }
+
+    private void setEndTime () {
+        setEndTime(Instant.now());
     }
 
     private ContainerHealth checkContainerHealth () {
@@ -305,7 +314,7 @@ public abstract class Experiment {
                                                .build();
                         notificationManager.sendNotification(chaosEvent);
                         callSelfHealing();
-                    }else{
+                    } else {
                         chaosEvent = ChaosEvent.builder()
                                                .fromExperiment(this)
                                                .withNotificationLevel(NotificationLevel.ERROR)
@@ -379,5 +388,17 @@ public abstract class Experiment {
 
     private Duration getMinimumTimeBetweenSelfHealing () {
         return container.getMinimumSelfHealingInterval();
+    }
+
+    protected Duration getDuration () {
+        return Duration.between(getStartTime(), getEndTime());
+    }
+
+    private Instant getEndTime () {
+        return Optional.ofNullable(endTime).orElse(Instant.now());
+    }
+
+    private void setEndTime (Instant endTime) {
+        this.endTime = endTime;
     }
 }

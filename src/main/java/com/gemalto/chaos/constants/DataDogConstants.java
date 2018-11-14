@@ -11,6 +11,8 @@ public class DataDogConstants {
     public static final String RDS_INSTANCE_ID = "instanceid";
     public static final String RDS_INSTANCE_SNAPSHOT = "dbsnapshot";
     public static final String RDS_CLUSTER_SNAPSHOT = "dbclustersnapshot";
+    public static final String EC2_INSTANCE = "ec2-instance";
+    public static final String DATADOG_EXPERIMENT_METHOD_KEY = "experimentMethod";
 
     private DataDogConstants () {
     }

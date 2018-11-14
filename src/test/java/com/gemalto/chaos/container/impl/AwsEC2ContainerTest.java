@@ -30,6 +30,7 @@ public class AwsEC2ContainerTest {
     private static final String KEY_NAME = randomUUID().toString();
     private static final String NAME = randomUUID().toString();
     private static final String INSTANCE_ID = randomUUID().toString();
+    private static final String GROUP_IDENTIFIER = randomUUID().toString();
     private AwsEC2Container awsEC2Container;
     @MockBean
     private AwsEC2Platform awsEC2Platform;
@@ -42,8 +43,7 @@ public class AwsEC2ContainerTest {
         awsEC2Container = AwsEC2Container.builder()
                                          .keyName(KEY_NAME)
                                          .instanceId(INSTANCE_ID)
-                                         .awsEC2Platform(awsEC2Platform)
-                                         .name(NAME)
+                                         .awsEC2Platform(awsEC2Platform).name(NAME).groupIdentifier(GROUP_IDENTIFIER)
                                          .build();
     }
 
