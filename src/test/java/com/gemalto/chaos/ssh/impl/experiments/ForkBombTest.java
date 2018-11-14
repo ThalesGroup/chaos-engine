@@ -6,6 +6,7 @@ import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.services.ShResourceService;
+import net.schmizz.sshj.xfer.FileSystemFile;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -17,6 +18,8 @@ import org.springframework.core.io.Resource;
 import java.io.IOException;
 
 import static junit.framework.TestCase.fail;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -59,22 +62,7 @@ public class ForkBombTest {
         when(result.getCommandOutput()).thenReturn("BASH");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         bomb.runExperiment();
-    }
-
-    @Test
-    public void parseBinaryName () throws IOException {
-        when(result.getExitStatus()).thenReturn(0);
-        when(result.getCommandOutput()).thenReturn("/bin/bash");
-        when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        bomb.runExperiment();
-    }
-
-    @Test(expected = ChaosException.class)
-    public void cannotExperiment () throws IOException {
-        when(result.getExitStatus()).thenReturn(0);
-        when(result.getCommandOutput()).thenReturn("uknown");
-        when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
-        bomb.runExperiment();
+        verify(sshManager, times(4)).disconnect();
     }
 
     @Test

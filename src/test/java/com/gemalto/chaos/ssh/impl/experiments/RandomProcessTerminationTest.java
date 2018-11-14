@@ -16,6 +16,8 @@ import org.springframework.core.io.Resource;
 import java.io.IOException;
 
 import static junit.framework.TestCase.fail;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -67,16 +69,7 @@ public class RandomProcessTerminationTest {
         RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
         randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
         randomProcessTermination.runExperiment();
-    }
-
-    @Test(expected = ChaosException.class)
-    public void cannotExperiment () throws IOException {
-        when(resultShellCapability.getExitStatus()).thenReturn(0);
-        when(resultShellCapability.getCommandOutput()).thenReturn("uknown");
-        when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
-        RandomProcessTermination randomProcessTermination = new RandomProcessTermination();
-        randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
-        randomProcessTermination.runExperiment();
+        verify(sshManager, times(1)).disconnect();
     }
 
     @Test
