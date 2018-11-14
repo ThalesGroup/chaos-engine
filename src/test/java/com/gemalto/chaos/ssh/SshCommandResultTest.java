@@ -3,13 +3,17 @@ package com.gemalto.chaos.ssh;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -31,6 +35,16 @@ public class SshCommandResultTest {
         SshCommandResult result = new SshCommandResult(command);
         assertEquals(okString, result.getCommandOutput());
         assertEquals(okExitCode, result.getExitStatus());
+    }
+
+    @Test
+    public void commandOutputExtractionFailed () throws IOException {
+        InputStream stream = Mockito.mock(InputStream.class);
+        doThrow(IOException.class).when(stream).read(ArgumentMatchers.any());
+        when(command.getInputStream()).thenReturn(stream);
+        SshCommandResult result = new SshCommandResult(command);
+        assertEquals("", result.getCommandOutput());
+        assertEquals(koExitCode, result.getExitStatus());
     }
 
     @Test
