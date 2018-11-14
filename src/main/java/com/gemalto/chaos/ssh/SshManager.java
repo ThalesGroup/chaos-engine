@@ -31,7 +31,15 @@ public class SshManager {
         this.sshClient = sshClient;
     }
 
-    public void uploadFile(File file,String destinationPath) throws IOException {
+    public String getHostname () {
+        return hostname;
+    }
+
+    public String getPort () {
+        return port;
+    }
+
+    public void uploadFile(File file, String destinationPath) throws IOException {
         sshClient.newSCPFileTransfer().upload(new FileSystemFile(file), destinationPath);
 
     }
