@@ -1,6 +1,9 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
@@ -371,6 +374,45 @@ public class AwsEC2PlatformTest {
         verify(amazonAutoScaling, atLeastOnce()).setInstanceHealth(new SetInstanceHealthRequest().withHealthStatus("Unhealthy")
                                                                                                  .withInstanceId(instanceId)
                                                                                                  .withShouldRespectGracePeriod(false));
+    }
+
+    @Test
+    public void isContainerTerminatedTrue () {
+        String instanceId = randomUUID().toString();
+        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(new Reservation()
+                .withInstances(new Instance().withInstanceId(instanceId)
+                                             .withState(new InstanceState().withCode(AwsEC2Constants.AWS_TERMINATED_CODE))));
+        doReturn(describeInstancesResult).when(amazonEC2)
+                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        assertTrue("One instance returned in terminated state should return true", awsEC2Platform.isContainerTerminated(instanceId));
+        describeInstancesResult = new DescribeInstancesResult().withReservations(new Reservation().withInstances(new Instance()
+                .withInstanceId(instanceId)
+                .withState(new InstanceState().withCode(AwsEC2Constants.AWS_RUNNING_CODE))));
+        doReturn(describeInstancesResult).when(amazonEC2)
+                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        assertFalse("One instance returned in running state should return false", awsEC2Platform.isContainerTerminated(instanceId));
+    }
+
+    @Test
+    public void isAutoscalingGroupAtDesiredInstances () {
+        String groupId = randomUUID().toString();
+        final int DESIRED_CAPACITY = new Random().nextInt(10) + 5;
+        List<com.amazonaws.services.autoscaling.model.Instance> instances = IntStream.range(0, DESIRED_CAPACITY)
+                                                                                     .mapToObj(i -> new com.amazonaws.services.autoscaling.model.Instance()
+                                                                                             .withHealthStatus("Healthy"))
+                                                                                     .collect(Collectors.toList());
+        AutoScalingGroup autoScalingGroup = new AutoScalingGroup().withInstances(instances)
+                                                                  .withDesiredCapacity(DESIRED_CAPACITY);
+        DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(Collections
+                .singletonList(autoScalingGroup));
+        doReturn(describeAutoScalingGroupsResult).when(amazonAutoScaling)
+                                                 .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(groupId));
+        assertTrue("An equal size set of healthy instances should be true", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
+        autoScalingGroup.getInstances().get(0).setHealthStatus("Unhealthy");
+        assertFalse("An unhealthy instance should not be counted", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
+        autoScalingGroup.getInstances().remove(0);
+        autoScalingGroup.getInstances().forEach(instance1 -> instance1.setHealthStatus("Healthy"));
+        assertFalse("Insufficient total instance should be false", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
     }
 
     @Configuration
