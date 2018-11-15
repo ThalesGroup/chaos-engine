@@ -36,14 +36,17 @@ public class CloudFoundryContainer extends Container {
         return null;
     };
     private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
-    private transient BiFunction<String, Integer, Callable<ContainerHealth>> isSshExperimentCompleted = (command, expectedExitStatus) -> () -> {
-        ContainerHealth instanceState = isInstanceRunning.call();
-        ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheck(this, command, expectedExitStatus);
-        if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
-            return ContainerHealth.NORMAL;
-        }
-        return ContainerHealth.RUNNING_EXPERIMENT;
-    };
+
+    private Callable<ContainerHealth> sshHealthCheck(CloudFoundryContainer container,String command,int expectedExitStatus){
+        return () -> {
+            ContainerHealth instanceState = isInstanceRunning.call();
+            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheck(container, command, expectedExitStatus);
+            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
+                return ContainerHealth.NORMAL;
+            }
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        };
+    }
 
     private CloudFoundryContainer () {
         super();
@@ -105,7 +108,7 @@ public class CloudFoundryContainer extends Container {
     public void forkBomb (Experiment experiment) {
         experiment.setSelfHealingMethod(restartContainer);
         String healthCheckCommand = ShellCommand.BINARYEXISTS + SshExperiment.DEFAULT_UPLOAD_PATH + ForkBomb.EXPERIMENT_SCRIPT;
-        experiment.setCheckContainerHealth(isSshExperimentCompleted.apply(healthCheckCommand, 1));
+        experiment.setCheckContainerHealth(sshHealthCheck(this,healthCheckCommand, 1));
         cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
