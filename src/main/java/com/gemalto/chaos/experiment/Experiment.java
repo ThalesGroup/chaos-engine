@@ -261,6 +261,7 @@ public abstract class Experiment {
         try {
             return container.getContainerHealth(experimentType);
         }catch(Exception e){
+            log.error("Issue while checking container health", e);
             return ContainerHealth.RUNNING_EXPERIMENT;
         }
     }
