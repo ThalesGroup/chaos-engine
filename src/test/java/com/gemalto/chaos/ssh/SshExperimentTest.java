@@ -21,15 +21,15 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class SshExperimentTest {
     @Mock
-    SshManager sshManager;
+    private SshManager sshManager;
     @Mock
-    SshCommandResult result;
+    private SshCommandResult result;
     @Mock
     private SshCommandResult resultTypeCapability;
     @Mock
-    Resource resource;
+    private Resource resource;
     @Mock
-    ShResourceService shResourceService;
+    private ShResourceService shResourceService;
 
     class GenericSshExperiment extends SshExperiment{
         public GenericSshExperiment (String experimentName, String experimentScript) {
