@@ -18,7 +18,7 @@ public class CloudFoundrySshManager extends SshManager {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundrySshManager.class);
     @Autowired
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    private CloudFoundryContainer container;
+    protected CloudFoundryContainer container;
 
     public CloudFoundrySshManager (CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
         super(cloudFoundryPlatformInfo.getApplicationSshEndpoint(), cloudFoundryPlatformInfo.getApplicationSshPort());
@@ -26,15 +26,17 @@ public class CloudFoundrySshManager extends SshManager {
     }
 
     @Override
-    public void executeCommandInInteractiveShell (String command, String shellName, int maxSessionDuration) throws IOException {
-        super.executeCommandInInteractiveShell(command, shellName + " : " + container.getName(), maxSessionDuration);
+    public void executeCommandInShell (String command, String shellName) throws IOException {
+         super.executeCommandInShell(command, shellName + " : " + container.getName());
     }
 
     //https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
+    protected String composeUserName(){
+        return "cf:" + container.getApplicationId() + "/" + container.getInstance();
+    }
     public boolean connect (CloudFoundryContainer container) throws IOException {
-        log.debug("Establishing ssh connection to app container {}, instance {}", container.getName(), container.getInstance());
-        String cfContainerUsername = "cf:" + container.getApplicationId() + "/" + container.getInstance();
         this.container = container;
-        return super.connect(cfContainerUsername, cloudFoundryPlatformInfo.getSshCode());
+        log.debug("Establishing ssh connection to app container {}, instance {}", container.getName(), container.getInstance());
+        return super.connect(composeUserName(), cloudFoundryPlatformInfo.getSshCode());
     }
 }

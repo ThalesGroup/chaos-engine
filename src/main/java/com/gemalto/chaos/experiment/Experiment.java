@@ -174,6 +174,7 @@ public abstract class Experiment {
                 Map<String, Method> stringMethodMap = experimentMethods.stream()
                                                                        .collect(Collectors.toMap(Method::getName, method -> method));
                 chosenMethod = stringMethodMap.get(preferredExperiment);
+                log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
             }
             if (chosenMethod == null) {
                 int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
@@ -253,9 +254,16 @@ public abstract class Experiment {
                 return checkContainerHealth.call();
             } catch (Exception e) {
                 log.error("Issue while checking container health using specific method", e);
+                return ContainerHealth.RUNNING_EXPERIMENT;
             }
         }
-        return container.getContainerHealth(experimentType);
+
+        try {
+            return container.getContainerHealth(experimentType);
+        }catch(Exception e){
+            log.error("Issue while checking container health", e);
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        }
     }
 
     public boolean isFinalizable () {

@@ -229,7 +229,8 @@ public class ExperimentTest {
         doReturn(Boolean.FALSE).when(stateExperiment).isBelowMinimumDuration();
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         assertEquals(ExperimentState.STARTED, stateExperiment.getExperimentState());
-        verify(stateContainer, times(1)).getContainerHealth(STATE);
+        verify(stateContainer, times(0)).getContainerHealth(STATE);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
         Mockito.reset(stateContainer);
     }
 

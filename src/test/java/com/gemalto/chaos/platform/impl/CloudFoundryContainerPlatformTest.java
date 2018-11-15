@@ -11,6 +11,7 @@ import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
@@ -37,10 +38,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
@@ -67,6 +65,8 @@ public class CloudFoundryContainerPlatformTest {
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
+    @MockBean
+    ShResourceService shResourceService;
     private String APPLICATION_ID = randomUUID().toString();
 
     @Test
@@ -242,9 +242,9 @@ public class CloudFoundryContainerPlatformTest {
 
     @Test
     public void sshExperimentMergeCapabilities () throws IOException {
-        ArrayList<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
         alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH));
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
@@ -254,7 +254,7 @@ public class CloudFoundryContainerPlatformTest {
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
         SshManager sshManager = mock(SshManager.class);
         RandomProcessTermination term = new RandomProcessTermination();
-        term.setShellSessionCapabilities(alreadyDetectedCapabilities);
+        term.setDetectedShellSessionCapabilities(alreadyDetectedCapabilities);
         SshCommandResult resultShellCapability = mock(SshCommandResult.class);
         SshCommandResult resultTypeCapability = mock(SshCommandResult.class);
         SshCommandResult resultGrepCapability = mock(SshCommandResult.class);
@@ -279,9 +279,10 @@ public class CloudFoundryContainerPlatformTest {
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
-        term.runExperiment(sshManager);
-        assertEquals(expectedCapabilities.size(), term.getShellSessionCapabilities().size());
-        Assert.assertEquals(expectedCapabilities, term.getShellSessionCapabilities());
+        term.setSshManager(sshManager);
+        term.setShResourceService(shResourceService);
+        term.runExperiment();
+        assertThat(expectedCapabilities, IsIterableContainingInAnyOrder.containsInAnyOrder(term.getDetectedShellSessionCapabilities().toArray()));
     }
 
     @Configuration

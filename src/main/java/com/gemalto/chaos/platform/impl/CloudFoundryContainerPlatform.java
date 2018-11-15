@@ -7,8 +7,10 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
+import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -41,6 +43,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private ContainerManager containerManager;
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundryClient cloudFoundryClient;
+    @Autowired
+    ShResourceService shResourceService;
 
     @Autowired
     public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
@@ -92,7 +96,6 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                                      .map(this::createContainersFromApplicationSummary)
                                      .flatMap(Collection::stream)
                                      .collect(Collectors.toList());
-
     }
 
     Collection<CloudFoundryContainer> createContainersFromApplicationSummary (ApplicationSummary applicationSummary) {
@@ -125,21 +128,39 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
+    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
+        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+        try {
+            ssh.connect(container);
+            SshCommandResult result = ssh.executeCommand(command);
+            if(expectedExitStatus==result.getExitStatus()){
+                return ContainerHealth.NORMAL;
+            }
+        } catch (IOException e) {
+            log.warn("Unsuccessful ssh health check: {}",e.getMessage());
+        }finally {
+            ssh.disconnect();
+        }
+        return ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
     public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
         try {
             CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+            sshExperiment.setSshManager(ssh);
+            sshExperiment.setShResourceService(shResourceService);
             if (ssh.connect(container)) {
                 if (container.getDetectedCapabilities() != null) {
-                    sshExperiment.setShellSessionCapabilities(container.getDetectedCapabilities());
+                    sshExperiment.setDetectedShellSessionCapabilities(container.getDetectedCapabilities());
                 }
-                sshExperiment.runExperiment(ssh);
-                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getShellSessionCapabilities()) {
-                    container.setDetectedCapabilities(sshExperiment.getShellSessionCapabilities());
+                sshExperiment.runExperiment();
+                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
+                    container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
                 }
                 ssh.disconnect();
             }
         } catch (IOException e) {
-           throw new ChaosException(e);
+            throw new ChaosException(e);
         }
     }
 
@@ -149,6 +170,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         private CloudFoundryClient cloudFoundryClient;
         private ContainerManager containerManager;
         private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
+        private ShResourceService resourcesService;
 
         private CloudFoundryContainerPlatformBuilder () {
         }
@@ -181,7 +203,6 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             this.containerManager = containerManager;
             return this;
         }
-
         public CloudFoundryContainerPlatform build () {
             CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);

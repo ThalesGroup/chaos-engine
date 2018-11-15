@@ -1,21 +1,60 @@
 package com.gemalto.chaos.ssh;
 
+import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
+import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
-    protected ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
-    protected ArrayList<ShellSessionCapability> detectedCapabilities;
+    public static final String DEFAULT_UPLOAD_PATH = "/tmp/";
+    private String experimentName;
+    private String experimentScript;
+    protected List<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
+    protected List<ShellSessionCapability> detectedCapabilities;
     protected SshManager sshManager;
+    private ShResourceService shResourceService;
 
     protected abstract void buildRequiredCapabilities ();
 
-    public boolean runExperiment (SshManager sshManager) throws IOException {
+    public String getExperimentName () {
+        return experimentName;
+    }
+
+    public String getExperimentScript () {
+        return experimentScript;
+    }
+
+    private void buildGenerallyRequiredCapabilities () {
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.ASH)
+                                                                                      .addCapabilityOption(ShellSessionCapabilityOption.SH));
+        requiredCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
+    }
+
+    protected SshExperiment (String experimentName, String experimentScript) {
+        this.experimentName = experimentName;
+        this.experimentScript = experimentScript;
+        buildGenerallyRequiredCapabilities();
+    }
+
+    public SshExperiment setSshManager (SshManager sshManager) {
         this.sshManager = sshManager;
+        return this;
+    }
+
+    public SshExperiment setShResourceService (ShResourceService shResourceService) {
+        this.shResourceService = shResourceService;
+        return this;
+    }
+
+    public void runExperiment () throws IOException {
         if (detectedCapabilities == null) {
             collectAvailableCapabilities();
         } else {
@@ -26,14 +65,16 @@ public abstract class SshExperiment {
             }
         }
         if (shellHasRequiredCapabilities()) {
-            log.debug("Starting {} experiment.", getExperimentName());
-            sshManager.executeCommandInInteractiveShell(getExperimentCommand(), getExperimentName(), getSshSessionMaxDuration());
+            log.debug("Deploying {} experiment.", getExperimentName());
+            sshManager.uploadResource(shResourceService.getScriptResource(getExperimentScript()), DEFAULT_UPLOAD_PATH, true);
             log.debug("Experiment {} deployed.", getExperimentName());
-            return true;
-        } else {
-            log.warn("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
+            String scriptExec = String.format("nohup %s%s &", DEFAULT_UPLOAD_PATH, getExperimentScript());
+            sshManager.executeCommandInShell(scriptExec, getExperimentName());
+            sshManager.disconnect();
+        }else {
+            log.error("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
+            throw new ChaosException("Cannot execute SSH experiment. Current shell session does not have all required capabilities");
         }
-        return false;
     }
 
     private void collectAvailableCapabilities () throws IOException {
@@ -53,8 +94,8 @@ public abstract class SshExperiment {
 
     private void updateAvailableCapabilities () throws IOException {
         log.debug("Updating shell capabilities");
-        ArrayList<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
-        ArrayList<ShellSessionCapability> additionalDetectedCapabilities;
+        List<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> additionalDetectedCapabilities;
         for (ShellSessionCapability requiredCap : requiredCapabilities) {
             if (!shellHasCapability(requiredCap)) {
                 additionalRequiredCapabilities.add(requiredCap);
@@ -79,12 +120,6 @@ public abstract class SshExperiment {
         return true;
     }
 
-    protected abstract String getExperimentName ();
-
-    protected abstract String getExperimentCommand ();
-
-    protected abstract int getSshSessionMaxDuration ();
-
     private boolean shellHasCapability (ShellSessionCapability requiredCap) {
         for (ShellSessionCapability actualCap : detectedCapabilities) {
             if (actualCap.getCapabilityType() == requiredCap.getCapabilityType() && actualCap.hasAnOption(requiredCap.getCapabilityOptions())) {
@@ -105,11 +140,11 @@ public abstract class SshExperiment {
         return false;
     }
 
-    public ArrayList<ShellSessionCapability> getShellSessionCapabilities () {
+    public List<ShellSessionCapability> getDetectedShellSessionCapabilities () {
         return detectedCapabilities;
     }
 
-    public void setShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+    public void setDetectedShellSessionCapabilities (List<ShellSessionCapability> detectedCapabilities) {
         this.detectedCapabilities = detectedCapabilities;
     }
 }
