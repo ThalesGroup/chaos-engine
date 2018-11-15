@@ -13,7 +13,7 @@ public class AwsEC2SelfAwareness {
     private static final Logger log = LoggerFactory.getLogger(AwsEC2SelfAwareness.class);
     private String instanceId;
     private boolean initialized = false;
-    @Value("${aws.callback.host")
+    @Value("${aws.callback.host}")
     private String awsCallbackHost;
 
     public boolean isMe (@NotNull String otherInstanceId) {
