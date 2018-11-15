@@ -25,7 +25,7 @@ public class SshCommandResult {
             InputStream inputStream = command.getInputStream();
             commandOutput = IOUtils.readFully(inputStream).toString();
         } catch (IOException e) {
-            log.error("Unable to read command output '{}'", command, e.getMessage());
+            log.error("Unable to read command output '{}'", command, e);
             exitStatus=-1;
         }
     }
