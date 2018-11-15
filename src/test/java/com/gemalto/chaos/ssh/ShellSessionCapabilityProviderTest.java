@@ -10,6 +10,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,7 +22,7 @@ public class ShellSessionCapabilityProviderTest {
     SshManager ssh;
     @Mock
     SshCommandResult result;
-    ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
+    List<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     ShellSessionCapabilityProvider provider;
     ShellSessionCapability capabilityBash = new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH);
     ShellSessionCapability capabilityBinary = new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP)
@@ -34,7 +35,7 @@ public class ShellSessionCapabilityProviderTest {
         when(result.getCommandOutput()).thenReturn("bash");
         when(ssh.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         provider.build();
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBash);
         assertEquals(expectedCapabilities.toString(), provider.getCapabilities().toString());
     }
@@ -53,14 +54,14 @@ public class ShellSessionCapabilityProviderTest {
         when(ssh.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.GREP.toString())).thenReturn(result);
         when(ssh.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT.toString())).thenReturn(result);
         provider.build();
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBinary);
         assertEquals(expectedCapabilities.toString(), provider.getCapabilities().toString());
     }
 
     @Test
     public void sessionHasComplexCapabilityRequirements () throws IOException {
-        ArrayList<ShellSessionCapability> complexRequiredCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> complexRequiredCapabilities = new ArrayList<>();
         complexRequiredCapabilities.add(capabilityBash);
         complexRequiredCapabilities.add(capabilityBinary);
         ShellSessionCapabilityProvider provider = new ShellSessionCapabilityProvider(ssh, complexRequiredCapabilities);
@@ -73,7 +74,7 @@ public class ShellSessionCapabilityProviderTest {
         when(result.getCommandOutput()).thenReturn("bash");
         when(ssh.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         provider.build();
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBash);
         expectedCapabilities.add(capabilityBinary);
         assertEquals(expectedCapabilities.toString(), provider.getCapabilities().toString());
@@ -86,7 +87,7 @@ public class ShellSessionCapabilityProviderTest {
         when(result.getCommandOutput()).thenReturn("UNKNOWN");
         when(ssh.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         provider.build();
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(capabilityBash);
         assertTrue(provider.getCapabilities().size() == 0);
         assertNotEquals(expectedCapabilities.toString(), provider.getCapabilities().toString());

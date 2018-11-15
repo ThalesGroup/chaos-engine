@@ -5,10 +5,11 @@ import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ShellSessionCapability {
     private ShellCapabilityType capabilityType;
-    private ArrayList<ShellSessionCapabilityOption> capabilityOptions = new ArrayList<>();
+    private List<ShellSessionCapabilityOption> capabilityOptions = new ArrayList<>();
 
     public ShellSessionCapability (ShellCapabilityType capabilityType) {
         this.capabilityType = capabilityType;
@@ -23,7 +24,7 @@ public class ShellSessionCapability {
         return capabilityOptions.isEmpty();
     }
 
-    public boolean hasAnOption (ArrayList<ShellSessionCapabilityOption> requiredOptions) {
+    public boolean hasAnOption (List<ShellSessionCapabilityOption> requiredOptions) {
         for (ShellSessionCapabilityOption option : requiredOptions) {
             for (ShellSessionCapabilityOption allowed : capabilityOptions) {
                 if (option == allowed) {
@@ -53,7 +54,7 @@ public class ShellSessionCapability {
         return capabilityType;
     }
 
-    public ArrayList<ShellSessionCapabilityOption> getCapabilityOptions () {
+    public List<ShellSessionCapabilityOption> getCapabilityOptions () {
         return capabilityOptions;
     }
 }

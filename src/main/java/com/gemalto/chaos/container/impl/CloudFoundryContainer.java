@@ -18,6 +18,7 @@ import org.cloudfoundry.operations.applications.RestartApplicationInstanceReques
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 
@@ -25,7 +26,7 @@ public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private transient ArrayList<ShellSessionCapability> detectedCapabilities;
+    private transient List<ShellSessionCapability> detectedCapabilities;
     private transient CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
@@ -138,11 +139,11 @@ public class CloudFoundryContainer extends Container {
         return instance;
     }
 
-    public ArrayList<ShellSessionCapability> getDetectedCapabilities () {
+    public List<ShellSessionCapability> getDetectedCapabilities () {
         return detectedCapabilities;
     }
 
-    public void setDetectedCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+    public void setDetectedCapabilities (List<ShellSessionCapability> detectedCapabilities) {
         this.detectedCapabilities = detectedCapabilities;
     }
 

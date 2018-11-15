@@ -9,19 +9,20 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ShellSessionCapabilityProvider {
     private static final Logger log = LoggerFactory.getLogger(ShellSessionCapabilityProvider.class);
     private SshManager sshManager;
-    private ArrayList<ShellSessionCapability> capabilities = new ArrayList<>();
-    private ArrayList<ShellSessionCapability> requiredCapabilities;
+    private List<ShellSessionCapability> capabilities = new ArrayList<>();
+    private List<ShellSessionCapability> requiredCapabilities;
 
-    public ShellSessionCapabilityProvider (SshManager sshManager, ArrayList<ShellSessionCapability> requiredCapabilities) {
+    public ShellSessionCapabilityProvider (SshManager sshManager, List<ShellSessionCapability> requiredCapabilities) {
         this.sshManager = sshManager;
         this.requiredCapabilities = requiredCapabilities;
     }
 
-    public ArrayList<ShellSessionCapability> getCapabilities () {
+    public List<ShellSessionCapability> getCapabilities () {
         return capabilities;
     }
 
@@ -60,7 +61,7 @@ public class ShellSessionCapabilityProvider {
         }
     }
 
-    private void checkBinaryPresent (ArrayList<ShellSessionCapabilityOption> binaryOptions) throws IOException {
+    private void checkBinaryPresent (List<ShellSessionCapabilityOption> binaryOptions) throws IOException {
         ShellSessionCapability capability = new ShellSessionCapability(ShellCapabilityType.BINARY);
         for (ShellSessionCapabilityOption option : binaryOptions) {
             SshCommandResult result = sshManager.executeCommand(ShellCommand.BINARYEXISTS + option.getName());

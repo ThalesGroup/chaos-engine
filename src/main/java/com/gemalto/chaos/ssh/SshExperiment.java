@@ -9,14 +9,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class SshExperiment {
     private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
     public static final String DEFAULT_UPLOAD_PATH = "/tmp/";
     private String experimentName;
     private String experimentScript;
-    protected ArrayList<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
-    protected ArrayList<ShellSessionCapability> detectedCapabilities;
+    protected List<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
+    protected List<ShellSessionCapability> detectedCapabilities;
     protected SshManager sshManager;
     private ShResourceService shResourceService;
 
@@ -93,8 +94,8 @@ public abstract class SshExperiment {
 
     private void updateAvailableCapabilities () throws IOException {
         log.debug("Updating shell capabilities");
-        ArrayList<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
-        ArrayList<ShellSessionCapability> additionalDetectedCapabilities;
+        List<ShellSessionCapability> additionalRequiredCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> additionalDetectedCapabilities;
         for (ShellSessionCapability requiredCap : requiredCapabilities) {
             if (!shellHasCapability(requiredCap)) {
                 additionalRequiredCapabilities.add(requiredCap);
@@ -139,11 +140,11 @@ public abstract class SshExperiment {
         return false;
     }
 
-    public ArrayList<ShellSessionCapability> getDetectedShellSessionCapabilities () {
+    public List<ShellSessionCapability> getDetectedShellSessionCapabilities () {
         return detectedCapabilities;
     }
 
-    public void setDetectedShellSessionCapabilities (ArrayList<ShellSessionCapability> detectedCapabilities) {
+    public void setDetectedShellSessionCapabilities (List<ShellSessionCapability> detectedCapabilities) {
         this.detectedCapabilities = detectedCapabilities;
     }
 }

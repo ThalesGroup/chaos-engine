@@ -38,10 +38,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
@@ -245,9 +242,9 @@ public class CloudFoundryContainerPlatformTest {
 
     @Test
     public void sshExperimentMergeCapabilities () throws IOException {
-        ArrayList<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
         alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH));
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
@@ -285,8 +282,7 @@ public class CloudFoundryContainerPlatformTest {
         term.setSshManager(sshManager);
         term.setShResourceService(shResourceService);
         term.runExperiment();
-        assertEquals(expectedCapabilities.size(), term.getDetectedShellSessionCapabilities().size());
-        Assert.assertEquals(expectedCapabilities, term.getDetectedShellSessionCapabilities());
+        assertThat(expectedCapabilities, IsIterableContainingInAnyOrder.containsInAnyOrder(term.getDetectedShellSessionCapabilities().toArray()));
     }
 
     @Configuration

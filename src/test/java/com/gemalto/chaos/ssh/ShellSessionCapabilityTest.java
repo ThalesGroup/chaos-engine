@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,7 +27,7 @@ public class ShellSessionCapabilityTest {
 
     @Test
     public void hasAnOption () {
-        ArrayList<ShellSessionCapabilityOption> reqOpts = new ArrayList<>();
+        List<ShellSessionCapabilityOption> reqOpts = new ArrayList<>();
         assertEquals(false, shellCapability.hasAnOption(reqOpts));
         reqOpts.add(ShellSessionCapabilityOption.SH);
         assertEquals(false, shellCapability.hasAnOption(reqOpts));

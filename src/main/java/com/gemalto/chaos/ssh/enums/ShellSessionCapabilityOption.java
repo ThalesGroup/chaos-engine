@@ -1,6 +1,7 @@
 package com.gemalto.chaos.ssh.enums;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public enum ShellSessionCapabilityOption {
     BASH("bash", ShellCapabilityType.SHELL),
@@ -19,8 +20,8 @@ public enum ShellSessionCapabilityOption {
         this.type = type;
     }
 
-    public static ArrayList<ShellSessionCapabilityOption> getShellTypes () {
-        ArrayList<ShellSessionCapabilityOption> shellTypes = new ArrayList<>();
+    public static List<ShellSessionCapabilityOption> getShellTypes () {
+        List<ShellSessionCapabilityOption> shellTypes = new ArrayList<>();
         for (ShellSessionCapabilityOption option : ShellSessionCapabilityOption.values()) {
             if (option.type == ShellCapabilityType.SHELL) {
                 shellTypes.add(option);

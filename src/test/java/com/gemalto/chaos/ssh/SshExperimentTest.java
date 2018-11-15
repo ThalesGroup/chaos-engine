@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -108,7 +109,7 @@ public class SshExperimentTest {
         when(result.getCommandOutput()).thenReturn("bash");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         genericSshExperiment.runExperiment();
-        ArrayList<ShellSessionCapability> detected = genericSshExperiment.getDetectedShellSessionCapabilities();
+        List<ShellSessionCapability> detected = genericSshExperiment.getDetectedShellSessionCapabilities();
         assertEquals(2,detected.size());
 
         assertTrue(detected.contains(mandatoryCapShell));
@@ -132,7 +133,7 @@ public class SshExperimentTest {
 
         genericSshExperiment.runExperiment();
 
-        ArrayList<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL)
                 .addCapabilityOption(ShellSessionCapabilityOption.BASH));
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY)
@@ -140,7 +141,7 @@ public class SshExperimentTest {
         expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY)
                 .addCapabilityOption(ShellSessionCapabilityOption.SORT));
 
-        ArrayList<ShellSessionCapability> capabilities =genericSshExperiment.getDetectedShellSessionCapabilities();
+        List<ShellSessionCapability> capabilities =genericSshExperiment.getDetectedShellSessionCapabilities();
         assertEquals(expectedCapabilities,capabilities);
     }
 
@@ -149,7 +150,7 @@ public class SshExperimentTest {
         ShellSessionCapability mandatoryCapShell= new ShellSessionCapability(ShellCapabilityType.SHELL)
                 .addCapabilityOption(ShellSessionCapabilityOption.BASH);
         GenericSshExperiment genericSshExperiment = new GenericSshExperiment(experimentName,experimentScript);
-        ArrayList<ShellSessionCapability>  capabilities = new ArrayList<>();
+        List<ShellSessionCapability>  capabilities = new ArrayList<>();
         capabilities.add(mandatoryCapShell);
         genericSshExperiment.setDetectedShellSessionCapabilities(capabilities);
         assertEquals(capabilities,genericSshExperiment.getDetectedShellSessionCapabilities());
