@@ -53,7 +53,7 @@ public class SshManagerTest {
             assertTrue(connected);
             sshManager.disconnect();
         } catch (Exception e) {
-            fail();
+            fail("No exception should be thrown while connecting to a valid target");
         }
     }
 
@@ -69,7 +69,7 @@ public class SshManagerTest {
             assertFalse(connected);
             sshManager.disconnect();
         } catch (Exception e) {
-            fail(e.getMessage());
+            fail("No exception should be thrown when connection interrupted");
         }
     }
 
@@ -97,7 +97,7 @@ public class SshManagerTest {
             verify(sshClient, times(1)).isAuthenticated();
             assertFalse(connected);
         } catch (Exception e) {
-            fail(e.getMessage());
+            fail("No exception should be thrown when authentication failed");
         }
     }
 
@@ -119,7 +119,7 @@ public class SshManagerTest {
             sshManager.connect(username, passwd);
             assertEquals(expectedResult.toString(), sshManager.executeCommand(script).toString());
         } catch (Exception e) {
-            fail(e.getMessage());
+            fail("No exception should be thrown when command executed successfully");
         }
     }
 

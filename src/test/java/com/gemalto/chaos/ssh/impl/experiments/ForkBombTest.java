@@ -70,7 +70,7 @@ public class ForkBombTest {
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         try {
             bomb.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when the target does not have a capability");
         }catch (ChaosException ex){
 
         }
@@ -78,7 +78,7 @@ public class ForkBombTest {
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         try {
             bomb.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when capability check failed");
         }catch (ChaosException ex){
 
         }

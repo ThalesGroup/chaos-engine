@@ -79,21 +79,21 @@ public class RandomProcessTerminationTest {
         randomProcessTermination.setShResourceService(shResourceService).setSshManager(sshManager);
         try {
             randomProcessTermination.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when the target does not have a capability");
         } catch (ChaosException ex) {
         }
         when(resultShellCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(resultShellCapability);
         try {
             randomProcessTermination.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when capability check failed");
         } catch (ChaosException ex) {
         }
         when(resultTypeCapability.getExitStatus()).thenReturn(-1);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         try {
             randomProcessTermination.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when capability check failed");
         } catch (ChaosException ex) {
         }
         randomProcessTermination = new RandomProcessTermination();
@@ -102,7 +102,7 @@ public class RandomProcessTerminationTest {
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
         try {
             randomProcessTermination.runExperiment();
-            fail();
+            fail("ChaosException must be thrown when the target does not have a capability");
         } catch (ChaosException ex) {
         }
     }
