@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -78,14 +79,27 @@ public class AwsEC2Container extends AwsContainer {
     @StateExperiment
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
-        experiment.setSelfHealingMethod(startContainerMethod);
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(checkContainerStartedMethod));
+    }
+
+    Callable<Void> autoscalingSelfHealingWrapper (@NotNull Callable<Void> baseMethod) {
+        final AtomicBoolean asgSelfHealingRun = new AtomicBoolean(false);
+        return isNativeAwsAutoscaling() ? () -> {
+            if (asgSelfHealingRun.compareAndSet(false, true)) {
+                log.debug("First self healing attempt will use Autoscaling to recreate");
+                awsEC2Platform.triggerAutoscalingUnhealthy(instanceId);
+                return null;
+            }
+            baseMethod.call();
+            return null;
+        } : baseMethod;
     }
 
     Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
         return isMemberOfScaledGroup() ? () -> {
             if (awsEC2Platform.isContainerTerminated(instanceId)) {
-                if (nativeAwsAutoscaling) {
+                if (isNativeAwsAutoscaling()) {
                     if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier))
                         return ContainerHealth.NORMAL;
                     else {
@@ -103,11 +117,15 @@ public class AwsEC2Container extends AwsContainer {
         return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
 
+    Boolean isNativeAwsAutoscaling () {
+        return nativeAwsAutoscaling;
+    }
+
     @StateExperiment
     public void restartContainer (Experiment experiment) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsEC2Platform.restartInstance(instanceId);
-        experiment.setSelfHealingMethod(startContainerMethod);
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform
                 .checkHealth(instanceId) : ContainerHealth.RUNNING_EXPERIMENT));
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
@@ -118,10 +136,10 @@ public class AwsEC2Container extends AwsContainer {
         List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupId()));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds)));
-        experiment.setSelfHealingMethod(() -> {
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {
             awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
             return null;
-        });
+        }));
     }
 
     public static final class AwsEC2ContainerBuilder {

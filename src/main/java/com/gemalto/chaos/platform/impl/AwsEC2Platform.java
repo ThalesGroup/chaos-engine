@@ -3,6 +3,7 @@ package com.gemalto.chaos.platform.impl;
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
+import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
@@ -361,5 +362,12 @@ public class AwsEC2Platform extends Platform {
                                                     .filter(instance -> instance.getHealthStatus().equals("Healthy"))
                                                     .count();
         return desiredCapacity == actualCapacity;
+    }
+
+    public void triggerAutoscalingUnhealthy (String instanceId) {
+        log.info("Manually setting instance {} as Unhealthy so Autoscaling corrects it.", v(DataDogConstants.RDS_INSTANCE_ID, instanceId));
+        amazonAutoScaling.setInstanceHealth(new SetInstanceHealthRequest().withHealthStatus("Unhealthy")
+                                                                          .withInstanceId(instanceId)
+                                                                          .withShouldRespectGracePeriod(false));
     }
 }

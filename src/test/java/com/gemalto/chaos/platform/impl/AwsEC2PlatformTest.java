@@ -1,6 +1,7 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.constants.AwsEC2Constants;
@@ -361,6 +362,15 @@ public class AwsEC2PlatformTest {
         assertThat(experimentRoster, IsIterableWithSize.iterableWithSize(8));
         assertTrue("Should always contain container that is not grouped.", experimentRoster.contains(independentContainer));
         assertTrue("Should always contain container that has no others in group.", experimentRoster.contains(lonelyScaledContainer));
+    }
+
+    @Test
+    public void triggerAutoscalingUnhealthy () {
+        String instanceId = randomUUID().toString();
+        awsEC2Platform.triggerAutoscalingUnhealthy(instanceId);
+        verify(amazonAutoScaling, atLeastOnce()).setInstanceHealth(new SetInstanceHealthRequest().withHealthStatus("Unhealthy")
+                                                                                                 .withInstanceId(instanceId)
+                                                                                                 .withShouldRespectGracePeriod(false));
     }
 
     @Configuration
