@@ -17,7 +17,6 @@ import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
@@ -37,14 +36,10 @@ public class CloudFoundryContainer extends Container {
         return null;
     };
     private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
-
-
-    private transient BiFunction<String,Integer, Callable<ContainerHealth>> isSshExperimentCompleted=(command,expectedExitStatus) ->
-            ()->
-    {
-        ContainerHealth  instanceState = isInstanceRunning.call();
-        ContainerHealth  shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheck(this,command,expectedExitStatus);
-        if(instanceState==ContainerHealth.NORMAL&&shellBasedHealthCheck==ContainerHealth.NORMAL){
+    private transient BiFunction<String, Integer, Callable<ContainerHealth>> isSshExperimentCompleted = (command, expectedExitStatus) -> () -> {
+        ContainerHealth instanceState = isInstanceRunning.call();
+        ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheck(this, command, expectedExitStatus);
+        if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
             return ContainerHealth.NORMAL;
         }
         return ContainerHealth.RUNNING_EXPERIMENT;
@@ -109,8 +104,8 @@ public class CloudFoundryContainer extends Container {
     @StateExperiment
     public void forkBomb (Experiment experiment) {
         experiment.setSelfHealingMethod(restartContainer);
-        String healthCheckCommand=ShellCommand.BINARYEXISTS+ SshExperiment.DEFAULT_UPLOAD_PATH+ForkBomb.EXPERIMENT_SCRIPT;
-        experiment.setCheckContainerHealth(isSshExperimentCompleted.apply(healthCheckCommand,1));
+        String healthCheckCommand = ShellCommand.BINARYEXISTS + SshExperiment.DEFAULT_UPLOAD_PATH + ForkBomb.EXPERIMENT_SCRIPT;
+        experiment.setCheckContainerHealth(isSshExperimentCompleted.apply(healthCheckCommand, 1));
         cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
