@@ -39,7 +39,7 @@ public class CloudFoundryContainer extends Container {
     private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
 
-    private transient BiFunction<String,Integer, Callable<ContainerHealth>> isSshExperimentCompelted=(command,expectedExitStatus) ->
+    private transient BiFunction<String,Integer, Callable<ContainerHealth>> isSshExperimentCompleted=(command,expectedExitStatus) ->
             ()->
     {
         ContainerHealth  instanceState = isInstanceRunning.call();
@@ -110,7 +110,7 @@ public class CloudFoundryContainer extends Container {
     public void forkBomb (Experiment experiment) {
         experiment.setSelfHealingMethod(restartContainer);
         String healthCheckCommand=ShellCommand.BINARYEXISTS+ SshExperiment.DEFAULT_UPLOAD_PATH+ForkBomb.EXPERIMENT_SCRIPT;
-        experiment.setCheckContainerHealth(isSshExperimentCompelted.apply(healthCheckCommand,1));
+        experiment.setCheckContainerHealth(isSshExperimentCompleted.apply(healthCheckCommand,1));
         cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
