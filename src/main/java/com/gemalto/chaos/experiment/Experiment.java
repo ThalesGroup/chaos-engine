@@ -253,7 +253,7 @@ public abstract class Experiment {
             try {
                 return checkContainerHealth.call();
             } catch (Exception e) {
-                log.error("Issue while checking container health using specific method: {}", e.getMessage(),e.getCause());
+                log.error("Issue while checking container health using specific method", e);
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         }
