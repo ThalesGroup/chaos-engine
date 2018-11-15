@@ -47,13 +47,12 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     ShResourceService shResourceService;
 
     @Autowired
-    public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager, ShResourceService shResourceService) {
+    public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
         super(cloudFoundryOperations, cloudFoundryPlatformInfo);
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
         this.cloudFoundryClient = cloudFoundryClient;
         this.containerManager = containerManager;
-        this.shResourceService = shResourceService;
     }
 
     public static CloudFoundryContainerPlatformBuilder builder () {
@@ -204,14 +203,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             this.containerManager = containerManager;
             return this;
         }
-
-        CloudFoundryContainerPlatformBuilder withResourcesService (ShResourceService resourcesService) {
-            this.resourcesService = resourcesService;
-            return this;
-        }
-
         public CloudFoundryContainerPlatform build () {
-            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager, resourcesService);
+            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
             return cloudFoundryContainerPlatform;
         }
