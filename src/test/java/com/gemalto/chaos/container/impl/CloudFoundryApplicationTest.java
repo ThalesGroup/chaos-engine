@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -131,7 +132,7 @@ public class CloudFoundryApplicationTest {
         experiment.getSelfHealingMethod().call();
     }
 
-    @Test
+    @Test(expected = ChaosException.class)
     public void unmapRouteAppWithNoRoutes () throws Exception {
         CloudFoundryApplication appNoRoutes = CloudFoundryApplication.builder()
                                                                      .applicationID(applicationId)
@@ -140,13 +141,8 @@ public class CloudFoundryApplicationTest {
                                                                      .applicationRoutes(new ArrayList<>())
                                                                      .platform(cloudFoundryApplicationPlatform)
                                                                      .build();
-        appNoRoutes.unmapRoute(experiment);
-        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        verify(experiment, times(0)).setFinalizeMethod(ArgumentMatchers.any());
-        verify(experiment, times(1)).setFinalizationDuration(Duration.ZERO);
-        Mockito.verify(cloudFoundryApplicationPlatform, times(0)).unmapRoute(ArgumentMatchers.any());
-        experiment.getSelfHealingMethod().call();
+            appNoRoutes.unmapRoute(experiment);
+
     }
 
     @Test
