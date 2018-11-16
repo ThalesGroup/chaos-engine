@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.zip.CRC32;
 
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
@@ -43,7 +45,11 @@ public abstract class Container implements ExperimentalObject {
 
     @Override
     public boolean canExperiment () {
-        return !supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability();
+        if(!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()){
+            return true;
+        }
+        log.debug("Cannot experiment on the container right now", v(DATADOG_CONTAINER_KEY, this));
+        return false;
     }
 
     @JsonIgnore
