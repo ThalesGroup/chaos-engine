@@ -233,7 +233,7 @@ public class AwsEC2Platform extends Platform {
         }
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName())
+                              .keyName(Optional.ofNullable(instance.getKeyName()).orElse(NO_ASSIGNED_KEY))
                               .name(name)
                               .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
                               .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))

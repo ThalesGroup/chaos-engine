@@ -12,6 +12,7 @@ public abstract class AwsEC2Constants {
     public static final int AWS_EC2_HARD_REBOOT_TIMER_MINUTES = 4;
     public static final String NO_GROUPING_IDENTIFIER = "No Grouping Identifier Found";
     public static final String AWS_ASG_NAME_TAG_KEY = "aws:autoscaling:groupName";
+    public static final String NO_ASSIGNED_KEY = "No Assigned Key";
 
     private AwsEC2Constants () {
     }
