@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
@@ -12,16 +13,19 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.UUID.randomUUID;
+import static junit.framework.TestCase.assertTrue;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,11 +44,13 @@ public class AwsEC2ContainerTest {
 
     @Before
     public void setUp () {
-        awsEC2Container = AwsEC2Container.builder()
-                                         .keyName(KEY_NAME)
-                                         .instanceId(INSTANCE_ID)
-                                         .awsEC2Platform(awsEC2Platform).name(NAME).groupIdentifier(GROUP_IDENTIFIER)
-                                         .build();
+        awsEC2Container = Mockito.spy(AwsEC2Container.builder()
+                                                     .keyName(KEY_NAME)
+                                                     .instanceId(INSTANCE_ID)
+                                                     .awsEC2Platform(awsEC2Platform)
+                                                     .name(NAME)
+                                                     .groupIdentifier(GROUP_IDENTIFIER)
+                                                     .build());
     }
 
     @Test
@@ -123,5 +129,147 @@ public class AwsEC2ContainerTest {
         assertEquals(DataDogIdentifier.dataDogIdentifier()
                                       .withValue(INSTANCE_ID)
                                       .withKey("Host"), awsEC2Container.getDataDogIdentifier());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingWrapperFramework () {
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
+        Callable<ContainerHealth> callable = mock(Callable.class);
+        assertNotEquals(callable, awsEC2Container.autoscalingHealthcheckWrapper(callable));
+        doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
+        assertEquals(callable, awsEC2Container.autoscalingHealthcheckWrapper(callable));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingWrapperScaledAndTerminated () throws Exception {
+        Callable<ContainerHealth> callable = mock(Callable.class);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
+        doReturn(true).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        assertEquals(ContainerHealth.NORMAL, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
+        verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
+        verify(callable, never()).call();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingWrapperScaledNotTerminated () throws Exception {
+        Callable<ContainerHealth> callable = mock(Callable.class);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
+        doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
+                                                                        .call());
+        verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
+        verify(callable, atLeastOnce()).call();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingWrapperNotScaled () throws Exception {
+        Callable<ContainerHealth> callable = mock(Callable.class);
+        doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
+        doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
+                                                                        .call());
+        verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
+        verify(callable, atLeastOnce()).call();
+    }
+
+    @Test
+    public void isMemberOfScaledGroup () {
+        assertTrue(awsEC2Container.isMemberOfScaledGroup());
+        ReflectionTestUtils.setField(awsEC2Container, "groupIdentifier", AwsEC2Constants.NO_GROUPING_IDENTIFIER);
+        assertFalse(awsEC2Container.isMemberOfScaledGroup());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingSelfHealingWrapper () throws Exception {
+        doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
+        Callable<Void> baseMethod = Mockito.spy(Callable.class);
+        Callable<Void> callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
+        callable.call();
+        /*
+        On the first call, it should use the Autoscaling method, and not touch the base method.
+         */
+        verify(awsEC2Platform, atLeastOnce()).triggerAutoscalingUnhealthy(anyString());
+        verify(baseMethod, never()).call();
+        reset(baseMethod, awsEC2Platform);
+        callable.call();
+        /*
+        On the second call, it should not use the Autoscaling method, and use the base method.
+         */
+        verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(anyString());
+        verify(baseMethod, atLeastOnce()).call();
+        reset(baseMethod, awsEC2Platform);
+        /*
+        If a Runtime exception occurs with the autoscaling method, it should use the base method on subsequent calls.
+         */
+        callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
+        doThrow(new RuntimeException()).when(awsEC2Platform).triggerAutoscalingUnhealthy(anyString());
+        try {
+            callable.call();
+            fail("We expect an exception to be thrown for this test.");
+        } catch (RuntimeException expected) {
+        }
+        callable.call();
+        verify(baseMethod, times(1)).call();
+    }
+
+    @Test
+    public void autoscalingSelfHealingWrapperOnNativeInstance () {
+        doReturn(false).when(awsEC2Container).isNativeAwsAutoscaling();
+        Callable<Void> baseMethod = () -> null;
+        assertSame(baseMethod, awsEC2Container.autoscalingSelfHealingWrapper(baseMethod));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingHealthCheckWrapperNativeAutoscaling () throws Exception {
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
+        doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
+        Callable<ContainerHealth> baseMethod = spy(Callable.class);
+        Callable<ContainerHealth> callable;
+        /*
+        Case 1: Not terminated. Expect the base method to be called.
+         */
+        doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        callable = awsEC2Container.autoscalingHealthcheckWrapper(baseMethod);
+        callable.call();
+        verify(baseMethod, atLeastOnce()).call();
+        assertNotSame(callable, baseMethod);
+        reset(baseMethod);
+        /*
+        Case 2/3: Terminated, 2/Not At Capacity, 3/At Capacity
+         */
+        doReturn(true).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        doReturn(true, false).when(awsEC2Platform).isAutoscalingGroupAtDesiredInstances(GROUP_IDENTIFIER);
+        callable = awsEC2Container.autoscalingHealthcheckWrapper(baseMethod);
+        assertEquals(ContainerHealth.NORMAL, callable.call());
+        verify(baseMethod, never()).call();
+        callable = awsEC2Container.autoscalingHealthcheckWrapper(baseMethod);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, callable.call());
+        verify(baseMethod, never()).call();
+    }
+
+    @Test
+    public void autoscalingHealthCheckWrapperThirdPartyAutoscaling () throws Exception {
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
+        doReturn(false).when(awsEC2Container).isNativeAwsAutoscaling();
+        doReturn(true).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        assertEquals(ContainerHealth.NORMAL, awsEC2Container.autoscalingHealthcheckWrapper(() -> null).call());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void autoscalingHealthCheckWrapperNoAutoscaling () {
+        doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
+        Callable<ContainerHealth> baseMethod = spy(Callable.class);
+        Callable<ContainerHealth> callable;
+        callable = awsEC2Container.autoscalingHealthcheckWrapper(baseMethod);
+        assertSame(baseMethod, callable);
     }
 }

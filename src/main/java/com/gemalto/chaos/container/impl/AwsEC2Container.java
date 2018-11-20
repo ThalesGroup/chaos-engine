@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -26,12 +27,14 @@ public class AwsEC2Container extends AwsContainer {
     private String keyName;
     private String name;
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
+    private boolean nativeAwsAutoscaling = false;
     private transient AwsEC2Platform awsEC2Platform;
     private final transient Callable<Void> startContainerMethod = () -> {
         awsEC2Platform.startInstance(instanceId);
         return null;
     };
     private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
+
     private AwsEC2Container () {
         super();
     }
@@ -76,16 +79,55 @@ public class AwsEC2Container extends AwsContainer {
     @StateExperiment
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
-        experiment.setSelfHealingMethod(startContainerMethod);
-        experiment.setCheckContainerHealth(checkContainerStartedMethod);
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(checkContainerStartedMethod));
+    }
+
+    Callable<Void> autoscalingSelfHealingWrapper (@NotNull Callable<Void> baseMethod) {
+        final AtomicBoolean asgSelfHealingRun = new AtomicBoolean(false);
+        return isNativeAwsAutoscaling() ? () -> {
+            if (asgSelfHealingRun.compareAndSet(false, true)) {
+                log.debug("First self healing attempt will use Autoscaling to recreate");
+                awsEC2Platform.triggerAutoscalingUnhealthy(instanceId);
+                return null;
+            }
+            baseMethod.call();
+            return null;
+        } : baseMethod;
+    }
+
+    Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
+        return isMemberOfScaledGroup() ? () -> {
+            if (awsEC2Platform.isContainerTerminated(instanceId)) {
+                if (isNativeAwsAutoscaling()) {
+                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier))
+                        return ContainerHealth.NORMAL;
+                    else {
+                        log.info("Instance is terminated but scaling group is not at desired capacity");
+                        return ContainerHealth.RUNNING_EXPERIMENT;
+                    }
+                }
+                return ContainerHealth.NORMAL;
+            }
+            return baseMethod.call();
+        } : baseMethod;
+    }
+
+    boolean isMemberOfScaledGroup () {
+        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
+    }
+
+    Boolean isNativeAwsAutoscaling () {
+        return nativeAwsAutoscaling;
     }
 
     @StateExperiment
     public void restartContainer (Experiment experiment) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsEC2Platform.restartInstance(instanceId);
-        experiment.setSelfHealingMethod(startContainerMethod);
-        experiment.setCheckContainerHealth(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform.checkHealth(instanceId) : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform
+                .checkHealth(instanceId) : ContainerHealth.RUNNING_EXPERIMENT));
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
@@ -93,11 +135,11 @@ public class AwsEC2Container extends AwsContainer {
     public void removeSecurityGroups (Experiment experiment) {
         List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupId()));
-        experiment.setCheckContainerHealth(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds));
-        experiment.setSelfHealingMethod(() -> {
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds)));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {
             awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
             return null;
-        });
+        }));
     }
 
     public static final class AwsEC2ContainerBuilder {
@@ -107,6 +149,7 @@ public class AwsEC2Container extends AwsContainer {
         private AwsEC2Platform awsEC2Platform;
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
+        private boolean nativeAwsAutoscaling = false;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -145,7 +188,10 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
-
+        public AwsEC2ContainerBuilder nativeAwsAutoscaling (boolean nativeAwsAutoscaling) {
+            this.nativeAwsAutoscaling = nativeAwsAutoscaling;
+            return this;
+        }
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -154,6 +200,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.name = this.name;
             awsEC2Container.availabilityZone = this.availabilityZone;
             awsEC2Container.groupIdentifier = this.groupIdentifier;
+            awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             return awsEC2Container;
         }
     }

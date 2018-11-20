@@ -1,5 +1,9 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
+import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
@@ -24,7 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
+import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -39,6 +43,8 @@ public class AwsEC2Platform extends Platform {
     private String chaosSecurityGroupId;
     private Vpc defaultVpc;
     private List<String> groupingTags;
+    @Autowired
+    private AmazonAutoScaling amazonAutoScaling;
 
     @Autowired
     AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
@@ -206,24 +212,31 @@ public class AwsEC2Platform extends Platform {
      * @return Container mapping to the instance.
      */
     AwsEC2Container buildContainerFromInstance (Instance instance) {
+        String groupIdentifier = null;
+        Boolean nativeAwsAutoscaling = null;
+
+
         String name = instance.getTags()
                               .stream()
                               .filter(tag -> tag.getKey().equals("Name"))
                               .findFirst()
                               .orElse(new Tag("Name", "no-name"))
                               .getValue();
-        final String groupIdentifier = Optional.ofNullable(groupingTags == null ? null : instance.getTags()
-                                                                                                 .stream()
-                                                                                                 .filter(tag -> groupingTags
-                                                                                                         .contains(tag.getKey()))
-                                                                                                 .min(Comparator.comparingInt(tag -> groupingTags
-                                                                                     .indexOf(tag.getKey())))
-                                                                                                 .orElse(new Tag())
-                                                                                                 .getValue())
-                                               .orElse(AwsEC2Constants.NO_GROUPING_IDENTIFIER);
+        if (groupingTags != null) {
+            Tag groupingTag = instance.getTags()
+                                      .stream()
+                                      .filter(tag -> groupingTags.contains(tag.getKey()))
+                                      .min(Comparator.comparingInt(tag -> groupingTags.indexOf(tag.getKey())))
+                                      .orElse(null);
+            groupIdentifier = groupingTag == null ? null : groupingTag.getValue();
+            nativeAwsAutoscaling = groupingTag != null && AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
+        }
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
-                              .keyName(instance.getKeyName()).name(name).groupIdentifier(groupIdentifier)
+                              .keyName(Optional.ofNullable(instance.getKeyName()).orElse(NO_ASSIGNED_KEY))
+                              .name(name)
+                              .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
+                              .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
                               .build();
     }
 
@@ -325,5 +338,36 @@ public class AwsEC2Platform extends Platform {
                         .stream()
                         .map(GroupIdentifier::getGroupId)
                         .collect(Collectors.toList());
+    }
+
+    public boolean isContainerTerminated (String instanceId) {
+        return amazonEC2.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(Collection::stream)
+                        .anyMatch(instance -> instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE);
+    }
+
+    public boolean isAutoscalingGroupAtDesiredInstances (String autoScalingGroupName) {
+        List<AutoScalingGroup> autoScalingGroups = amazonAutoScaling.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest()
+                .withAutoScalingGroupNames(autoScalingGroupName)).getAutoScalingGroups();
+        int desiredCapacity = autoScalingGroups.stream()
+                                               .findFirst()
+                                               .map(AutoScalingGroup::getDesiredCapacity)
+                                               .orElse(1);
+        int actualCapacity = (int) autoScalingGroups.stream()
+                                                    .map(AutoScalingGroup::getInstances)
+                                                    .flatMap(Collection::stream)
+                                                    .filter(instance -> instance.getHealthStatus().equals("Healthy"))
+                                                    .count();
+        return desiredCapacity == actualCapacity;
+    }
+
+    public void triggerAutoscalingUnhealthy (String instanceId) {
+        log.info("Manually setting instance {} as Unhealthy so Autoscaling corrects it.", v(DataDogConstants.RDS_INSTANCE_ID, instanceId));
+        amazonAutoScaling.setInstanceHealth(new SetInstanceHealthRequest().withHealthStatus("Unhealthy")
+                                                                          .withInstanceId(instanceId)
+                                                                          .withShouldRespectGracePeriod(false));
     }
 }
