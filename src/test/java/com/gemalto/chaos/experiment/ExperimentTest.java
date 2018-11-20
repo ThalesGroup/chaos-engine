@@ -327,7 +327,7 @@ public class ExperimentTest {
         assertEquals(ExperimentState.STARTED,stateExperiment.doSelfHealing());
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
                                                                          .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
                                                                          .build());
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
@@ -362,7 +362,7 @@ public class ExperimentTest {
         verify(stateExperiment, times(1)).callSelfHealing();
         verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
                                                                          .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
                                                                          .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
                                                                          .build());
         stateExperiment.doSelfHealing();

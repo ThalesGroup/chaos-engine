@@ -309,14 +309,16 @@ public abstract class Experiment {
                     if(selfHealingCounter.get()<=DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
                         StringBuilder message = new StringBuilder();
                         message.append(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING);
+                        NotificationLevel notificationLevel = NotificationLevel.ERROR;
                         if (selfHealingCounter.incrementAndGet() > 1) {
                             message.append(ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER)
                                    .append(selfHealingCounter.get())
                                    .append(".");
+                            notificationLevel=NotificationLevel.WARN;
                         }
                         chaosEvent = ChaosEvent.builder()
                                                .fromExperiment(this)
-                                               .withNotificationLevel(NotificationLevel.WARN)
+                                               .withNotificationLevel(notificationLevel)
                                                .withMessage(message.toString())
                                                .build();
                         notificationManager.sendNotification(chaosEvent);
