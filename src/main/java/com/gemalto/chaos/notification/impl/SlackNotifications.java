@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +32,24 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private static final Integer MAXIMUM_ATTACHMENTS = 20;
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
+    private String hostname;
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
         this.webhookUri = webhookUri;
+        this.hostname=getHostname();
         log.info("Created Slack notification manager against {}", this.webhookUri);
+    }
+
+    private String getHostname(){
+        String hostname="";
+        try {
+            hostname=InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            log.warn("Cannot resolve machine hostname",e);
+        }
+        return hostname;
     }
 
     @Override
@@ -73,7 +87,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
         return SlackAttachment.builder()
                               .withFallback(chaosEvent.toString())
-                              .withFooter("Chaos Engine")
+                              .withFooter("Chaos Engine - "+hostname)
                               .withTitle(chaosEvent.getExperimentType() + " against " + chaosEvent.getTargetContainer()
                                                                                                   .getSimpleName())
                               .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
