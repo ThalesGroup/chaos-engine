@@ -87,7 +87,7 @@ public class ExperimentManagerTest {
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
         when(container2.canExperiment()).thenReturn(false);
-        experimentManager.startExperiments();
+        experimentManager.scheduleExperiments();
         assertThat(experimentManager.getNewExperimentQueue(), hasItem(experiment1));
         verify(container2, times(1)).canExperiment();
         verify(container2, times(0)).createExperiment();
@@ -118,7 +118,7 @@ public class ExperimentManagerTest {
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(true);
-        experimentManager.startExperiments();
+        experimentManager.scheduleExperiments();
         Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
         experimentManager.updateExperimentStatus();
         Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
@@ -165,12 +165,12 @@ public class ExperimentManagerTest {
         when(experiment3.getContainer()).thenReturn(container3);
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
-        experimentManager.startExperiments();
+        experimentManager.scheduleExperiments();
         Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
         int scheduledExperimentsCount = experiments.size();
-        experimentManager.startExperiments();
+        experimentManager.scheduleExperiments();
         Queue<Experiment> experiments2 = experimentManager.getNewExperimentQueue();
-        // new startExperiments invocation should not add new experiment until newExperimentQueue is empty
+        // new scheduleExperiments invocation should not add new experiment until newExperimentQueue is empty
         assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
         Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
@@ -207,7 +207,7 @@ public class ExperimentManagerTest {
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
         //schedule experiments
-        experimentManager.startExperiments();
+        experimentManager.scheduleExperiments();
         experimentManager.updateExperimentStatus();
         //check they are active
         assertEquals(2, experimentManager.getActiveExperiments().size());
@@ -336,7 +336,7 @@ public class ExperimentManagerTest {
         doReturn(Collections.emptyList()).when(platform3).getRoster();
         doReturn(Instant.now()).when(platform1).getNextChaosTime();
         doReturn(Instant.now().plusSeconds(1)).when(platform2).getNextChaosTime();
-        experimentManager.startExperiments(false);
+        experimentManager.scheduleExperiments(false);
         verify(platform4, never()).getRoster();
         verify(platform1, times(1)).getNextChaosTime();
         verify(platform2, times(1)).getNextChaosTime();
@@ -441,7 +441,7 @@ public class ExperimentManagerTest {
         doReturn(false).when(platform4).canExperiment();
         doReturn(Collections.emptyList()).when(platform1).getRoster();
         doReturn(Collections.emptyList()).when(platform2).getRoster();
-        assertThat(experimentManager.startExperiments(false), IsEmptyCollection.empty());
+        assertThat(experimentManager.scheduleExperiments(false), IsEmptyCollection.empty());
         verify(platform3, never()).getRoster();
         verify(platform4, never()).getRoster();
         verify(platform1, never()).getNextChaosTime();

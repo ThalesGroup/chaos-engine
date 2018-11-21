@@ -39,7 +39,7 @@ public class ExperimentController {
     @ApiOperation(value = "Start Random Experiment", notes = "Starts a new experiment immediately. This ignores scheduling, and ensures at least one container in the chosen platform is used for experimentation.")
     @PostMapping("/start")
     public Queue<Experiment> startExperiments () {
-        return experimentManager.startExperiments(true);
+        return experimentManager.scheduleExperiments(true);
     }
 
     @ApiOperation(value = "Start Experiment on Specific Container", notes = "Creates an experiment for a specific container.")

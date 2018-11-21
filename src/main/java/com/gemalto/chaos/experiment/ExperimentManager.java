@@ -105,11 +105,11 @@ public class ExperimentManager {
     }
 
     @Scheduled(fixedDelay = 1000 * 15)
-    void startExperiments () {
-        startExperiments(false);
+    void scheduleExperiments () {
+        scheduleExperiments(false);
     }
 
-    synchronized Queue<Experiment> startExperiments (final boolean force) {
+    synchronized Queue<Experiment> scheduleExperiments (final boolean force) {
         if (activeExperiments.isEmpty() && newExperimentQueue.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");

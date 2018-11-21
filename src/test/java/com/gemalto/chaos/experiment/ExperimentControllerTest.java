@@ -154,7 +154,7 @@ public class ExperimentControllerTest {
     @Test
     public void startExperiments () throws Exception {
         mvc.perform(post("/experiment/start").contentType(APPLICATION_JSON)).andExpect(status().isOk());
-        verify(experimentManager, times(1)).startExperiments(true);
+        verify(experimentManager, times(1)).scheduleExperiments(true);
     }
 
     @Test
