@@ -3,7 +3,7 @@ services:
   chaosengine:
     build:
       context: .
-      target: test
+      target: develop
     ports:
     - "8080:8080"
     - "8081:8081"

@@ -1,0 +1,25 @@
+resources:
+- name: git-chaos-engine
+  type: git
+  source:
+    uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+    branch: ((git_branch))
+    private_key: ((ssh_key))
+
+- name: docker-chaos-engine
+  type: docker-image
+  source:
+    repository: ((docker_repo))
+    aws_access_key_id: ((aws_access_key_id))
+    aws_secret_access_key: ((aws_secret_access_key))
+
+jobs:
+- name: chaos-engine-build
+  public: true
+  plan:
+  - get: git-chaos-engine
+    trigger: true
+  - put: docker-chaos-engine
+    params:
+      build: git-chaos-engine
+      target_name: ((git_branch))

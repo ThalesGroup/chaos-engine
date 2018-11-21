@@ -12,6 +12,17 @@ buildNumber.properties
 !/.mvn/wrapper/maven-wrapper.jar
 
 
+# Ignore variables for the pipeline
+ci/secret-vars.yml
+
+#Ignore VSCode/Eclipse files
+.settings/
+.classpath
+.project
+
+
+#Ignore IntelliJ files EXCEPT Code Styles and Shared Running Configurations
+
 !.idea/
 
 .idea/*
