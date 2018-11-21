@@ -163,4 +163,9 @@ public class ExperimentControllerTest {
         mvc.perform(post("/experiment/start/" + containerId)).andExpect(status().isOk());
         verify(experimentManager, times(1)).experimentContainerId(containerId);
     }
+
+    @Test
+    public void startExperimentAlwaysReturnsExperiment () {
+        experimentManager.startExperiments(true);
+    }
 }
