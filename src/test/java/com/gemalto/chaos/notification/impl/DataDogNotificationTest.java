@@ -4,6 +4,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
+import com.gemalto.chaos.platform.Platform;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
@@ -29,6 +30,8 @@ import static org.mockito.Mockito.*;
 public class DataDogNotificationTest {
     private ChaosEvent chaosEvent;
     @Mock
+    private Platform platform;
+    @Mock
     private Container container;
     private DataDogNotification.DataDogEvent dataDogEvent ;
 
@@ -51,6 +54,8 @@ public class DataDogNotificationTest {
                               .withExperimentType(ExperimentType.STATE)
                               .build();
         when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
+        when(container.getPlatform()).thenReturn(platform);
+        when(platform.getPlatformType()).thenReturn("TYPE");
         dataDogEvent= new DataDogNotification().new DataDogEvent(chaosEvent);
 
 
@@ -58,6 +63,7 @@ public class DataDogNotificationTest {
         expectedTags.add(DataDogNotification.DataDogEvent.METHOD + chaosEvent.getExperimentMethod());
         expectedTags.add(DataDogNotification.DataDogEvent.TYPE + chaosEvent.getExperimentType().name());
         expectedTags.add(DataDogNotification.DataDogEvent.TARGET + chaosEvent.getTargetContainer().getSimpleName());
+        expectedTags.add(DataDogNotification.DataDogEvent.PLATFORM + chaosEvent.getTargetContainer().getPlatform().getPlatformType());
 
     }
     @Test

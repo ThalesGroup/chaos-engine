@@ -20,7 +20,7 @@ public class HttpUtils {
     }
 
     public static String getMachineHostname () {
-        String hostname = "";
+        String hostname;
         try {
             hostname = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {

@@ -47,13 +47,14 @@ public class DataDogNotification implements NotificationMethods {
 
     class DataDogEvent {
         private ChaosEvent chaosEvent;
-        public static final String EVENT_PREFIX = "Chaos Event ";
-        public static final String SOURCE_TYPE = "java";
+        protected static final String EVENT_PREFIX = "Chaos Event ";
+        protected static final String SOURCE_TYPE = "java";
 
-        public static final String EXPERIMENT_ID = "ExperimentId:";
-        public static final String METHOD = "Method:";
-        public static final String TYPE = "Type:";
-        public static final String TARGET = "Target:";
+        protected static final String EXPERIMENT_ID = "ExperimentId:";
+        protected static final String METHOD = "Method:";
+        protected static final String TYPE = "Type:";
+        protected static final String TARGET = "Target:";
+        protected static final String PLATFORM = "Platform:";
 
         DataDogEvent (ChaosEvent event) {
             this.chaosEvent = event;
@@ -90,6 +91,7 @@ public class DataDogNotification implements NotificationMethods {
             tags.add(METHOD + chaosEvent.getExperimentMethod());
             tags.add(TYPE + chaosEvent.getExperimentType().name());
             tags.add(TARGET + chaosEvent.getTargetContainer().getSimpleName());
+            tags.add(PLATFORM + chaosEvent.getTargetContainer().getPlatform().getPlatformType());
             return tags.toArray(new String[0]);
         }
     }
