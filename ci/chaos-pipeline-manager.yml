@@ -1,0 +1,60 @@
+resource_types:
+- name: concourse-pipeline
+  type: docker-image
+  source:
+    repository: concourse/concourse-pipeline-resource
+
+resources:
+- name: chaos-concourse-team
+  type: concourse-pipeline
+  source:
+    target: "http://concourse-web:8080"
+    insecure: "true"
+    teams:
+    - name: main
+      username: test
+      password: test
+
+# - name: concourse-pieline
+#   type: concourse-pipeline
+#   source:
+#     insecure: "true"
+#     teams:
+#     - name: main
+#       username: test
+#       password: test
+
+
+- name: git-chaos-engine
+  type: git
+  source:
+    uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+    branch: ((git_branch))
+    private_key: ((gitlab.private_key))
+    paths:
+    - ci/**
+
+jobs:
+- name: set-build-pipeline
+  plan:
+  - get: git-chaos-engine
+    trigger: true
+  - put: chaos-concourse-team
+    params:
+      pipelines:
+      - name: chaos-docker-build
+        team: main
+        config_file: git-chaos-engine/ci/chaos-docker-build.yml
+
+- name: set-pipeline-manager
+  plan:
+  - get: git-chaos-engine
+    trigger: true
+  - put: chaos-concourse-team
+    params:
+      pipelines:
+      - name: pipeline-manager
+        team: main
+        config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml
+
+
