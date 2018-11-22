@@ -47,7 +47,13 @@ public class DataDogNotification implements NotificationMethods {
 
     class DataDogEvent {
         private ChaosEvent chaosEvent;
-        private final String eventPrefix = "Chaos Event ";
+        public static final String EVENT_PREFIX = "Chaos Event ";
+        public static final String SOURCE_TYPE = "java";
+
+        public static final String EXPERIMENT_ID = "ExperimentId:";
+        public static final String METHOD = "Method:";
+        public static final String TYPE = "Type:";
+        public static final String TARGET = "Target:";
 
         DataDogEvent (ChaosEvent event) {
             this.chaosEvent = event;
@@ -57,9 +63,9 @@ public class DataDogNotification implements NotificationMethods {
             return Event.builder()
                         .withAggregationKey(chaosEvent.getExperimentId())
                         .withAlertType(mapLevel(chaosEvent.getNotificationLevel()))
-                        .withTitle(eventPrefix + chaosEvent.getExperimentMethod())
+                        .withTitle(EVENT_PREFIX + chaosEvent.getExperimentMethod())
                         .withText(chaosEvent.getMessage())
-                        .withSourceTypeName("Java")
+                        .withSourceTypeName(SOURCE_TYPE)
                         .build();
         }
 
@@ -80,10 +86,10 @@ public class DataDogNotification implements NotificationMethods {
 
         String[] generateTags () {
             ArrayList<String> tags = new ArrayList<>();
-            tags.add("ExperimentId:" + chaosEvent.getExperimentId());
-            tags.add("Method:" + chaosEvent.getExperimentMethod());
-            tags.add("Type:" + chaosEvent.getExperimentType().name());
-            tags.add("Target:" + chaosEvent.getTargetContainer().getSimpleName());
+            tags.add(EXPERIMENT_ID + chaosEvent.getExperimentId());
+            tags.add(METHOD + chaosEvent.getExperimentMethod());
+            tags.add(TYPE + chaosEvent.getExperimentType().name());
+            tags.add(TARGET + chaosEvent.getTargetContainer().getSimpleName());
             return tags.toArray(new String[0]);
         }
     }

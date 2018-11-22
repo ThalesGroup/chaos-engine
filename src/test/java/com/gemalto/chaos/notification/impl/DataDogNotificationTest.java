@@ -36,8 +36,6 @@ public class DataDogNotificationTest {
     private String experimentMethod=UUID.randomUUID().toString();
     private String message = UUID.randomUUID().toString();
 
-    private String sourcetypeName="Java";
-    private String eventPrefix="Chaos Event ";
 
     private NotificationLevel level = NotificationLevel.WARN;
     private ArrayList<String> expectedTags = new ArrayList<>();
@@ -56,10 +54,10 @@ public class DataDogNotificationTest {
         dataDogEvent= new DataDogNotification().new DataDogEvent(chaosEvent);
 
 
-        expectedTags.add("ExperimentId:" + chaosEvent.getExperimentId());
-        expectedTags.add("Method:" + chaosEvent.getExperimentMethod());
-        expectedTags.add("Type:" + chaosEvent.getExperimentType().name());
-        expectedTags.add("Target:" + chaosEvent.getTargetContainer().getSimpleName());
+        expectedTags.add(DataDogNotification.DataDogEvent.EXPERIMENT_ID + chaosEvent.getExperimentId());
+        expectedTags.add(DataDogNotification.DataDogEvent.METHOD + chaosEvent.getExperimentMethod());
+        expectedTags.add(DataDogNotification.DataDogEvent.TYPE + chaosEvent.getExperimentType().name());
+        expectedTags.add(DataDogNotification.DataDogEvent.TARGET + chaosEvent.getTargetContainer().getSimpleName());
 
     }
     @Test
@@ -92,9 +90,9 @@ public class DataDogNotificationTest {
     public void buildEvent(){
         Event expectedEvent = Event.builder()
                                    .withText(message)
-                                   .withTitle(eventPrefix+ experimentMethod)
+                                   .withTitle(DataDogNotification.DataDogEvent.EVENT_PREFIX+ experimentMethod)
                                    .withAlertType(Event.AlertType.WARNING)
-                                   .withSourceTypeName(sourcetypeName)
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
                                    .build();
         Event actualEvent =dataDogEvent.buildEvent();
         assertEquals(expectedEvent.getTitle(),actualEvent.getTitle());
