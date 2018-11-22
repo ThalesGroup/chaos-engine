@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.SLACK_NOTIFICATION_SERVER_RESPONSE_KEY;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
@@ -34,20 +33,30 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
 
+    public static final String TITLE = "Message";
+    public static final String AUTHOR_NAME = "Chaos Event Trace";
+    public static final String EXPERIMENT_ID = "Experiment ID";
+    public static final String TARGET = "Target";
+    public static final String EXPERIMENT_METHOD = "Method";
+    public static final String EXPERIMENT_TYPE = "Type";
+    public static final String PLATFORM_LAYER = "Platform Layer";
+    public static final String RAW_EVENT = "Raw Event";
+    public static final String FOOTER_PREFIX = "Chaos Engine - ";
+
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
         this.webhookUri = webhookUri;
-        this.hostname=getHostname();
+        this.hostname = getHostname();
         log.info("Created Slack notification manager against {}", this.webhookUri);
     }
 
-    private String getHostname(){
-        String hostname="";
+    private String getHostname () {
+        String hostname = "";
         try {
-            hostname=InetAddress.getLocalHost().getHostName();
+            hostname = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            log.warn("Cannot resolve machine hostname",e);
+            log.warn("Cannot resolve machine hostname", e);
         }
         return hostname;
     }
@@ -87,12 +96,19 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
         return SlackAttachment.builder()
                               .withFallback(chaosEvent.toString())
-                              .withFooter("Chaos Engine - "+hostname)
-                              .withTitle(chaosEvent.getExperimentType() + " against " + chaosEvent.getTargetContainer()
-                                                                                                  .getSimpleName())
+                              .withFooter(FOOTER_PREFIX + hostname)
+                              .withTitle(TITLE)
                               .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
-                              .withText(chaosEvent.toString())
+                              .withText(chaosEvent.getMessage())
                               .withTs(chaosEvent.getChaosTime().toInstant())
+                              .withAuthor_name(AUTHOR_NAME)
+                              .withPretext(chaosEvent.getNotificationLevel().toString())
+                              .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
+                              .withField(TARGET, chaosEvent.getTargetContainer().getSimpleName())
+                              .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
+                              .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
+                              .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
+                              .withCollapsibleField(RAW_EVENT, chaosEvent.toString())
                               .build();
     }
 
@@ -125,7 +141,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 log.error("Unknown exception sending payload " + payload, e);
             }
             BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            log.debug("Slack notification status: {}",keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE_KEY, response.readLine()) );
+            log.debug("Slack notification status: {}", keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE_KEY, response.readLine()));
             if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
                 throw new IOException("Unexpected response from server");
             }
@@ -177,7 +193,10 @@ class SlackMessage {
 
 @SuppressWarnings("unused")
         // Variables are used as part of Gson, despite appearing unused.
+        // Message format definition: https://api.slack.com/docs/messages/builder?msg=%7B%22attachments
 class SlackAttachment {
+    private String pretext;
+    private String author_name;
     private String title;
     private String title_link;
     private String text;
@@ -185,12 +204,15 @@ class SlackAttachment {
     private String footer;
     private Long ts;
     private String fallback;
+    private List<Field> fields;
 
     static SlackAttachmentBuilder builder () {
         return new SlackAttachmentBuilder();
     }
 
     public static final class SlackAttachmentBuilder {
+        private String pretext;
+        private String author_name;
         private String title;
         private String title_link;
         private String text;
@@ -198,8 +220,19 @@ class SlackAttachment {
         private String footer;
         private Long ts;
         private String fallback;
+        private List<Field> fields = new ArrayList<>();
 
         private SlackAttachmentBuilder () {
+        }
+
+        public SlackAttachmentBuilder withPretext (String pretext) {
+            this.pretext = pretext;
+            return this;
+        }
+
+        public SlackAttachmentBuilder withAuthor_name (String author_name) {
+            this.author_name = author_name;
+            return this;
         }
 
         SlackAttachmentBuilder withTitle (String title) {
@@ -237,8 +270,20 @@ class SlackAttachment {
             return this;
         }
 
+        SlackAttachmentBuilder withField (String title, String value) {
+            this.fields.add(new Field(title, value));
+            return this;
+        }
+
+        SlackAttachmentBuilder withCollapsibleField (String title, String value) {
+            this.fields.add(new Field(title, value,true));
+            return this;
+        }
+
         SlackAttachment build () {
             SlackAttachment slackAttachment = new SlackAttachment();
+            slackAttachment.pretext = this.pretext;
+            slackAttachment.author_name = this.author_name;
             slackAttachment.color = this.color;
             slackAttachment.title = this.title;
             slackAttachment.text = this.text;
@@ -246,8 +291,25 @@ class SlackAttachment {
             slackAttachment.fallback = this.fallback;
             slackAttachment.footer = this.footer;
             slackAttachment.ts = this.ts;
+            slackAttachment.fields = this.fields;
             return slackAttachment;
         }
     }
 }
 
+class Field {
+    String title;
+    String value;
+    boolean Short = false;
+
+    public Field (String title, String value) {
+        this.title = title;
+        this.value = value;
+    }
+
+    public Field (String title, String value, boolean Short) {
+        this.title = title;
+        this.value = value;
+        this.Short = Short;
+    }
+}
