@@ -39,7 +39,7 @@ public class ExperimentManager {
         this.holidayManager = holidayManager;
     }
 
-    private Experiment addExperiment (Experiment experiment) {
+    Experiment addExperiment (Experiment experiment) {
         newExperimentQueue.offer(experiment);
         return experiment;
     }
@@ -109,11 +109,11 @@ public class ExperimentManager {
         scheduleExperiments(false);
     }
 
-    synchronized Queue<Experiment> scheduleExperiments (final boolean force) {
+    synchronized Set<Experiment> scheduleExperiments (final boolean force) {
         if (activeExperiments.isEmpty() && newExperimentQueue.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
-                return new LinkedBlockingDeque<>();
+                return Collections.emptySet();
             }
             Optional<Platform> eligiblePlatform = platformManager.getPlatforms()
                                                                  .stream()
@@ -124,13 +124,13 @@ public class ExperimentManager {
                                                                                                                    .toEpochMilli()));
             if (!eligiblePlatform.isPresent()) {
                 log.debug("No platforms eligible for experiments");
-                return new LinkedBlockingDeque<>();
+                return Collections.emptySet();
             }
             Platform chosenPlatform = eligiblePlatform.get();
             List<Container> roster = chosenPlatform.scheduleExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
                 log.debug("Platform {} has empty roster, no experiments scheduled", keyValue(DATADOG_PLATFORM_KEY, chosenPlatform.getPlatformType()));
-                return new LinkedBlockingDeque<>();
+                return Collections.emptySet();
             }
             Set<Container> containersToExperiment;
             do {
@@ -138,12 +138,15 @@ public class ExperimentManager {
                                                .filter(Container::canExperiment)
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
-            containersToExperiment.stream().map(Container::createExperiment)
-                                  .map(this::addExperiment)
-                                  .forEach(experiment -> log.info("Experiment {}, {} added to the queue", experiment.getId(), experiment));
-            return newExperimentQueue;
+            return containersToExperiment.stream()
+                                         .map(Container::createExperiment)
+                                         .map(this::addExperiment)
+                                         .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
+                                                 .getId(), experiment))
+                                         .collect(Collectors.toSet());
+
         }
-        return new LinkedBlockingDeque<>();
+        return Collections.emptySet();
     }
 
     Set<Experiment> getActiveExperiments () {

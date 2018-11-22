@@ -15,7 +15,6 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsEmptyCollection;
-import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -34,6 +33,7 @@ import java.util.stream.Collectors;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -235,7 +235,7 @@ public class ExperimentManagerTest {
         when(container1.getIdentity()).thenReturn(containerId);
         when(container2.getIdentity()).thenReturn(containerId + 1);
         doReturn(experiment1).when(container1).createExperiment();
-        assertThat(experimentManager.experimentContainerId(containerId), IsIterableContainingInAnyOrder.containsInAnyOrder(experiment1));
+        assertThat(experimentManager.experimentContainerId(containerId), containsInAnyOrder(experiment1));
         verify(container1, times(1)).createExperiment();
         verify(container2, times(0)).createExperiment();
     }
@@ -452,6 +452,18 @@ public class ExperimentManagerTest {
         verify(platform2, never()).scheduleExperiment();
         verify(platform3, never()).scheduleExperiment();
         verify(platform4, never()).scheduleExperiment();
+    }
+
+    @Test
+    public void experimentsAlwaysReturnedByStartExperiment () {
+        doReturn(Collections.singleton(platform)).when(platformManager).getPlatforms();
+        doReturn(Collections.singletonList(container1)).when(platform).getRoster();
+        doReturn(platform).when(platform).scheduleExperiment();
+        doCallRealMethod().when(platform).generateExperimentRoster();
+        doReturn(true).when(container1).canExperiment();
+        doReturn(experiment1).when(container1).createExperiment();
+        doReturn(experiment1).when(experimentManager).addExperiment(experiment1);
+        assertThat(experimentManager.startExperiments(true), containsInAnyOrder(experiment1));
     }
 
     @Configuration
