@@ -4,6 +4,7 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
+import com.gemalto.chaos.util.HttpUtils;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,37 +29,27 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
-    private static final Integer MAXIMUM_ATTACHMENTS = 20;
+    protected static final Integer MAXIMUM_ATTACHMENTS = 20;
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
 
-    public static final String TITLE = "Message";
-    public static final String AUTHOR_NAME = "Chaos Event Trace";
-    public static final String EXPERIMENT_ID = "Experiment ID";
-    public static final String TARGET = "Target";
-    public static final String EXPERIMENT_METHOD = "Method";
-    public static final String EXPERIMENT_TYPE = "Type";
-    public static final String PLATFORM_LAYER = "Platform Layer";
-    public static final String RAW_EVENT = "Raw Event";
-    public static final String FOOTER_PREFIX = "Chaos Engine - ";
+    protected static final String TITLE = "Message";
+    protected static final String AUTHOR_NAME = "Chaos Event Trace";
+    protected static final String EXPERIMENT_ID = "Experiment ID";
+    protected static final String TARGET = "Target";
+    protected static final String EXPERIMENT_METHOD = "Method";
+    protected static final String EXPERIMENT_TYPE = "Type";
+    protected static final String PLATFORM_LAYER = "Platform Layer";
+    protected static final String RAW_EVENT = "Raw Event";
+    protected static final String FOOTER_PREFIX = "Chaos Engine - ";
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
         this.webhookUri = webhookUri;
-        this.hostname = getHostname();
+        this.hostname = HttpUtils.getMachineHostname();
         log.info("Created Slack notification manager against {}", this.webhookUri);
-    }
-
-    private String getHostname () {
-        String hostname = "";
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            log.warn("Cannot resolve machine hostname", e);
-        }
-        return hostname;
     }
 
     @Override
@@ -112,7 +103,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                               .build();
     }
 
-    private String getSlackNotificationColor (NotificationLevel notificationLevel) {
+    protected String getSlackNotificationColor (NotificationLevel notificationLevel) {
         switch (notificationLevel) {
             case GOOD:
                 return "good";
@@ -123,7 +114,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
     }
 
-    private void sendSlackMessage (SlackMessage slackMessage) throws IOException {
+    protected void sendSlackMessage (SlackMessage slackMessage) throws IOException {
         String payload = new Gson().toJson(slackMessage);
         try {
             log.debug("Sending slack notification");
@@ -157,6 +148,10 @@ public class SlackNotifications extends BufferedNotificationMethod {
 class SlackMessage {
     private String text;
     private List<SlackAttachment> attachments;
+
+    public List<SlackAttachment> getAttachments () {
+        return attachments;
+    }
 
     static SlackMessageBuilder builder () {
         return new SlackMessageBuilder();
