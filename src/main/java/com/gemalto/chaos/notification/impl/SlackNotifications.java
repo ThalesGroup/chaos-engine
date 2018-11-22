@@ -14,9 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +97,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
                               .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
                               .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
                               .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
-                              .withCollapsibleField(RAW_EVENT, chaosEvent.toString())
+                              .withCodeField(RAW_EVENT, chaosEvent.toString())
+                              .withMarkupIn(SlackAttachment.MarkupOpts.fields)
+                              .withMarkupIn(SlackAttachment.MarkupOpts.pretext)
                               .build();
     }
 
@@ -201,6 +201,12 @@ class SlackAttachment {
     private String fallback;
     private List<Field> fields;
 
+    public enum MarkupOpts {
+        fields,
+        text,
+        pretext,
+    }
+
     static SlackAttachmentBuilder builder () {
         return new SlackAttachmentBuilder();
     }
@@ -215,13 +221,17 @@ class SlackAttachment {
         private String footer;
         private Long ts;
         private String fallback;
+
+        private List<MarkupOpts> mrkdwn_in = new ArrayList<>();
         private List<Field> fields = new ArrayList<>();
 
         private SlackAttachmentBuilder () {
         }
 
         public SlackAttachmentBuilder withPretext (String pretext) {
-            this.pretext = pretext;
+            String pretext_prefix="_*";
+            String pretext_suffix="*_";
+            this.pretext = pretext_prefix+pretext+pretext_suffix;
             return this;
         }
 
@@ -270,10 +280,17 @@ class SlackAttachment {
             return this;
         }
 
-        SlackAttachmentBuilder withCollapsibleField (String title, String value) {
-            this.fields.add(new Field(title, value,true));
+        SlackAttachmentBuilder withCodeField (String title, String value) {
+            String codeMarkup="```";
+            this.fields.add(new Field(title, codeMarkup+value+codeMarkup,true));
             return this;
         }
+
+        SlackAttachmentBuilder withMarkupIn (MarkupOpts value) {
+            this.mrkdwn_in.add(value);
+            return this;
+        }
+
 
         SlackAttachment build () {
             SlackAttachment slackAttachment = new SlackAttachment();

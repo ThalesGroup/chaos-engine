@@ -80,7 +80,7 @@ public class SlackNotificationsTest {
                                                          .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer()
                                                                                               .getPlatform()
                                                                                               .getPlatformType())
-                                                         .withCollapsibleField(RAW_EVENT, chaosEvent.toString())
+                                                         .withCodeField(RAW_EVENT, chaosEvent.toString())
                                                          .build();
         SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
         SlackMessage expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachment).build();
