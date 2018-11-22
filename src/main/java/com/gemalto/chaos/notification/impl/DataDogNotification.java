@@ -33,7 +33,7 @@ public class DataDogNotification implements NotificationMethods {
             dataDogEvent.send();
             log.debug("DataDog notification send", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
         } catch (StatsDClientException ex) {
-            log.warn("Cannot send DataDog event: {}", ex);
+            log.warn("Cannot send DataDog event: {}", ex,keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
         }
     }
 
