@@ -463,7 +463,7 @@ public class ExperimentManagerTest {
         doReturn(true).when(container1).canExperiment();
         doReturn(experiment1).when(container1).createExperiment();
         doReturn(experiment1).when(experimentManager).addExperiment(experiment1);
-        assertThat(experimentManager.startExperiments(true), containsInAnyOrder(experiment1));
+        assertThat(experimentManager.scheduleExperiments(true), containsInAnyOrder(experiment1));
     }
 
     @Configuration

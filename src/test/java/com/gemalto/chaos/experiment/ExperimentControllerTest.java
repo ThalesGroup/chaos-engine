@@ -166,6 +166,6 @@ public class ExperimentControllerTest {
 
     @Test
     public void startExperimentAlwaysReturnsExperiment () {
-        experimentManager.startExperiments(true);
+        experimentManager.scheduleExperiments(true);
     }
 }
