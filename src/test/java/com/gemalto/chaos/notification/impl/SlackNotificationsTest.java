@@ -7,16 +7,21 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.util.HttpUtils;
 import com.google.gson.Gson;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -30,19 +35,27 @@ import static org.mockito.Mockito.*;
 public class SlackNotificationsTest {
     private ChaosEvent chaosEvent;
     private SlackNotifications slackNotifications;
-    private String slack_webhookuri = "";
+    private static final String OK_RESPONSE = "ok";
     @Mock
     private Platform platform;
     @Mock
     private Container container;
-    private DataDogNotification.DataDogEvent dataDogEvent;
     private String experimentId = UUID.randomUUID().toString();
     private String experimentMethod = UUID.randomUUID().toString();
     private String message = UUID.randomUUID().toString();
     private NotificationLevel level = NotificationLevel.WARN;
+    private String slack_webhookuri;
+    private HttpServer slackServerMock;
+    private Integer slackServerPort;
+
+    @After
+    public void tearDown () {
+        slackServerMock.stop(0);
+    }
 
     @Before
     public void setUp () throws Exception {
+        setupMockServer();
         slackNotifications = Mockito.spy(new SlackNotifications(slack_webhookuri));
         chaosEvent = ChaosEvent.builder()
                                .withMessage(message)
@@ -58,6 +71,28 @@ public class SlackNotificationsTest {
         when(container.getPlatform()).thenReturn(platform);
         when(platform.getPlatformType()).thenReturn("TYPE");
     }
+
+    private void setupMockServer () throws IOException {
+        InetSocketAddress socket = new InetSocketAddress(0);
+        slackServerMock = HttpServer.create(socket, 0);
+        slackServerMock.createContext("/", new SlackNotificationsTest.SlackHandler());
+        slackServerMock.setExecutor(null);
+        slackServerMock.start();
+        slackServerPort = slackServerMock.getAddress().getPort();
+        slack_webhookuri = "http://localhost:" + slackServerPort;
+    }
+
+    private class SlackHandler implements HttpHandler {
+        @Override
+        public void handle (HttpExchange httpExchange) throws IOException {
+            httpExchange.sendResponseHeaders(200, OK_RESPONSE.length());
+            OutputStream os = httpExchange.getResponseBody();
+            os.write(OK_RESPONSE.getBytes());
+            os.close();
+        }
+    }
+
+
 
     @Test
     public void logEvent () throws IOException {
@@ -85,7 +120,6 @@ public class SlackNotificationsTest {
         SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
         SlackMessage expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachment).build();
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        doNothing().when(slackNotifications).sendSlackMessage(ArgumentMatchers.any());
         slackNotifications.logEvent(chaosEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
