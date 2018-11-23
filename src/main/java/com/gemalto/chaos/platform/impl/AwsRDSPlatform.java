@@ -43,6 +43,8 @@ import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.*;
@@ -57,16 +59,43 @@ public class AwsRDSPlatform extends Platform {
     private AmazonEC2 amazonEC2;
     @Autowired
     private ContainerManager containerManager;
+    private Map<String, String> filter = new HashMap<>();
     private String defaultVpcId;
     private String chaosSecurityGroup;
-
     @Autowired
     public AwsRDSPlatform () {
     }
-
     AwsRDSPlatform (AmazonRDS amazonRDS, AmazonEC2 amazonEC2) {
         this.amazonRDS = amazonRDS;
         this.amazonEC2 = amazonEC2;
+    }
+
+    private Collection<DBCluster> getAllDBClusters () {
+        Collection<DBCluster> dbClusters = new HashSet<>();
+        DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
+        DescribeDBClustersResult describeDBClustersResult;
+        int i = 0;
+        do {
+            log.debug("Running describeDBClusters, page {}", ++i);
+            describeDBClustersResult = amazonRDS.describeDBClusters(describeDBClustersRequest);
+            dbClusters.addAll(describeDBClustersResult.getDBClusters());
+            describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
+        } while (describeDBClustersRequest.getMarker() != null);
+        return dbClusters.parallelStream().filter(this::filterDBCluster).collect(Collectors.toSet());
+    }
+
+    Boolean filterDBCluster (DBCluster dbCluster) {
+        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
+                .withResourceName(dbCluster.getDBClusterArn()));
+        List<Tag> tagList = listTagsForResourceResult.getTagList();
+        return tagList.containsAll(generateTagsFromFilters());
+    }
+
+    private Collection<Tag> generateTagsFromFilters () {
+        return getFilter().entrySet()
+                          .stream()
+                          .map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue()))
+                          .collect(Collectors.toSet());
     }
 
     @EventListener(ApplicationReadyEvent.class)
