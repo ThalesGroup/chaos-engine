@@ -4,6 +4,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.amazonaws.services.rds.model.Tag;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
@@ -16,6 +17,8 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.util.AwsRDSUtils;
 import com.gemalto.chaos.util.CalendarUtils;
+import com.google.common.collect.ImmutableMap;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -905,6 +908,66 @@ public class AwsRDSPlatformTest {
         assertTrue("Exactly one instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
         assertTrue("Any instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
         assertFalse("No instances backing up should return false", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
+    }
+
+    @Test
+    public void filterDBClusterNoTags () {
+        // Given that Filters are empty, it should return true.
+        assertTrue(awsRDSPlatform.filterDBCluster(new DBCluster()));
+        // Assert filters are empty in case something changes with filter initialization.
+        assertThat(awsRDSPlatform.getFilter().keySet(), IsEmptyCollection.empty());
+    }
+
+    @Test
+    public void filterDBInstanceNoTags () {
+        // Given that Filters are empty, it should return true.
+        assertTrue(awsRDSPlatform.filterDBInstance(new DBInstance()));
+        // Assert filters are empty in case something changes with filter initialization.
+        assertThat(awsRDSPlatform.getFilter().keySet(), IsEmptyCollection.empty());
+    }
+
+    @Test
+    public void filterDBCluster () {
+        String dBClusterArn = randomUUID().toString();
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value"));
+        doReturn(new ListTagsForResourceResult().withTagList(new Tag().withKey("key")
+                                                                      .withValue("value"))).when(amazonRDS)
+                                                                                           .listTagsForResource(new ListTagsForResourceRequest()
+                                                                                                   .withResourceName(dBClusterArn));
+        assertTrue(awsRDSPlatform.filterDBCluster(new DBCluster().withDBClusterArn(dBClusterArn)));
+        awsRDSPlatform.setFilter(ImmutableMap.of("k", "v"));
+        assertFalse(awsRDSPlatform.filterDBCluster(new DBCluster().withDBClusterArn(dBClusterArn)));
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value", "k", "v"));
+        assertFalse(awsRDSPlatform.filterDBCluster(new DBCluster().withDBClusterArn(dBClusterArn)));
+        doReturn(new ListTagsForResourceResult().withTagList(new Tag().withKey("key")
+                                                                      .withValue("value"), new Tag().withKey("k")
+                                                                                                    .withValue("v"))).when(amazonRDS)
+                                                                                                                     .listTagsForResource(new ListTagsForResourceRequest()
+                                                                                                                             .withResourceName(dBClusterArn));
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value"));
+        assertTrue(awsRDSPlatform.filterDBCluster(new DBCluster().withDBClusterArn(dBClusterArn)));
+    }
+
+    @Test
+    public void filterDBInstance () {
+        String dBInstanceArn = randomUUID().toString();
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value"));
+        doReturn(new ListTagsForResourceResult().withTagList(new Tag().withKey("key")
+                                                                      .withValue("value"))).when(amazonRDS)
+                                                                                           .listTagsForResource(new ListTagsForResourceRequest()
+                                                                                                   .withResourceName(dBInstanceArn));
+        assertTrue(awsRDSPlatform.filterDBInstance(new DBInstance().withDBInstanceArn(dBInstanceArn)));
+        awsRDSPlatform.setFilter(ImmutableMap.of("k", "v"));
+        assertFalse(awsRDSPlatform.filterDBInstance(new DBInstance().withDBInstanceArn(dBInstanceArn)));
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value", "k", "v"));
+        assertFalse(awsRDSPlatform.filterDBInstance(new DBInstance().withDBInstanceArn(dBInstanceArn)));
+        doReturn(new ListTagsForResourceResult().withTagList(new Tag().withKey("key")
+                                                                      .withValue("value"), new Tag().withKey("k")
+                                                                                                    .withValue("v"))).when(amazonRDS)
+                                                                                                                     .listTagsForResource(new ListTagsForResourceRequest()
+                                                                                                                             .withResourceName(dBInstanceArn));
+        awsRDSPlatform.setFilter(ImmutableMap.of("key", "value"));
+        assertTrue(awsRDSPlatform.filterDBInstance(new DBInstance().withDBInstanceArn(dBInstanceArn)));
     }
 
     @Configuration
