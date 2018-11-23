@@ -167,10 +167,12 @@ public class AwsRDSPlatform extends Platform {
     }
 
     Boolean filterDBCluster (DBCluster dbCluster) {
+        Collection<Tag> tags = generateTagsFromFilters();
+        if (tags.isEmpty()) return true;
         ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
                 .withResourceName(dbCluster.getDBClusterArn()));
         List<Tag> tagList = listTagsForResourceResult.getTagList();
-        return tagList.containsAll(generateTagsFromFilters());
+        return tagList.containsAll(tags);
     }
 
     private Collection<DBInstance> getAllDBInstances () {
@@ -188,10 +190,12 @@ public class AwsRDSPlatform extends Platform {
     }
 
     boolean filterDBInstance (DBInstance dbInstance) {
+        Collection<Tag> tags = generateTagsFromFilters();
+        if (tags.isEmpty()) return true;
         ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
                 .withResourceName(dbInstance.getDBInstanceArn()));
         List<Tag> tagList = listTagsForResourceResult.getTagList();
-        return tagList.containsAll(generateTagsFromFilters());
+        return tagList.containsAll(tags);
     }
 
     AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
