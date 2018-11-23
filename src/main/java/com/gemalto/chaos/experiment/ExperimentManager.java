@@ -53,8 +53,8 @@ public class ExperimentManager {
             } else {
                 updateExperimentStatusImpl();
             }
-            startNewExperiments();
         }
+        startNewExperiments();
     }
 
     private void startNewExperiments () {
@@ -67,7 +67,9 @@ public class ExperimentManager {
             autowireCapableBeanFactory.autowireBean(experiment);
             try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
                 if (experiment.startExperiment()) {
-                    activeExperiments.add(experiment);
+                    synchronized (activeExperiments) {
+                        activeExperiments.add(experiment);
+                    }
                 }
                 experiment = newExperimentQueue.poll();
             }
