@@ -45,7 +45,7 @@ public class ExperimentManager {
     }
 
     @Scheduled(fixedDelay = 15 * 1000)
-    synchronized void updateExperimentStatus () {
+    void updateExperimentStatus () {
         synchronized (activeExperiments) {
             log.debug("Checking on existing experiments");
             if (activeExperiments.isEmpty()) {
