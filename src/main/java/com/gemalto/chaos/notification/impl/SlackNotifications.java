@@ -149,10 +149,6 @@ class SlackMessage {
     private String text;
     private List<SlackAttachment> attachments;
 
-    public List<SlackAttachment> getAttachments () {
-        return attachments;
-    }
-
     static SlackMessageBuilder builder () {
         return new SlackMessageBuilder();
     }

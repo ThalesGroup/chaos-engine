@@ -35,6 +35,7 @@ import static org.mockito.Mockito.*;
 public class SlackNotificationsTest {
     private ChaosEvent chaosEvent;
     private SlackNotifications slackNotifications;
+    private SlackMessage expectedSlackMessage;
     private static final String OK_RESPONSE = "ok";
     @Mock
     private Platform platform;
@@ -70,6 +71,29 @@ public class SlackNotificationsTest {
         when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
         when(container.getPlatform()).thenReturn(platform);
         when(platform.getPlatformType()).thenReturn("TYPE");
+        SlackAttachment slackAttachment = SlackAttachment.builder()
+                                                         .withFallback(chaosEvent.toString())
+                                                         .withFooter(FOOTER_PREFIX + HttpUtils.getMachineHostname())
+                                                         .withTitle(TITLE)
+                                                         .withColor(slackNotifications.getSlackNotificationColor(chaosEvent
+                                                                 .getNotificationLevel()))
+                                                         .withText(chaosEvent.getMessage())
+                                                         .withTs(chaosEvent.getChaosTime().toInstant())
+                                                         .withAuthor_name(AUTHOR_NAME)
+                                                         .withPretext(chaosEvent.getNotificationLevel().toString())
+                                                         .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
+                                                         .withField(TARGET, chaosEvent.getTargetContainer()
+                                                                                      .getSimpleName())
+                                                         .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
+                                                         .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType()
+                                                                                               .toString())
+                                                         .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer()
+                                                                                              .getPlatform()
+                                                                                              .getPlatformType())
+                                                         .withCodeField(RAW_EVENT, chaosEvent.toString())
+                                                         .build();
+        SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
+        expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachment).build();
     }
 
     private void setupMockServer () throws IOException {
@@ -96,29 +120,7 @@ public class SlackNotificationsTest {
 
     @Test
     public void logEvent () throws IOException {
-        SlackAttachment slackAttachment = SlackAttachment.builder()
-                                                         .withFallback(chaosEvent.toString())
-                                                         .withFooter(FOOTER_PREFIX + HttpUtils.getMachineHostname())
-                                                         .withTitle(TITLE)
-                                                         .withColor(slackNotifications.getSlackNotificationColor(chaosEvent
-                                                                 .getNotificationLevel()))
-                                                         .withText(chaosEvent.getMessage())
-                                                         .withTs(chaosEvent.getChaosTime().toInstant())
-                                                         .withAuthor_name(AUTHOR_NAME)
-                                                         .withPretext(chaosEvent.getNotificationLevel().toString())
-                                                         .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
-                                                         .withField(TARGET, chaosEvent.getTargetContainer()
-                                                                                      .getSimpleName())
-                                                         .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
-                                                         .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType()
-                                                                                               .toString())
-                                                         .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer()
-                                                                                              .getPlatform()
-                                                                                              .getPlatformType())
-                                                         .withCodeField(RAW_EVENT, chaosEvent.toString())
-                                                         .build();
-        SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
-        SlackMessage expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachment).build();
+
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         slackNotifications.logEvent(chaosEvent);
         slackNotifications.flushBuffer();
@@ -128,5 +130,32 @@ public class SlackNotificationsTest {
         String expectedPayload = new Gson().toJson(expectedSlackMessage);
         String actualPayload = new Gson().toJson(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
+    }
+
+    @Test
+    public void sendNotification () throws IOException {
+        slackNotifications.sendNotification(chaosEvent);
+        ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
+        verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
+        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
+        SlackMessage actualSlackMessage = slackMessages.get(0);
+        String expectedPayload = new Gson().toJson(expectedSlackMessage);
+        String actualPayload = new Gson().toJson(actualSlackMessage);
+        assertEquals(expectedPayload, actualPayload);
+    }
+
+    @Test
+    public void getSlackNotificationColor () {
+        assertEquals("danger", slackNotifications.getSlackNotificationColor(NotificationLevel.ERROR));
+        assertEquals("warning", slackNotifications.getSlackNotificationColor(NotificationLevel.WARN));
+        assertEquals("good", slackNotifications.getSlackNotificationColor(NotificationLevel.GOOD));
+    }
+
+    @Test
+    public void bufferFlush () {
+        for (int i = 0; i < SlackNotifications.MAXIMUM_ATTACHMENTS; i++) {
+            slackNotifications.logEvent(chaosEvent);
+        }
+        verify(slackNotifications, times(1)).flushBuffer();
     }
 }
