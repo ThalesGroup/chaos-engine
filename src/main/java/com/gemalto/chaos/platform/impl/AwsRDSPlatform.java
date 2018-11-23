@@ -43,8 +43,6 @@ import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.*;
@@ -71,7 +69,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     public Map<String, String> getFilter () {
-        return ofNullable(filter).orElse(emptyMap());
+        return filter;
     }
 
     private Collection<Tag> generateTagsFromFilters () {
