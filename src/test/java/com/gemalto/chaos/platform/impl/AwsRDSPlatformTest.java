@@ -81,6 +81,8 @@ public class AwsRDSPlatformTest {
         DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE);
         DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER);
         DescribeDBInstancesResult describeDBInstancesResult;
+        doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
+        doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
         // Case 1: Single normal instance.
         describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(normalDbInstance);
         when(amazonRDS.describeDBInstances(any(DescribeDBInstancesRequest.class))).thenReturn(describeDBInstancesResult);
@@ -138,6 +140,8 @@ public class AwsRDSPlatformTest {
                                                  .describeDBInstances(new DescribeDBInstancesRequest().withMarker(marker1));
         doReturn(new DescribeDBClustersResult()).when(amazonRDS)
                                                 .describeDBClusters(new DescribeDBClustersRequest().withMarker(marker2));
+        doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
+        doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
         assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
                 .builder()
                 .withDbClusterIdentifier(dbCluster1Identifier)
@@ -481,6 +485,8 @@ public class AwsRDSPlatformTest {
             matchSet2.add(container);
             describeDBClustersResult.withDBClusters(dbCluster);
         }
+        doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
+        doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
         doReturn(describeDBInstancesResult).when(amazonRDS).describeDBInstances(any(DescribeDBInstancesRequest.class));
         doReturn(describeDBClustersResult).when(amazonRDS).describeDBClusters(any(DescribeDBClustersRequest.class));
         assertThat(awsRDSPlatform.generateExperimentRoster(), anyOf(IsIterableContainingInAnyOrder.containsInAnyOrder(matchSet1
