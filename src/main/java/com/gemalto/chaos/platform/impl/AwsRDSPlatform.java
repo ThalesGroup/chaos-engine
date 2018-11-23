@@ -70,25 +70,8 @@ public class AwsRDSPlatform extends Platform {
         this.amazonEC2 = amazonEC2;
     }
 
-    private Collection<DBCluster> getAllDBClusters () {
-        Collection<DBCluster> dbClusters = new HashSet<>();
-        DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();
-        DescribeDBClustersResult describeDBClustersResult;
-        int i = 0;
-        do {
-            log.debug("Running describeDBClusters, page {}", ++i);
-            describeDBClustersResult = amazonRDS.describeDBClusters(describeDBClustersRequest);
-            dbClusters.addAll(describeDBClustersResult.getDBClusters());
-            describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
-        } while (describeDBClustersRequest.getMarker() != null);
-        return dbClusters.parallelStream().filter(this::filterDBCluster).collect(Collectors.toSet());
-    }
-
-    Boolean filterDBCluster (DBCluster dbCluster) {
-        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
-                .withResourceName(dbCluster.getDBClusterArn()));
-        List<Tag> tagList = listTagsForResourceResult.getTagList();
-        return tagList.containsAll(generateTagsFromFilters());
+    public Map<String, String> getFilter () {
+        return ofNullable(filter).orElse(emptyMap());
     }
 
     private Collection<Tag> generateTagsFromFilters () {
@@ -96,6 +79,10 @@ public class AwsRDSPlatform extends Platform {
                           .stream()
                           .map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue()))
                           .collect(Collectors.toSet());
+    }
+
+    public void setFilter (Map<String, String> filter) {
+        this.filter = filter;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -176,7 +163,14 @@ public class AwsRDSPlatform extends Platform {
             dbClusters.addAll(describeDBClustersResult.getDBClusters());
             describeDBClustersRequest.setMarker(describeDBClustersResult.getMarker());
         } while (describeDBClustersRequest.getMarker() != null);
-        return dbClusters;
+        return dbClusters.parallelStream().filter(this::filterDBCluster).collect(Collectors.toSet());
+    }
+
+    Boolean filterDBCluster (DBCluster dbCluster) {
+        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
+                .withResourceName(dbCluster.getDBClusterArn()));
+        List<Tag> tagList = listTagsForResourceResult.getTagList();
+        return tagList.containsAll(generateTagsFromFilters());
     }
 
     private Collection<DBInstance> getAllDBInstances () {
@@ -190,7 +184,14 @@ public class AwsRDSPlatform extends Platform {
             dbInstances.addAll(describeDBInstancesResult.getDBInstances());
             describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
         } while (describeDBInstancesRequest.getMarker() != null);
-        return dbInstances;
+        return dbInstances.parallelStream().filter(this::filterDBInstance).collect(Collectors.toSet());
+    }
+
+    boolean filterDBInstance (DBInstance dbInstance) {
+        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
+                .withResourceName(dbInstance.getDBInstanceArn()));
+        List<Tag> tagList = listTagsForResourceResult.getTagList();
+        return tagList.containsAll(generateTagsFromFilters());
     }
 
     AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
