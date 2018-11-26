@@ -1,0 +1,7 @@
+pipelines:
+- name: chaos-docker-build
+  team: main
+  config_file: git-chaos-engine/ci/chaos-docker-build.yml
+- name: pipeline-manager
+  team: main
+  config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml

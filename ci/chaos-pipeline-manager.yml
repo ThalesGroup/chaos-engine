@@ -15,16 +15,6 @@ resources:
       username: test
       password: test
 
-# - name: concourse-pieline
-#   type: concourse-pipeline
-#   source:
-#     insecure: "true"
-#     teams:
-#     - name: main
-#       username: test
-#       password: test
-
-
 - name: git-chaos-engine
   type: git
   source:
@@ -41,12 +31,4 @@ jobs:
     trigger: true
   - put: chaos-concourse-team
     params:
-      pipelines:
-      - name: chaos-docker-build
-        team: main
-        config_file: git-chaos-engine/ci/chaos-docker-build.yml
-      - name: pipeline-manager
-        team: main
-        config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml
-
-
+      pipelines_file: git-chaos-engine/ci/pipelines.yml
