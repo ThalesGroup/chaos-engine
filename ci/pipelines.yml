@@ -1,7 +1,13 @@
+# Used with the pipeline-manager pipeline to handle different pipelines
+
 pipelines:
 - name: chaos-docker-build
-  team: main
+  team: ((concourse.team))
   config_file: git-chaos-engine/ci/chaos-docker-build.yml
+  vars_file:
+  - gitlab-chaos-engine/ci/vars.yml
 - name: pipeline-manager
-  team: main
+  team: ((concourse.team))Name
   config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml
+  vars_file:
+  - gitlab-chaos-engine/ci/vars.yml

@@ -1,0 +1,5 @@
+gitlab:
+  uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+
+concourse:
+  team: main

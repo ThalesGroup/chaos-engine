@@ -1,8 +1,10 @@
+# Used for creating and storing a docker image of the Chaos Engine
+
 resources:
 - name: git-chaos-engine
   type: git
   source:
-    uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+    uri: ((gitlab.uri))
     branch: ((git_branch))
     private_key: ((gitlab.private_key))
 

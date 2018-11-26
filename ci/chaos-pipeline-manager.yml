@@ -1,3 +1,5 @@
+# Used in combination with ./pipelines.yml to mange all pipelines, including this one.
+
 resource_types:
 - name: concourse-pipeline
   type: docker-image
@@ -9,17 +11,20 @@ resources:
   type: concourse-pipeline
   source:
     target: "http://concourse-web:8080"
+    # TODO - This should be pointed to dynamically, as it needs to refer to the same concourse server it is running in.
     insecure: "true"
     teams:
-    - name: main
+    - name: ((concourse.team))
       username: test
       password: test
+      # TODO - Credentials should be managed by a credential manager.
 
 - name: git-chaos-engine
   type: git
   source:
-    uri: git@gitlab.sascloud.io:chaos/chaos-engine.git
+    uri: ((gitlab.uri))
     branch: ((git_branch))
+    # TODO - Change this to use the same gitlab prefix as Private Key
     private_key: ((gitlab.private_key))
     paths:
     - ci/**
