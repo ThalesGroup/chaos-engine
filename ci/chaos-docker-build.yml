@@ -14,7 +14,7 @@ resources:
     branch: ((gitlab.branch))
     private_key: |
       ((gitlab.private_key))
-    ignored_paths:
+    ignore_paths:
     - ci/**
     - cloudformation/**
     - .idea/**
