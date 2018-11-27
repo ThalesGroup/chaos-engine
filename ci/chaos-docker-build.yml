@@ -5,8 +5,9 @@ resources:
   type: git
   source:
     uri: ((gitlab.uri))
-    branch: ((git_branch))
-    private_key: ((gitlab.private_key))
+    branch: ((gitlab.branch))
+    private_key: |
+      ((gitlab.private_key))
 
 - name: docker-chaos-engine
   type: docker-image
@@ -24,4 +25,4 @@ jobs:
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
-      target_name: ((git_branch))
+      target_name: ((gitlab.branch))

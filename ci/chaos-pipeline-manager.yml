@@ -23,9 +23,10 @@ resources:
   type: git
   source:
     uri: ((gitlab.uri))
-    branch: ((git_branch))
+    branch: ((gitlab.branch))
     # TODO - Change this to use the same gitlab prefix as Private Key
-    private_key: ((gitlab.private_key))
+    private_key: |
+      ((gitlab.private_key))
     paths:
     - ci/**
 
