@@ -14,7 +14,7 @@ resources:
     # TODO - This should be pointed to dynamically, as it needs to refer to the same concourse server it is running in.
     insecure: "true"
     teams:
-    - name: ((concourse.team))
+    - name: main # TODO - This will not run as main forever
       username: test
       password: test
       # TODO - Credentials should be managed by a credential manager.
