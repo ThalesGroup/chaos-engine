@@ -38,8 +38,7 @@ jobs:
     on_failure:
       put: slack-alert
       params:
-        text: |
-        Git Pull failure.
+        text: Git Pull failure.
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
@@ -47,5 +46,4 @@ jobs:
     on_failure:
       put: slack-alert
       params:
-        text: |
-        Build failure.
+        text: Build failure.
