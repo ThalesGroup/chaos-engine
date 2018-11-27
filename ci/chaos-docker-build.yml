@@ -1,4 +1,10 @@
 # Used for creating and storing a docker image of the Chaos Engine
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
 
 resources:
 - name: git-chaos-engine
@@ -10,6 +16,11 @@ resources:
       ((gitlab.private_key))
     ignored_paths:
     - ci/**
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: ((slack.webhookuri))
 
 - name: docker-chaos-engine
   type: docker-image
@@ -24,7 +35,17 @@ jobs:
   plan:
   - get: git-chaos-engine
     trigger: true
+    on_failure:
+      put: slack-alert
+      params:
+        text: |
+        Git Pull failure.
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
       target_name: ((gitlab.branch))
+    on_failure:
+      put: slack-alert
+      params:
+        text: |
+        Build failure.
