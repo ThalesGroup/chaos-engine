@@ -45,7 +45,7 @@ jobs:
     params:
       build: git-chaos-engine
       target_name: ((gitlab.branch))
-      tag_file: git-chaos-engine/.git/ref
+      tag_file: git-chaos-engine/.git/short_ref
     on_failure:
       put: slack-alert
       params:
