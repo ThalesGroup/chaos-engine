@@ -15,16 +15,14 @@ resources:
     insecure: "true"
     teams:
     - name: main # TODO - This will not run as main forever
-      username: test
-      password: test
-      # TODO - Credentials should be managed by a credential manager.
+      username: ((concourse.username))
+      password: ((concourse.password))
 
 - name: git-chaos-engine
   type: git
   source:
     uri: ((gitlab.uri))
     branch: ((gitlab.branch))
-    # TODO - Change this to use the same gitlab prefix as Private Key
     private_key: |
       ((gitlab.private_key))
     paths:
