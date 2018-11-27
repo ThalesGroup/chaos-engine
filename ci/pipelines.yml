@@ -4,10 +4,6 @@ pipelines:
 - name: chaos-docker-build
   team: main
   config_file: git-chaos-engine/ci/chaos-docker-build.yml
-  vars_file:
-  - gitlab-chaos-engine/ci/vars.yml
 - name: pipeline-manager
   team: main
   config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml
-  vars_file:
-  - gitlab-chaos-engine/ci/vars.yml
