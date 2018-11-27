@@ -8,6 +8,8 @@ resources:
     branch: ((gitlab.branch))
     private_key: |
       ((gitlab.private_key))
+    ignored_paths:
+    - ci/**
 
 - name: docker-chaos-engine
   type: docker-image
