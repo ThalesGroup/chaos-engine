@@ -16,6 +16,8 @@ resources:
       ((gitlab.private_key))
     ignored_paths:
     - ci/**
+    - cloudformation/**
+    - .idea/**
 
 - name: slack-alert
   type: slack-notification
