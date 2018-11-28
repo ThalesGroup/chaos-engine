@@ -16,7 +16,6 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
-import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,9 @@ import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_TERMINATED_CODE;
 import static com.gemalto.chaos.constants.AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -72,7 +73,7 @@ public class AwsEC2PlatformTest {
         final String INSTANCE_KEYNAME_2 = randomUUID().toString();
         final String INSTANCE_ID_2 = randomUUID().toString();
         final List<Reservation> reservationList = Collections.singletonList(reservation);
-        final List<Instance> instanceList = Arrays.asList(instance, instance2);
+        final List<Instance> instanceList = asList(instance, instance2);
         final Tag namedTag = new Tag("Name", INSTANCE_NAME_1);
         final InstanceState instanceState = new InstanceState().withCode(AwsEC2Constants.AWS_RUNNING_CODE);
         final AwsEC2Container CONTAINER_1 = AwsEC2Container.builder()
@@ -98,7 +99,7 @@ public class AwsEC2PlatformTest {
         when(instance2.getKeyName()).thenReturn(INSTANCE_KEYNAME_2);
         when(instance2.getState()).thenReturn(instanceState);
         final List<Container> roster = awsEC2Platform.getRoster();
-        assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(CONTAINER_1, CONTAINER_2));
+        assertThat(roster, containsInAnyOrder(CONTAINER_1, CONTAINER_2));
     }
 
     @Test
@@ -261,7 +262,7 @@ public class AwsEC2PlatformTest {
         doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
                 .when(amazonEC2)
                 .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Arrays.asList(groupId, groupId2)));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, asList(groupId, groupId2)));
     }
 
     @Test
@@ -306,7 +307,7 @@ public class AwsEC2PlatformTest {
         container = AwsEC2Container.builder().instanceId(instanceId).name("no-name").keyName(keyName).build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
         // With Grouping Tag
-        ReflectionTestUtils.setField(awsEC2Platform, "groupingTags", Arrays.asList("asg", "bosh", "somethingelse"));
+        ReflectionTestUtils.setField(awsEC2Platform, "groupingTags", asList("asg", "bosh", "somethingelse"));
         instance = new Instance().withInstanceId(instanceId)
                                  .withKeyName(keyName)
                                  .withTags(new Tag("Name", name), new Tag("asg", "scalegroup"));
@@ -413,6 +414,18 @@ public class AwsEC2PlatformTest {
         autoScalingGroup.getInstances().remove(0);
         autoScalingGroup.getInstances().forEach(instance1 -> instance1.setHealthStatus("Healthy"));
         assertFalse("Insufficient total instance should be false", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
+    }
+
+    @Test
+    public void generateSearchFilters () {
+        Map<String, List<String>> filterConfig = new HashMap<>();
+        filterConfig.put("Filter1", Collections.singletonList("Value1"));
+        filterConfig.put("Filter2", asList("Value2a", "Value2b"));
+        Filter filter1 = new Filter("tag:Filter1", Collections.singletonList("Value1"));
+        Filter filter2 = new Filter("tag:Filter2", asList("Value2a", "Value2b"));
+        awsEC2Platform.setFilter(filterConfig);
+        Collection<Filter> filters = awsEC2Platform.generateSearchFilters();
+        assertThat(filters, containsInAnyOrder(filter1, filter2));
     }
 
     @Configuration
