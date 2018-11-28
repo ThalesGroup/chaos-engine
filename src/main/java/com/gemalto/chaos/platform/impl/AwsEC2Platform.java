@@ -6,7 +6,6 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
@@ -19,11 +18,11 @@ import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,60 +37,28 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class AwsEC2Platform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
-    private Map<String, String> filter = new HashMap<>();
+    private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private String chaosSecurityGroupId;
     private Vpc defaultVpc;
     private List<String> groupingTags;
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
-
     @Autowired
-    AwsEC2Platform (@Value("${AWS_FILTER_KEYS:#{null}}") String[] filterKeys, @Value("${AWS_FILTER_VALUES:#{null}}") String[] filterValues, AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
+    AwsEC2Platform (AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
-        if (filterKeys != null && filterValues != null) {
-            if (filterKeys.length != filterValues.length) {
-                throw new ChaosException("Cannot start with an unequal amount of Filter Keys and Values");
-            }
-            for (int i = 0; i < filterKeys.length; i++) {
-                filter.putIfAbsent(filterKeys[i], filterValues[i]);
-            }
-        }
         this.amazonEC2 = amazonEC2;
         this.containerManager = containerManager;
         this.awsEC2SelfAwareness = awsEC2SelfAwareness;
     }
 
-    @Override
-    public List<Container> generateExperimentRoster () {
-        List<Container> roster = getRoster();
-        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream()
-                                                                 .map(AwsEC2Container.class::cast)
-                                                                 .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
-        List<Container> eligibleExperimentTargets = new ArrayList<>();
-        groupedRoster.forEach((k, v) -> {
-            // Anything that isn't in a managed group is eligible for experiments
-            if (k.equals(AwsEC2Constants.NO_GROUPING_IDENTIFIER)) {
-                eligibleExperimentTargets.addAll(v);
-                return;
-            }
-            // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
-            if (v.size() < 2) {
-                log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));
-                eligibleExperimentTargets.addAll(v);
-                return;
-            }
-            int designatedSurvivorIndex = new Random().nextInt(v.size());
-            AwsEC2Container survivor = v.remove(designatedSurvivorIndex);
-            log.debug("The container {} will be a designated survivor for this experiment", v(DataDogConstants.DATADOG_CONTAINER_KEY, survivor));
-            eligibleExperimentTargets.addAll(v);
-        });
-        log.info("The following containers will be eligible for experiments: {}", v("experimentRoster", eligibleExperimentTargets));
-        return eligibleExperimentTargets;
-    }
-
     private AwsEC2Platform () {
         log.info("AWS EC2 Platform created");
+    }
+
+    public void setFilter (@NotNull Map<String, List<String>> filter) {
+        log.info("EC2 Instances will be filtered with the following tags and values: {}", v("filterCriteria", filter));
+        this.filter = filter;
     }
 
     public void setGroupingTags (List<String> groupingTags) {
@@ -135,24 +102,9 @@ public class AwsEC2Platform extends Platform {
 
     @Override
     public List<Container> generateRoster () {
-        return generateRosterImpl(filter);
-    }
-
-    /**
-     * Polls AWS EC2 API for a complete list of instances, with optional filters, and returns a list of Container class
-     * objects to be used.
-     *
-     * @param filterValues Key/Value pair of tags to do an inclusive filter on
-     * @return A list of Containers representing EC2 instances.
-     */
-    private List<Container> generateRosterImpl (Map<String, String> filterValues) {
         final List<Container> containerList = new ArrayList<>();
-        Collection<Filter> filters = new HashSet<>();
-        if (filterValues != null) {
-            filterValues.forEach((k, v) -> filters.add(new Filter().withName("tag:" + k).withValues(v)));
-        }
         boolean done = false;
-        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
+        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(generateSearchFilters());
         while (!done) {
             DescribeInstancesResult describeInstancesResult = amazonEC2.describeInstances(describeInstancesRequest);
             containerList.addAll(describeInstancesResult.getReservations()
@@ -173,6 +125,42 @@ public class AwsEC2Platform extends Platform {
             log.warn("No matching EC2 instance found.");
         }
         return containerList;
+    }
+
+    @Override
+    public List<Container> generateExperimentRoster () {
+        List<Container> roster = getRoster();
+        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream()
+                                                                 .map(AwsEC2Container.class::cast)
+                                                                 .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        List<Container> eligibleExperimentTargets = new ArrayList<>();
+        groupedRoster.forEach((k, v) -> {
+            // Anything that isn't in a managed group is eligible for experiments
+            if (k.equals(AwsEC2Constants.NO_GROUPING_IDENTIFIER)) {
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
+            // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
+            if (v.size() < 2) {
+                log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));
+                eligibleExperimentTargets.addAll(v);
+                return;
+            }
+            int designatedSurvivorIndex = new Random().nextInt(v.size());
+            AwsEC2Container survivor = v.remove(designatedSurvivorIndex);
+            log.debug("The container {} will be a designated survivor for this experiment", v(DataDogConstants.DATADOG_CONTAINER_KEY, survivor));
+            eligibleExperimentTargets.addAll(v);
+        });
+        log.info("The following containers will be eligible for experiments: {}", v("experimentRoster", eligibleExperimentTargets));
+        return eligibleExperimentTargets;
+    }
+
+    Collection<Filter> generateSearchFilters () {
+        return filter.entrySet()
+                     .stream()
+                     .map(filterEntry -> new Filter().withName("tag:" + filterEntry.getKey())
+                                                     .withValues(filterEntry.getValue()))
+                     .collect(Collectors.toSet());
     }
 
     private Stream<Instance> getInstanceStream () {
