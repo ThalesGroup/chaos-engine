@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,7 +56,8 @@ public class AwsEC2Platform extends Platform {
         log.info("AWS EC2 Platform created");
     }
 
-    public void setFilter (Map<String, List<String>> filter) {
+    public void setFilter (@NotNull Map<String, List<String>> filter) {
+        log.info("EC2 Instances will be filtered with the following tags and values: {}", v("filterCriteria", filter));
         this.filter = filter;
     }
 
