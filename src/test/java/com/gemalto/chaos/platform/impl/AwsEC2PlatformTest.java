@@ -426,7 +426,7 @@ public class AwsEC2PlatformTest {
 
         @Bean
         AwsEC2Platform awsEC2Platform () {
-            return Mockito.spy(new AwsEC2Platform(null, null, amazonEC2, containerManager, awsEC2SelfAwareness));
+            return Mockito.spy(new AwsEC2Platform(amazonEC2, containerManager, awsEC2SelfAwareness));
         }
     }
 }
