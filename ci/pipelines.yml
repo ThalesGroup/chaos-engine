@@ -3,7 +3,7 @@
 pipelines:
 - name: chaos-docker-build
   team: main
-  config_file: git-chaos-engine/ci/chaos-docker-build.yml
+  config_file: git-chaos-engine/ci/build/chaos-docker-build.yml
 - name: pipeline-manager
   team: main
-  config_file: git-chaos-engine/ci/chaos-pipeline-manager.yml
+  config_file: git-chaos-engine/ci/pipeline-manager/chaos-pipeline-manager.yml
