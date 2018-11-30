@@ -31,22 +31,41 @@ resources:
     aws_access_key_id: ((aws_poweruser.aws_access_key_id))
     aws_secret_access_key: ((aws_poweruser.aws_secret_access_key))
 
+on_failure: &generic_slack_failure
+  do:
+  - put: slack-alert
+    params:
+      attachments: |
+        [{
+          "color" : "danger",
+          "pretext" : ":warning: *Pipeline [$BUILD_PIPELINE_NAME] failed*",
+          "author_name" : "Concourse Build Failure Notification",
+          "title" : "Click to access the failed build",
+          "title_link" : "$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME",
+          "text" : "Context ->",
+          "fields" : [
+            { "title" : "Git Branch",
+              "value" : "[((gitlab.branch))]",
+              "short" : true
+            },
+            {
+              "title": "Job",
+              "value": "[$BUILD_JOB_NAME]",
+              "short": true
+            }
+          ]
+        }]
+
 jobs:
 - name: chaos-engine-build
   public: true
   plan:
   - get: git-chaos-engine
     trigger: true
-    on_failure:
-      put: slack-alert
-      params:
-        text: Git Pull failure.
+    on_failure: *generic_slack_failure
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
       target_name: ((gitlab.branch))
       tag_file: git-chaos-engine/.git/short_ref
-    on_failure:
-      put: slack-alert
-      params:
-        text: Build failure.
+    on_failure: *generic_slack_failure
