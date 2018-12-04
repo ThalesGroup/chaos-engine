@@ -14,10 +14,10 @@ resources:
     branch: ((gitlab.branch))
     private_key: |
       ((gitlab.private_key))
-    ignore_paths:
-    - ci/**
-    - cloudformation/**
-    - .idea/**
+    #    ignore_paths:
+#    - ci/**
+#    - cloudformation/**
+#    - .idea/**
 
 - name: slack-alert
   type: slack-notification
@@ -63,9 +63,13 @@ jobs:
   - get: git-chaos-engine
     trigger: true
     on_failure: *generic_slack_failure
+  - task: generate-docker-tags
+    file: git-chaos-engine/ci/build/tag-build.yml
+    params:
+      BRANCH: ((gitlab.branch))
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
       target_name: ((gitlab.branch))
-      tag_file: git-chaos-engine/.git/short_ref
+      tag_file: version/tags.txt
     on_failure: *generic_slack_failure
