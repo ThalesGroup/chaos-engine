@@ -81,18 +81,10 @@ public abstract class Platform implements ExperimentalObject {
 
     public synchronized List<Container> getRoster () {
         try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_PLATFORM_KEY, this.getPlatformType())) {
-            List<Container> returnValue;
-            if (roster == null || roster.value() == null) {
-                returnValue = generateRoster();
-                roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
-                return returnValue;
+            if (roster == null) {
+                roster = new Expiring<>(generateRoster(), ROSTER_CACHE_DURATION);
             }
-            returnValue = roster.value();
-            if (returnValue == null) {
-                returnValue = generateRoster();
-                roster = new Expiring<>(returnValue, ROSTER_CACHE_DURATION);
-            }
-            return returnValue;
+            return roster.computeIfAbsent(this::generateRoster, ROSTER_CACHE_DURATION);
         }
     }
 
