@@ -63,13 +63,10 @@ jobs:
   - get: git-chaos-engine
     trigger: true
     on_failure: *generic_slack_failure
-  - task: generate-docker-tags
-    file: git-chaos-engine/ci/build/tag-build.yml
-    params:
-      BRANCH: ((gitlab.branch))
   - put: docker-chaos-engine
     params:
       build: git-chaos-engine
       target_name: ((gitlab.branch))
-      tag_file: version/tags.txt
+      tag_file: git-chaos-engine/.git/short_ref
+      tag_prefix: ((gitlab.branch))-
     on_failure: *generic_slack_failure
