@@ -95,6 +95,19 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
+    public void terminateASGContainer () throws Exception {
+        doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
+        awsEC2Container.terminateASGContainer(experiment);
+        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
+        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
+        Mockito.verify(awsEC2Platform, times(1)).terminateInstance(INSTANCE_ID);
+        experiment.getSelfHealingMethod().call();
+        await().atMost(4, TimeUnit.MINUTES)
+               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
+        experiment.getCheckContainerHealth().call();
+    }
+
+    @Test
     public void getSimpleName () {
         String EXPECTED_NAME = String.format("%s (%s) [%s]", NAME, KEY_NAME, INSTANCE_ID);
         assertEquals(EXPECTED_NAME, awsEC2Container.getSimpleName());
