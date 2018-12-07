@@ -52,6 +52,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         super(cloudFoundryOperations, cloudFoundryPlatformInfo);
         this.cloudFoundryOperations = cloudFoundryOperations;
         this.cloudFoundryClient = cloudFoundryClient;
+        log.info("PCF Application Platform created");
     }
 
     public ContainerHealth checkPlatformHealth () {

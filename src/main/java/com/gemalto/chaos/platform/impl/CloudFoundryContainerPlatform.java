@@ -53,6 +53,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
         this.cloudFoundryClient = cloudFoundryClient;
         this.containerManager = containerManager;
+        log.info("PCF Container Platform created");
     }
 
     public static CloudFoundryContainerPlatformBuilder builder () {
