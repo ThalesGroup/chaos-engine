@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
@@ -27,7 +26,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Set<Experiment> activeExperiments = new HashSet<>();
-    private final Queue<Experiment> newExperimentQueue = new LinkedBlockingDeque<>();
+    private final Collection<Experiment> newExperimentQueue = new HashSet<>();
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
     @Autowired
@@ -40,7 +39,7 @@ public class ExperimentManager {
     }
 
     Experiment addExperiment (Experiment experiment) {
-        newExperimentQueue.offer(experiment);
+            newExperimentQueue.add(experiment);
         return experiment;
     }
 
@@ -50,30 +49,30 @@ public class ExperimentManager {
             log.debug("Checking on existing experiments");
             if (activeExperiments.isEmpty()) {
                 log.debug("No experiments are currently active.");
+                startNewExperiments();
             } else {
                 updateExperimentStatusImpl();
             }
         }
-        startNewExperiments();
     }
 
     private void startNewExperiments () {
+        if (newExperimentQueue.isEmpty()) return;
         if (holidayManager.isHoliday() || holidayManager.isOutsideWorkingHours()) {
             log.debug("Cannot start new experiments right now: {} ", holidayManager.isHoliday() ? "public holiday" : "out of business");
             return;
         }
-        Experiment experiment = newExperimentQueue.poll();
-        while (experiment != null) {
-            autowireCapableBeanFactory.autowireBean(experiment);
-            try (MDC.MDCCloseable ignored = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
-                if (experiment.startExperiment()) {
-                    synchronized (activeExperiments) {
-                        activeExperiments.add(experiment);
-                    }
-                }
-                experiment = newExperimentQueue.poll();
-            }
+        synchronized (newExperimentQueue) {
+            newExperimentQueue.parallelStream()
+                              .peek(autowireCapableBeanFactory::autowireBean)
+                              .peek(experiment -> MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId()))
+                              .map(experiment -> experiment.startExperiment() ? experiment : null)
+                              .peek(experiment -> MDC.remove(DATADOG_EXPERIMENTID_KEY))
+                              .filter(Objects::nonNull)
+                              .forEach(activeExperiments::add);
+            newExperimentQueue.clear();
         }
+
     }
 
     private void updateExperimentStatusImpl () {
@@ -140,12 +139,14 @@ public class ExperimentManager {
                                                .filter(Container::canExperiment)
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
-            return containersToExperiment.stream()
-                                         .map(Container::createExperiment)
-                                         .map(this::addExperiment)
-                                         .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
-                                                 .getId(), experiment))
-                                         .collect(Collectors.toSet());
+            synchronized (newExperimentQueue) {
+                return containersToExperiment.stream()
+                                             .map(Container::createExperiment)
+                                             .map(this::addExperiment)
+                                             .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
+                                                     .getId(), experiment))
+                                             .collect(Collectors.toSet());
+            }
 
         }
         return Collections.emptySet();
@@ -166,7 +167,7 @@ public class ExperimentManager {
                               .collect(Collectors.toSet());
     }
 
-    Queue<Experiment> getNewExperimentQueue () {
+    Collection<Experiment> getNewExperimentQueue () {
         return newExperimentQueue;
     }
 

@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Queue;
+import java.util.Collection;
 import java.util.Set;
 
 @RestController
@@ -32,7 +32,7 @@ public class ExperimentController {
 
     @ApiOperation(value = "Get Experiment Queue", notes = "Returns metadata about all experiments queued up to start at the next experiment start interval.")
     @GetMapping("/queue")
-    public Queue<Experiment> getExperimentQueue () {
+    public Collection<Experiment> getExperimentQueue () {
         return experimentManager.getNewExperimentQueue();
     }
 

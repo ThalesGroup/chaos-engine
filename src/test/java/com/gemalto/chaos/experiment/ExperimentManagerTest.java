@@ -119,7 +119,7 @@ public class ExperimentManagerTest {
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(true);
         experimentManager.scheduleExperiments();
-        Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
+        Collection<Experiment> experiments = experimentManager.getNewExperimentQueue();
         experimentManager.updateExperimentStatus();
         Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
         int activeExperimentsCount = activeExperiments.size();
@@ -166,10 +166,10 @@ public class ExperimentManagerTest {
         when(holidayManager.isHoliday()).thenReturn(false);
         when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
         experimentManager.scheduleExperiments();
-        Queue<Experiment> experiments = experimentManager.getNewExperimentQueue();
+        Collection<Experiment> experiments = experimentManager.getNewExperimentQueue();
         int scheduledExperimentsCount = experiments.size();
         experimentManager.scheduleExperiments();
-        Queue<Experiment> experiments2 = experimentManager.getNewExperimentQueue();
+        Collection<Experiment> experiments2 = experimentManager.getNewExperimentQueue();
         // new scheduleExperiments invocation should not add new experiment until newExperimentQueue is empty
         assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
