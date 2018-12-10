@@ -221,7 +221,8 @@ public abstract class Experiment {
                     log.info("Experiment {} complete", id);
                     notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
                                                                    .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage("Experiment finished. Container recovered from the experiment")
+                                                                   .withMessage(String.format("Experiment finished. Container recovered from the experiment. Duration: %d s, Self-healing attempts: %d", getDuration()
+                                                                           .getSeconds(), selfHealingCounter.get()))
                                                                    .build());
 
                     return finalizeExperiment();
