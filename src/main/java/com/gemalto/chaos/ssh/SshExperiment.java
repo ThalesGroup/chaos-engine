@@ -17,8 +17,8 @@ public abstract class SshExperiment {
     private String experimentName;
     private String experimentScript;
     protected List<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
-    protected List<ShellSessionCapability> detectedCapabilities;
-    protected SshManager sshManager;
+    private List<ShellSessionCapability> detectedCapabilities;
+    private SshManager sshManager;
     private ShResourceService shResourceService;
 
     protected abstract void buildRequiredCapabilities ();
@@ -70,7 +70,6 @@ public abstract class SshExperiment {
             log.debug("Experiment {} deployed.", getExperimentName());
             String scriptExec = String.format("nohup %s%s &", DEFAULT_UPLOAD_PATH, getExperimentScript());
             sshManager.executeCommandInShell(scriptExec, getExperimentName());
-            sshManager.disconnect();
         }else {
             log.error("Cannot execute SSH experiment {}. Current shell session does not have all required capabilities: {}, actual capabilities: {}", getExperimentName(), requiredCapabilities, detectedCapabilities);
             throw new ChaosException("Cannot execute SSH experiment. Current shell session does not have all required capabilities");

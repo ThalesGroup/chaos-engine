@@ -17,8 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SshExperimentTest {
     @Mock
@@ -75,7 +76,6 @@ public class SshExperimentTest {
         when(result.getCommandOutput()).thenReturn("BASH");
         when(sshManager.executeCommand(ShellCommand.SHELLTYPE.toString())).thenReturn(result);
         genericSshExperiment.runExperiment();
-        verify(sshManager, times(4)).disconnect();
     }
 
     @Test
