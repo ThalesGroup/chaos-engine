@@ -19,7 +19,6 @@ import org.cloudfoundry.operations.applications.RestartApplicationInstanceReques
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.function.BiFunction;
 
 public class CloudFoundryContainer extends Container {
     private String applicationId;
@@ -46,6 +45,14 @@ public class CloudFoundryContainer extends Container {
             }
             return ContainerHealth.RUNNING_EXPERIMENT;
         };
+    }
+
+    @StateExperiment
+    public void forkBomb (Experiment experiment) {
+        experiment.setSelfHealingMethod(restartContainer);
+        String healthCheckCommand = ShellCommand.BINARYEXISTS + SshExperiment.DEFAULT_UPLOAD_PATH + ForkBomb.EXPERIMENT_SCRIPT;
+        experiment.setCheckContainerHealth(sshHealthCheckInverse(this, healthCheckCommand, 0));
+        cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
     private CloudFoundryContainer () {
@@ -104,12 +111,15 @@ public class CloudFoundryContainer extends Container {
         return restartApplicationInstanceRequest;
     }
 
-    @StateExperiment
-    public void forkBomb (Experiment experiment) {
-        experiment.setSelfHealingMethod(restartContainer);
-        String healthCheckCommand = ShellCommand.BINARYEXISTS + SshExperiment.DEFAULT_UPLOAD_PATH + ForkBomb.EXPERIMENT_SCRIPT;
-        experiment.setCheckContainerHealth(sshHealthCheck(this,healthCheckCommand, 1));
-        cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
+    private Callable<ContainerHealth> sshHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
+        return () -> {
+            ContainerHealth instanceState = isInstanceRunning.call();
+            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(container, command, errorExitStatus);
+            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
+                return ContainerHealth.NORMAL;
+            }
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        };
     }
 
     @StateExperiment

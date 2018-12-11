@@ -10,6 +10,7 @@ import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
+import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -21,7 +22,6 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -283,6 +283,36 @@ public class CloudFoundryContainerPlatformTest {
         term.setShResourceService(shResourceService);
         term.runExperiment();
         assertThat(expectedCapabilities, IsIterableContainingInAnyOrder.containsInAnyOrder(term.getDetectedShellSessionCapabilities().toArray()));
+    }
+
+    @Test
+    public void sshBasedHealthCheck () throws IOException {
+        String command = "echo echo";
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doReturn(result).when(sshManager).executeCommand(command);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        when(result.getExitStatus()).thenReturn(-1);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        when(result.getExitStatus()).thenReturn(127);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+    }
+
+    @Test
+    public void sshBasedHealthCheckInverse () throws IOException {
+        String command = "echo echo";
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doReturn(result).when(sshManager).executeCommand(command);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        when(result.getExitStatus()).thenReturn(-1);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        when(result.getExitStatus()).thenReturn(127);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
     }
 
     @Configuration

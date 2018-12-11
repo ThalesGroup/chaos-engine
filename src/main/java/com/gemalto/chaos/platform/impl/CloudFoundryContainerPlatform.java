@@ -129,17 +129,37 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
-        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+    public ContainerHealth sshBasedHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
+        CloudFoundrySshManager ssh = getSSHManager();
         try {
             ssh.connect(container);
             SshCommandResult result = ssh.executeCommand(command);
-            if(expectedExitStatus==result.getExitStatus()){
+            if (errorExitStatus == result.getExitStatus()) {
+                return ContainerHealth.RUNNING_EXPERIMENT;
+            }
+        } catch (IOException e) {
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+        } finally {
+            ssh.disconnect();
+        }
+        return ContainerHealth.NORMAL;
+    }
+
+    CloudFoundrySshManager getSSHManager () {
+        return new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+    }
+
+    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
+        CloudFoundrySshManager ssh = getSSHManager();
+        try {
+            ssh.connect(container);
+            SshCommandResult result = ssh.executeCommand(command);
+            if (expectedExitStatus == result.getExitStatus()) {
                 return ContainerHealth.NORMAL;
             }
         } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}",e.getMessage());
-        }finally {
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+        } finally {
             ssh.disconnect();
         }
         return ContainerHealth.RUNNING_EXPERIMENT;
@@ -204,6 +224,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             this.containerManager = containerManager;
             return this;
         }
+
         public CloudFoundryContainerPlatform build () {
             CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
