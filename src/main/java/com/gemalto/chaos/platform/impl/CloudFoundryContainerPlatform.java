@@ -44,7 +44,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundryClient cloudFoundryClient;
     @Autowired
-    ShResourceService shResourceService;
+    private ShResourceService shResourceService;
 
     @Autowired
     public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
@@ -129,25 +129,45 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
-        CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+    public ContainerHealth sshBasedHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
+        CloudFoundrySshManager ssh = getSSHManager();
         try {
             ssh.connect(container);
             SshCommandResult result = ssh.executeCommand(command);
-            if(expectedExitStatus==result.getExitStatus()){
+            if (errorExitStatus == result.getExitStatus()) {
+                return ContainerHealth.RUNNING_EXPERIMENT;
+            }
+        } catch (IOException e) {
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+        } finally {
+            ssh.disconnect();
+        }
+        return ContainerHealth.NORMAL;
+    }
+
+    CloudFoundrySshManager getSSHManager () {
+        return new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+    }
+
+    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
+        CloudFoundrySshManager ssh = getSSHManager();
+        try {
+            ssh.connect(container);
+            SshCommandResult result = ssh.executeCommand(command);
+            if (expectedExitStatus == result.getExitStatus()) {
                 return ContainerHealth.NORMAL;
             }
         } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}",e.getMessage());
-        }finally {
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+        } finally {
             ssh.disconnect();
         }
         return ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
+        CloudFoundrySshManager ssh = getSSHManager();
         try {
-            CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
             sshExperiment.setSshManager(ssh);
             sshExperiment.setShResourceService(shResourceService);
             if (ssh.connect(container)) {
@@ -158,10 +178,12 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                 if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
                     container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
                 }
-                ssh.disconnect();
+
             }
         } catch (IOException e) {
             throw new ChaosException(e);
+        } finally {
+            ssh.disconnect();
         }
     }
 
@@ -204,6 +226,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             this.containerManager = containerManager;
             return this;
         }
+
         public CloudFoundryContainerPlatform build () {
             CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
             cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);

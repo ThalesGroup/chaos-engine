@@ -6,10 +6,10 @@ import com.gemalto.chaos.container.impl.CloudFoundryContainer;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.SshCommandResult;
-import com.gemalto.chaos.ssh.SshManager;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
 import com.gemalto.chaos.ssh.enums.ShellCommand;
 import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
+import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -21,10 +21,11 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -241,20 +242,17 @@ public class CloudFoundryContainerPlatformTest {
     }
 
     @Test
-    public void sshExperimentMergeCapabilities () throws IOException {
-        List<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
-        alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
-        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.ASH));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.BASH));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.KILL));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.SORT));
-        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
-        SshManager sshManager = mock(SshManager.class);
-        RandomProcessTermination term = new RandomProcessTermination();
-        term.setDetectedShellSessionCapabilities(alreadyDetectedCapabilities);
+    public void sshExperiment () throws IOException {
+        CloudFoundryContainer container = Mockito.spy(CloudFoundryContainer.builder()
+                                                                           .applicationId(APPLICATION_ID)
+                                                                           .instance(0)
+                                                                           .platform(cloudFoundryContainerPlatform)
+                                                                           .build());
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        when(sshManager.connect(container)).thenReturn(true);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
         SshCommandResult resultShellCapability = mock(SshCommandResult.class);
         SshCommandResult resultTypeCapability = mock(SshCommandResult.class);
         SshCommandResult resultGrepCapability = mock(SshCommandResult.class);
@@ -279,10 +277,102 @@ public class CloudFoundryContainerPlatformTest {
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
         when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
-        term.setSshManager(sshManager);
-        term.setShResourceService(shResourceService);
-        term.runExperiment();
-        assertThat(expectedCapabilities, IsIterableContainingInAnyOrder.containsInAnyOrder(term.getDetectedShellSessionCapabilities().toArray()));
+        RandomProcessTermination term = Mockito.spy(new RandomProcessTermination());
+        cloudFoundryContainerPlatform.sshExperiment(term, container);
+        verify(term, times(0)).setDetectedShellSessionCapabilities(ArgumentMatchers.anyList());
+        verify(container, times(1)).setDetectedCapabilities(ArgumentMatchers.anyList());
+        verify(term, times(1)).runExperiment();
+        verify(sshManager, times(1)).disconnect();
+    }
+
+    @Test
+    public void sshExperimentMergePreviouslyDetectedCapabilities () throws IOException {
+        CloudFoundryContainer container = Mockito.spy(CloudFoundryContainer.builder()
+                                                                           .applicationId(APPLICATION_ID)
+                                                                           .instance(0)
+                                                                           .platform(cloudFoundryContainerPlatform)
+                                                                           .build());
+
+        List<ShellSessionCapability> alreadyDetectedCapabilities = new ArrayList<>();
+        alreadyDetectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.ASH));
+        container.setDetectedCapabilities(alreadyDetectedCapabilities);
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        when(sshManager.connect(container)).thenReturn(true);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+
+        List<ShellSessionCapability> expectedCapabilities = new ArrayList<>();
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.SHELL).addCapabilityOption(ShellSessionCapabilityOption.ASH));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.TYPE));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.GREP));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.KILL));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.SORT));
+        expectedCapabilities.add(new ShellSessionCapability(ShellCapabilityType.BINARY).addCapabilityOption(ShellSessionCapabilityOption.HEAD));
+
+        SshCommandResult resultShellCapability = mock(SshCommandResult.class);
+        SshCommandResult resultTypeCapability = mock(SshCommandResult.class);
+        SshCommandResult resultGrepCapability = mock(SshCommandResult.class);
+        SshCommandResult resultKillCapability = mock(SshCommandResult.class);
+        SshCommandResult resultSortCapability = mock(SshCommandResult.class);
+        SshCommandResult resultHeadCapability = mock(SshCommandResult.class);
+        when(resultShellCapability.getExitStatus()).thenReturn(0);
+        when(resultShellCapability.getCommandOutput()).thenReturn("bash");
+        when(resultTypeCapability.getExitStatus()).thenReturn(0);
+        when(resultTypeCapability.getCommandOutput()).thenReturn("type");
+        when(resultGrepCapability.getExitStatus()).thenReturn(0);
+        when(resultGrepCapability.getCommandOutput()).thenReturn("grep");
+        when(resultKillCapability.getExitStatus()).thenReturn(0);
+        when(resultKillCapability.getCommandOutput()).thenReturn("kill");
+        when(resultSortCapability.getExitStatus()).thenReturn(0);
+        when(resultSortCapability.getCommandOutput()).thenReturn("sort");
+        when(resultHeadCapability.getExitStatus()).thenReturn(0);
+        when(resultHeadCapability.getCommandOutput()).thenReturn("head");
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.TYPE)).thenReturn(resultTypeCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.GREP)).thenReturn(resultGrepCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.KILL)).thenReturn(resultKillCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.SORT)).thenReturn(resultSortCapability);
+        when(sshManager.executeCommand(ShellCommand.BINARYEXISTS.toString() + ShellSessionCapabilityOption.HEAD)).thenReturn(resultHeadCapability);
+        RandomProcessTermination term = Mockito.spy(new RandomProcessTermination());
+        cloudFoundryContainerPlatform.sshExperiment(term, container);
+        verify(term, times(1)).setDetectedShellSessionCapabilities(ArgumentMatchers.anyList());
+        verify(container, times(1)).setDetectedCapabilities(ArgumentMatchers.anyList());
+        verify(term, times(1)).runExperiment();
+        verify(sshManager, times(1)).disconnect();
+        assertThat(expectedCapabilities, IsIterableContainingInAnyOrder.containsInAnyOrder(container.getDetectedCapabilities()
+                                                                                                    .toArray()));
+    }
+
+    @Test
+    public void sshBasedHealthCheck () throws IOException {
+        String command = "echo echo";
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doReturn(result).when(sshManager).executeCommand(command);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        verify(sshManager, times(1)).disconnect();
+        when(result.getExitStatus()).thenReturn(-1);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        when(result.getExitStatus()).thenReturn(127);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+    }
+
+    @Test
+    public void sshBasedHealthCheckInverse () throws IOException {
+        String command = "echo echo";
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        SshCommandResult result = mock(SshCommandResult.class);
+        when(result.getExitStatus()).thenReturn(0);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doReturn(result).when(sshManager).executeCommand(command);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        verify(sshManager, times(1)).disconnect();
+        when(result.getExitStatus()).thenReturn(-1);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        when(result.getExitStatus()).thenReturn(127);
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
     }
 
     @Configuration
