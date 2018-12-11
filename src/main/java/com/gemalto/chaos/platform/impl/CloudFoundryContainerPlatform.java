@@ -44,7 +44,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundryClient cloudFoundryClient;
     @Autowired
-    ShResourceService shResourceService;
+    private ShResourceService shResourceService;
 
     @Autowired
     public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
@@ -166,8 +166,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     }
 
     public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
+        CloudFoundrySshManager ssh = getSSHManager();
         try {
-            CloudFoundrySshManager ssh = new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
             sshExperiment.setSshManager(ssh);
             sshExperiment.setShResourceService(shResourceService);
             if (ssh.connect(container)) {
@@ -178,10 +178,12 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                 if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
                     container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
                 }
-                ssh.disconnect();
+
             }
         } catch (IOException e) {
             throw new ChaosException(e);
+        } finally {
+            ssh.disconnect();
         }
     }
 
