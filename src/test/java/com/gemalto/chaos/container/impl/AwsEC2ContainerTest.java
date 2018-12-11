@@ -96,15 +96,31 @@ public class AwsEC2ContainerTest {
 
     @Test
     public void terminateASGContainer () throws Exception {
+        Callable<ContainerHealth> autoscalingCallableBaseMethod = spy(Callable.class);
+        Callable<Void> selfHealingCallableBaseMethod = spy(Callable.class);
+        Callable<ContainerHealth> autoscalingCallable;
+        Callable<Void> selfHealingCallable;
+
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
+        autoscalingCallable = awsEC2Container.autoscalingHealthcheckWrapper(autoscalingCallableBaseMethod);
+        selfHealingCallable = awsEC2Container.autoscalingSelfHealingWrapper(selfHealingCallableBaseMethod);
+
         awsEC2Container.terminateASGContainer(experiment);
+
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).terminateInstance(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
-        await().atMost(4, TimeUnit.MINUTES)
-               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
-        experiment.getCheckContainerHealth().call();
+        verify(awsEC2Platform, times(1)).terminateInstance(INSTANCE_ID);
+        selfHealingCallable.call();
+        verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
+        //Healthcheck is triggered by triggerAutoscalingUnhealthy method
+        verify(selfHealingCallableBaseMethod, never()).call();
+        autoscalingCallable.call();
+        verify(autoscalingCallableBaseMethod, atLeastOnce()).call();
+        assertNotSame(autoscalingCallable, autoscalingCallableBaseMethod);
+        assertNotSame(selfHealingCallable, selfHealingCallableBaseMethod);
+        reset(autoscalingCallableBaseMethod);
+        reset(selfHealingCallableBaseMethod);
+
     }
 
     @Test
