@@ -169,7 +169,7 @@ public class AwsEC2ContainerTest {
     public void getDataDogIdentifier () {
         assertEquals(DataDogIdentifier.dataDogIdentifier()
                                       .withValue(INSTANCE_ID)
-                                      .withKey("Host"), awsEC2Container.getDataDogIdentifier());
+                                      .withKey("host"), awsEC2Container.getDataDogIdentifier());
     }
 
     @Test

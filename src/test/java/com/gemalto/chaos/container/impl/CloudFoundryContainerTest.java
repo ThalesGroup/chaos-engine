@@ -3,7 +3,6 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
-import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.ssh.ShellSessionCapability;
 import com.gemalto.chaos.ssh.enums.ShellCapabilityType;
@@ -25,6 +24,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.zip.CRC32;
 
+import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -132,8 +132,7 @@ public class CloudFoundryContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        assertEquals(DataDogIdentifier.dataDogIdentifier()
-                                      .withKey("Host")
-                                      .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
+        assertEquals(dataDogIdentifier().withKey("host")
+                                        .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
     }
 }
