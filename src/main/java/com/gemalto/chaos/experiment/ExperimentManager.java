@@ -63,13 +63,13 @@ public class ExperimentManager {
             return;
         }
         synchronized (newExperimentQueue) {
-            newExperimentQueue.parallelStream()
-                              .peek(autowireCapableBeanFactory::autowireBean)
-                              .peek(experiment -> MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId()))
-                              .map(experiment -> experiment.startExperiment() ? experiment : null)
-                              .peek(experiment -> MDC.remove(DATADOG_EXPERIMENTID_KEY))
-                              .filter(Objects::nonNull)
-                              .forEach(activeExperiments::add);
+            activeExperiments.addAll(newExperimentQueue.parallelStream()
+                                                       .peek(autowireCapableBeanFactory::autowireBean)
+                                                       .peek(experiment -> MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId()))
+                                                       .map(experiment -> experiment.startExperiment() ? experiment : null)
+                                                       .peek(experiment -> MDC.remove(DATADOG_EXPERIMENTID_KEY))
+                                                       .filter(Objects::nonNull)
+                                                       .collect(Collectors.toSet()));
             newExperimentQueue.clear();
         }
 
