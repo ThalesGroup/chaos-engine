@@ -140,6 +140,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
             }
         } catch (IOException e) {
             log.warn("Unsuccessful ssh health check: {}", e.getMessage(), e);
+            return ContainerHealth.RUNNING_EXPERIMENT;
         } finally {
             ssh.disconnect();
         }
