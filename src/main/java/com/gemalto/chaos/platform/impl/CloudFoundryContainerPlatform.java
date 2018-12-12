@@ -70,6 +70,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
+            log.error("Cannot get application instances: {}", e.getMessage(), e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
         String status;
@@ -138,7 +139,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage(), e);
         } finally {
             ssh.disconnect();
         }
@@ -158,7 +159,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                 return ContainerHealth.NORMAL;
             }
         } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}", e.getMessage());
+            log.warn("Unsuccessful ssh health check: {}", e.getMessage(), e);
         } finally {
             ssh.disconnect();
         }

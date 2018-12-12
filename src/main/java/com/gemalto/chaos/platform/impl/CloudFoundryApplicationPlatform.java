@@ -81,6 +81,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
+            log.error("Cannot get application instances: {}", e.getMessage(), e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
         String status;
