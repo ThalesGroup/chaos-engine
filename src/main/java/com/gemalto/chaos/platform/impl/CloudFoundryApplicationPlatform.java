@@ -42,16 +42,15 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConditionalOnProperty({ "cf.organization" })
 @ConfigurationProperties("cf")
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
+    @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
+    @Autowired
     private CloudFoundryClient cloudFoundryClient;
     @Autowired
     private ContainerManager containerManager;
 
     @Autowired
-    public CloudFoundryApplicationPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryClient cloudFoundryClient, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
-        super(cloudFoundryOperations, cloudFoundryPlatformInfo);
-        this.cloudFoundryOperations = cloudFoundryOperations;
-        this.cloudFoundryClient = cloudFoundryClient;
+    public CloudFoundryApplicationPlatform () {
         log.info("PCF Application Platform created");
     }
 
@@ -81,6 +80,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
+            log.error("Cannot get application instances: {}", e.getMessage(), e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
         String status;

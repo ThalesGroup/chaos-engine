@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
@@ -12,6 +13,7 @@ import com.gemalto.chaos.ssh.enums.ShellSessionCapabilityOption;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
 import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import com.gemalto.chaos.ssh.services.ShResourceService;
+import com.gemalto.chaos.util.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
@@ -67,20 +69,23 @@ public class CloudFoundryContainerPlatformTest {
     @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
     @MockBean
-    ShResourceService shResourceService;
+    private ShResourceService shResourceService;
     private String APPLICATION_ID = randomUUID().toString();
+    private String APPLICATION_NAME = randomUUID().toString();
+    private Integer INSTANCES = 2;
+    private CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
+                                                                              .applicationId(APPLICATION_ID)
+                                                                              .instance(0)
+                                                                              .platform(cloudFoundryContainerPlatform)
+                                                                              .name(APPLICATION_NAME)
+                                                                              .build();
+    private String command = StringUtils.generateRandomString(100);
+
 
     @Test
     @SuppressWarnings("unchecked")
     public void getRoster () {
-        String APPLICATION_NAME = randomUUID().toString();
-        Integer INSTANCES = 2;
-        CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
-                                                                          .applicationId(APPLICATION_ID)
-                                                                          .instance(0)
-                                                                          .platform(cloudFoundryContainerPlatform)
-                                                                          .name(APPLICATION_NAME)
-                                                                          .build();
+
         CloudFoundryContainer EXPECTED_CONTAINER_2 = CloudFoundryContainer.builder()
                                                                           .applicationId(APPLICATION_ID)
                                                                           .instance(1)
@@ -343,60 +348,74 @@ public class CloudFoundryContainerPlatformTest {
                                                                                                     .toArray()));
     }
 
+    @Test(expected = ChaosException.class)
+    public void sshExperimentFailedToConnect () throws IOException {
+        CloudFoundryContainer container = Mockito.spy(CloudFoundryContainer.builder()
+                                                                           .applicationId(APPLICATION_ID)
+                                                                           .instance(0)
+                                                                           .platform(cloudFoundryContainerPlatform)
+                                                                           .build());
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        when(sshManager.connect(container)).thenThrow(IOException.class);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        RandomProcessTermination term = Mockito.spy(new RandomProcessTermination());
+        cloudFoundryContainerPlatform.sshExperiment(term, container);
+        verify(sshManager, times(1)).disconnect();
+    }
+
     @Test
     public void sshBasedHealthCheck () throws IOException {
-        String command = "echo echo";
+
         CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
         SshCommandResult result = mock(SshCommandResult.class);
         when(result.getExitStatus()).thenReturn(0);
         doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
         doReturn(result).when(sshManager).executeCommand(command);
-        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheck(EXPECTED_CONTAINER_1, command, 0));
         verify(sshManager, times(1)).disconnect();
         when(result.getExitStatus()).thenReturn(-1);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(EXPECTED_CONTAINER_1, command, 0));
         when(result.getExitStatus()).thenReturn(127);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(null, command, 0));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(EXPECTED_CONTAINER_1, command, 0));
+    }
+
+    @Test
+    public void sshBasedHealthCheckFailed () throws IOException {
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doThrow(IOException.class).when(sshManager).connect(ArgumentMatchers.any());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheck(EXPECTED_CONTAINER_1, command, 0));
     }
 
     @Test
     public void sshBasedHealthCheckInverse () throws IOException {
-        String command = "echo echo";
         CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
         SshCommandResult result = mock(SshCommandResult.class);
         when(result.getExitStatus()).thenReturn(0);
         doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
         doReturn(result).when(sshManager).executeCommand(command);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(EXPECTED_CONTAINER_1, command, 0));
         verify(sshManager, times(1)).disconnect();
         when(result.getExitStatus()).thenReturn(-1);
-        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(EXPECTED_CONTAINER_1, command, 0));
         when(result.getExitStatus()).thenReturn(127);
-        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(null, command, 0));
+        assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(EXPECTED_CONTAINER_1, command, 0));
+    }
+
+    @Test
+    public void sshBasedHealthCheckInverseFailed () throws IOException {
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        doThrow(IOException.class).when(sshManager).connect(ArgumentMatchers.any());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(EXPECTED_CONTAINER_1, command, 0));
     }
 
     @Configuration
     static class ContextConfiguration {
-        @Autowired
-        private CloudFoundryOperations cloudFoundryOperations;
-        @Autowired
-        private ContainerManager containerManager;
-        @Autowired
-        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-        @Autowired
-        private CloudFoundryClient cloudFoundryClient;
-        @Autowired
-        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
         @Bean
         CloudFoundryContainerPlatform cloudFoundryContainerPlatform () {
-            return spy(CloudFoundryContainerPlatform.builder()
-                                                    .withCloudFoundryClient(cloudFoundryClient)
-                                                    .withCloudFoundryOperations(cloudFoundryOperations)
-                                                    .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
-                                                    .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                                    .withContainerManager(containerManager)
-                                                    .build());
+            return spy(new CloudFoundryContainerPlatform());
         }
     }
 }
