@@ -83,23 +83,20 @@ public class ExperimentManager {
             try (MDC.MDCCloseable ignored1 = MDC.putCloseable(DATADOG_PLATFORM_KEY, experiment.getContainer()
                                                                                               .getPlatform()
                                                                                               .getPlatformType())) {
-                try (MDC.MDCCloseable ignored = MDC.putCloseable(experiment.getContainer()
-                                                                           .getDataDogIdentifier()
-                                                                           .getKey(), experiment.getContainer()
-                                                                                                .getDataDogIdentifier()
-                                                                                                .getValue())) {
                     try (MDC.MDCCloseable ignored2 = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
                         try (MDC.MDCCloseable ignored3 = MDC.putCloseable(DataDogConstants.DATADOG_EXPERIMENT_METHOD_KEY, experiment
                                 .getExperimentMethodName())) {
+                            experiment.getContainer().setMappedDiagnosticContext();
                             ExperimentState experimentState = experiment.getExperimentState();
                             if (experimentState == ExperimentState.FINISHED || experimentState == ExperimentState.FAILED) {
                                 log.info("Removing experiment from active experiment roster, {}", kv("finalExperimentDuration", experiment
                                         .getDuration()));
                                 finishedExperiments.add(experiment);
                             }
+                        } finally {
+                            experiment.getContainer().clearMappedDiagnosticContext();
                         }
                     }
-                }
             }
         });
         activeExperiments.removeAll(finishedExperiments);

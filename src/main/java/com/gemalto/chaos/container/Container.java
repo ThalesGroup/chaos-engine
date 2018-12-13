@@ -11,6 +11,7 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
@@ -18,10 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -34,6 +32,7 @@ public abstract class Container implements ExperimentalObject {
     private ContainerHealth containerHealth;
     private Method lastExperimentMethod;
     private Experiment currentExperiment;
+    protected final Map<String, String> dataDogTags = new HashMap<>();
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -193,4 +192,12 @@ public abstract class Container implements ExperimentalObject {
     }
 
     protected abstract boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier);
+
+    public void setMappedDiagnosticContext () {
+        dataDogTags.forEach(MDC::put);
+    }
+
+    public void clearMappedDiagnosticContext () {
+        dataDogTags.keySet().forEach(MDC::remove);
+    }
 }
