@@ -6,7 +6,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
-import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
@@ -39,25 +38,20 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConditionalOnProperty({ "cf.organization" })
 @ConfigurationProperties("cf")
 public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
+    @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
+    @Autowired
     private ContainerManager containerManager;
+    @Autowired
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
+    @Autowired
     private CloudFoundryClient cloudFoundryClient;
     @Autowired
     private ShResourceService shResourceService;
 
     @Autowired
-    public CloudFoundryContainerPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo, CloudFoundryClient cloudFoundryClient, ContainerManager containerManager) {
-        super(cloudFoundryOperations, cloudFoundryPlatformInfo);
-        this.cloudFoundryOperations = cloudFoundryOperations;
-        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
-        this.cloudFoundryClient = cloudFoundryClient;
-        this.containerManager = containerManager;
+    public CloudFoundryContainerPlatform () {
         log.info("PCF Container Platform created");
-    }
-
-    public static CloudFoundryContainerPlatformBuilder builder () {
-        return CloudFoundryContainerPlatformBuilder.builder();
     }
 
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
@@ -180,59 +174,11 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                 if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
                     container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
                 }
-
             }
         } catch (IOException e) {
             throw new ChaosException(e);
         } finally {
             ssh.disconnect();
-        }
-    }
-
-    public static final class CloudFoundryContainerPlatformBuilder {
-        private CloudFoundryOperations cloudFoundryOperations;
-        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-        private CloudFoundryClient cloudFoundryClient;
-        private ContainerManager containerManager;
-        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
-        private ShResourceService resourcesService;
-
-        private CloudFoundryContainerPlatformBuilder () {
-        }
-
-        private static CloudFoundryContainerPlatformBuilder builder () {
-            return new CloudFoundryContainerPlatformBuilder();
-        }
-
-        CloudFoundryContainerPlatformBuilder withCloudFoundryOperations (CloudFoundryOperations cloudFoundryOperations) {
-            this.cloudFoundryOperations = cloudFoundryOperations;
-            return this;
-        }
-
-        CloudFoundryContainerPlatformBuilder withCloudFoundryPlatformInfo (CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
-            this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
-            return this;
-        }
-
-        CloudFoundryContainerPlatformBuilder withCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
-            this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
-            return this;
-        }
-
-        CloudFoundryContainerPlatformBuilder withCloudFoundryClient (CloudFoundryClient cloudFoundryClient) {
-            this.cloudFoundryClient = cloudFoundryClient;
-            return this;
-        }
-
-        CloudFoundryContainerPlatformBuilder withContainerManager (ContainerManager containerManager) {
-            this.containerManager = containerManager;
-            return this;
-        }
-
-        public CloudFoundryContainerPlatform build () {
-            CloudFoundryContainerPlatform cloudFoundryContainerPlatform = new CloudFoundryContainerPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo, cloudFoundryClient, containerManager);
-            cloudFoundryContainerPlatform.setCloudFoundrySelfAwareness(this.cloudFoundrySelfAwareness);
-            return cloudFoundryContainerPlatform;
         }
     }
 }

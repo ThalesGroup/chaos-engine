@@ -331,18 +331,10 @@ public class CloudFoundryApplicationPlatformTest {
 
     @Configuration
     static class ContextConfiguration {
-        @Autowired
-        private CloudFoundryOperations cloudFoundryOperations;
-        @Autowired
-        private CloudFoundryClient cloudFoundryClient;
-        @Autowired
-        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-        @Autowired
-        private ContainerManager containerManager;
 
         @Bean
         CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform () {
-            return spy(new CloudFoundryApplicationPlatform(cloudFoundryOperations, cloudFoundryClient, cloudFoundryPlatformInfo));
+            return spy(new CloudFoundryApplicationPlatform());
         }
     }
 }

@@ -4,6 +4,7 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
+import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -13,7 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 
@@ -23,6 +27,7 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STOPPED;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -39,8 +44,7 @@ public class CloudFoundryPlatformTest {
     private CloudFoundryClient cloudFoundryClient;
     @MockBean
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
-    @MockBean
-    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    @Autowired
     private CloudFoundryPlatform cfp;
     private String APPLICATION_NAME = randomUUID().toString();
     private String APPLICATION_ID = randomUUID().toString();
@@ -56,8 +60,7 @@ public class CloudFoundryPlatformTest {
 
     @Before
     public void setUp () {
-        cfp = new CloudFoundryPlatform(cloudFoundryOperations, cloudFoundryPlatformInfo) {
-        };
+        CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform = new CloudFoundryApplicationPlatform();
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
                                                       .applicationID(APPLICATION_ID)
@@ -137,5 +140,31 @@ public class CloudFoundryPlatformTest {
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
         assertEquals(PlatformHealth.FAILED, cfp.getPlatformHealth());
+    }
+
+    @Test
+    public void getCloudFoundryPlatformInfo () {
+        cfp.getCloudFoundryPlatformInfo();
+        verify(cloudFoundryPlatformInfo, times(1)).fetchInfo();
+    }
+
+    @Test
+    public void getPlatformLevel () {
+        assertEquals(PlatformLevel.PAAS, cfp.getPlatformLevel());
+    }
+
+    @Test
+    public void generateRoster () {
+        assertNotNull(cfp.generateRoster());
+    }
+
+    @Configuration
+    static class ContextConfiguration {
+        @Bean
+        CloudFoundryPlatform cloudFoundryPlatform () {
+            CloudFoundryPlatform platform = new CloudFoundryPlatform() {
+            };
+            return spy(platform);
+        }
     }
 }

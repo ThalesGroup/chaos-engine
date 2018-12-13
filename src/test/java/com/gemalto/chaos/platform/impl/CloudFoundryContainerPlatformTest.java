@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
@@ -347,6 +348,21 @@ public class CloudFoundryContainerPlatformTest {
                                                                                                     .toArray()));
     }
 
+    @Test(expected = ChaosException.class)
+    public void sshExperimentFailedToConnect () throws IOException {
+        CloudFoundryContainer container = Mockito.spy(CloudFoundryContainer.builder()
+                                                                           .applicationId(APPLICATION_ID)
+                                                                           .instance(0)
+                                                                           .platform(cloudFoundryContainerPlatform)
+                                                                           .build());
+        CloudFoundrySshManager sshManager = mock(CloudFoundrySshManager.class);
+        when(sshManager.connect(container)).thenThrow(IOException.class);
+        doReturn(sshManager).when(cloudFoundryContainerPlatform).getSSHManager();
+        RandomProcessTermination term = Mockito.spy(new RandomProcessTermination());
+        cloudFoundryContainerPlatform.sshExperiment(term, container);
+        verify(sshManager, times(1)).disconnect();
+    }
+
     @Test
     public void sshBasedHealthCheck () throws IOException {
 
@@ -396,26 +412,10 @@ public class CloudFoundryContainerPlatformTest {
 
     @Configuration
     static class ContextConfiguration {
-        @Autowired
-        private CloudFoundryOperations cloudFoundryOperations;
-        @Autowired
-        private ContainerManager containerManager;
-        @Autowired
-        private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-        @Autowired
-        private CloudFoundryClient cloudFoundryClient;
-        @Autowired
-        private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
         @Bean
         CloudFoundryContainerPlatform cloudFoundryContainerPlatform () {
-            return spy(CloudFoundryContainerPlatform.builder()
-                                                    .withCloudFoundryClient(cloudFoundryClient)
-                                                    .withCloudFoundryOperations(cloudFoundryOperations)
-                                                    .withCloudFoundryPlatformInfo(cloudFoundryPlatformInfo)
-                                                    .withCloudFoundrySelfAwareness(cloudFoundrySelfAwareness)
-                                                    .withContainerManager(containerManager)
-                                                    .build());
+            return spy(new CloudFoundryContainerPlatform());
         }
     }
 }

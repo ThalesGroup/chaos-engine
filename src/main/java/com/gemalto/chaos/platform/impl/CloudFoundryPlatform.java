@@ -19,14 +19,14 @@ import java.util.List;
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 
 public abstract class CloudFoundryPlatform extends Platform {
+    @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
+    @Autowired
     private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     @Autowired
-    public CloudFoundryPlatform (CloudFoundryOperations cloudFoundryOperations, CloudFoundryPlatformInfo cloudFoundryPlatformInfo) {
-        this.cloudFoundryOperations = cloudFoundryOperations;
-        this.cloudFoundryPlatformInfo = cloudFoundryPlatformInfo;
+    public CloudFoundryPlatform () {
     }
 
 
@@ -36,7 +36,7 @@ public abstract class CloudFoundryPlatform extends Platform {
     }
 
     @JsonIgnore
-    public CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
+    CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
         cloudFoundryPlatformInfo.fetchInfo();
         return cloudFoundryPlatformInfo;
     }
@@ -84,8 +84,7 @@ public abstract class CloudFoundryPlatform extends Platform {
 
     @Override
     public List<Container> generateRoster () {
-        List<Container> containers = new ArrayList<>();
-        return containers;
+        return new ArrayList<>();
     }
 
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
