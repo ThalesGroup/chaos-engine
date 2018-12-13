@@ -205,6 +205,7 @@ public class AwsRDSPlatform extends Platform {
                                                .withAvailabilityZone(dbInstance.getAvailabilityZone())
                                                .withDbInstanceIdentifier(dbInstance.getDBInstanceIdentifier())
                                                .withEngine(dbInstance.getEngine())
+                                               .withDbiResourceId(dbInstance.getDbiResourceId())
                                                .build();
             log.debug("Creating RDS Instance Container {} from {}", v(DATADOG_CONTAINER_KEY, container), keyValue("dbInstance", dbInstance));
             containerManager.offer(container);
