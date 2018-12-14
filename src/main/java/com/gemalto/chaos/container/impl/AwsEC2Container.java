@@ -226,11 +226,12 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
-            awsEC2Container.log.info("Created new AWS EC2 Container object", this.dataDogTags.entrySet()
-                                                                                             .stream()
-                                                                                             .map(entry -> kv(entry.getKey(), entry
-                                                                                                     .getValue()))
-                                                                                             .toArray());
+            try {
+                awsEC2Container.setMappedDiagnosticContext();
+                awsEC2Container.log.info("Created new AWS EC2 Container object");
+            } finally {
+                awsEC2Container.clearMappedDiagnosticContext();
+            }
             return awsEC2Container;
         }
     }

@@ -21,7 +21,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER;
-import static net.logstash.logback.argument.StructuredArguments.*;
+import static net.logstash.logback.argument.StructuredArguments.v;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
     private String dbClusterIdentifier;
@@ -188,12 +189,12 @@ public class AwsRDSClusterContainer extends AwsContainer {
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
             awsRDSClusterContainer.dataDogTags.putAll(this.dataDogTags);
-            awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container", this.dataDogTags.entrySet()
-                                                                                                     .stream()
-                                                                                                     .map(entry -> kv(entry
-                                                                                                             .getKey(), entry
-                                                                                                             .getValue()))
-                                                                                                     .toArray());
+            try {
+                awsRDSClusterContainer.setMappedDiagnosticContext();
+                awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container object");
+            } finally {
+                awsRDSClusterContainer.clearMappedDiagnosticContext();
+            }
             return awsRDSClusterContainer;
         }
     }
