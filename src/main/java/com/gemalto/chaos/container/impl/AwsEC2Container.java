@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
@@ -225,6 +226,11 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
+            awsEC2Container.log.info("Created new AWS EC2 Container object", this.dataDogTags.entrySet()
+                                                                                             .stream()
+                                                                                             .map(entry -> kv(entry.getKey(), entry
+                                                                                                     .getValue()))
+                                                                                             .toArray());
             return awsEC2Container;
         }
     }
