@@ -253,7 +253,7 @@ public class AwsEC2Platform extends Platform {
         amazonEC2.stopInstances(new StopInstancesRequest().withForce(true).withInstanceIds(instanceIds));
     }
 
-    void terminateInstance (String... instanceIds) {
+    public void terminateInstance (String... instanceIds) {
         log.info("Requesting a Terminate of instances {}", (Object[]) instanceIds);
         amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(instanceIds));
     }

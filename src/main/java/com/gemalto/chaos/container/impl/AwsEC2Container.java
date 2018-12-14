@@ -1,6 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -21,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
     private String instanceId;
@@ -129,6 +132,17 @@ public class AwsEC2Container extends AwsContainer {
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform
                 .checkHealth(instanceId) : ContainerHealth.RUNNING_EXPERIMENT));
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
+    }
+
+    @StateExperiment
+    public void terminateASGContainer (Experiment experiment) {
+        if (!isNativeAwsAutoscaling()) {
+            log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
+            throw new ChaosException(String.format("Instance %s is not part of an autoscaling group, won't terminate it.", instanceId));
+        }
+        awsEC2Platform.terminateInstance(instanceId);
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> ContainerHealth.RUNNING_EXPERIMENT));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> null));
     }
 
     @NetworkExperiment
