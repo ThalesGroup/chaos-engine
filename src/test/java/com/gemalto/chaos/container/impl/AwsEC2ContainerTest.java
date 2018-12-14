@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
@@ -23,6 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.UUID.randomUUID;
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -96,31 +98,41 @@ public class AwsEC2ContainerTest {
 
     @Test
     public void terminateASGContainer () throws Exception {
-        Callable<ContainerHealth> autoscalingCallableBaseMethod = spy(Callable.class);
-        Callable<Void> selfHealingCallableBaseMethod = spy(Callable.class);
-        Callable<ContainerHealth> autoscalingCallable;
-        Callable<Void> selfHealingCallable;
 
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
-        autoscalingCallable = awsEC2Container.autoscalingHealthcheckWrapper(autoscalingCallableBaseMethod);
-        selfHealingCallable = awsEC2Container.autoscalingSelfHealingWrapper(selfHealingCallableBaseMethod);
-
+        doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         awsEC2Container.terminateASGContainer(experiment);
-
+        // Case 1 - Verify that the Terminate method was actually called
+        verify(awsEC2Platform, times(1)).terminateInstance(INSTANCE_ID);
+        // Case 2 - Verify that Check Container Health and Self Healing methods were set.
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        verify(awsEC2Platform, times(1)).terminateInstance(INSTANCE_ID);
-        selfHealingCallable.call();
+        // Case 3 - Verify self healing method calls Trigger Autoscaling Unhealthy
+        verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(INSTANCE_ID);
+        experiment.getSelfHealingMethod().call();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
-        //Healthcheck is triggered by triggerAutoscalingUnhealthy method
-        verify(selfHealingCallableBaseMethod, never()).call();
-        autoscalingCallable.call();
-        verify(autoscalingCallableBaseMethod, atLeastOnce()).call();
-        assertNotSame(autoscalingCallable, autoscalingCallableBaseMethod);
-        assertNotSame(selfHealingCallable, selfHealingCallableBaseMethod);
-        reset(autoscalingCallableBaseMethod);
-        reset(selfHealingCallableBaseMethod);
+        experiment.getSelfHealingMethod().call();
+        verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
 
+
+        //Healthcheck is triggered by triggerAutoscalingUnhealthy method
+        doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
+        verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
+    }
+
+    @Test
+    public void terminateNonASGContainer () {
+        doReturn(false).when(awsEC2Container).isNativeAwsAutoscaling();
+        try {
+            awsEC2Container.terminateASGContainer(experiment);
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            assertEquals("Thrown exception should be a Chaos Exception for catch purposes", e.getClass(), ChaosException.class);
+        }
+        verify(awsEC2Platform, never().description("Should not have terminated any instances that aren't in an Autoscaling Group"))
+                .terminateInstance(any());
     }
 
     @Test
