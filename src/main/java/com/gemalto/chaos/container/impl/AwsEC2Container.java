@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
-import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
