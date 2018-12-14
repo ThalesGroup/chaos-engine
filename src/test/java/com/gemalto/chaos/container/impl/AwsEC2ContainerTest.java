@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
@@ -12,14 +13,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.Spy;
+import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -312,5 +311,19 @@ public class AwsEC2ContainerTest {
         Callable<ContainerHealth> callable;
         callable = awsEC2Container.autoscalingHealthcheckWrapper(baseMethod);
         assertSame(baseMethod, callable);
+    }
+
+    @Test
+    public void dataDogTags () {
+        Map<String, String> baseContextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(new HashMap<>());
+        awsEC2Container.setMappedDiagnosticContext();
+        Map<String, String> modifiedContextMap = MDC.getCopyOfContextMap();
+        awsEC2Container.clearMappedDiagnosticContext();
+        Map<String, String> finalContextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(new HashMap<>());
+        Map<String, String> expectedTags = new HashMap<>();
+        expectedTags.put(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, INSTANCE_ID);
+        expectedTags.putAll(baseContextMap);
+        assertEquals(baseContextMap, finalContextMap);
+        assertEquals(expectedTags, modifiedContextMap);
     }
 }
