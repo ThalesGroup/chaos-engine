@@ -65,9 +65,17 @@ public class ExperimentManager {
         synchronized (newExperimentQueue) {
             activeExperiments.addAll(newExperimentQueue.parallelStream()
                                                        .peek(autowireCapableBeanFactory::autowireBean)
-                                                       .peek(experiment -> MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId()))
-                                                       .map(experiment -> experiment.startExperiment() ? experiment : null)
-                                                       .peek(experiment -> MDC.remove(DATADOG_EXPERIMENTID_KEY))
+                                                       .map(experiment -> {
+                                                           try {
+                                                               MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId());
+                                                               experiment.getContainer().setMappedDiagnosticContext();
+                                                               return experiment.startExperiment() ? experiment : null;
+                                                           } finally {
+                                                               experiment.getContainer().clearMappedDiagnosticContext();
+                                                               MDC.remove(DATADOG_EXPERIMENTID_KEY);
+                                                           }
+                                                       })
+
                                                        .filter(Objects::nonNull)
                                                        .collect(Collectors.toSet()));
             newExperimentQueue.clear();
