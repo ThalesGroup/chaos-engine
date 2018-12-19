@@ -17,7 +17,9 @@ import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -164,6 +166,7 @@ public class AwsEC2Container extends AwsContainer {
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
         private boolean nativeAwsAutoscaling = false;
+        private final Map<String, String> dataDogTags = new HashMap<>();
 
         private AwsEC2ContainerBuilder () {
         }
@@ -174,7 +177,7 @@ public class AwsEC2Container extends AwsContainer {
 
         public AwsEC2ContainerBuilder instanceId (String instanceId) {
             this.instanceId = instanceId;
-            return this;
+            return this.withDataDogTag(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, instanceId);
         }
 
         public AwsEC2ContainerBuilder keyName (String keyName) {
@@ -206,6 +209,12 @@ public class AwsEC2Container extends AwsContainer {
             this.nativeAwsAutoscaling = nativeAwsAutoscaling;
             return this;
         }
+
+        public AwsEC2ContainerBuilder withDataDogTag (String key, String value) {
+            dataDogTags.put(key, value);
+            return this;
+        }
+
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -215,6 +224,13 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.availabilityZone = this.availabilityZone;
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
+            awsEC2Container.dataDogTags.putAll(this.dataDogTags);
+            try {
+                awsEC2Container.setMappedDiagnosticContext();
+                awsEC2Container.log.info("Created new AWS EC2 Container object");
+            } finally {
+                awsEC2Container.clearMappedDiagnosticContext();
+            }
             return awsEC2Container;
         }
     }

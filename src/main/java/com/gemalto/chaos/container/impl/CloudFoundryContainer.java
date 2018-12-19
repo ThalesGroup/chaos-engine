@@ -17,7 +17,9 @@ import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryContainer extends Container {
@@ -156,6 +158,7 @@ public class CloudFoundryContainer extends Container {
     }
 
     public static final class CloudFoundryContainerBuilder {
+        private final Map<String, String> dataDogTags = new HashMap<>();
         private String applicationId;
         private String name;
         private Integer instance;
@@ -170,22 +173,27 @@ public class CloudFoundryContainer extends Container {
 
         public CloudFoundryContainerBuilder applicationId (String applicationId) {
             this.applicationId = applicationId;
+            return dataDogTags("application_id", applicationId);
+        }
+
+        public CloudFoundryContainerBuilder dataDogTags (String key, String value) {
+            this.dataDogTags.put(key, value);
             return this;
         }
 
         public CloudFoundryContainerBuilder name (String name) {
             this.name = name;
-            return this;
-        }
-
-        public CloudFoundryContainerBuilder instance (Integer instance) {
-            this.instance = instance;
-            return this;
+            return dataDogTags("application_name", name);
         }
 
         public CloudFoundryContainerBuilder platform (CloudFoundryContainerPlatform cloudFoundryContainerPlatform) {
             this.cloudFoundryContainerPlatform = cloudFoundryContainerPlatform;
             return this;
+        }
+
+        public CloudFoundryContainerBuilder instance (Integer instance) {
+            this.instance = instance;
+            return dataDogTags("instance_index", instance.toString());
         }
 
         public CloudFoundryContainer build () {

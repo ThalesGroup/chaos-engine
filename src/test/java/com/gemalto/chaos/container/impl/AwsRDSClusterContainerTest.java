@@ -2,6 +2,8 @@ package com.gemalto.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsRDSConstants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
@@ -10,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AwsRDSClusterContainerTest {
+    private static final String DB_CLUSTER_RESOURCE_ID = UUID.randomUUID().toString();
     private AwsRDSClusterContainer awsRDSClusterContainer;
     @MockBean
     private AwsRDSPlatform awsRDSPlatform;
@@ -36,6 +40,7 @@ public class AwsRDSClusterContainerTest {
                                                                    .withAwsRDSPlatform(awsRDSPlatform)
                                                                    .withDbClusterIdentifier(dbClusterIdentifier)
                                                                    .withEngine(engine)
+                                                                   .withDBClusterResourceId(DB_CLUSTER_RESOURCE_ID)
                                                                    .build());
     }
 
@@ -140,4 +145,20 @@ public class AwsRDSClusterContainerTest {
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
         assertEquals(ContainerHealth.NORMAL, experiment.getCheckContainerHealth().call());
     }
+
+    @Test
+    public void dataDogTags () {
+        Map<String, String> baseContextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(new HashMap<>());
+        awsRDSClusterContainer.setMappedDiagnosticContext();
+        Map<String, String> modifiedContextMap = MDC.getCopyOfContextMap();
+        awsRDSClusterContainer.clearMappedDiagnosticContext();
+        Map<String, String> finalContextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(new HashMap<>());
+        Map<String, String> expectedTags = new HashMap<>();
+        expectedTags.put(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, DB_CLUSTER_RESOURCE_ID);
+        expectedTags.put(AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier);
+        expectedTags.putAll(baseContextMap);
+        assertEquals(baseContextMap, finalContextMap);
+        assertEquals(expectedTags, modifiedContextMap);
+    }
+
 }

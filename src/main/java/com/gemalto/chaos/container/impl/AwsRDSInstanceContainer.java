@@ -2,6 +2,7 @@ package com.gemalto.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBSnapshot;
 import com.amazonaws.services.rds.model.DBSnapshotNotFoundException;
+import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -15,6 +16,8 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_INSTANCE_DATADOG_IDENTIFIER;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -97,6 +100,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         private String engine;
         private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
+        private final Map<String, String> dataDogTags = new HashMap<>();
 
         private AwsRDSInstanceContainerBuilder () {
         }
@@ -107,6 +111,11 @@ public class AwsRDSInstanceContainer extends AwsContainer {
 
         public AwsRDSInstanceContainerBuilder withDbInstanceIdentifier (String dbInstanceIdentifier) {
             this.dbInstanceIdentifier = dbInstanceIdentifier;
+            return withDataDogTag(AwsRDSConstants.AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier);
+        }
+
+        public AwsRDSInstanceContainerBuilder withDataDogTag (String key, String value) {
+            dataDogTags.put(key, value);
             return this;
         }
 
@@ -125,15 +134,23 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             return this;
         }
 
+        public AwsRDSInstanceContainerBuilder withDbiResourceId (String dbiResourceId) {
+            return withDataDogTag(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, dbiResourceId);
+        }
+
         public AwsRDSInstanceContainer build () {
             AwsRDSInstanceContainer awsRDSInstanceContainer = new AwsRDSInstanceContainer();
             awsRDSInstanceContainer.dbInstanceIdentifier = this.dbInstanceIdentifier;
             awsRDSInstanceContainer.engine = this.engine;
             awsRDSInstanceContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSInstanceContainer.availabilityZone = this.availabilityZone;
-            DataDogIdentifier dataDogIdentifier = awsRDSInstanceContainer.getDataDogIdentifier();
-            awsRDSInstanceContainer.log.info("Created AWS RDS Instance Container {}", value(dataDogIdentifier.getKey(), dataDogIdentifier
-                    .getValue()));
+            awsRDSInstanceContainer.dataDogTags.putAll(this.dataDogTags);
+            try {
+                awsRDSInstanceContainer.setMappedDiagnosticContext();
+                awsRDSInstanceContainer.log.info("Created new AWS RDS Instance Container object");
+            } finally {
+                awsRDSInstanceContainer.clearMappedDiagnosticContext();
+            }
             return awsRDSInstanceContainer;
         }
     }

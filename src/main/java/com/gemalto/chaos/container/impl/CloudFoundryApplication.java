@@ -14,8 +14,9 @@ import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 
 import javax.validation.constraints.NotNull;
-import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -152,6 +153,7 @@ public class CloudFoundryApplication extends Container {
     }
 
     public static final class CloudFoundryApplicationBuilder {
+        private final Map<String, String> dataDogTags = new HashMap<>();
         private String name;
         private Integer containerInstances;
         private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
@@ -172,11 +174,11 @@ public class CloudFoundryApplication extends Container {
 
         public CloudFoundryApplicationBuilder applicationID (String applicationID) {
             this.applicationID = applicationID;
-            return this;
+            return dataDogTag("application_id", applicationID);
         }
 
-        public CloudFoundryApplicationBuilder name (String name) {
-            this.name = name;
+        public CloudFoundryApplicationBuilder dataDogTag (String key, String value) {
+            this.dataDogTags.put(key, value);
             return this;
         }
 
@@ -190,6 +192,11 @@ public class CloudFoundryApplication extends Container {
             return this;
         }
 
+        public CloudFoundryApplicationBuilder name (String name) {
+            this.name = name;
+            return dataDogTag("application_name", name);
+        }
+
         public CloudFoundryApplication build () {
             CloudFoundryApplication cloudFoundryApplication = new CloudFoundryApplication();
             cloudFoundryApplication.name = this.name;
@@ -198,6 +205,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplication.cloudFoundryApplicationPlatform = this.cloudFoundryApplicationPlatform;
             cloudFoundryApplication.applicationID = this.applicationID;
             cloudFoundryApplication.applicationRoutes = this.applicationRoutes;
+            cloudFoundryApplication.dataDogTags.putAll(this.dataDogTags);
             return cloudFoundryApplication;
         }
     }

@@ -4,6 +4,7 @@ import com.amazonaws.services.rds.model.DBClusterNotFoundException;
 import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -139,10 +140,12 @@ public class AwsRDSClusterContainer extends AwsContainer {
     }
 
     public static final class AwsRDSClusterContainerBuilder {
+        private final Map<String, String> dataDogTags = new HashMap<>();
         private String dbClusterIdentifier;
         private String engine;
         private String availabilityZone;
         private AwsRDSPlatform awsRDSPlatform;
+
         private AwsRDSClusterContainerBuilder () {
         }
 
@@ -157,7 +160,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
 
         public AwsRDSClusterContainerBuilder withDbClusterIdentifier (String dbClusterIdentifier) {
             this.dbClusterIdentifier = dbClusterIdentifier;
-            return this;
+            return withDataDogTag(AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER, dbClusterIdentifier);
         }
 
         public AwsRDSClusterContainerBuilder withEngine (String engine) {
@@ -170,15 +173,28 @@ public class AwsRDSClusterContainer extends AwsContainer {
             return this;
         }
 
+        public AwsRDSClusterContainerBuilder withDataDogTag (String key, String value) {
+            this.dataDogTags.put(key, value);
+            return this;
+        }
+
+        public AwsRDSClusterContainerBuilder withDBClusterResourceId (String dbClusterResourceId) {
+            return withDataDogTag(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, dbClusterResourceId);
+        }
+
         public AwsRDSClusterContainer build () {
             AwsRDSClusterContainer awsRDSClusterContainer = new AwsRDSClusterContainer();
             awsRDSClusterContainer.engine = this.engine;
             awsRDSClusterContainer.dbClusterIdentifier = this.dbClusterIdentifier;
             awsRDSClusterContainer.awsRDSPlatform = this.awsRDSPlatform;
             awsRDSClusterContainer.availabilityZone = this.availabilityZone != null ? this.availabilityZone : NO_AZ_INFORMATION;
-            DataDogIdentifier dataDogIdentifier = awsRDSClusterContainer.getDataDogIdentifier();
-            awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container {}", value(dataDogIdentifier.getKey(), dataDogIdentifier
-                    .getValue()));
+            awsRDSClusterContainer.dataDogTags.putAll(this.dataDogTags);
+            try {
+                awsRDSClusterContainer.setMappedDiagnosticContext();
+                awsRDSClusterContainer.log.info("Created new AWS RDS Cluster Container object");
+            } finally {
+                awsRDSClusterContainer.clearMappedDiagnosticContext();
+            }
             return awsRDSClusterContainer;
         }
     }
