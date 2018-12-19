@@ -25,7 +25,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
-    private final Set<Experiment> activeExperiments = new HashSet<>();
+    private final Collection<Experiment> activeExperiments = new HashSet<>();
     private final Collection<Experiment> newExperimentQueue = new HashSet<>();
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
@@ -157,7 +157,7 @@ public class ExperimentManager {
         return Collections.emptySet();
     }
 
-    Set<Experiment> getActiveExperiments () {
+    Collection<Experiment> getActiveExperiments () {
         return activeExperiments;
     }
 
