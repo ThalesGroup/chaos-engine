@@ -15,6 +15,7 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -24,8 +25,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -153,53 +153,75 @@ public abstract class Experiment {
         return container;
     }
 
-    boolean startExperiment () {
-        if (!adminManager.canRunExperiments()) {
-            log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
-            return false;
-        }
-        if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
-            log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
-            return false;
-        }
-        if (container.supportsExperimentType(experimentType)) {
-            List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType().getAnnotation());
-            if (experimentMethods.isEmpty()) {
-                throw new ChaosException("Could not find an experiment vector");
+    Future<Boolean> startExperiment () {
+        CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
+        MDC.put(DataDogConstants.DATADOG_EXPERIMENTID_KEY, getId());
+        getContainer().setMappedDiagnosticContext();
+        Map<String, String> existingMDC = MDC.getCopyOfContextMap();
+        Executors.newCachedThreadPool().submit(() -> {
+            try {
+                MDC.setContextMap(existingMDC);
+                if (!adminManager.canRunExperiments()) {
+                    log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
+                    completableFuture.complete(false);
+                    return null;
+                }
+                if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
+                    log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
+                    completableFuture.complete(false);
+                    return null;
+                }
+                if (container.supportsExperimentType(experimentType)) {
+                    List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType().getAnnotation());
+                    if (experimentMethods.isEmpty()) {
+                        completableFuture.cancel(false);
+                        throw new ChaosException("Could not find an experiment vector");
+                    }
+                    Method chosenMethod = null;
+                    if (preferredExperiment != null && experimentMethods.stream()
+                                                                        .map(Method::getName)
+                                                                        .anyMatch(s -> s.equals(preferredExperiment))) {
+                        Map<String, Method> stringMethodMap = experimentMethods.stream()
+                                                                               .collect(Collectors.toMap(Method::getName, method -> method));
+                        chosenMethod = stringMethodMap.get(preferredExperiment);
+                        log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
+                    }
+                    if (chosenMethod == null) {
+                        int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
+                        chosenMethod = experimentMethods.get(index);
+                    }
+                    log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
+                    setExperimentMethod(chosenMethod);
+                    setExperimentLayer(container.getPlatform());
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .fromExperiment(this)
+                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                   .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                   .build());
+                    try {
+                        container.startExperiment(this);
+                    } catch (ChaosException ex) {
+                        notificationManager.sendNotification(ChaosEvent.builder()
+                                                                       .fromExperiment(this)
+                                                                       .withNotificationLevel(NotificationLevel.ERROR)
+                                                                       .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
+                                                                       .build());
+                        completableFuture.complete(false);
+                        return null;
+                    }
+                    startTime = Instant.now();
+                    experimentState = ExperimentState.STARTED;
+                } else {
+                    completableFuture.complete(false);
+                    return null;
+                }
+                completableFuture.complete(true);
+                return null;
+            } finally {
+                existingMDC.keySet().forEach(MDC::remove);
             }
-            Method chosenMethod = null;
-            if (preferredExperiment != null && experimentMethods.stream()
-                                                                .map(Method::getName)
-                                                                .anyMatch(s -> s.equals(preferredExperiment))) {
-                Map<String, Method> stringMethodMap = experimentMethods.stream()
-                                                                       .collect(Collectors.toMap(Method::getName, method -> method));
-                chosenMethod = stringMethodMap.get(preferredExperiment);
-                log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
-            }
-            if (chosenMethod == null) {
-                int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
-                chosenMethod = experimentMethods.get(index);
-            }
-            log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
-            setExperimentMethod(chosenMethod);
-            setExperimentLayer(container.getPlatform());
-            notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                           .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
-                                                           .build());
-            try{
-                container.startExperiment(this);
-            }catch (ChaosException ex){
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
-                                                               .build());
-                return false;
-            }
-            startTime = Instant.now();
-            experimentState = ExperimentState.STARTED;
-        } else return false;
-        return true;
+        });
+        return completableFuture;
     }
 
     public ExperimentType getExperimentType () {

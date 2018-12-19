@@ -29,6 +29,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -89,39 +91,39 @@ public class ExperimentTest {
     }
 
     @Test
-    public void experimentClassTest () {
+    public void experimentClassTest () throws ExecutionException, InterruptedException {
         final Platform platform = mock(Platform.class);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
         doReturn(platform).when(stateContainer).getPlatform();
         assertNull(stateExperiment.getExperimentLayer());
-        assertTrue(stateExperiment.startExperiment());
+        assertTrue(stateExperiment.startExperiment().get());
         assertEquals(platform, stateExperiment.getExperimentLayer());
     }
 
     @Test
-    public void cannotStartWhilePaused () {
+    public void cannotStartWhilePaused () throws ExecutionException, InterruptedException {
         doReturn(PAUSED).when(adminManager).getAdminState();
-        assertFalse(stateExperiment.startExperiment());
-        assertFalse(networkExperiment.startExperiment());
-        assertFalse(resourceExperiment.startExperiment());
+        assertFalse(stateExperiment.startExperiment().get());
+        assertFalse(networkExperiment.startExperiment().get());
+        assertFalse(resourceExperiment.startExperiment().get());
         doReturn(DRAIN).when(adminManager).getAdminState();
-        assertFalse(stateExperiment.startExperiment());
-        assertFalse(networkExperiment.startExperiment());
-        assertFalse(resourceExperiment.startExperiment());
+        assertFalse(stateExperiment.startExperiment().get());
+        assertFalse(networkExperiment.startExperiment().get());
+        assertFalse(resourceExperiment.startExperiment().get());
     }
 
     @Test
-    public void containerNotStarted () {
+    public void containerNotStarted () throws ExecutionException, InterruptedException {
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(stateContainer).getContainerHealth(STATE);
         doReturn(ContainerHealth.DOES_NOT_EXIST).when(networkContainer).getContainerHealth(NETWORK);
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(resourceContainer).getContainerHealth(RESOURCE);
-        assertFalse(stateExperiment.startExperiment());
-        assertFalse(networkExperiment.startExperiment());
-        assertFalse(resourceExperiment.startExperiment());
+        assertFalse(stateExperiment.startExperiment().get());
+        assertFalse(networkExperiment.startExperiment().get());
+        assertFalse(resourceExperiment.startExperiment().get());
     }
 
-    @Test(expected = ChaosException.class)
+    @Test
     public void containerWithNoTestMethods () {
         Container container = mock(Container.class);
         Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
@@ -133,11 +135,13 @@ public class ExperimentTest {
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
         doReturn(true).when(container).supportsExperimentType(STATE);
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
-        experiment.startExperiment();
+        Future<Boolean> booleanFuture = experiment.startExperiment();
+        await().until(booleanFuture::isCancelled);
+
     }
 
     @Test
-    public void startExperimentWithoutSupportedMethod () {
+    public void startExperimentWithoutSupportedMethod () throws ExecutionException, InterruptedException {
         Container container = Mockito.mock(Container.class);
         Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                       .withExperimentType(STATE)
@@ -147,11 +151,11 @@ public class ExperimentTest {
         doReturn(true).when(adminManager).canRunExperiments();
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
         doReturn(false).when(container).supportsExperimentType(STATE);
-        assertFalse(experiment.startExperiment());
+        assertFalse(experiment.startExperiment().get());
     }
 
     @Test
-    public void startExperimentFailedToStart(){
+    public void startExperimentFailedToStart () throws ExecutionException, InterruptedException {
         Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                       .withExperimentType(STATE)
                                                                       .withContainer(stateContainer)
@@ -161,7 +165,7 @@ public class ExperimentTest {
         doReturn(true).when(adminManager).canRunExperiments();
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
-        assertFalse(experiment.startExperiment());
+        assertFalse(experiment.startExperiment().get());
         verify(notificationManager,times(1)).sendNotification(ChaosEvent.builder()
                                                                         .fromExperiment(experiment)
                                                                         .withNotificationLevel(NotificationLevel.WARN)
@@ -453,9 +457,9 @@ public class ExperimentTest {
     }
 
     @Test
-    public void startExperimentOutOfHours () {
+    public void startExperimentOutOfHours () throws Exception {
         doReturn(false).when(adminManager).canRunExperiments();
-        assertFalse(stateExperiment.startExperiment());
+        assertFalse(stateExperiment.startExperiment().get());
     }
 
     @Test
@@ -474,7 +478,8 @@ public class ExperimentTest {
             doReturn(ContainerHealth.NORMAL).when(mockContainer).getContainerHealth(STATE);
             doReturn(true).when(mockContainer).supportsExperimentType(STATE);
             experiment.startExperiment();
-            assertEquals(doAnotherThing, experiment.getExperimentMethod().getName());
+            await().until(() -> experiment.getExperimentMethod().getName().equals(doAnotherThing));
+//            assertEquals(doAnotherThing, experiment.getExperimentMethod().getName());
         });
     }
 
@@ -489,6 +494,7 @@ public class ExperimentTest {
 
         assertEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
         stateExperiment.startExperiment();
+        await().until(() -> stateExperiment.getStartTime() != null);
         assertNotEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
     }
 
