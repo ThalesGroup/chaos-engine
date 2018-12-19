@@ -206,7 +206,7 @@ public abstract class Experiment {
                                                                        .withNotificationLevel(NotificationLevel.ERROR)
                                                                        .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
                                                                        .build());
-                        completableFuture.complete(false);
+                        completableFuture.cancel(false);
                         return null;
                     }
                     startTime = Instant.now();

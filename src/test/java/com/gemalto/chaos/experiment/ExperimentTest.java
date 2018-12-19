@@ -165,7 +165,8 @@ public class ExperimentTest {
         doReturn(true).when(adminManager).canRunExperiments();
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
-        assertFalse(experiment.startExperiment().get());
+        Future<Boolean> booleanFuture = experiment.startExperiment();
+        await().until(booleanFuture::isCancelled);
         verify(notificationManager,times(1)).sendNotification(ChaosEvent.builder()
                                                                         .fromExperiment(experiment)
                                                                         .withNotificationLevel(NotificationLevel.WARN)
