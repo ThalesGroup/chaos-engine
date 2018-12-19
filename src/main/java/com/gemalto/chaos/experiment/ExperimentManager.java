@@ -27,6 +27,7 @@ public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Collection<Experiment> activeExperiments = new HashSet<>();
     private final Collection<Experiment> newExperimentQueue = new HashSet<>();
+    private final Collection<Experiment> startedExperiments = new HashSet<>();
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
     @Autowired
