@@ -121,7 +121,7 @@ public class ExperimentManagerTest {
         experimentManager.scheduleExperiments();
         Collection<Experiment> experiments = experimentManager.getNewExperimentQueue();
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        Collection<Experiment> activeExperiments = experimentManager.getActiveExperiments();
         int activeExperimentsCount = activeExperiments.size();
         assertEquals(0, activeExperimentsCount);
     }
@@ -173,7 +173,7 @@ public class ExperimentManagerTest {
         // new scheduleExperiments invocation should not add new experiment until newExperimentQueue is empty
         assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        Collection<Experiment> activeExperiments = experimentManager.getActiveExperiments();
         int activeExperimentsCount = activeExperiments.size();
         //number active experiments should be equal to number of previously scheduled experiments
         assertEquals(scheduledExperimentsCount, activeExperimentsCount);
