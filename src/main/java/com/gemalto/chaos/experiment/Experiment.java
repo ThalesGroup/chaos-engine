@@ -37,6 +37,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Experiment {
     private static final Logger log = LoggerFactory.getLogger(Experiment.class);
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private final String id = randomUUID().toString();
     protected Container container;
     protected ExperimentType experimentType;
@@ -157,9 +158,6 @@ public abstract class Experiment {
         MDC.put(DataDogConstants.DATADOG_EXPERIMENTID_KEY, getId());
         getContainer().setMappedDiagnosticContext();
         Map<String, String> existingMDC = MDC.getCopyOfContextMap();
-        ExecutorService executorService = null;
-        try {
-            executorService = Executors.newSingleThreadExecutor();
             return executorService.submit(() -> {
                 try {
                     MDC.setContextMap(existingMDC);
@@ -206,9 +204,6 @@ public abstract class Experiment {
                     existingMDC.keySet().forEach(MDC::remove);
                 }
             });
-        } finally {
-            if (executorService != null) executorService.shutdown();
-        }
     }
 
     private Method getExperimentMethod (List<Method> experimentMethods) {
