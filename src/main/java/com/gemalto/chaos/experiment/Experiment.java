@@ -177,19 +177,7 @@ public abstract class Experiment {
                         if (experimentMethods.isEmpty()) {
                             return Boolean.FALSE;
                         }
-                        Method chosenMethod = null;
-                        if (preferredExperiment != null && experimentMethods.stream()
-                                                                            .map(Method::getName)
-                                                                            .anyMatch(s -> s.equals(preferredExperiment))) {
-                            Map<String, Method> stringMethodMap = experimentMethods.stream()
-                                                                                   .collect(Collectors.toMap(Method::getName, method -> method));
-                            chosenMethod = stringMethodMap.get(preferredExperiment);
-                            log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
-                        }
-                        if (chosenMethod == null) {
-                            int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
-                            chosenMethod = experimentMethods.get(index);
-                        }
+                        Method chosenMethod = getExperimentMethod(experimentMethods);
                         log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
                         setExperimentMethod(chosenMethod);
                         setExperimentLayer(container.getPlatform());
@@ -221,6 +209,23 @@ public abstract class Experiment {
         } finally {
             if (executorService != null) executorService.shutdown();
         }
+    }
+
+    private Method getExperimentMethod (List<Method> experimentMethods) {
+        Method chosenMethod = null;
+        if (preferredExperiment != null && experimentMethods.stream()
+                                                            .map(Method::getName)
+                                                            .anyMatch(s -> s.equals(preferredExperiment))) {
+            Map<String, Method> stringMethodMap = experimentMethods.stream()
+                                                                   .collect(Collectors.toMap(Method::getName, method -> method));
+            chosenMethod = stringMethodMap.get(preferredExperiment);
+            log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
+        }
+        if (chosenMethod == null) {
+            int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
+            chosenMethod = experimentMethods.get(index);
+        }
+        return chosenMethod;
     }
 
     public ExperimentType getExperimentType () {
