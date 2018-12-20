@@ -159,7 +159,7 @@ public abstract class Experiment {
         Map<String, String> existingMDC = MDC.getCopyOfContextMap();
         ExecutorService executorService = null;
         try {
-            executorService = Executors.newCachedThreadPool();
+            executorService = Executors.newSingleThreadExecutor();
             return executorService.submit(() -> {
                 try {
                     MDC.setContextMap(existingMDC);
