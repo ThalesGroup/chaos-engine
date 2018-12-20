@@ -136,7 +136,7 @@ public class ExperimentTest {
         doReturn(true).when(container).supportsExperimentType(STATE);
         doReturn(ContainerHealth.NORMAL).when(container).getContainerHealth(STATE);
         Future<Boolean> booleanFuture = experiment.startExperiment();
-        await().until(booleanFuture::isCancelled);
+        await().until(() -> !booleanFuture.get());
 
     }
 
@@ -166,7 +166,7 @@ public class ExperimentTest {
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
         Future<Boolean> booleanFuture = experiment.startExperiment();
-        await().until(booleanFuture::isCancelled);
+        await().until(() -> !booleanFuture.get());
         verify(notificationManager,times(1)).sendNotification(ChaosEvent.builder()
                                                                         .fromExperiment(experiment)
                                                                         .withNotificationLevel(NotificationLevel.WARN)
