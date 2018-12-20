@@ -175,7 +175,6 @@ public abstract class Experiment {
                         List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType()
                                 .getAnnotation());
                         if (experimentMethods.isEmpty()) {
-//                            throw new ChaosException("Could not find an experiment vector");
                             return Boolean.FALSE;
                         }
                         Method chosenMethod = null;
@@ -208,7 +207,6 @@ public abstract class Experiment {
                                                                            .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
                                                                            .build());
                             return Boolean.FALSE;
-//                            throw ex;
                         }
                         startTime = Instant.now();
                         experimentState = ExperimentState.STARTED;
