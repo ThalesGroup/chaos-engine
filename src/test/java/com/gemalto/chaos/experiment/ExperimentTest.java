@@ -9,15 +9,16 @@ import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.ResourceExperiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -25,6 +26,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
@@ -51,11 +53,9 @@ public class ExperimentTest {
     private Experiment stateExperiment;
     private Experiment networkExperiment;
     private Experiment resourceExperiment;
-    @Mock
+
     private StateContainer stateContainer;
-    @Mock
     private NetworkContainer networkContainer;
-    @Mock
     private ResourceContainer resourceContainer;
     @MockBean
     private NotificationManager notificationManager;
@@ -67,7 +67,9 @@ public class ExperimentTest {
     @Before
     public void setUp () {
         doReturn(STARTED).when(adminManager).getAdminState();
-
+        stateContainer = Mockito.spy(new StateContainer());
+        networkContainer = Mockito.spy(new NetworkContainer());
+        resourceContainer = Mockito.spy(new ResourceContainer());
         stateExperiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                 .withExperimentType(STATE)
                                                                 .withContainer(stateContainer)
@@ -96,8 +98,10 @@ public class ExperimentTest {
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
         doReturn(platform).when(stateContainer).getPlatform();
+        doNothing().when(stateContainer).startExperiment(stateExperiment);
         assertNull(stateExperiment.getExperimentLayer());
-        assertTrue(stateExperiment.startExperiment().get());
+        Future<Boolean> booleanFuture = stateExperiment.startExperiment();
+        await().atMost(org.awaitility.Duration.TEN_MINUTES).until(booleanFuture::get);
         assertEquals(platform, stateExperiment.getExperimentLayer());
     }
 
@@ -469,7 +473,40 @@ public class ExperimentTest {
         // breaks, there is a 1 in 2^100 chance of this passing.
         final String doAnotherThing = "doAnotherThing";
         IntStream.range(0, 100).parallel().forEach(i -> {
-            SecondStateContainer mockContainer = mock(SecondStateContainer.class);
+            SecondStateContainer mockContainer = Mockito.spy(new SecondStateContainer() {
+                @Override
+                public void doAnotherThing (Experiment experiment) {
+                }
+
+                @Override
+                public void doAThing (Experiment experiment) {
+                }
+
+                @Override
+                public Platform getPlatform () {
+                    return null;
+                }
+
+                @Override
+                protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+                    return null;
+                }
+
+                @Override
+                public String getSimpleName () {
+                    return null;
+                }
+
+                @Override
+                public DataDogIdentifier getDataDogIdentifier () {
+                    return null;
+                }
+
+                @Override
+                protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+                    return false;
+                }
+            });
             Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                           .withContainer(mockContainer)
                                                                           .withExperimentType(STATE)
@@ -480,7 +517,6 @@ public class ExperimentTest {
             doReturn(true).when(mockContainer).supportsExperimentType(STATE);
             experiment.startExperiment();
             await().until(() -> experiment.getExperimentMethod().getName().equals(doAnotherThing));
-//            assertEquals(doAnotherThing, experiment.getExperimentMethod().getName());
         });
     }
 
@@ -499,23 +535,102 @@ public class ExperimentTest {
         assertNotEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
     }
 
-    private abstract class StateContainer extends Container {
+    private class StateContainer extends Container {
         @StateExperiment
-        public abstract void doAThing (Experiment experiment);
+        public void doAThing (Experiment experiment) {
+        }
+
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
     }
 
-    private abstract class SecondStateContainer extends StateContainer {
+    private class SecondStateContainer extends StateContainer {
         @StateExperiment
-        public abstract void doAnotherThing (Experiment experiment);
+        public void doAnotherThing (Experiment experiment) {
+        }
     }
 
-    private abstract class NetworkContainer extends Container {
+    private class NetworkContainer extends Container {
         @NetworkExperiment
-        public abstract void doAThing (Experiment experiment);
+        public void doAThing (Experiment experiment) {
+        }
+
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
     }
 
-    private abstract class ResourceContainer extends Container {
+    private class ResourceContainer extends Container {
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
+
         @ResourceExperiment
-        public abstract void doAThing (Experiment experiment);
+        public void doAThing (Experiment experiment) {
+        }
     }
 }

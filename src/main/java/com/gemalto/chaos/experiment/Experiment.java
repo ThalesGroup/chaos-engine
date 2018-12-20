@@ -19,18 +19,18 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.*;
-import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -170,12 +170,8 @@ public abstract class Experiment {
                         return Boolean.FALSE;
                     }
                     if (container.supportsExperimentType(experimentType)) {
-                        List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType()
-                                .getAnnotation());
-                        if (experimentMethods.isEmpty()) {
-                            return Boolean.FALSE;
-                        }
-                        Method chosenMethod = getExperimentMethod(experimentMethods);
+                        Method chosenMethod = chooseExperimentMethod();
+                        if (chosenMethod == null) return Boolean.FALSE;
                         log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
                         setExperimentMethod(chosenMethod);
                         setExperimentLayer(container.getPlatform());
@@ -206,19 +202,25 @@ public abstract class Experiment {
             });
     }
 
-    private Method getExperimentMethod (List<Method> experimentMethods) {
+    private Method chooseExperimentMethod () {
+        Map<Class<? extends Annotation>, List<Method>> experimentMethods = container.getExperimentMethods();
+        if (!experimentMethods.keySet().contains(experimentType.getAnnotation()) || experimentMethods.get(experimentType
+                .getAnnotation()).isEmpty()) return null;
         Method chosenMethod = null;
-        if (preferredExperiment != null && experimentMethods.stream()
-                                                            .map(Method::getName)
-                                                            .anyMatch(s -> s.equals(preferredExperiment))) {
-            Map<String, Method> stringMethodMap = experimentMethods.stream()
-                                                                   .collect(Collectors.toMap(Method::getName, method -> method));
-            chosenMethod = stringMethodMap.get(preferredExperiment);
+        if (preferredExperiment != null) {
+            Optional<Method> optionalMethod = experimentMethods.values()
+                                                               .stream()
+                                                               .flatMap(Collection::stream)
+                                                               .filter(method -> method.getName()
+                                                                                       .equals(preferredExperiment))
+                                                               .findFirst();
+            chosenMethod = optionalMethod.orElse(null);
             log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
         }
         if (chosenMethod == null) {
-            int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
-            chosenMethod = experimentMethods.get(index);
+            List<Method> methods = experimentMethods.get(experimentType.getAnnotation());
+            int index = ThreadLocalRandom.current().nextInt(methods.size());
+            chosenMethod = methods.get(index);
         }
         return chosenMethod;
     }
