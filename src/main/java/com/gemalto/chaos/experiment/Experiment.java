@@ -158,48 +158,50 @@ public abstract class Experiment {
         MDC.put(DataDogConstants.DATADOG_EXPERIMENTID_KEY, getId());
         getContainer().setMappedDiagnosticContext();
         Map<String, String> existingMDC = MDC.getCopyOfContextMap();
-            return executorService.submit(() -> {
-                try {
-                    MDC.setContextMap(existingMDC);
-                    if (!adminManager.canRunExperiments()) {
-                        log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
-                        return Boolean.FALSE;
-                    }
-                    if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
-                        log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
-                        return Boolean.FALSE;
-                    }
-                    if (container.supportsExperimentType(experimentType)) {
-                        Method chosenMethod = chooseExperimentMethod();
-                        if (chosenMethod == null) return Boolean.FALSE;
-                        log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
-                        setExperimentMethod(chosenMethod);
-                        setExperimentLayer(container.getPlatform());
+        MDC.remove(DataDogConstants.DATADOG_EXPERIMENTID_KEY);
+        getContainer().clearMappedDiagnosticContext();
+        return executorService.submit(() -> {
+            try {
+                MDC.setContextMap(existingMDC);
+                if (!adminManager.canRunExperiments()) {
+                    log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
+                    return Boolean.FALSE;
+                }
+                if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
+                    log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
+                    return Boolean.FALSE;
+                }
+                if (container.supportsExperimentType(experimentType)) {
+                    Method chosenMethod = chooseExperimentMethod();
+                    if (chosenMethod == null) return Boolean.FALSE;
+                    log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
+                    setExperimentMethod(chosenMethod);
+                    setExperimentLayer(container.getPlatform());
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .fromExperiment(this)
+                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                   .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                   .build());
+                    try {
+                        container.startExperiment(this);
+                    } catch (ChaosException ex) {
                         notificationManager.sendNotification(ChaosEvent.builder()
                                                                        .fromExperiment(this)
-                                                                       .withNotificationLevel(NotificationLevel.WARN)
-                                                                       .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                       .withNotificationLevel(NotificationLevel.ERROR)
+                                                                       .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
                                                                        .build());
-                        try {
-                            container.startExperiment(this);
-                        } catch (ChaosException ex) {
-                            notificationManager.sendNotification(ChaosEvent.builder()
-                                                                           .fromExperiment(this)
-                                                                           .withNotificationLevel(NotificationLevel.ERROR)
-                                                                           .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
-                                                                           .build());
-                            return Boolean.FALSE;
-                        }
-                        startTime = Instant.now();
-                        experimentState = ExperimentState.STARTED;
-                    } else {
                         return Boolean.FALSE;
                     }
-                    return Boolean.TRUE;
-                } finally {
-                    existingMDC.keySet().forEach(MDC::remove);
+                    startTime = Instant.now();
+                    experimentState = ExperimentState.STARTED;
+                } else {
+                    return Boolean.FALSE;
                 }
-            });
+                return Boolean.TRUE;
+            } finally {
+                existingMDC.keySet().forEach(MDC::remove);
+            }
+        });
     }
 
     private Method chooseExperimentMethod () {
