@@ -15,6 +15,7 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsEmptyCollection;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -466,6 +467,45 @@ public class ExperimentManagerTest {
         doReturn(experiment1).when(experimentManager).addExperiment(experiment1);
         assertThat(experimentManager.scheduleExperiments(true), containsInAnyOrder(experiment1));
     }
+
+    @Test
+    public void asynchronousStartExperimentTest () {
+        doReturn(false).when(holidayManager).isOutsideWorkingHours();
+        doReturn(false).when(holidayManager).isHoliday();
+        CompletableFuture<Boolean> experimentAResults = new CompletableFuture<>();
+        CompletableFuture<Boolean> experimentBResults = new CompletableFuture<>();
+        Experiment experimentA = Mockito.mock(Experiment.class);
+        Experiment experimentB = Mockito.mock(Experiment.class);
+        doReturn(experimentAResults).when(experimentA).startExperiment();
+        doReturn(experimentBResults).when(experimentB).startExperiment();
+        experimentManager.addExperiment(experimentA);
+        experimentManager.addExperiment(experimentB);
+        experimentManager.startNewExperiments();
+        verify(experimentA, atLeastOnce()).startExperiment();
+        verify(experimentB, atLeastOnce()).startExperiment();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA, experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA, experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        experimentAResults.complete(true);
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+        experimentBResults.complete(false);
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+    }
+
 
     @Configuration
     static class ExperimentManagerTestConfiguration {

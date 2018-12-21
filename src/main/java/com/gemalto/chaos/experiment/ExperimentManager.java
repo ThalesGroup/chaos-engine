@@ -35,16 +35,14 @@ public class ExperimentManager {
     private HolidayManager holidayManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
-
     @Autowired
     public ExperimentManager (PlatformManager platformManager, HolidayManager holidayManager) {
         this.platformManager = platformManager;
         this.holidayManager = holidayManager;
     }
 
-    Experiment addExperiment (Experiment experiment) {
-            newExperimentQueue.add(experiment);
-        return experiment;
+    public Map<Experiment, Future<Boolean>> getStartedExperiments () {
+        return startedExperiments;
     }
 
     @Scheduled(fixedDelay = 15 * 1000)
@@ -61,7 +59,7 @@ public class ExperimentManager {
         }
     }
 
-    private void startNewExperiments () {
+    void startNewExperiments () {
         if (newExperimentQueue.isEmpty()) return;
         if (holidayManager.isHoliday() || holidayManager.isOutsideWorkingHours()) {
             log.debug("Cannot start new experiments right now: {} ", holidayManager.isHoliday() ? "public holiday" : "out of business");
@@ -77,7 +75,7 @@ public class ExperimentManager {
 
     }
 
-    private void transitionExperimentsThatHaveStarted () {
+    void transitionExperimentsThatHaveStarted () {
         Collection<Experiment> finishedStarting = startedExperiments.entrySet()
                                                                     .stream()
                                                                     .filter(experimentFutureEntry -> experimentFutureEntry
@@ -184,6 +182,11 @@ public class ExperimentManager {
 
         }
         return Collections.emptySet();
+    }
+
+    Experiment addExperiment (Experiment experiment) {
+        newExperimentQueue.add(experiment);
+        return experiment;
     }
 
     Collection<Experiment> getActiveExperiments () {
