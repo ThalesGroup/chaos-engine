@@ -61,6 +61,10 @@ public abstract class Experiment {
     @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
 
+    Boolean isSelfHealingRequired () {
+        return getExperimentState() == ExperimentState.FINISHED ? getSelfHealingCounter().get() > 0 : null;
+    }
+
     public void setPreferredExperiment (String preferredExperiment) {
         this.preferredExperiment = preferredExperiment;
     }
@@ -206,7 +210,8 @@ public abstract class Experiment {
         return experimentType;
     }
 
-    ExperimentState getExperimentState () {
+    @JsonIgnore
+    public ExperimentState getExperimentState () {
         experimentState = checkExperimentState();
         if (experimentState == ExperimentState.FAILED || experimentState == ExperimentState.FINISHED) {
             setEndTime();
