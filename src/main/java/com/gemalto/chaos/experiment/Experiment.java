@@ -61,7 +61,7 @@ public abstract class Experiment {
     @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
 
-    public Boolean isSelfHealingRequired () {
+    Boolean isSelfHealingRequired () {
         return getExperimentState() == ExperimentState.FINISHED ? getSelfHealingCounter().get() > 0 : null;
     }
 
