@@ -210,7 +210,8 @@ public abstract class Experiment {
         return experimentType;
     }
 
-    ExperimentState getExperimentState () {
+    @JsonIgnore
+    public ExperimentState getExperimentState () {
         experimentState = checkExperimentState();
         if (experimentState == ExperimentState.FAILED || experimentState == ExperimentState.FINISHED) {
             setEndTime();

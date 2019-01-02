@@ -492,6 +492,15 @@ public class ExperimentTest {
         assertNotEquals(EXPERIMENT_METHOD_NOT_SET_YET,stateExperiment.getExperimentMethodName());
     }
 
+    @Test
+    public void isSelfHealingRequired () {
+        doReturn(new AtomicInteger(0), new AtomicInteger(1)).when(networkExperiment).getSelfHealingCounter();
+        doReturn(ExperimentState.STARTED, ExperimentState.FINISHED).when(networkExperiment).getExperimentState();
+        assertNull("When Experiment State is not FINISHED, should return null", networkExperiment.isSelfHealingRequired());
+        assertFalse("If the Self Healing Counter is zero, should return False", networkExperiment.isSelfHealingRequired());
+        assertTrue("If the Self Healing Counter is one, should return true", networkExperiment.isSelfHealingRequired());
+    }
+
     private abstract class StateContainer extends Container {
         @StateExperiment
         public abstract void doAThing (Experiment experiment);
