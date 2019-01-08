@@ -544,7 +544,7 @@ public class ExperimentTest {
         assertTrue("If the Self Healing Counter is one, should return true", networkExperiment.isSelfHealingRequired());
     }
 
-    private abstract class StateContainer extends Container {
+    private class StateContainer extends Container {
         @StateExperiment
         public void doAThing (Experiment experiment) {
         }
