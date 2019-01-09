@@ -20,7 +20,7 @@ public class ExperimentController {
 
     @ApiOperation(value = "Get Experiments", notes = "Returns a list of all active experiments.")
     @GetMapping
-    public Set<Experiment> getExperiments () {
+    public Collection<Experiment> getExperiments () {
         return experimentManager.getActiveExperiments();
     }
 

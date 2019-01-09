@@ -14,12 +14,15 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.validation.constraints.NotNull;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -199,5 +202,12 @@ public abstract class Container implements ExperimentalObject {
 
     public void clearMappedDiagnosticContext () {
         dataDogTags.keySet().forEach(MDC::remove);
+    }
+
+    @JsonIgnore
+    public Map<Class<? extends Annotation>, List<Method>> getExperimentMethods () {
+        return Arrays.stream(ExperimentType.values())
+                     .map(ExperimentType::getAnnotation)
+                     .collect(Collectors.toMap(Function.identity(), (k) -> getMethodsWithAnnotation(this.getClass(), k)));
     }
 }

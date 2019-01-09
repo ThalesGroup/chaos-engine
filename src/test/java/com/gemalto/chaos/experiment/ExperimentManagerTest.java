@@ -15,6 +15,7 @@ import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.hamcrest.collection.IsEmptyCollection;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -28,6 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -112,8 +114,8 @@ public class ExperimentManagerTest {
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
-        when(experiment1.startExperiment()).thenReturn(true);
-        when(experiment2.startExperiment()).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -121,7 +123,7 @@ public class ExperimentManagerTest {
         experimentManager.scheduleExperiments();
         Collection<Experiment> experiments = experimentManager.getNewExperimentQueue();
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        Collection<Experiment> activeExperiments = experimentManager.getActiveExperiments();
         int activeExperimentsCount = activeExperiments.size();
         assertEquals(0, activeExperimentsCount);
     }
@@ -157,9 +159,9 @@ public class ExperimentManagerTest {
         when(container3.canExperiment()).thenReturn(true);
         when(container3.createExperiment()).thenReturn(experiment3);
         when(container3.getPlatform()).thenReturn(cloudFoundryContainerPlatform);
-        when(experiment1.startExperiment()).thenReturn(true);
-        when(experiment2.startExperiment()).thenReturn(true);
-        when(experiment3.startExperiment()).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment3.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(experiment3.getContainer()).thenReturn(container3);
@@ -173,7 +175,7 @@ public class ExperimentManagerTest {
         // new scheduleExperiments invocation should not add new experiment until newExperimentQueue is empty
         assertEquals(experiments, experiments2);
         experimentManager.updateExperimentStatus();
-        Set<Experiment> activeExperiments = experimentManager.getActiveExperiments();
+        Collection<Experiment> activeExperiments = experimentManager.getActiveExperiments();
         int activeExperimentsCount = activeExperiments.size();
         //number active experiments should be equal to number of previously scheduled experiments
         assertEquals(scheduledExperimentsCount, activeExperimentsCount);
@@ -200,8 +202,8 @@ public class ExperimentManagerTest {
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
-        when(experiment1.startExperiment()).thenReturn(true);
-        when(experiment2.startExperiment()).thenReturn(true);
+        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -465,6 +467,45 @@ public class ExperimentManagerTest {
         doReturn(experiment1).when(experimentManager).addExperiment(experiment1);
         assertThat(experimentManager.scheduleExperiments(true), containsInAnyOrder(experiment1));
     }
+
+    @Test
+    public void asynchronousStartExperimentTest () {
+        doReturn(false).when(holidayManager).isOutsideWorkingHours();
+        doReturn(false).when(holidayManager).isHoliday();
+        CompletableFuture<Boolean> experimentAResults = new CompletableFuture<>();
+        CompletableFuture<Boolean> experimentBResults = new CompletableFuture<>();
+        Experiment experimentA = Mockito.mock(Experiment.class);
+        Experiment experimentB = Mockito.mock(Experiment.class);
+        doReturn(experimentAResults).when(experimentA).startExperiment();
+        doReturn(experimentBResults).when(experimentB).startExperiment();
+        experimentManager.addExperiment(experimentA);
+        experimentManager.addExperiment(experimentB);
+        experimentManager.startNewExperiments();
+        verify(experimentA, atLeastOnce()).startExperiment();
+        verify(experimentB, atLeastOnce()).startExperiment();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA, experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA, experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        experimentAResults.complete(true);
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentB));
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+        experimentBResults.complete(false);
+        experimentManager.transitionExperimentsThatHaveStarted();
+        assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getStartedExperiments()
+                                    .keySet(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+    }
+
 
     @Configuration
     static class ExperimentManagerTestConfiguration {

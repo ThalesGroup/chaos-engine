@@ -29,6 +29,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.EXPERIMENT_METHOD_NOT_SET_YET;
 import static java.util.UUID.randomUUID;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
@@ -116,6 +117,8 @@ public class ExperimentControllerTest {
         doReturn(true).when(adminManager).canRunExperiments();
         experiment1.startExperiment();
         experiment2.startExperiment();
+        await().until(() -> experiment1.getExperimentMethod() != null);
+        await().until(() -> experiment2.getExperimentMethod() != null);
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
