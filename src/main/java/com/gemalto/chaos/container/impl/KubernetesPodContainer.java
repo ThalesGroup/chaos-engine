@@ -9,8 +9,6 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import io.kubernetes.client.models.V1Pod;
-import org.apache.commons.collections.CollectionUtils;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -31,16 +29,6 @@ public class KubernetesPodContainer extends Container {
 
     public static KubernetesPodContainerBuilder builder () {
         return KubernetesPodContainerBuilder.aKubernetesPodContainer();
-    }
-
-    public static KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod, KubernetesPlatform platform) {
-        return new KubernetesPodContainerBuilder().withPodName(pod.getMetadata().getName())
-                                                  .withNamespace(pod.getMetadata().getNamespace())
-                                                  .withLabels(pod.getMetadata().getLabels())
-                                                  .withKubernetesPlatform(platform)
-                                                  .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata()
-                                                                                                      .getOwnerReferences()))
-                                                  .build();
     }
 
     public String getPodName () {
@@ -100,7 +88,7 @@ public class KubernetesPodContainer extends Container {
         private boolean isBackedByController = false;
         private KubernetesPlatform kubernetesPlatform;
 
-        private KubernetesPodContainerBuilder () {
+        public KubernetesPodContainerBuilder () {
         }
 
         static KubernetesPodContainerBuilder aKubernetesPodContainer () {

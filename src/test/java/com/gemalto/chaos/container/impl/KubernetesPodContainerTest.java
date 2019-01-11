@@ -4,10 +4,6 @@ import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1ObjectMetaBuilder;
-import io.kubernetes.client.models.V1OwnerReferenceBuilder;
-import io.kubernetes.client.models.V1Pod;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +14,10 @@ import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.UUID.randomUUID;
 import static junit.framework.TestCase.assertEquals;
@@ -53,7 +52,7 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void stopContainer () throws Exception {
+    public void stopContainer () {
         kubernetesPodContainer.stopContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
@@ -61,31 +60,11 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void testCreationFromAPI () throws Exception {
-        KubernetesPodContainer container = KubernetesPodContainer.fromKubernetesAPIPod(getV1Pod(true), kubernetesPlatform);
-        assertEquals(NAME, container.getPodName());
-        assertEquals(NAMESPACE_NAME, container.getNamespace());
-    }
-
-    private static final V1Pod getV1Pod (boolean isBackedByController) {
-        List ownerReferences = new ArrayList<>();
-        if (isBackedByController) {
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withName(NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        return pod;
-    }
-
-    @Test
     public void getSimpleName () {
         String EXPECTED_NAME = String.format("%s (%s)", NAME, NAMESPACE_NAME);
         assertEquals(EXPECTED_NAME, kubernetesPodContainer.getSimpleName());
+        assertEquals(NAME, kubernetesPodContainer.getPodName());
+        assertEquals(NAMESPACE_NAME, kubernetesPodContainer.getNamespace());
     }
 
     @Test

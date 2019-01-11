@@ -1,44 +1,59 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.apis.CoreApi;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.*;
+import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class KubernetesPlatformTest {
+    private static final String POD_NAME = "mypod";
+    private static final String NAMESPACE_NAME = "mynamespace";
+
     @Mock
     private CoreV1Api coreV1Api;
     @Mock
     private CoreApi coreApi;
-    @Mock
+    @MockBean
     private ApiClient client;
-    @InjectMocks
-    private KubernetesPlatform platform = new KubernetesPlatform(client);
+    @SpyBean
+    private ContainerManager containerManager;
+    @Autowired
+    private KubernetesPlatform platform;
 
     @Before
     public void setup () {
-        platform = spy(platform);
+        platform.setCoreV1Api(coreV1Api);
+        platform.setCoreApi(coreApi);
     }
 
     @Test
@@ -46,23 +61,6 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(false));
         assertEquals(1, platform.getRoster().size());
         assertEquals(false, platform.getRoster().get(0).canExperiment());
-    }
-
-    private static final V1PodList getV1PodList (boolean isBackedByController) {
-        List ownerReferences = new ArrayList<>();
-        if (isBackedByController) {
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withName("mypod")
-                                                         .withNamespace("mynamespace")
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        V1PodList list = new V1PodList();
-        list.addItemsItem(pod);
-        return list;
     }
 
     @Test
@@ -142,6 +140,15 @@ public class KubernetesPlatformTest {
     }
 
     @Test
+    public void testStopContainerJSONSyntaxException () throws ApiException {
+        when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
+        when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new JsonSyntaxException(""));
+        boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
+        assertEquals(true, result);
+        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     public void testRoasterWithAPIException () throws ApiException {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
         assertEquals(0, platform.getRoster().size());
@@ -150,5 +157,46 @@ public class KubernetesPlatformTest {
     @Test
     public void getGetPlatformLevel () {
         assertEquals(PlatformLevel.PAAS, platform.getPlatformLevel());
+    }
+
+    private static final V1PodList getV1PodList (boolean isBackedByController) {
+        List ownerReferences = new ArrayList<>();
+        if (isBackedByController) {
+            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
+        }
+        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withName(POD_NAME)
+                                                         .withNamespace(NAMESPACE_NAME)
+                                                         .withLabels(new HashMap<>())
+                                                         .withOwnerReferences(ownerReferences)
+                                                         .build();
+        V1Pod pod = new V1Pod();
+        pod.setMetadata(metadata);
+        V1PodList list = new V1PodList();
+        list.addItemsItem(pod);
+        return list;
+    }
+
+    @Test
+    public void testCreationFromAPI () throws Exception {
+        KubernetesPodContainer container = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
+        TestCase.assertEquals(POD_NAME, container.getPodName());
+        TestCase.assertEquals(NAMESPACE_NAME, container.getNamespace());
+        verify(containerManager, times(1)).offer(container);
+        KubernetesPodContainer container2 = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
+        verify(containerManager, times(1)).offer(container);
+        assertSame(container, container2);
+    }
+
+    @Configuration
+    static class ContextConfiguration {
+        @Autowired
+        private ApiClient apiClient;
+        @Autowired
+        private ContainerManager containerManager;
+
+        @Bean
+        KubernetesPlatform kubernetesPlatform () {
+            return Mockito.spy(new KubernetesPlatform(apiClient));
+        }
     }
 }
