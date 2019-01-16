@@ -4,6 +4,7 @@ import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
+import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +22,8 @@ import java.util.Optional;
 
 import static java.util.UUID.randomUUID;
 import static junit.framework.TestCase.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -57,6 +60,12 @@ public class KubernetesPodContainerTest {
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(kubernetesPlatform, times(1)).stopInstance(ArgumentMatchers.any());
+    }
+
+    @Test
+    public void forkBomb () {
+        kubernetesPodContainer.forkBomb(experiment);
+        Mockito.verify(kubernetesPlatform, times(1)).sshExperiment(any(ForkBomb.class), eq(kubernetesPodContainer));
     }
 
     @Test

@@ -12,14 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class SshExperiment {
-    private static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
+    protected static final Logger log = LoggerFactory.getLogger(SshExperiment.class);
     public static final String DEFAULT_UPLOAD_PATH = "/tmp/";
     private String experimentName;
     private String experimentScript;
     protected List<ShellSessionCapability> requiredCapabilities = new ArrayList<>();
     private List<ShellSessionCapability> detectedCapabilities;
-    private SshManager sshManager;
-    private ShResourceService shResourceService;
+    protected SshManager sshManager;
+    protected ShResourceService shResourceService;
 
     protected abstract void buildRequiredCapabilities ();
 

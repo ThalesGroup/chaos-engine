@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -8,10 +9,15 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
+import com.gemalto.chaos.ssh.KubernetesSshExperiment;
+import com.gemalto.chaos.ssh.SshExperiment;
+import com.gemalto.chaos.ssh.impl.KubernetesSshManager;
+import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
+import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.CoreApi;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1DeleteOptions;
@@ -39,8 +45,11 @@ public class KubernetesPlatform extends Platform {
     private static final Set<String> PROTECTED_NAMESPACES = new HashSet<>(Arrays.asList("kube-system"));
     @Autowired
     private ContainerManager containerManager;
+    @Autowired
+    private ShResourceService shResourceService;
     private CoreApi coreApi;
     private CoreV1Api coreV1Api;
+    private Exec exec;
 
     @Autowired
     public KubernetesPlatform () throws IOException {
@@ -55,6 +64,7 @@ public class KubernetesPlatform extends Platform {
         Configuration.setDefaultApiClient(client);
         setCoreApi(new CoreApi());
         setCoreV1Api(new CoreV1Api());
+        setExec(new Exec());
     }
 
     public void setCoreApi (CoreApi coreApi) {
@@ -63,6 +73,10 @@ public class KubernetesPlatform extends Platform {
 
     public void setCoreV1Api (CoreV1Api coreV1Api) {
         this.coreV1Api = coreV1Api;
+    }
+
+    public void setExec (Exec exec) {
+        this.exec = exec;
     }
 
     public boolean stopInstance (KubernetesPodContainer instance) {
@@ -76,6 +90,18 @@ public class KubernetesPlatform extends Platform {
             return false;
         }
         return true;
+    }
+
+    public void sshExperiment (SshExperiment experiment, KubernetesPodContainer container) {
+        try {
+            KubernetesSshExperiment.fromExperiment(experiment)
+                                   .setExec(exec)
+                                   .setSshManager(new KubernetesSshManager(container.getPodName(), container.getNamespace()))
+                                   .setShResourceService(shResourceService)
+                                   .runExperiment();
+        } catch (IOException e) {
+            throw new ChaosException(e);
+        }
     }
 
     public ContainerHealth checkHealth (KubernetesPodContainer instance) {

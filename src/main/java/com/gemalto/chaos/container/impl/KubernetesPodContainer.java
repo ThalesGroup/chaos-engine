@@ -9,6 +9,7 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
+import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -78,6 +79,11 @@ public class KubernetesPodContainer extends Container {
         experiment.setCheckContainerHealth(() -> {
             return ContainerHealth.NORMAL;
         });
+    }
+
+    @StateExperiment
+    public void forkBomb (Experiment experiment) {
+        kubernetesPlatform.sshExperiment(new ForkBomb(), this);
     }
 
     public static final class KubernetesPodContainerBuilder {
