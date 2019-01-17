@@ -55,7 +55,7 @@ public class ChaosEvent {
     }
 
     @JsonIgnore
-    Map<Object, Object> asMap () {
+    public Map<Object, Object> asMap () {
         return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
     }
 
