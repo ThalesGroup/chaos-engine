@@ -57,6 +57,7 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract Platform getPlatform ();
 
+    @JsonIgnore
     public List<ExperimentType> getSupportedExperimentTypes () {
         return supportedExperimentTypes;
     }

@@ -1,5 +1,7 @@
 package com.gemalto.chaos.notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -8,6 +10,7 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Date;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public class ChaosEvent {
@@ -49,6 +52,11 @@ public class ChaosEvent {
 
     public String getMessage () {
         return message;
+    }
+
+    @JsonIgnore
+    Map<Object, Object> asMap () {
+        return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
     }
 
     @Override
