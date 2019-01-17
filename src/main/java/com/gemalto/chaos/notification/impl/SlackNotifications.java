@@ -15,10 +15,9 @@ import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.gemalto.chaos.constants.DataDogConstants.SLACK_NOTIFICATION_SERVER_RESPONSE_KEY;
@@ -27,20 +26,23 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
-    protected static final Integer MAXIMUM_ATTACHMENTS = 20;
+    static final Integer MAXIMUM_ATTACHMENTS = 20;
+    static final String TITLE = "Message";
+    static final String AUTHOR_NAME = "Chaos Event Trace";
+    static final String EXPERIMENT_ID = "Experiment ID";
+    static final String TARGET = "Target";
+    static final String EXPERIMENT_METHOD = "Method";
+    static final String EXPERIMENT_TYPE = "Type";
+    static final String PLATFORM_LAYER = "Platform Layer";
+    static final String RAW_EVENT = "Raw Event";
+    static final String FOOTER_PREFIX = "Chaos Engine - ";
+    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<NotificationLevel, String>(NotificationLevel.class) {{
+        put(NotificationLevel.GOOD, "good");
+        put(NotificationLevel.WARN, "warning");
+    }};
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-
-    protected static final String TITLE = "Message";
-    protected static final String AUTHOR_NAME = "Chaos Event Trace";
-    protected static final String EXPERIMENT_ID = "Experiment ID";
-    protected static final String TARGET = "Target";
-    protected static final String EXPERIMENT_METHOD = "Method";
-    protected static final String EXPERIMENT_TYPE = "Type";
-    protected static final String PLATFORM_LAYER = "Platform Layer";
-    protected static final String RAW_EVENT = "Raw Event";
-    protected static final String FOOTER_PREFIX = "Chaos Engine - ";
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -103,18 +105,11 @@ public class SlackNotifications extends BufferedNotificationMethod {
                               .build();
     }
 
-    protected String getSlackNotificationColor (NotificationLevel notificationLevel) {
-        switch (notificationLevel) {
-            case GOOD:
-                return "good";
-            case WARN:
-                return "warning";
-            default:
-                return "danger";
-        }
+    String getSlackNotificationColor (NotificationLevel notificationLevel) {
+        return Optional.ofNullable(slackNotificationColorMap.get(notificationLevel)).orElse("danger");
     }
 
-    protected void sendSlackMessage (SlackMessage slackMessage) throws IOException {
+    void sendSlackMessage (SlackMessage slackMessage) throws IOException {
         String payload = new Gson().toJson(slackMessage);
         try {
             log.debug("Sending slack notification");
@@ -125,13 +120,13 @@ public class SlackNotifications extends BufferedNotificationMethod {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             OutputStream outputStream = connection.getOutputStream();
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"))) {
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
                 bufferedWriter.write(payload);
                 bufferedWriter.flush();
             } catch (Exception e) {
                 log.error("Unknown exception sending payload " + payload, e);
             }
-            BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
             log.debug("Slack notification status: {}", keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE_KEY, response.readLine()));
             if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
                 throw new IOException("Unexpected response from server");
@@ -197,14 +192,14 @@ class SlackAttachment {
     private String fallback;
     private List<Field> fields;
 
+    static SlackAttachmentBuilder builder () {
+        return new SlackAttachmentBuilder();
+    }
+
     public enum MarkupOpts {
         fields,
         text,
         pretext,
-    }
-
-    static SlackAttachmentBuilder builder () {
-        return new SlackAttachmentBuilder();
     }
 
     public static final class SlackAttachmentBuilder {
