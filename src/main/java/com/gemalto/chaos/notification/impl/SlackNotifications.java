@@ -9,19 +9,18 @@ import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.NotNull;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static com.gemalto.chaos.constants.DataDogConstants.SLACK_NOTIFICATION_SERVER_RESPONSE_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
@@ -110,30 +109,13 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     void sendSlackMessage (SlackMessage slackMessage) throws IOException {
-        String payload = new Gson().toJson(slackMessage);
-        try {
-            log.debug("Sending slack notification");
-            URL url = new URL(webhookUri);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-            OutputStream outputStream = connection.getOutputStream();
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
-                bufferedWriter.write(payload);
-                bufferedWriter.flush();
-            } catch (Exception e) {
-                log.error("Unknown exception sending payload " + payload, e);
-            }
-            BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
-            log.debug("Slack notification status: {}", keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE_KEY, response.readLine()));
-            if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
-                throw new IOException("Unexpected response from server");
-            }
-        } catch (IOException e) {
-            log.debug("Failed to send payload: " + payload, e);
-            throw e;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> httpEntity = new HttpEntity<>(new Gson().toJson(slackMessage), headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IOException("unexpected response from server");
         }
     }
 }
