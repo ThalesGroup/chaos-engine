@@ -1,11 +1,11 @@
 package com.gemalto.chaos.notification.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.util.HttpUtils;
-import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,10 +35,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     static final String PLATFORM_LAYER = "Platform Layer";
     static final String RAW_EVENT = "Raw Event";
     static final String FOOTER_PREFIX = "Chaos Engine - ";
-    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<NotificationLevel, String>(NotificationLevel.class) {{
-        put(NotificationLevel.GOOD, "good");
-        put(NotificationLevel.WARN, "warning");
-    }};
+    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<NotificationLevel, String>(NotificationLevel.class);
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
@@ -48,6 +45,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
         super();
         this.webhookUri = webhookUri;
         this.hostname = HttpUtils.getMachineHostname();
+        slackNotificationColorMap.put(NotificationLevel.GOOD, "good");
+        slackNotificationColorMap.put(NotificationLevel.WARN, "warning");
+
         log.info("Created Slack notification manager against {}", this.webhookUri);
     }
 
@@ -112,7 +112,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> httpEntity = new HttpEntity<>(new Gson().toJson(slackMessage), headers);
+        HttpEntity<String> httpEntity = new HttpEntity<>(new ObjectMapper().writeValueAsString(slackMessage), headers);
         ResponseEntity<String> response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IOException("unexpected response from server");
@@ -120,14 +120,20 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 }
 
-@SuppressWarnings("unused")
-        // Variables are used as part of Gson, despite appearing unused.
 class SlackMessage {
     private String text;
     private List<SlackAttachment> attachments;
 
     static SlackMessageBuilder builder () {
         return new SlackMessageBuilder();
+    }
+
+    public String getText () {
+        return text;
+    }
+
+    public List<SlackAttachment> getAttachments () {
+        return attachments;
     }
 
     static final class SlackMessageBuilder {
@@ -176,6 +182,46 @@ class SlackAttachment {
 
     static SlackAttachmentBuilder builder () {
         return new SlackAttachmentBuilder();
+    }
+
+    public String getPretext () {
+        return pretext;
+    }
+
+    public String getAuthor_name () {
+        return author_name;
+    }
+
+    public String getTitle () {
+        return title;
+    }
+
+    public String getTitle_link () {
+        return title_link;
+    }
+
+    public String getText () {
+        return text;
+    }
+
+    public String getColor () {
+        return color;
+    }
+
+    public String getFooter () {
+        return footer;
+    }
+
+    public Long getTs () {
+        return ts;
+    }
+
+    public String getFallback () {
+        return fallback;
+    }
+
+    public List<Field> getFields () {
+        return fields;
     }
 
     public enum MarkupOpts {
@@ -296,5 +342,17 @@ class Field {
         this.title = title;
         this.value = value;
         this.Short = Short;
+    }
+
+    public String getTitle () {
+        return title;
+    }
+
+    public String getValue () {
+        return value;
+    }
+
+    public boolean isShort () {
+        return Short;
     }
 }
