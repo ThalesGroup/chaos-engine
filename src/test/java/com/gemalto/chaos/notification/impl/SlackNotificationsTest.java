@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static com.gemalto.chaos.notification.impl.SlackNotifications.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -161,5 +162,48 @@ public class SlackNotificationsTest {
             slackNotifications.logEvent(chaosEvent);
         }
         verify(slackNotifications, times(1)).flushBuffer();
+    }
+
+    @Test
+    public void ExtendedChaosEventTest () throws IOException {
+        ChaosEvent x = new ChaosEvent() {
+            public String getNewField () {
+                return "12345";
+            }
+
+            @Override
+            public ExperimentType getExperimentType () {
+                return ExperimentType.STATE;
+            }
+
+            @Override
+            public NotificationLevel getNotificationLevel () {
+                return NotificationLevel.GOOD;
+            }
+
+            @Override
+            public Container getTargetContainer () {
+                return container;
+            }
+
+            @Override
+            public Date getChaosTime () {
+                return Date.from(Instant.now());
+            }
+        };
+        ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
+        slackNotifications.logEvent(x);
+        slackNotifications.flushBuffer();
+        verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
+        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
+        SlackMessage actualSlackMessage = slackMessages.get(0);
+        assertTrue(actualSlackMessage.getAttachments()
+                                     .stream()
+                                     .anyMatch(slackAttachment -> slackAttachment.getFields()
+                                                                                 .stream()
+                                                                                 .anyMatch(field -> field.getTitle()
+                                                                                                         .equals("New Field") && field
+                                                                                         .getValue()
+                                                                                         .equals("12345"))));
     }
 }

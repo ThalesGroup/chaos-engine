@@ -6,6 +6,7 @@ import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.util.HttpUtils;
+import com.gemalto.chaos.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -107,7 +108,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
                   .entrySet()
                   .stream()
                   .filter(e -> !knownChaosEventFields.contains(e.getKey().toString()))
-                  .forEach(e -> builder.withField(e.getKey().toString(), e.getValue().toString()));
+                  .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                          .toString()), e.getValue()
+                                                                                                         .toString()));
         return builder.build();
     }
 
