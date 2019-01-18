@@ -1,10 +1,11 @@
 package com.gemalto.chaos.notification.impl;
 
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
-import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.util.HttpUtils;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
@@ -38,7 +39,7 @@ public class SlackNotificationsTest {
     private SlackMessage expectedSlackMessage;
     private static final String OK_RESPONSE = "ok";
     @Mock
-    private Platform platform;
+    private AwsEC2Platform platform;
     @Mock
     private Container container;
     private String experimentId = UUID.randomUUID().toString();
@@ -57,6 +58,11 @@ public class SlackNotificationsTest {
     @Before
     public void setUp () throws Exception {
         setupMockServer();
+        container = AwsEC2Container.builder()
+                                   .name(UUID.randomUUID().toString())
+                                   .awsEC2Platform(platform)
+                                   .instanceId(UUID.randomUUID().toString())
+                                   .build();
         slackNotifications = Mockito.spy(new SlackNotifications(slack_webhookuri));
         chaosEvent = ChaosEvent.builder()
                                .withMessage(message)
@@ -68,8 +74,6 @@ public class SlackNotificationsTest {
                                .withExperimentType(ExperimentType.STATE)
                                .withChaosTime(Date.from(Instant.now()))
                                .build();
-        when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
-        when(container.getPlatform()).thenReturn(platform);
         when(platform.getPlatformType()).thenReturn("TYPE");
         SlackAttachment slackAttachment = SlackAttachment.builder()
                                                          .withFallback(chaosEvent.toString())
