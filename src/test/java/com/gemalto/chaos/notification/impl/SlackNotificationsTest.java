@@ -1,5 +1,6 @@
 package com.gemalto.chaos.notification.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -7,7 +8,6 @@ import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.util.HttpUtils;
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -50,6 +50,8 @@ public class SlackNotificationsTest {
     private HttpServer slackServerMock;
     private Integer slackServerPort;
     private int responseCode = 200;
+    private ObjectMapper mapper = new ObjectMapper();
+
 
     @After
     public void tearDown () {
@@ -131,8 +133,8 @@ public class SlackNotificationsTest {
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
-        String expectedPayload = new Gson().toJson(expectedSlackMessage);
-        String actualPayload = new Gson().toJson(actualSlackMessage);
+        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
 
@@ -142,8 +144,8 @@ public class SlackNotificationsTest {
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
-        String expectedPayload = new Gson().toJson(expectedSlackMessage);
-        String actualPayload = new Gson().toJson(actualSlackMessage);
+        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
 
