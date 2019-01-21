@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import static com.gemalto.chaos.notification.impl.SlackNotifications.*;
@@ -131,8 +130,7 @@ public class SlackNotificationsTest {
         slackNotifications.logEvent(chaosEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
-        SlackMessage actualSlackMessage = slackMessages.get(0);
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
         String expectedPayload = new Gson().toJson(expectedSlackMessage);
         String actualPayload = new Gson().toJson(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
@@ -143,8 +141,7 @@ public class SlackNotificationsTest {
         slackNotifications.sendNotification(chaosEvent);
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
-        SlackMessage actualSlackMessage = slackMessages.get(0);
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
         String expectedPayload = new Gson().toJson(expectedSlackMessage);
         String actualPayload = new Gson().toJson(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
@@ -196,8 +193,7 @@ public class SlackNotificationsTest {
         slackNotifications.logEvent(x);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
-        SlackMessage actualSlackMessage = slackMessages.get(0);
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
         assertTrue(actualSlackMessage.getAttachments()
                                      .stream()
                                      .anyMatch(slackAttachment -> slackAttachment.getFields()
