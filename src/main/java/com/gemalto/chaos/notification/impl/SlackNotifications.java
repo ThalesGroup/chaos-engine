@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.NotNull;
@@ -121,9 +122,14 @@ public class SlackNotifications extends BufferedNotificationMethod {
     void sendSlackMessage (SlackMessage slackMessage) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+        ResponseEntity<String> response;
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> httpEntity = new HttpEntity<>(new ObjectMapper().writeValueAsString(slackMessage), headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
+        try {
+            response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
+        } catch (HttpServerErrorException e) {
+            throw new IOException("unexpected response from server");
+        }
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IOException("unexpected response from server");
         }

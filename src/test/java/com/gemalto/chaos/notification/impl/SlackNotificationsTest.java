@@ -50,6 +50,7 @@ public class SlackNotificationsTest {
     private String slack_webhookuri;
     private HttpServer slackServerMock;
     private Integer slackServerPort;
+    private int responseCode = 200;
 
     @After
     public void tearDown () {
@@ -111,13 +112,13 @@ public class SlackNotificationsTest {
         slack_webhookuri = "http://localhost:" + slackServerPort;
     }
 
-    private class SlackHandler implements HttpHandler {
-        @Override
-        public void handle (HttpExchange httpExchange) throws IOException {
-            httpExchange.sendResponseHeaders(200, OK_RESPONSE.length());
-            OutputStream os = httpExchange.getResponseBody();
-            os.write(OK_RESPONSE.getBytes());
-            os.close();
+    @Test(expected = IOException.class)
+    public void slackIOExceptionTest () throws IOException {
+        try {
+            responseCode = 500;
+            slackNotifications.sendNotification(chaosEvent);
+        } finally {
+            responseCode = 200;
         }
     }
 
@@ -205,5 +206,15 @@ public class SlackNotificationsTest {
                                                                                                          .equals("New Field") && field
                                                                                          .getValue()
                                                                                          .equals("12345"))));
+    }
+
+    private class SlackHandler implements HttpHandler {
+        @Override
+        public void handle (HttpExchange httpExchange) throws IOException {
+            httpExchange.sendResponseHeaders(responseCode, OK_RESPONSE.length());
+            OutputStream os = httpExchange.getResponseBody();
+            os.write(OK_RESPONSE.getBytes());
+            os.close();
+        }
     }
 }
