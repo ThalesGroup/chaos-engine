@@ -419,13 +419,17 @@ public class AwsEC2PlatformTest {
     @Test
     public void generateSearchFilters () {
         Map<String, List<String>> filterConfig = new HashMap<>();
-        filterConfig.put("Filter1", Collections.singletonList("Value1"));
-        filterConfig.put("Filter2", asList("Value2a", "Value2b"));
+        filterConfig.put("tag.Filter1", Collections.singletonList("Value1"));
+        filterConfig.put("tag.Filter2", asList("Value2a", "Value2b"));
+        filterConfig.put("keyName", Collections.singletonList("keyValue1"));
+        filterConfig.put("KeyName", Collections.singletonList("keyValue2"));
         Filter filter1 = new Filter("tag:Filter1", Collections.singletonList("Value1"));
         Filter filter2 = new Filter("tag:Filter2", asList("Value2a", "Value2b"));
+        Filter filter3 = new Filter("key-name", Collections.singletonList("keyValue1"));
+        Filter filter4 = new Filter("key-name", Collections.singletonList("keyValue2"));
         awsEC2Platform.setFilter(filterConfig);
         Collection<Filter> filters = awsEC2Platform.generateSearchFilters();
-        assertThat(filters, containsInAnyOrder(filter1, filter2));
+        assertThat(filters, containsInAnyOrder(filter1, filter2, filter3, filter4));
     }
 
     @Configuration

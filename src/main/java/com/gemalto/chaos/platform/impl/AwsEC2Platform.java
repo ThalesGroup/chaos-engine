@@ -156,11 +156,19 @@ public class AwsEC2Platform extends Platform {
     }
 
     Collection<Filter> generateSearchFilters () {
-        return filter.entrySet()
-                     .stream()
-                     .map(filterEntry -> new Filter().withName("tag:" + filterEntry.getKey())
-                                                     .withValues(filterEntry.getValue()))
+        return filter.entrySet().stream().map(this::createFilterFromEntry)
                      .collect(Collectors.toSet());
+    }
+
+    private Filter createFilterFromEntry (Map.Entry<String, List<String>> entry) {
+        Filter newFilter = new Filter().withValues(entry.getValue());
+        String name = entry.getKey();
+        if (name.startsWith("tag.")) {
+            newFilter.setName("tag:" + name.substring(4));
+        } else {
+            newFilter.setName(name.replaceAll("(?<!^)([A-Z])", "-$1").toLowerCase());
+        }
+        return newFilter;
     }
 
     private Stream<Instance> getInstanceStream () {
