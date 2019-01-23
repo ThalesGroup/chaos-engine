@@ -1,12 +1,13 @@
 package com.gemalto.chaos.notification.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
-import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.util.HttpUtils;
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -24,11 +25,11 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import static com.gemalto.chaos.notification.impl.SlackNotifications.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -38,7 +39,7 @@ public class SlackNotificationsTest {
     private SlackMessage expectedSlackMessage;
     private static final String OK_RESPONSE = "ok";
     @Mock
-    private Platform platform;
+    private AwsEC2Platform platform;
     @Mock
     private Container container;
     private String experimentId = UUID.randomUUID().toString();
@@ -48,6 +49,9 @@ public class SlackNotificationsTest {
     private String slack_webhookuri;
     private HttpServer slackServerMock;
     private Integer slackServerPort;
+    private int responseCode = 200;
+    private ObjectMapper mapper = new ObjectMapper();
+
 
     @After
     public void tearDown () {
@@ -57,6 +61,11 @@ public class SlackNotificationsTest {
     @Before
     public void setUp () throws Exception {
         setupMockServer();
+        container = AwsEC2Container.builder()
+                                   .name(UUID.randomUUID().toString())
+                                   .awsEC2Platform(platform)
+                                   .instanceId(UUID.randomUUID().toString())
+                                   .build();
         slackNotifications = Mockito.spy(new SlackNotifications(slack_webhookuri));
         chaosEvent = ChaosEvent.builder()
                                .withMessage(message)
@@ -68,8 +77,6 @@ public class SlackNotificationsTest {
                                .withExperimentType(ExperimentType.STATE)
                                .withChaosTime(Date.from(Instant.now()))
                                .build();
-        when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
-        when(container.getPlatform()).thenReturn(platform);
         when(platform.getPlatformType()).thenReturn("TYPE");
         SlackAttachment slackAttachment = SlackAttachment.builder()
                                                          .withFallback(chaosEvent.toString())
@@ -106,13 +113,13 @@ public class SlackNotificationsTest {
         slack_webhookuri = "http://localhost:" + slackServerPort;
     }
 
-    private class SlackHandler implements HttpHandler {
-        @Override
-        public void handle (HttpExchange httpExchange) throws IOException {
-            httpExchange.sendResponseHeaders(200, OK_RESPONSE.length());
-            OutputStream os = httpExchange.getResponseBody();
-            os.write(OK_RESPONSE.getBytes());
-            os.close();
+    @Test(expected = IOException.class)
+    public void slackIOExceptionTest () throws IOException {
+        try {
+            responseCode = 500;
+            slackNotifications.sendNotification(chaosEvent);
+        } finally {
+            responseCode = 200;
         }
     }
 
@@ -125,10 +132,9 @@ public class SlackNotificationsTest {
         slackNotifications.logEvent(chaosEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
-        SlackMessage actualSlackMessage = slackMessages.get(0);
-        String expectedPayload = new Gson().toJson(expectedSlackMessage);
-        String actualPayload = new Gson().toJson(actualSlackMessage);
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
+        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
 
@@ -137,10 +143,9 @@ public class SlackNotificationsTest {
         slackNotifications.sendNotification(chaosEvent);
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        List<SlackMessage> slackMessages = slackMessageArgumentCaptor.getAllValues();
-        SlackMessage actualSlackMessage = slackMessages.get(0);
-        String expectedPayload = new Gson().toJson(expectedSlackMessage);
-        String actualPayload = new Gson().toJson(actualSlackMessage);
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
+        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
 
@@ -157,5 +162,57 @@ public class SlackNotificationsTest {
             slackNotifications.logEvent(chaosEvent);
         }
         verify(slackNotifications, times(1)).flushBuffer();
+    }
+
+    @Test
+    public void ExtendedChaosEventTest () throws IOException {
+        ChaosEvent x = new ChaosEvent() {
+            public String getNewField () {
+                return "12345";
+            }
+
+            @Override
+            public ExperimentType getExperimentType () {
+                return ExperimentType.STATE;
+            }
+
+            @Override
+            public NotificationLevel getNotificationLevel () {
+                return NotificationLevel.GOOD;
+            }
+
+            @Override
+            public Container getTargetContainer () {
+                return container;
+            }
+
+            @Override
+            public Date getChaosTime () {
+                return Date.from(Instant.now());
+            }
+        };
+        ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
+        slackNotifications.logEvent(x);
+        slackNotifications.flushBuffer();
+        verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
+        assertTrue(actualSlackMessage.getAttachments()
+                                     .stream()
+                                     .anyMatch(slackAttachment -> slackAttachment.getFields()
+                                                                                 .stream()
+                                                                                 .anyMatch(field -> field.getTitle()
+                                                                                                         .equals("New Field") && field
+                                                                                         .getValue()
+                                                                                         .equals("12345"))));
+    }
+
+    private class SlackHandler implements HttpHandler {
+        @Override
+        public void handle (HttpExchange httpExchange) throws IOException {
+            httpExchange.sendResponseHeaders(responseCode, OK_RESPONSE.length());
+            OutputStream os = httpExchange.getResponseBody();
+            os.write(OK_RESPONSE.getBytes());
+            os.close();
+        }
     }
 }
