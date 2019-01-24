@@ -17,9 +17,11 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import com.gemalto.chaos.util.AwsEC2Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
@@ -34,16 +36,19 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Component
 @ConditionalOnProperty("aws.ec2")
 @ConfigurationProperties("aws.ec2")
+@DependsOn({ "AwsEC2Utils", "AmazonAutoScaling", "AmazonEC2", "ContainerManager", "AwsEC2SelfAwareness" })
 public class AwsEC2Platform extends Platform {
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private String chaosSecurityGroupId;
-    private Vpc defaultVpc;
     private List<String> groupingTags;
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
+    @Autowired
+    private AwsEC2Utils awsEC2Utils;
+
     @Autowired
     AwsEC2Platform (AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
@@ -306,8 +311,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     private String getDefaultVPC () {
-        initDefaultVpc();
-        return defaultVpc != null ? defaultVpc.getVpcId() : null;
+        return awsEC2Utils.getChaosVpc().getVpcId();
     }
 
     private String createChaosSecurityGroup () {
@@ -315,11 +319,6 @@ public class AwsEC2Platform extends Platform {
                                                                              .withVpcId(getDefaultVPC())
                                                                              .withDescription(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
                         .getGroupId();
-    }
-
-    private synchronized void initDefaultVpc () {
-        if (defaultVpc != null) return;
-        defaultVpc = amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().orElse(null);
     }
 
     public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {

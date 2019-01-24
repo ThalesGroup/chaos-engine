@@ -16,6 +16,7 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import com.gemalto.chaos.util.AwsEC2Utils;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,8 @@ public class AwsEC2PlatformTest {
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     @MockBean
     private AmazonAutoScaling amazonAutoScaling;
+    @MockBean
+    private AwsEC2Utils awsEC2Utils;
     @Autowired
     private AwsEC2Platform awsEC2Platform;
 
@@ -196,26 +199,22 @@ public class AwsEC2PlatformTest {
 
     @Test
     public void getChaosSecurityGroupId () {
-        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        Vpc chaosVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                                 .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                                 .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup1, customSecurityGroup2);
-        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
-        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
-        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
-        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup1);
+        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                               .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
                                                               .withGroupId(UUID.randomUUID().toString());
         CreateSecurityGroupResult createSecurityGroupResult = new CreateSecurityGroupResult().withGroupId(chaosSecurityGroup
                 .getGroupId());
+        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
+        doReturn(chaosVpc).when(awsEC2Utils).getChaosVpc();
         doReturn(createSecurityGroupResult).when(amazonEC2).createSecurityGroup(any());
         assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
-        verify(amazonEC2, times(1)).describeVpcs();
+        verify(awsEC2Utils, atLeastOnce()).getChaosVpc();
         verify(amazonEC2, times(1)).createSecurityGroup(any());
         verify(awsEC2Platform, times(1)).initChaosSecurityGroupId();
         awsEC2Platform.getChaosSecurityGroupId();
@@ -224,23 +223,19 @@ public class AwsEC2PlatformTest {
 
     @Test
     public void getChaosSecurityGroupIdAlreadyInitialized () {
-        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        Vpc chaosVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
+        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                                 .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                                 .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
+        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(chaosVpc.getVpcId())
                                                               .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
                                                               .withGroupId(UUID.randomUUID().toString());
-        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, chaosSecurityGroup, customSecurityGroup1, customSecurityGroup2);
-        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
+        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, chaosSecurityGroup, customSecurityGroup1);
         doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
-        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
+        doReturn(chaosVpc).when(awsEC2Utils).getChaosVpc();
         assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
-        verify(amazonEC2, times(1)).describeVpcs();
+        verify(awsEC2Utils, atLeastOnce()).getChaosVpc();
         verify(amazonEC2, times(0)).createSecurityGroup(any());
     }
 
