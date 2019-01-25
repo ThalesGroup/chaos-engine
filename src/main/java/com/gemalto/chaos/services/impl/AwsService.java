@@ -9,7 +9,6 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClientBuilder;
-import com.gemalto.chaos.util.AwsEC2Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -76,9 +75,4 @@ public class AwsService {
                                              .build();
     }
 
-    @Bean
-    @RefreshScope
-    AwsEC2Utils awsEC2Utils (AmazonEC2 amazonEC2) {
-        return new AwsEC2Utils(amazonEC2);
-    }
 }
