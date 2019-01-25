@@ -63,13 +63,20 @@ public abstract class Experiment {
     private String preferredExperiment;
 
     Boolean isSelfHealingRequired () {
-        return getExperimentState() == ExperimentState.FINISHED ? getSelfHealingCounter().get() > 0 : null;
+        return endTime != null ? getSelfHealingCounter().get() > 0 : null;
+    }
+
+    public AtomicInteger getSelfHealingCounter () {
+        return selfHealingCounter;
+    }
+
+    protected void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
+        this.selfHealingCounter = selfHealingCounter;
     }
 
     public void setPreferredExperiment (String preferredExperiment) {
         this.preferredExperiment = preferredExperiment;
     }
-
 
     NotificationManager getNotificationManager () {
         return notificationManager;
@@ -96,14 +103,6 @@ public abstract class Experiment {
         return container.getContainerType();
     }
 
-    public AtomicInteger getSelfHealingCounter () {
-        return selfHealingCounter;
-    }
-
-    protected void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
-        this.selfHealingCounter = selfHealingCounter;
-    }
-
     @JsonIgnore
     public Method getExperimentMethod () {
         return experimentMethod;
@@ -113,8 +112,8 @@ public abstract class Experiment {
         this.experimentMethod = experimentMethod;
     }
 
-    public String getExperimentMethodName(){
-        if(experimentMethod!=null) {
+    public String getExperimentMethodName () {
+        if (experimentMethod != null) {
             return experimentMethod.getName();
         }
         return EXPERIMENT_METHOD_NOT_SET_YET;
@@ -148,14 +147,6 @@ public abstract class Experiment {
 
     public void setFinalizationDuration (Duration finalizationDuration) {
         this.finalizationDuration = finalizationDuration;
-    }
-
-    public String getId () {
-        return id;
-    }
-
-    public Container getContainer () {
-        return container;
     }
 
     Future<Boolean> startExperiment () {
@@ -208,6 +199,14 @@ public abstract class Experiment {
         });
     }
 
+    public String getId () {
+        return id;
+    }
+
+    public Container getContainer () {
+        return container;
+    }
+
     private Method chooseExperimentMethod () {
         Map<Class<? extends Annotation>, List<Method>> experimentMethods = container.getExperimentMethods();
         if (!experimentMethods.keySet().contains(experimentType.getAnnotation()) || experimentMethods.get(experimentType
@@ -254,7 +253,6 @@ public abstract class Experiment {
                                                                    .withMessage(String.format("Experiment finished. Container recovered from the experiment. Duration: %d s, Self-healing attempts: %d", getDuration()
                                                                            .getSeconds(), selfHealingCounter.get()))
                                                                    .build());
-
                     return finalizeExperiment();
                 }
                 return ExperimentState.STARTED;
@@ -288,10 +286,9 @@ public abstract class Experiment {
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         }
-
         try {
             return container.getContainerHealth(experimentType);
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Issue while checking container health", e);
             return ContainerHealth.RUNNING_EXPERIMENT;
         }
@@ -304,6 +301,10 @@ public abstract class Experiment {
         boolean finalizable = Instant.now().isAfter(getFinalizationStartTime().plus(finalizationDuration));
         log.debug("Experiment {} is finalizable = {}", id, finalizable);
         return finalizable;
+    }
+
+    protected Duration getDuration () {
+        return Duration.between(getStartTime(), getEndTime());
     }
 
     private ExperimentState finalizeExperiment () {
@@ -337,7 +338,7 @@ public abstract class Experiment {
                 log.warn("The experiment {} has gone on too long, invoking self-healing. \n{}", id, this);
                 ChaosEvent chaosEvent;
                 if (canRunSelfHealing()) {
-                    if(selfHealingCounter.get()<=DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
+                    if (selfHealingCounter.get() <= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
                         StringBuilder message = new StringBuilder();
                         message.append(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING);
                         NotificationLevel notificationLevel = NotificationLevel.ERROR;
@@ -345,7 +346,7 @@ public abstract class Experiment {
                             message.append(ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER)
                                    .append(selfHealingCounter.get())
                                    .append(".");
-                            notificationLevel=NotificationLevel.WARN;
+                            notificationLevel = NotificationLevel.WARN;
                         }
                         chaosEvent = ChaosEvent.builder()
                                                .fromExperiment(this)
@@ -368,14 +369,12 @@ public abstract class Experiment {
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                            .build();
-
                     notificationManager.sendNotification(chaosEvent);
                 } else {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
                                            .build();
-
                     notificationManager.sendNotification(chaosEvent);
                 }
             } catch (ChaosException e) {
@@ -402,6 +401,14 @@ public abstract class Experiment {
         return finalizationStartTime;
     }
 
+    public Instant getStartTime () {
+        return startTime;
+    }
+
+    private Instant getEndTime () {
+        return Optional.ofNullable(endTime).orElseGet(Instant::now);
+    }
+
     protected boolean isOverDuration () {
         return Instant.now().isAfter(getStartTime().plus(maximumDuration));
     }
@@ -422,23 +429,11 @@ public abstract class Experiment {
         }
     }
 
-    public Instant getStartTime () {
-        return startTime;
-    }
-
     private Duration getMinimumTimeBetweenSelfHealing () {
         return container.getMinimumSelfHealingInterval();
     }
 
-    protected Duration getDuration () {
-        return Duration.between(getStartTime(), getEndTime());
-    }
-
-    private Instant getEndTime () {
-        return Optional.ofNullable(endTime).orElse(Instant.now());
-    }
-
-    private void setEndTime (Instant endTime) {
+    void setEndTime (Instant endTime) {
         this.endTime = endTime;
     }
 }
