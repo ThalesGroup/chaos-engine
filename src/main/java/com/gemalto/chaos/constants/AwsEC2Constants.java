@@ -1,5 +1,8 @@
 package com.gemalto.chaos.constants;
 
+import com.amazonaws.services.ec2.model.IpPermission;
+import com.amazonaws.services.ec2.model.IpRange;
+
 public abstract class AwsEC2Constants {
     public static final int AWS_PENDING_CODE = 0;
     public static final int AWS_RUNNING_CODE = 16;
@@ -13,6 +16,8 @@ public abstract class AwsEC2Constants {
     public static final String NO_GROUPING_IDENTIFIER = "No Grouping Identifier Found";
     public static final String AWS_ASG_NAME_TAG_KEY = "aws:autoscaling:groupName";
     public static final String NO_ASSIGNED_KEY = "No Assigned Key";
+    public static final IpPermission DEFAULT_IP_PERMISSIONS = new IpPermission().withIpProtocol("-1")
+                                                                                .withIpv4Ranges(new IpRange().withCidrIp("0.0.0.0/0"));
 
     private AwsEC2Constants () {
     }

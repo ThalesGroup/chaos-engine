@@ -433,6 +433,13 @@ public class AwsEC2PlatformTest {
         assertEquals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId, request.getGroupName());
         assertEquals(vpcId, request.getVpcId());
         assertEquals(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION, request.getDescription());
+        ArgumentCaptor<RevokeSecurityGroupEgressRequest> revokeSecurityGroupEgressRequestArgumentCaptor = ArgumentCaptor
+                .forClass(RevokeSecurityGroupEgressRequest.class);
+        verify(amazonEC2, times(1)).revokeSecurityGroupEgress(revokeSecurityGroupEgressRequestArgumentCaptor.capture());
+        RevokeSecurityGroupEgressRequest revokeSecurityGroupEgressRequest = revokeSecurityGroupEgressRequestArgumentCaptor
+                .getValue();
+        assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeSecurityGroupEgressRequest
+                .getIpPermissions());
     }
 
     @Configuration

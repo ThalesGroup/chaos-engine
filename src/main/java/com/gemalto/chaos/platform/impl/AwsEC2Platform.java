@@ -347,10 +347,13 @@ public class AwsEC2Platform extends Platform {
 
     String createChaosSecurityGroup (String vpcId) {
         log.info("Creating Chaos Security Group for VPC {}", vpcId);
-        return amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId)
-                                                                             .withVpcId(vpcId)
-                                                                             .withDescription(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
-                        .getGroupId();
+        String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId)
+                                                                                       .withVpcId(vpcId)
+                                                                                       .withDescription(EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
+                                  .getGroupId();
+        amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withIpPermissions(DEFAULT_IP_PERMISSIONS)
+                                                                                  .withGroupId(groupId));
+        return groupId;
     }
 
 
