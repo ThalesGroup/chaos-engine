@@ -538,8 +538,8 @@ public class ExperimentTest {
     @Test
     public void isSelfHealingRequired () {
         doReturn(new AtomicInteger(0), new AtomicInteger(1)).when(networkExperiment).getSelfHealingCounter();
-        doReturn(ExperimentState.STARTED, ExperimentState.FINISHED).when(networkExperiment).getExperimentState();
         assertNull("When Experiment State is not FINISHED, should return null", networkExperiment.isSelfHealingRequired());
+        networkExperiment.setEndTime(Instant.now());
         assertFalse("If the Self Healing Counter is zero, should return False", networkExperiment.isSelfHealingRequired());
         assertTrue("If the Self Healing Counter is one, should return true", networkExperiment.isSelfHealingRequired());
     }
