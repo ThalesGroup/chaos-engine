@@ -411,13 +411,13 @@ public class AwsEC2PlatformTest {
         String vpcId = randomUUID().toString();
         String securityGroupId = randomUUID().toString();
         doReturn(vpcId).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
-        doReturn(securityGroupId).when(awsEC2Platform).createChaosSecurityGroup(vpcId);
+        doReturn(securityGroupId).when(awsEC2Platform).lookupChaosSecurityGroup(vpcId);
         assertEquals(securityGroupId, awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
-        verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
+        verify(awsEC2Platform, times(1)).lookupChaosSecurityGroup(vpcId);
         reset(awsEC2Platform);
         doReturn(vpcId).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
         assertEquals(securityGroupId, awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
-        verify(awsEC2Platform, never()).createChaosSecurityGroup(vpcId);
+        verify(awsEC2Platform, never()).lookupChaosSecurityGroup(vpcId);
     }
 
     @Test
@@ -440,6 +440,16 @@ public class AwsEC2PlatformTest {
                 .getValue();
         assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeSecurityGroupEgressRequest
                 .getIpPermissions());
+    }
+
+    @Test
+    public void lookupChaosSecurityGroup () {
+        String vpcId = randomUUID().toString();
+        String groupId = randomUUID().toString();
+        doReturn(groupId).when(awsEC2Platform).createChaosSecurityGroup(vpcId);
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups();
+        assertEquals(groupId, awsEC2Platform.lookupChaosSecurityGroup(vpcId));
+        verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
     }
 
     @Configuration

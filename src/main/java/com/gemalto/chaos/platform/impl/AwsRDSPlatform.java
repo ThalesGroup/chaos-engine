@@ -2,10 +2,12 @@ package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
-import com.amazonaws.services.ec2.model.Vpc;
+import com.amazonaws.services.ec2.model.RevokeSecurityGroupEgressRequest;
+import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -58,8 +61,7 @@ public class AwsRDSPlatform extends Platform {
     @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
-    private String defaultVpcId;
-    private String chaosSecurityGroup;
+    private final Map<String, String> vpcToSecurityGroupMap = new ConcurrentHashMap<>();
     @Autowired
     public AwsRDSPlatform () {
     }
@@ -360,42 +362,39 @@ public class AwsRDSPlatform extends Platform {
                         .map(VpcSecurityGroupMembership::getVpcSecurityGroupId).collect(toSet());
     }
 
-    public String getChaosSecurityGroup () {
-        if (chaosSecurityGroup == null) initChaosSecurityGroup();
-        return chaosSecurityGroup;
+    public String getChaosSecurityGroup (String dbInstanceIdentifier) {
+        String vpcId = getVpcIdOfInstance(dbInstanceIdentifier);
+        return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::getChaosSecurityGroupOfVpc);
     }
 
-    void initChaosSecurityGroup () {
-        log.debug("Retrieving a VPC Security Group to use for Chaos");
-        amazonEC2.describeSecurityGroups()
-                 .getSecurityGroups()
-                 .stream()
-                 .filter(securityGroup -> securityGroup.getGroupName().equals(AWS_RDS_CHAOS_SECURITY_GROUP))
-                 .findFirst()
-                 .ifPresent(securityGroup -> {
-                     chaosSecurityGroup = securityGroup.getGroupId();
-                     log.info("Found existing VPC Security Group ID {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, chaosSecurityGroup));
-                 });
-        if (chaosSecurityGroup == null) {
-            log.debug("No existing VPC Security Group for Chaos found");
-            chaosSecurityGroup = createChaosSecurityGroup();
-        }
+    private String getVpcIdOfInstance (String dbInstanceIdentifier) {
+        return amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
+                        .getDBInstances()
+                        .stream()
+                        .map(DBInstance::getDBSubnetGroup)
+                        .map(DBSubnetGroup::getVpcId)
+                        .findFirst()
+                        .orElseThrow(() -> new ChaosException("Could not find a VPC for instance " + dbInstanceIdentifier));
     }
 
-    private String createChaosSecurityGroup () {
-        log.debug("Creating a VPC Security Group for Chaos");
-        amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().ifPresent(vpc -> {
-            defaultVpcId = vpc.getVpcId();
-            log.debug("Using {}", keyValue("defaultVpcId", defaultVpcId));
-        });
-        if (defaultVpcId == null) {
-            throw new ChaosException("No Default VPC Found");
-        }
-        String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withVpcId(defaultVpcId)
-                                                                                       .withDescription(AwsRDSConstants.AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
-                                                                                       .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP))
-                                  .getGroupId();
-        log.info("Created VPC Security Group {}", value(AWS_RDS_VPC_SECURITY_GROUP_ID, groupId));
+    String getChaosSecurityGroupOfVpc (String vpcId) {
+        return amazonEC2.describeSecurityGroups()
+                        .getSecurityGroups()
+                        .stream()
+                        .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
+                        .filter(securityGroup -> securityGroup.getGroupName()
+                                                              .equals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId))
+                        .map(SecurityGroup::getGroupId)
+                        .findFirst()
+                        .orElseGet(() -> createChaosSecurityGroup(vpcId));
+    }
+
+    private String createChaosSecurityGroup (String vpcId) {
+        String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
+                                                                                       .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
+                                                                                       .withVpcId(vpcId)).getGroupId();
+        amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withGroupId(groupId)
+                                                                                  .withIpPermissions(AwsEC2Constants.DEFAULT_IP_PERMISSIONS));
         return groupId;
     }
 

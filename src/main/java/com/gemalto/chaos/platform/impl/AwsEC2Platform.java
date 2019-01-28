@@ -285,7 +285,7 @@ public class AwsEC2Platform extends Platform {
 
     public String getChaosSecurityGroupForInstance (String instanceId) {
         String vpcId = getVpcIdOfContainer(instanceId);
-        return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::createChaosSecurityGroup);
+        return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::lookupChaosSecurityGroup);
     }
 
     public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
@@ -343,6 +343,18 @@ public class AwsEC2Platform extends Platform {
                         .findFirst()
                         .orElseThrow(() -> new ChaosException("No instances returned"))
                         .getVpcId();
+    }
+
+    String lookupChaosSecurityGroup (String vpcId) {
+        return amazonEC2.describeSecurityGroups()
+                        .getSecurityGroups()
+                        .stream()
+                        .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
+                        .filter(securityGroup -> securityGroup.getGroupName()
+                                                              .equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + " " + vpcId))
+                        .map(SecurityGroup::getGroupId)
+                        .findFirst()
+                        .orElseGet(() -> createChaosSecurityGroup(vpcId));
     }
 
     String createChaosSecurityGroup (String vpcId) {
