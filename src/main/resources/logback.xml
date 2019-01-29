@@ -5,7 +5,8 @@
 
     <appender name="Chaos" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"env":"${DEPLOYMENT_ENVIRONMENT}"}</customFields>
+            <customFields>{"env":"${DEPLOYMENT_ENVIRONMENT}",
+                "chaos-host" : "${HOSTNAME}"}</customFields>
         </encoder>
     </appender>
 
