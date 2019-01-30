@@ -17,6 +17,7 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -446,10 +447,13 @@ public class AwsEC2PlatformTest {
     public void lookupChaosSecurityGroup () {
         String vpcId = randomUUID().toString();
         String groupId = randomUUID().toString();
+        ArgumentCaptor<DescribeSecurityGroupsRequest> captor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
         doReturn(groupId).when(awsEC2Platform).createChaosSecurityGroup(vpcId);
-        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups();
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups(captor.capture());
         assertEquals(groupId, awsEC2Platform.lookupChaosSecurityGroup(vpcId));
         verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
+        assertThat(captor.getValue().getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
+
     }
 
     @Configuration

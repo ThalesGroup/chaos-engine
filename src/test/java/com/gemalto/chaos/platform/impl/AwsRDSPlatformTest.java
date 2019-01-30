@@ -904,6 +904,7 @@ public class AwsRDSPlatformTest {
         String securityGroupId = randomUUID().toString();
         ArgumentCaptor<CreateSecurityGroupRequest> createSecurityGroupRequestCaptor = ArgumentCaptor.forClass(CreateSecurityGroupRequest.class);
         ArgumentCaptor<DescribeDBInstancesRequest> describeDBInstancesRequestCaptor = ArgumentCaptor.forClass(DescribeDBInstancesRequest.class);
+        ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
         DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
                 .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
         doReturn(describeDBInstancesResult).when(amazonRDS)
@@ -911,7 +912,8 @@ public class AwsRDSPlatformTest {
         doReturn(new CreateSecurityGroupResult().withGroupId(securityGroupId)).when(amazonEC2)
                                                                               .createSecurityGroup(createSecurityGroupRequestCaptor
                                                                                       .capture());
-        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups();
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2)
+                                                    .describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor.capture());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
         assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
         assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION, createSecurityGroupRequestCaptor.getValue()
@@ -925,6 +927,8 @@ public class AwsRDSPlatformTest {
         assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeEgressCaptor.getValue()
                                                                                                           .getIpPermissions());
         assertEquals(securityGroupId, revokeEgressCaptor.getValue().getGroupId());
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
+                                                              .getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
@@ -937,6 +941,7 @@ public class AwsRDSPlatformTest {
         String vpcId = randomUUID().toString();
         String securityGroupId = randomUUID().toString();
         ArgumentCaptor<DescribeDBInstancesRequest> describeDBInstancesRequestCaptor = ArgumentCaptor.forClass(DescribeDBInstancesRequest.class);
+        ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
         DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
                 .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
         doReturn(describeDBInstancesResult).when(amazonRDS)
@@ -945,11 +950,15 @@ public class AwsRDSPlatformTest {
                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
                                                                                           .withVpcId(vpcId))).when(amazonEC2)
-                                                                                                             .describeSecurityGroups();
+                                                                                                             .describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor
+                                                                                                                     .capture());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
         assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
         verify(amazonEC2, never()).createSecurityGroup(any());
         verify(amazonEC2, never()).revokeSecurityGroupEgress(any());
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
+                                                              .getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
+
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));

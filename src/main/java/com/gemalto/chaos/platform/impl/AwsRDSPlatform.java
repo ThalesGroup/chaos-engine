@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
+import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.RevokeSecurityGroupEgressRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.rds.AmazonRDS;
@@ -378,7 +379,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     String getChaosSecurityGroupOfVpc (String vpcId) {
-        return amazonEC2.describeSecurityGroups()
+        return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withGroupIds(vpcId))
                         .getSecurityGroups()
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))

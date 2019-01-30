@@ -346,7 +346,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     String lookupChaosSecurityGroup (String vpcId) {
-        return amazonEC2.describeSecurityGroups()
+        return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withGroupIds(vpcId))
                         .getSecurityGroups()
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
