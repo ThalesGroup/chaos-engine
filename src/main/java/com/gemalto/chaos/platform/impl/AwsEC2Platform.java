@@ -351,7 +351,7 @@ public class AwsEC2Platform extends Platform {
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
                         .filter(securityGroup -> securityGroup.getGroupName()
-                                                              .equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + " " + vpcId))
+                                                              .equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId))
                         .map(SecurityGroup::getGroupId)
                         .findFirst()
                         .orElseGet(() -> createChaosSecurityGroup(vpcId));
