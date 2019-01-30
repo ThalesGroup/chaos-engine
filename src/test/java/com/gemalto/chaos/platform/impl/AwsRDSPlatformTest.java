@@ -1,6 +1,7 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.Tag;
@@ -928,7 +929,8 @@ public class AwsRDSPlatformTest {
                                                                                                           .getIpPermissions());
         assertEquals(securityGroupId, revokeEgressCaptor.getValue().getGroupId());
         assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
-                                                              .getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
+                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+                .withValues(vpcId)));
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
@@ -957,8 +959,8 @@ public class AwsRDSPlatformTest {
         verify(amazonEC2, never()).createSecurityGroup(any());
         verify(amazonEC2, never()).revokeSecurityGroupEgress(any());
         assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
-                                                              .getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
-
+                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+                .withValues(vpcId)));
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));

@@ -379,7 +379,8 @@ public class AwsRDSPlatform extends Platform {
     }
 
     String getChaosSecurityGroupOfVpc (String vpcId) {
-        return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withGroupIds(vpcId))
+        return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(new com.amazonaws.services.ec2.model.Filter("vpc-id")
+                .withValues(vpcId)))
                         .getSecurityGroups()
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))

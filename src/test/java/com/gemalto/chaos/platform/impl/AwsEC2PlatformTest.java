@@ -452,7 +452,8 @@ public class AwsEC2PlatformTest {
         doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups(captor.capture());
         assertEquals(groupId, awsEC2Platform.lookupChaosSecurityGroup(vpcId));
         verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
-        assertThat(captor.getValue().getGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(vpcId));
+        assertThat(captor.getValue()
+                         .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id").withValues(vpcId)));
 
     }
 
