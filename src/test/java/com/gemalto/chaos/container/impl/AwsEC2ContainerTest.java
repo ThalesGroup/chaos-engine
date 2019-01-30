@@ -146,7 +146,7 @@ public class AwsEC2ContainerTest {
         List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID()
                                                                                                  .toString());
         doReturn(configuredSecurityGroupId).when(awsEC2Platform).getSecurityGroupIds(INSTANCE_ID);
-        doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupId();
+        doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0))
                .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
         verify(experiment, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
