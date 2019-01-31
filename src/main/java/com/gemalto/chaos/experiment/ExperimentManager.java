@@ -93,7 +93,7 @@ public class ExperimentManager {
                                                                                                           .get();
                                                                          } catch (InterruptedException | ExecutionException e) {
                                                                              log.error("Error in asynchronous start of experiment", e);
-                                                                             return false;
+                                                                             return true;
                                                                          }
                                                                      })
                                                                      .map(Map.Entry::getKey)

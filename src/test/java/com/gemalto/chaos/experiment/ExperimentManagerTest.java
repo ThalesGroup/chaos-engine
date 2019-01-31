@@ -1,5 +1,6 @@
 package com.gemalto.chaos.experiment;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.calendar.HolidayManager;
 import com.gemalto.chaos.container.Container;
@@ -503,6 +504,24 @@ public class ExperimentManagerTest {
         assertThat(experimentManager.getNewExperimentQueue(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
         assertThat(experimentManager.getStartedExperiments()
                                     .keySet(), IsEmptyCollection.emptyCollectionOf(Experiment.class));
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+    }
+
+    @Test
+    public void experimentStartFailed () {
+        doReturn(false).when(holidayManager).isOutsideWorkingHours();
+        doReturn(false).when(holidayManager).isHoliday();
+        Experiment experimentA = Mockito.mock(Experiment.class);
+        Experiment experimentB = Mockito.mock(Experiment.class);
+        experimentManager.addExperiment(experimentA);
+        experimentManager.addExperiment(experimentB);
+        CompletableFuture<Boolean> failedStartup = new CompletableFuture<>();
+        failedStartup.completeExceptionally(new ChaosException("Failed startup"));
+        CompletableFuture<Boolean> successfulStartup = new CompletableFuture<>();
+        successfulStartup.complete(Boolean.TRUE);
+        doReturn(successfulStartup).when(experimentA).startExperiment();
+        doReturn(failedStartup).when(experimentB).startExperiment();
+        experimentManager.startNewExperiments();
         assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
     }
 
