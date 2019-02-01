@@ -287,7 +287,8 @@ public class AwsEC2Platform extends Platform {
             amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
                                                                                   .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
-            if (Optional.ofNullable(e.getErrorCode()).orElse("").equals(SECURITY_GROUP_NOT_FOUND)) {
+            if (e.getErrorCode() != null && e.getErrorCode().equals(SECURITY_GROUP_NOT_FOUND)) {
+                log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
                 processInvalidGroups(securityGroupIds);
             }
             throw new ChaosException(e);
@@ -295,6 +296,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     void processInvalidGroups (Collection<String> securityGroupIds) {
+        log.info("Removing {} from cached Security Groups for Chaos", v("Security Group IDs", securityGroupIds));
         vpcToSecurityGroupMap.values().removeAll(securityGroupIds);
     }
 
@@ -316,6 +318,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     String lookupChaosSecurityGroup (String vpcId) {
+        log.debug("Looking up Security Group to use for experiments for VPC {}", v("VPC", vpcId));
         return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(new Filter("vpc-id").withValues(vpcId)))
                         .getSecurityGroups()
                         .stream()
@@ -328,13 +331,14 @@ public class AwsEC2Platform extends Platform {
     }
 
     String createChaosSecurityGroup (String vpcId) {
-        log.info("Creating Chaos Security Group for VPC {}", vpcId);
+        log.debug("Creating Chaos Security Group for VPC {}", v("VPC", vpcId));
         String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId)
                                                                                        .withVpcId(vpcId)
                                                                                        .withDescription(EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
                                   .getGroupId();
         amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withIpPermissions(DEFAULT_IP_PERMISSIONS)
                                                                                   .withGroupId(groupId));
+        log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
     }
 
