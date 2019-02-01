@@ -287,7 +287,7 @@ public class AwsEC2Platform extends Platform {
             amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
                                                                                   .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
-            if (e.getErrorCode() != null && e.getErrorCode().equals(SECURITY_GROUP_NOT_FOUND)) {
+            if (SECURITY_GROUP_NOT_FOUND.equals(e.getErrorCode())) {
                 log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
                 processInvalidGroups(securityGroupIds);
             }
