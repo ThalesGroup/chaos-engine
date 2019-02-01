@@ -18,6 +18,7 @@ public abstract class AwsEC2Constants {
     public static final String NO_ASSIGNED_KEY = "No Assigned Key";
     public static final IpPermission DEFAULT_IP_PERMISSIONS = new IpPermission().withIpProtocol("-1")
                                                                                 .withIpv4Ranges(new IpRange().withCidrIp("0.0.0.0/0"));
+    public static final String SECURITY_GROUP_NOT_FOUND = "InvalidGroup.NotFound";
 
     private AwsEC2Constants () {
     }
