@@ -10,6 +10,7 @@ public abstract class AwsRDSConstants {
     public static final String AWS_RDS_CLUSTER_DATADOG_IDENTIFIER = "dbclusteridentifier";
     public static final String AWS_RDS_INSTANCE_DATADOG_IDENTIFIER = "dbinstanceidentifier";
     public static final String AWS_RDS_VPC_SECURITY_GROUP_ID = "vpcSecurityGroupId";
+    public static final String INVALID_PARAMETER_VALUE = "InvalidParameterValue";
 
     private AwsRDSConstants () {
     }

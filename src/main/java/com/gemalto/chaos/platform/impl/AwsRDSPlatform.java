@@ -75,6 +75,11 @@ public class AwsRDSPlatform extends Platform {
         return filter;
     }
 
+    public Map<String, String> getVpcToSecurityGroupMap () {
+        return new HashMap<>(vpcToSecurityGroupMap);
+    }
+
+
     private Collection<Tag> generateTagsFromFilters () {
         return getFilter().entrySet()
                           .stream()
@@ -341,7 +346,18 @@ public class AwsRDSPlatform extends Platform {
 
     public void setVpcSecurityGroupIds (String dbInstanceIdentifier, Collection<String> vpcSecurityGroupIds) {
         log.info("Setting VPC Security Group ID for {} to {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value(AWS_RDS_VPC_SECURITY_GROUP_ID, vpcSecurityGroupIds));
-        amazonRDS.modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
+        try {
+            amazonRDS.modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
+        } catch (AmazonRDSException e) {
+            if (e.getErrorCode().equals(INVALID_PARAMETER_VALUE)) {
+                processInvalidSecurityGroupId(vpcSecurityGroupIds);
+            }
+            throw new ChaosException(e);
+        }
+    }
+
+    void processInvalidSecurityGroupId (Collection<String> vpcSecurityGroupIds) {
+        vpcToSecurityGroupMap.values().removeAll(vpcSecurityGroupIds);
     }
 
     ContainerHealth checkVpcSecurityGroupIds (String dbInstanceIdentifier, String vpcSecurityGroupId) {
@@ -368,7 +384,7 @@ public class AwsRDSPlatform extends Platform {
         return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::getChaosSecurityGroupOfVpc);
     }
 
-    private String getVpcIdOfInstance (String dbInstanceIdentifier) {
+    String getVpcIdOfInstance (String dbInstanceIdentifier) {
         return amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                         .getDBInstances()
                         .stream()
