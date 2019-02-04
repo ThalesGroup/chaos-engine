@@ -22,8 +22,7 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
 public class ExperimentManager {
@@ -92,8 +91,10 @@ public class ExperimentManager {
                                                                              return !experimentFutureEntry.getValue()
                                                                                                           .get();
                                                                          } catch (InterruptedException | ExecutionException e) {
-                                                                             log.error("Error in asynchronous start of experiment", e);
-                                                                             return false;
+                                                                             log.error("Error in asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
+                                                                                     .getKey()
+                                                                                     .getId()), e);
+                                                                             return true;
                                                                          }
                                                                      })
                                                                      .map(Map.Entry::getKey)
