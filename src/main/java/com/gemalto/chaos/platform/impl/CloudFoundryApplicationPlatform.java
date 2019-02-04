@@ -39,7 +39,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
-@ConditionalOnProperty({ "cf.organization" })
+@ConditionalOnProperty({ "cf.applicationChaos" })
 @ConfigurationProperties("cf")
 public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     @Autowired
@@ -89,6 +89,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
             for (Map.Entry<String, ApplicationInstanceInfo> appInfo : applicationInstanceResponse.entrySet()) {
                 if (!CloudFoundryConstants.CLOUDFOUNDRY_RUNNING_STATE.equals(appInfo.getValue().getState())) {
                     status = appInfo.getValue().getState();
+                    log.warn("Application {} is not healthy. Actual state is {}", applicationName, status);
                     break;
                 }
             }
