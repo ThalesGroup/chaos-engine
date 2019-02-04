@@ -141,7 +141,7 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
-                kubernetesPodContainer.log.info("Created new AWS EC2 Container object");
+                kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");
             } finally {
                 kubernetesPodContainer.clearMappedDiagnosticContext();
             }

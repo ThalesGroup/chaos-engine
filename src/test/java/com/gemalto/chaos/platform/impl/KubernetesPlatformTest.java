@@ -217,7 +217,7 @@ public class KubernetesPlatformTest {
 
     @Configuration
     static class ContextConfiguration {
-        @Autowired
+        //@Autowired
         private ApiClient apiClient;
         @Autowired
         private ContainerManager containerManager;

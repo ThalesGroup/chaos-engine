@@ -165,10 +165,10 @@ public class KubernetesPlatform extends Platform {
                                                                                           .getMetadata()
                                                                                           .getOwnerReferences()))
                                                                                   .build();
-            log.info("Found new AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
+            log.info("Found new Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
         } else {
-            log.debug("Found existing AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
+            log.debug("Found existing Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
     }
