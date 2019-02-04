@@ -1,7 +1,7 @@
 package com.gemalto.chaos.health.impl;
 
 import com.gemalto.chaos.platform.Platform;
-import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
+import com.gemalto.chaos.platform.impl.CloudFoundryPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty({ "cf.organization" })
 public class CloudFoundryHealth extends AbstractPlatformHealth {
     @Autowired
-    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    private CloudFoundryPlatform cloudFoundryPlatform;
 
-    CloudFoundryHealth (CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform) {
+    CloudFoundryHealth (CloudFoundryPlatform cloudFoundryPlatform) {
         this();
-        this.cloudFoundryApplicationPlatform = cloudFoundryApplicationPlatform;
+        this.cloudFoundryPlatform = cloudFoundryPlatform;
     }
 
     @Autowired
@@ -24,6 +24,6 @@ public class CloudFoundryHealth extends AbstractPlatformHealth {
 
     @Override
     Platform getPlatform () {
-        return cloudFoundryApplicationPlatform;
+        return cloudFoundryPlatform;
     }
 }

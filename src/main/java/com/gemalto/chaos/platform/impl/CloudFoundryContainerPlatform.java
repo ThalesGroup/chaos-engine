@@ -35,7 +35,7 @@ import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
-@ConditionalOnProperty({ "cf.organization" })
+@ConditionalOnProperty({ "cf.containerChaos" })
 @ConfigurationProperties("cf")
 public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     @Autowired
