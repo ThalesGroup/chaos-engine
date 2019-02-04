@@ -40,6 +40,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.*;
 import static java.util.UUID.randomUUID;
@@ -967,7 +968,93 @@ public class AwsRDSPlatformTest {
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void handleInvalidSecurityGroup () {
+        ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
+        ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String dbInstanceIdentifier = randomUUID().toString();
+        AmazonRDSException exception = new AmazonRDSException("Test Exception");
+        exception.setErrorCode(INVALID_PARAMETER_VALUE);
+        doThrow(exception).when(amazonRDS).modifyDBInstance(modifyRequestCaptor.capture());
+        doNothing().when(awsRDSPlatform).processInvalidSecurityGroupId(groupListCaptor.capture());
+        try {
+            awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        Collection<String> groupsToRemove = groupListCaptor.getValue();
+        ModifyDBInstanceRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(dbInstanceIdentifier, modifyRequest.getDBInstanceIdentifier());
+        assertThat(modifyRequest.getVpcSecurityGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups
+                .toArray(new String[0])));
+        assertThat(groupsToRemove, IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
+    }
 
+    @Test
+    public void handleInvalidSecurityGroupWithDifferentError () {
+        ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String dbInstanceIdentifier = randomUUID().toString();
+        AmazonRDSException exception = new AmazonRDSException("Test Exception");
+        exception.setErrorCode("This is a test of the emergency broadcast system");
+        doThrow(exception).when(amazonRDS).modifyDBInstance(modifyRequestCaptor.capture());
+        try {
+            awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        verify(awsRDSPlatform, never()).processInvalidSecurityGroupId(any());
+        ModifyDBInstanceRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(dbInstanceIdentifier, modifyRequest.getDBInstanceIdentifier());
+        assertThat(modifyRequest.getVpcSecurityGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups
+                .toArray(new String[0])));
+    }
+
+    @Test
+    public void processInvalidSecurityGroupId () {
+        Map<String, String> vpcToSecurityGroupMap;
+        Collection<String> validSecurityGroups = IntStream.range(0, 10)
+                                                          .mapToObj(i -> randomUUID().toString())
+                                                          .collect(Collectors.toList());
+        String invalidSecurityGroup = randomUUID().toString();
+        String invalidVpc = randomUUID().toString();
+        validSecurityGroups.forEach(s -> {
+            String vpc = randomUUID().toString();
+            String dbInstanceIdentifier = randomUUID().toString();
+            doReturn(vpc).when(awsRDSPlatform).getVpcIdOfInstance(dbInstanceIdentifier);
+            doReturn(s).when(awsRDSPlatform).getChaosSecurityGroupOfVpc(vpc);
+            awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier);
+        });
+        String dbInstanceIdentifier = randomUUID().toString();
+        doReturn(invalidVpc).when(awsRDSPlatform).getVpcIdOfInstance(dbInstanceIdentifier);
+        doReturn(invalidSecurityGroup).when(awsRDSPlatform).getChaosSecurityGroupOfVpc(invalidVpc);
+        awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier);
+        // Lookup Security Group Map and make sure it's valid before we start pruning
+        vpcToSecurityGroupMap = awsRDSPlatform.getVpcToSecurityGroupMap();
+        Collection<String> expectedSecurityGroups = new ArrayList<>(validSecurityGroups);
+        expectedSecurityGroups.add(invalidSecurityGroup);
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(expectedSecurityGroups
+                .toArray(new String[0])));
+        // Prune out the security group and make sure it's different.
+        awsRDSPlatform.processInvalidSecurityGroupId(Collections.singleton(invalidSecurityGroup));
+        vpcToSecurityGroupMap = awsRDSPlatform.getVpcToSecurityGroupMap();
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(validSecurityGroups
+                .toArray(new String[0])));
+    }
+
+    @Test
+    public void getVpcToSecurityGroupMap () {
+        assertNotSame("Should return clones, not the final map.", awsRDSPlatform.getVpcToSecurityGroupMap(), awsRDSPlatform
+                .getVpcToSecurityGroupMap());
+    }
 
     @Configuration
     static class ContextConfiguration {

@@ -75,6 +75,11 @@ public class AwsRDSPlatform extends Platform {
         return filter;
     }
 
+    public Map<String, String> getVpcToSecurityGroupMap () {
+        return new HashMap<>(vpcToSecurityGroupMap);
+    }
+
+
     private Collection<Tag> generateTagsFromFilters () {
         return getFilter().entrySet()
                           .stream()
@@ -341,7 +346,19 @@ public class AwsRDSPlatform extends Platform {
 
     public void setVpcSecurityGroupIds (String dbInstanceIdentifier, Collection<String> vpcSecurityGroupIds) {
         log.info("Setting VPC Security Group ID for {} to {}", value(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), value(AWS_RDS_VPC_SECURITY_GROUP_ID, vpcSecurityGroupIds));
-        amazonRDS.modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
+        try {
+            amazonRDS.modifyDBInstance(new ModifyDBInstanceRequest(dbInstanceIdentifier).withVpcSecurityGroupIds(vpcSecurityGroupIds));
+        } catch (AmazonRDSException e) {
+            if (e.getErrorCode().equals(INVALID_PARAMETER_VALUE)) {
+                processInvalidSecurityGroupId(vpcSecurityGroupIds);
+            }
+            throw new ChaosException(e);
+        }
+    }
+
+    void processInvalidSecurityGroupId (Collection<String> vpcSecurityGroupIds) {
+        log.info("Removing Security Groups from Chaos VPC Security Group Cache: {}", v("Security Group IDs", vpcSecurityGroupIds));
+        vpcToSecurityGroupMap.values().removeAll(vpcSecurityGroupIds);
     }
 
     ContainerHealth checkVpcSecurityGroupIds (String dbInstanceIdentifier, String vpcSecurityGroupId) {
@@ -368,7 +385,8 @@ public class AwsRDSPlatform extends Platform {
         return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::getChaosSecurityGroupOfVpc);
     }
 
-    private String getVpcIdOfInstance (String dbInstanceIdentifier) {
+    String getVpcIdOfInstance (String dbInstanceIdentifier) {
+        log.debug("Looking up VPC for Instance {}", v(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier));
         return amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                         .getDBInstances()
                         .stream()
@@ -379,6 +397,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     String getChaosSecurityGroupOfVpc (String vpcId) {
+        log.debug("Looking up Chaos Security Group of VPC {}", v("VPC", vpcId));
         return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(new com.amazonaws.services.ec2.model.Filter("vpc-id")
                 .withValues(vpcId)))
                         .getSecurityGroups()
@@ -392,11 +411,14 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private String createChaosSecurityGroup (String vpcId) {
+        log.debug("Creating a Chaos Security Group of VPC {}", v("VPC", vpcId));
+
         String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
                                                                                        .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
                                                                                        .withVpcId(vpcId)).getGroupId();
         amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withGroupId(groupId)
                                                                                   .withIpPermissions(AwsEC2Constants.DEFAULT_IP_PERMISSIONS));
+        log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
     }
 
