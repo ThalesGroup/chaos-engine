@@ -523,6 +523,7 @@ public class ExperimentManagerTest {
         doReturn(failedStartup).when(experimentB).startExperiment();
         experimentManager.startNewExperiments();
         assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+        verify(experimentB, times(1).description("Expected ExperimentB's getId to be evaluated for logging")).getId();
     }
 
 
