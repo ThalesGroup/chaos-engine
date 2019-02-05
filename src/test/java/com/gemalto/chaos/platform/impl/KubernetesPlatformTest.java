@@ -107,11 +107,15 @@ public class KubernetesPlatformTest {
     @Test
     public void testPlatformHealth () {
         try {
-            when(coreApi.getAPIVersions()).thenReturn(new V1APIVersionsBuilder().addToVersions("1").build());
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
             assertEquals(PlatformHealth.OK, platform.getPlatformHealth());
         } catch (Exception e) {
             fail();
         }
+    }
+
+    private static final V1PodList getV1PodList (boolean isBackedByController) {
+        return getV1PodList(isBackedByController, 1);
     }
 
     @Test
@@ -125,14 +129,21 @@ public class KubernetesPlatformTest {
         }
     }
 
-    @Test
-    public void testPlatformHealthNotAvailable () {
-        try {
-            when(coreApi.getAPIVersions()).thenThrow(new ApiException());
-            assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
-        } catch (Exception e) {
-            fail();
+    private static final V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
+        List ownerReferences = new ArrayList<>();
+        if (isBackedByController) {
+            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
         }
+        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withName(POD_NAME)
+                                                         .withNamespace(NAMESPACE_NAME)
+                                                         .withLabels(new HashMap<>())
+                                                         .withOwnerReferences(ownerReferences)
+                                                         .build();
+        V1Pod pod = new V1Pod();
+        pod.setMetadata(metadata);
+        V1PodList list = new V1PodList();
+        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
+        return list;
     }
 
     @Test
@@ -187,21 +198,24 @@ public class KubernetesPlatformTest {
         assertEquals(PlatformLevel.PAAS, platform.getPlatformLevel());
     }
 
-    private static final V1PodList getV1PodList (boolean isBackedByController) {
-        List ownerReferences = new ArrayList<>();
-        if (isBackedByController) {
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
+    @Test
+    public void testPlatformHealthNoNamespacesToTest () {
+        try {
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true, 0));
+            assertEquals(PlatformHealth.DEGRADED, platform.getPlatformHealth());
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withName(POD_NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        V1PodList list = new V1PodList();
-        list.addItemsItem(pod);
-        return list;
+    }
+
+    @Test
+    public void testPlatformHealthNotAvailable () {
+        try {
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
+            assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
+        } catch (Exception e) {
+            fail();
+        }
     }
 
     @Test

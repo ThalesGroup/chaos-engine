@@ -126,8 +126,13 @@ public class KubernetesPlatform extends Platform {
     @Override
     public PlatformHealth getPlatformHealth () {
         try {
-            coreApi.getAPIVersions().getVersions();
-            return PlatformHealth.OK;
+            V1PodList pods = coreV1Api.listPodForAllNamespaces("", "", true, "", 0, "", "", 0, false);
+            Set<String> namespaces = pods.getItems()
+                                         .stream()
+                                         .filter(p -> !PROTECTED_NAMESPACES.contains(p.getMetadata().getNamespace()))
+                                         .map(this::getNamespace)
+                                         .collect(Collectors.toSet());
+            return (namespaces.size() > 0) ? PlatformHealth.OK : PlatformHealth.DEGRADED;
         } catch (ApiException e) {
             return PlatformHealth.FAILED;
         }
@@ -171,5 +176,9 @@ public class KubernetesPlatform extends Platform {
             log.debug("Found existing Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
+    }
+
+    private String getNamespace (V1Pod pod) {
+        return pod.getMetadata().getNamespace();
     }
 }
