@@ -73,7 +73,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             return null;
         });
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
-        awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup());
+        awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
     }
 
     @StateExperiment

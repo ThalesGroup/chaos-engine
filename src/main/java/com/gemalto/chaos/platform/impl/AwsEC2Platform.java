@@ -6,6 +6,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,15 +37,15 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConditionalOnProperty("aws.ec2")
 @ConfigurationProperties("aws.ec2")
 public class AwsEC2Platform extends Platform {
+    private final Map<String, String> vpcToSecurityGroupMap = new ConcurrentHashMap<>();
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
-    private String chaosSecurityGroupId;
-    private Vpc defaultVpc;
     private List<String> groupingTags;
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
+
     @Autowired
     AwsEC2Platform (AmazonEC2 amazonEC2, ContainerManager containerManager, AwsEC2SelfAwareness awsEC2SelfAwareness) {
         this();
@@ -54,6 +56,10 @@ public class AwsEC2Platform extends Platform {
 
     private AwsEC2Platform () {
         log.info("AWS EC2 Platform created");
+    }
+
+    public Map<String, String> getVpcToSecurityGroupMap () {
+        return new HashMap<>(vpcToSecurityGroupMap);
     }
 
     public void setFilter (@NotNull Map<String, List<String>> filter) {
@@ -156,23 +162,8 @@ public class AwsEC2Platform extends Platform {
     }
 
     Collection<Filter> generateSearchFilters () {
-        return filter.entrySet()
-                     .stream()
-                     .map(filterEntry -> new Filter().withName("tag:" + filterEntry.getKey())
-                                                     .withValues(filterEntry.getValue()))
+        return filter.entrySet().stream().map(this::createFilterFromEntry)
                      .collect(Collectors.toSet());
-    }
-
-    private Stream<Instance> getInstanceStream () {
-        return getInstanceStream(new DescribeInstancesRequest());
-    }
-
-    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
-        return amazonEC2.describeInstances(describeInstancesRequest)
-                        .getReservations()
-                        .stream()
-                        .map(Reservation::getInstances)
-                        .flatMap(List::stream);
     }
 
     /**
@@ -191,6 +182,17 @@ public class AwsEC2Platform extends Platform {
             log.debug("Found existing AWS EC2 Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
+    }
+
+    private Filter createFilterFromEntry (Map.Entry<String, List<String>> entry) {
+        Filter newFilter = new Filter().withValues(entry.getValue());
+        String name = entry.getKey();
+        if (name.startsWith("tag.")) {
+            newFilter.setName("tag:" + name.substring(4));
+        } else {
+            newFilter.setName(name.replaceAll("(?<!^)([A-Z])", "-$1").toLowerCase());
+        }
+        return newFilter;
     }
 
     /**
@@ -226,6 +228,18 @@ public class AwsEC2Platform extends Platform {
                               .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
                               .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
                               .build();
+    }
+
+    private Stream<Instance> getInstanceStream () {
+        return getInstanceStream(new DescribeInstancesRequest());
+    }
+
+    private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
+        return amazonEC2.describeInstances(describeInstancesRequest)
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(List::stream);
     }
 
     public ContainerHealth checkHealth (String instanceId) {
@@ -269,49 +283,63 @@ public class AwsEC2Platform extends Platform {
     }
 
     public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
-        amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
-                                                                              .withGroups(securityGroupIds));
-    }
-
-    public String getChaosSecurityGroupId () {
-        if (chaosSecurityGroupId == null) {
-            // Let's cache this value, only need to look it up once.
-            initChaosSecurityGroupId();
-        }
-        return chaosSecurityGroupId;
-    }
-
-    void initChaosSecurityGroupId () {
-        amazonEC2.describeSecurityGroups()
-                 .getSecurityGroups()
-                 .stream()
-                 // Our security group must exist in the default VPC.
-                 .filter(securityGroup -> securityGroup.getVpcId().equals(getDefaultVPC()))
-                 // Our Security Group is identified by a static name.
-                 .filter(securityGroup -> securityGroup.getGroupName().equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME))
-                 .findFirst()
-                 // If present, set the value, skipping the next section.
-                 .ifPresent(securityGroup -> chaosSecurityGroupId = securityGroup.getGroupId());
-        if (chaosSecurityGroupId == null) {
-            chaosSecurityGroupId = createChaosSecurityGroup();
+        try {
+            amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
+                                                                                  .withGroups(securityGroupIds));
+        } catch (AmazonEC2Exception e) {
+            if (SECURITY_GROUP_NOT_FOUND.equals(e.getErrorCode())) {
+                log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
+                processInvalidGroups(securityGroupIds);
+            }
+            throw new ChaosException(e);
         }
     }
 
-    private String getDefaultVPC () {
-        initDefaultVpc();
-        return defaultVpc != null ? defaultVpc.getVpcId() : null;
+    void processInvalidGroups (Collection<String> securityGroupIds) {
+        log.info("Removing {} from cached Security Groups for Chaos", v("Security Group IDs", securityGroupIds));
+        vpcToSecurityGroupMap.values().removeAll(securityGroupIds);
     }
 
-    private String createChaosSecurityGroup () {
-        return amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
-                                                                             .withVpcId(getDefaultVPC())
-                                                                             .withDescription(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
-                        .getGroupId();
+    public String getChaosSecurityGroupForInstance (String instanceId) {
+        String vpcId = getVpcIdOfContainer(instanceId);
+        return vpcToSecurityGroupMap.computeIfAbsent(vpcId, this::lookupChaosSecurityGroup);
     }
 
-    private synchronized void initDefaultVpc () {
-        if (defaultVpc != null) return;
-        defaultVpc = amazonEC2.describeVpcs().getVpcs().stream().filter(Vpc::isDefault).findFirst().orElse(null);
+    String getVpcIdOfContainer (String instanceId) {
+        return amazonEC2.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(Collection::stream)
+                        .peek(instance -> log.info("Lookup of VPCs for Instance {} shows {}", instanceId, instance.getVpcId()))
+                        .findFirst()
+                        .orElseThrow(() -> new ChaosException("No instances returned"))
+                        .getVpcId();
+    }
+
+    String lookupChaosSecurityGroup (String vpcId) {
+        log.debug("Looking up Security Group to use for experiments for VPC {}", v("VPC", vpcId));
+        return amazonEC2.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(new Filter("vpc-id").withValues(vpcId)))
+                        .getSecurityGroups()
+                        .stream()
+                        .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
+                        .filter(securityGroup -> securityGroup.getGroupName()
+                                                              .equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId))
+                        .map(SecurityGroup::getGroupId)
+                        .findFirst()
+                        .orElseGet(() -> createChaosSecurityGroup(vpcId));
+    }
+
+    String createChaosSecurityGroup (String vpcId) {
+        log.debug("Creating Chaos Security Group for VPC {}", v("VPC", vpcId));
+        String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId)
+                                                                                       .withVpcId(vpcId)
+                                                                                       .withDescription(EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION))
+                                  .getGroupId();
+        amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withIpPermissions(DEFAULT_IP_PERMISSIONS)
+                                                                                  .withGroupId(groupId));
+        log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
+        return groupId;
     }
 
     public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
@@ -358,4 +386,6 @@ public class AwsEC2Platform extends Platform {
                                                                           .withInstanceId(instanceId)
                                                                           .withShouldRespectGracePeriod(false));
     }
+
+
 }

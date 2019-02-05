@@ -21,4 +21,8 @@ public class StringUtils {
         new Random().nextBytes(array);
         return new String(array, Charset.forName("UTF-8"));
     }
+
+    public static String convertCamelCaseToSentence (String camelCase) {
+        return camelCase.substring(0, 1).toUpperCase() + camelCase.substring(1).replaceAll("([A-Z])", " $1");
+    }
 }

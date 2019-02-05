@@ -1,11 +1,13 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
-import com.amazonaws.services.rds.model.*;
 import com.amazonaws.services.rds.model.Tag;
+import com.amazonaws.services.rds.model.*;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -22,6 +24,7 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -37,6 +40,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.AwsRDSConstants.*;
 import static java.util.UUID.randomUUID;
@@ -359,81 +363,6 @@ public class AwsRDSPlatformTest {
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, biggerSet));
         // Second set has one less item
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, smallerSet));
-    }
-
-    @Test
-    public void getChaosSecurityGroup () {
-        String defaultVpcId = randomUUID().toString();
-        String customVpcId = randomUUID().toString();
-        String defaultSecurityGroupID = randomUUID().toString();
-        String customSecurityGroupID = randomUUID().toString();
-        String chaosSecurityGroupID = randomUUID().toString();
-        SecurityGroup chaosSecurityGroup = new SecurityGroup().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
-                                                              .withVpcId(defaultVpcId)
-                                                              .withGroupId(chaosSecurityGroupID);
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
-                                                                .withVpcId(defaultVpcId)
-                                                                .withGroupId(defaultSecurityGroupID);
-        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
-                                                               .withVpcId(customVpcId)
-                                                               .withGroupId(customSecurityGroupID);
-        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(chaosSecurityGroup, defaultSecurityGroup, customSecurityGroup))
-                .when(amazonEC2)
-                .describeSecurityGroups();
-        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
-        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
-        verify(awsRDSPlatform, times(1)).initChaosSecurityGroup();
-    }
-
-    @Test
-    public void getChaosSecurityGroup2 () {
-        String defaultVpcId = randomUUID().toString();
-        String customVpcId = randomUUID().toString();
-        String defaultSecurityGroupID = randomUUID().toString();
-        String customSecurityGroupID = randomUUID().toString();
-        String chaosSecurityGroupID = randomUUID().toString();
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
-                                                                .withVpcId(defaultVpcId)
-                                                                .withGroupId(defaultSecurityGroupID);
-        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
-                                                               .withVpcId(customVpcId)
-                                                               .withGroupId(customSecurityGroupID);
-        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(defaultVpcId);
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(customVpcId);
-        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup)).when(amazonEC2)
-                                                                                                                  .describeSecurityGroups();
-        doReturn(new DescribeVpcsResult().withVpcs(defaultVpc, customVpc)).when(amazonEC2).describeVpcs();
-        doReturn(new CreateSecurityGroupResult().withGroupId(chaosSecurityGroupID)).when(amazonEC2)
-                                                                                   .createSecurityGroup(new CreateSecurityGroupRequest()
-                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
-                                                                                           .withVpcId(defaultVpcId)
-                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION));
-        assertEquals(chaosSecurityGroupID, awsRDSPlatform.getChaosSecurityGroup());
-    }
-
-    @Test(expected = ChaosException.class)
-    public void getChaosSecurityGroup3 () {
-        String defaultVpcId = randomUUID().toString();
-        String customVpcId = randomUUID().toString();
-        String defaultSecurityGroupID = randomUUID().toString();
-        String customSecurityGroupID = randomUUID().toString();
-        String chaosSecurityGroupID = randomUUID().toString();
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withGroupName("Default")
-                                                                .withVpcId(defaultVpcId)
-                                                                .withGroupId(defaultSecurityGroupID);
-        SecurityGroup customSecurityGroup = new SecurityGroup().withGroupName("Custom")
-                                                               .withVpcId(customVpcId)
-                                                               .withGroupId(customSecurityGroupID);
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(customVpcId);
-        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup)).when(amazonEC2)
-                                                                                                                  .describeSecurityGroups();
-        doReturn(new DescribeVpcsResult().withVpcs(customVpc)).when(amazonEC2).describeVpcs();
-        doReturn(new CreateSecurityGroupResult().withGroupId(chaosSecurityGroupID)).when(amazonEC2)
-                                                                                   .createSecurityGroup(new CreateSecurityGroupRequest()
-                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP)
-                                                                                           .withVpcId(defaultVpcId)
-                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION));
-        awsRDSPlatform.getChaosSecurityGroup();
     }
 
     @Test
@@ -968,6 +897,163 @@ public class AwsRDSPlatformTest {
                                                                                                                              .withResourceName(dBInstanceArn));
         awsRDSPlatform.setFilter(ImmutableMap.of("key", "value"));
         assertTrue(awsRDSPlatform.filterDBInstance(new DBInstance().withDBInstanceArn(dBInstanceArn)));
+    }
+
+    @Test
+    public void getChaosSecurityGroupWithCreation () {
+        String dbInstanceIdentifier = randomUUID().toString();
+        String vpcId = randomUUID().toString();
+        String securityGroupId = randomUUID().toString();
+        ArgumentCaptor<CreateSecurityGroupRequest> createSecurityGroupRequestCaptor = ArgumentCaptor.forClass(CreateSecurityGroupRequest.class);
+        ArgumentCaptor<DescribeDBInstancesRequest> describeDBInstancesRequestCaptor = ArgumentCaptor.forClass(DescribeDBInstancesRequest.class);
+        ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
+        DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
+                .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
+        doReturn(describeDBInstancesResult).when(amazonRDS)
+                                           .describeDBInstances(describeDBInstancesRequestCaptor.capture());
+        doReturn(new CreateSecurityGroupResult().withGroupId(securityGroupId)).when(amazonEC2)
+                                                                              .createSecurityGroup(createSecurityGroupRequestCaptor
+                                                                                      .capture());
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2)
+                                                    .describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor.capture());
+        assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
+        assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
+        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION, createSecurityGroupRequestCaptor.getValue()
+                                                                                               .getDescription());
+        assertEquals(vpcId, createSecurityGroupRequestCaptor.getValue().getVpcId());
+        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId, createSecurityGroupRequestCaptor.getValue()
+                                                                                                 .getGroupName());
+        verify(amazonEC2, times(1)).createSecurityGroup(any());
+        ArgumentCaptor<RevokeSecurityGroupEgressRequest> revokeEgressCaptor = ArgumentCaptor.forClass(RevokeSecurityGroupEgressRequest.class);
+        verify(amazonEC2, times(1)).revokeSecurityGroupEgress(revokeEgressCaptor.capture());
+        assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeEgressCaptor.getValue()
+                                                                                                          .getIpPermissions());
+        assertEquals(securityGroupId, revokeEgressCaptor.getValue().getGroupId());
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
+                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+                .withValues(vpcId)));
+        // Verify it's in the cache afterwards
+        verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
+        assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
+        verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
+    }
+
+    @Test
+    public void getChaosSecurityGroupAlreadyCreated () {
+        String dbInstanceIdentifier = randomUUID().toString();
+        String vpcId = randomUUID().toString();
+        String securityGroupId = randomUUID().toString();
+        ArgumentCaptor<DescribeDBInstancesRequest> describeDBInstancesRequestCaptor = ArgumentCaptor.forClass(DescribeDBInstancesRequest.class);
+        ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
+        DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
+                .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
+        doReturn(describeDBInstancesResult).when(amazonRDS)
+                                           .describeDBInstances(describeDBInstancesRequestCaptor.capture());
+        doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(new SecurityGroup().withGroupId(securityGroupId)
+                                                                                          .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
+                                                                                          .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
+                                                                                          .withVpcId(vpcId))).when(amazonEC2)
+                                                                                                             .describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor
+                                                                                                                     .capture());
+        assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
+        assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
+        verify(amazonEC2, never()).createSecurityGroup(any());
+        verify(amazonEC2, never()).revokeSecurityGroupEgress(any());
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
+                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+                .withValues(vpcId)));
+        // Verify it's in the cache afterwards
+        verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
+        assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
+        verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void handleInvalidSecurityGroup () {
+        ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
+        ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String dbInstanceIdentifier = randomUUID().toString();
+        AmazonRDSException exception = new AmazonRDSException("Test Exception");
+        exception.setErrorCode(INVALID_PARAMETER_VALUE);
+        doThrow(exception).when(amazonRDS).modifyDBInstance(modifyRequestCaptor.capture());
+        doNothing().when(awsRDSPlatform).processInvalidSecurityGroupId(groupListCaptor.capture());
+        try {
+            awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        Collection<String> groupsToRemove = groupListCaptor.getValue();
+        ModifyDBInstanceRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(dbInstanceIdentifier, modifyRequest.getDBInstanceIdentifier());
+        assertThat(modifyRequest.getVpcSecurityGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups
+                .toArray(new String[0])));
+        assertThat(groupsToRemove, IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
+    }
+
+    @Test
+    public void handleInvalidSecurityGroupWithDifferentError () {
+        ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String dbInstanceIdentifier = randomUUID().toString();
+        AmazonRDSException exception = new AmazonRDSException("Test Exception");
+        exception.setErrorCode("This is a test of the emergency broadcast system");
+        doThrow(exception).when(amazonRDS).modifyDBInstance(modifyRequestCaptor.capture());
+        try {
+            awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        verify(awsRDSPlatform, never()).processInvalidSecurityGroupId(any());
+        ModifyDBInstanceRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(dbInstanceIdentifier, modifyRequest.getDBInstanceIdentifier());
+        assertThat(modifyRequest.getVpcSecurityGroupIds(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups
+                .toArray(new String[0])));
+    }
+
+    @Test
+    public void processInvalidSecurityGroupId () {
+        Map<String, String> vpcToSecurityGroupMap;
+        Collection<String> validSecurityGroups = IntStream.range(0, 10)
+                                                          .mapToObj(i -> randomUUID().toString())
+                                                          .collect(Collectors.toList());
+        String invalidSecurityGroup = randomUUID().toString();
+        String invalidVpc = randomUUID().toString();
+        validSecurityGroups.forEach(s -> {
+            String vpc = randomUUID().toString();
+            String dbInstanceIdentifier = randomUUID().toString();
+            doReturn(vpc).when(awsRDSPlatform).getVpcIdOfInstance(dbInstanceIdentifier);
+            doReturn(s).when(awsRDSPlatform).getChaosSecurityGroupOfVpc(vpc);
+            awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier);
+        });
+        String dbInstanceIdentifier = randomUUID().toString();
+        doReturn(invalidVpc).when(awsRDSPlatform).getVpcIdOfInstance(dbInstanceIdentifier);
+        doReturn(invalidSecurityGroup).when(awsRDSPlatform).getChaosSecurityGroupOfVpc(invalidVpc);
+        awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier);
+        // Lookup Security Group Map and make sure it's valid before we start pruning
+        vpcToSecurityGroupMap = awsRDSPlatform.getVpcToSecurityGroupMap();
+        Collection<String> expectedSecurityGroups = new ArrayList<>(validSecurityGroups);
+        expectedSecurityGroups.add(invalidSecurityGroup);
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(expectedSecurityGroups
+                .toArray(new String[0])));
+        // Prune out the security group and make sure it's different.
+        awsRDSPlatform.processInvalidSecurityGroupId(Collections.singleton(invalidSecurityGroup));
+        vpcToSecurityGroupMap = awsRDSPlatform.getVpcToSecurityGroupMap();
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(validSecurityGroups
+                .toArray(new String[0])));
+    }
+
+    @Test
+    public void getVpcToSecurityGroupMap () {
+        assertNotSame("Should return clones, not the final map.", awsRDSPlatform.getVpcToSecurityGroupMap(), awsRDSPlatform
+                .getVpcToSecurityGroupMap());
     }
 
     @Configuration

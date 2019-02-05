@@ -150,7 +150,7 @@ public class AwsEC2Container extends AwsContainer {
     @NetworkExperiment
     public void removeSecurityGroups (Experiment experiment) {
         List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
-        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupId()));
+        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId)));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds)));
         experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {
             awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);

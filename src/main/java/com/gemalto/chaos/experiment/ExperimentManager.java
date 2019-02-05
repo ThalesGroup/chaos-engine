@@ -15,72 +15,100 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
-    private final Set<Experiment> activeExperiments = new HashSet<>();
+    private final Collection<Experiment> activeExperiments = new HashSet<>();
     private final Collection<Experiment> newExperimentQueue = new HashSet<>();
+    private final Map<Experiment, Future<Boolean>> startedExperiments = new HashMap<>();
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
-
     @Autowired
     public ExperimentManager (PlatformManager platformManager, HolidayManager holidayManager) {
         this.platformManager = platformManager;
         this.holidayManager = holidayManager;
     }
 
-    Experiment addExperiment (Experiment experiment) {
-            newExperimentQueue.add(experiment);
-        return experiment;
+    public Map<Experiment, Future<Boolean>> getStartedExperiments () {
+        return startedExperiments;
     }
 
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
         synchronized (activeExperiments) {
             log.debug("Checking on existing experiments");
-            if (activeExperiments.isEmpty()) {
+            if (activeExperiments.isEmpty() && startedExperiments.isEmpty()) {
                 log.debug("No experiments are currently active.");
                 startNewExperiments();
             } else {
+                transitionExperimentsThatHaveStarted();
                 updateExperimentStatusImpl();
             }
         }
     }
 
-    private void startNewExperiments () {
+    void startNewExperiments () {
         if (newExperimentQueue.isEmpty()) return;
         if (holidayManager.isHoliday() || holidayManager.isOutsideWorkingHours()) {
             log.debug("Cannot start new experiments right now: {} ", holidayManager.isHoliday() ? "public holiday" : "out of business");
             return;
         }
         synchronized (newExperimentQueue) {
-            activeExperiments.addAll(newExperimentQueue.parallelStream()
-                                                       .peek(autowireCapableBeanFactory::autowireBean)
-                                                       .map(experiment -> {
-                                                           try {
-                                                               MDC.put(DATADOG_EXPERIMENTID_KEY, experiment.getId());
-                                                               experiment.getContainer().setMappedDiagnosticContext();
-                                                               return experiment.startExperiment() ? experiment : null;
-                                                           } finally {
-                                                               experiment.getContainer().clearMappedDiagnosticContext();
-                                                               MDC.remove(DATADOG_EXPERIMENTID_KEY);
-                                                           }
-                                                       })
-
-                                                       .filter(Objects::nonNull)
-                                                       .collect(Collectors.toSet()));
+            startedExperiments.putAll(newExperimentQueue.parallelStream()
+                                                        .peek(autowireCapableBeanFactory::autowireBean)
+                                                        .collect(Collectors.toMap(Function.identity(), Experiment::startExperiment)));
+            transitionExperimentsThatHaveStarted();
             newExperimentQueue.clear();
         }
 
+    }
+
+    void transitionExperimentsThatHaveStarted () {
+        Collection<Experiment> finishedStarting = startedExperiments.entrySet()
+                                                                    .stream()
+                                                                    .filter(experimentFutureEntry -> experimentFutureEntry
+                                                                            .getValue()
+                                                                            .isDone())
+                                                                    .map(Map.Entry::getKey)
+                                                                    .collect(Collectors.toSet());
+        Collection<Experiment> failedExperiments = startedExperiments.entrySet()
+                                                                     .stream()
+                                                                     .filter(experimentFutureEntry -> finishedStarting.contains(experimentFutureEntry
+                                                                             .getKey()))
+                                                                     .filter(experimentFutureEntry -> {
+                                                                         try {
+                                                                             return !experimentFutureEntry.getValue()
+                                                                                                          .get();
+                                                                         } catch (InterruptedException | ExecutionException e) {
+                                                                             log.error("Error in asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
+                                                                                     .getKey()
+                                                                                     .getId()), e);
+                                                                             return true;
+                                                                         }
+                                                                     })
+                                                                     .map(Map.Entry::getKey)
+                                                                     .collect(Collectors.toSet());
+        failedExperiments.addAll(startedExperiments.entrySet()
+                                                   .stream()
+                                                   .filter(experimentFutureEntry -> experimentFutureEntry.getValue()
+                                                                                                         .isCancelled())
+                                                   .map(Map.Entry::getKey)
+                                                   .collect(Collectors.toSet()));
+        finishedStarting.removeAll(failedExperiments);
+        activeExperiments.addAll(finishedStarting);
+        finishedStarting.forEach(startedExperiments::remove);
+        failedExperiments.forEach(startedExperiments::remove);
     }
 
     private void updateExperimentStatusImpl () {
@@ -157,7 +185,12 @@ public class ExperimentManager {
         return Collections.emptySet();
     }
 
-    Set<Experiment> getActiveExperiments () {
+    Experiment addExperiment (Experiment experiment) {
+        newExperimentQueue.add(experiment);
+        return experiment;
+    }
+
+    Collection<Experiment> getActiveExperiments () {
         return activeExperiments;
     }
 

@@ -7,6 +7,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -16,9 +17,11 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +45,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -192,56 +196,6 @@ public class AwsEC2PlatformTest {
         String groupId = UUID.randomUUID().toString();
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
         verify(amazonEC2, times(1)).modifyInstanceAttribute(any());
-    }
-
-    @Test
-    public void getChaosSecurityGroupId () {
-        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, customSecurityGroup1, customSecurityGroup2);
-        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
-        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
-        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
-        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                              .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
-                                                              .withGroupId(UUID.randomUUID().toString());
-        CreateSecurityGroupResult createSecurityGroupResult = new CreateSecurityGroupResult().withGroupId(chaosSecurityGroup
-                .getGroupId());
-        doReturn(createSecurityGroupResult).when(amazonEC2).createSecurityGroup(any());
-        assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
-        verify(amazonEC2, times(1)).describeVpcs();
-        verify(amazonEC2, times(1)).createSecurityGroup(any());
-        verify(awsEC2Platform, times(1)).initChaosSecurityGroupId();
-        awsEC2Platform.getChaosSecurityGroupId();
-        verify(awsEC2Platform, times(1)).initChaosSecurityGroupId();
-    }
-
-    @Test
-    public void getChaosSecurityGroupIdAlreadyInitialized () {
-        Vpc defaultVpc = new Vpc().withIsDefault(true).withVpcId(UUID.randomUUID().toString());
-        Vpc customVpc = new Vpc().withIsDefault(false).withVpcId(UUID.randomUUID().toString());
-        SecurityGroup defaultSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup1 = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup customSecurityGroup2 = new SecurityGroup().withVpcId(customVpc.getVpcId())
-                                                                .withGroupName(UUID.randomUUID().toString());
-        SecurityGroup chaosSecurityGroup = new SecurityGroup().withVpcId(defaultVpc.getVpcId())
-                                                              .withGroupName(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME)
-                                                              .withGroupId(UUID.randomUUID().toString());
-        DescribeSecurityGroupsResult securityGroupsResult = new DescribeSecurityGroupsResult().withSecurityGroups(defaultSecurityGroup, chaosSecurityGroup, customSecurityGroup1, customSecurityGroup2);
-        DescribeVpcsResult vpcsResult = new DescribeVpcsResult().withVpcs(defaultVpc, customVpc);
-        doReturn(securityGroupsResult).when(amazonEC2).describeSecurityGroups();
-        doReturn(vpcsResult).when(amazonEC2).describeVpcs();
-        assertEquals(chaosSecurityGroup.getGroupId(), awsEC2Platform.getChaosSecurityGroupId());
-        verify(amazonEC2, times(1)).describeVpcs();
-        verify(amazonEC2, times(0)).createSecurityGroup(any());
     }
 
     @Test
@@ -419,13 +373,174 @@ public class AwsEC2PlatformTest {
     @Test
     public void generateSearchFilters () {
         Map<String, List<String>> filterConfig = new HashMap<>();
-        filterConfig.put("Filter1", Collections.singletonList("Value1"));
-        filterConfig.put("Filter2", asList("Value2a", "Value2b"));
+        filterConfig.put("tag.Filter1", Collections.singletonList("Value1"));
+        filterConfig.put("tag.Filter2", asList("Value2a", "Value2b"));
+        filterConfig.put("keyName", Collections.singletonList("keyValue1"));
+        filterConfig.put("KeyName", Collections.singletonList("keyValue2"));
         Filter filter1 = new Filter("tag:Filter1", Collections.singletonList("Value1"));
         Filter filter2 = new Filter("tag:Filter2", asList("Value2a", "Value2b"));
+        Filter filter3 = new Filter("key-name", Collections.singletonList("keyValue1"));
+        Filter filter4 = new Filter("key-name", Collections.singletonList("keyValue2"));
         awsEC2Platform.setFilter(filterConfig);
         Collection<Filter> filters = awsEC2Platform.generateSearchFilters();
-        assertThat(filters, containsInAnyOrder(filter1, filter2));
+        assertThat(filters, containsInAnyOrder(filter1, filter2, filter3, filter4));
+    }
+
+    @Test
+    public void getVpcIdOfContainer () {
+        String instanceId = randomUUID().toString();
+        String vpcId = randomUUID().toString();
+        Instance instance = new Instance().withInstanceId(instanceId).withVpcId(vpcId);
+        Reservation reservation = new Reservation().withInstances(instance);
+        ArgumentCaptor<DescribeInstancesRequest> captor = ArgumentCaptor.forClass(DescribeInstancesRequest.class);
+        doReturn(new DescribeInstancesResult().withReservations(reservation)).when(amazonEC2)
+                                                                             .describeInstances(captor.capture());
+        assertEquals(vpcId, awsEC2Platform.getVpcIdOfContainer(instanceId));
+        assertEquals(Collections.singletonList(instanceId), captor.getValue().getInstanceIds());
+    }
+
+    @Test(expected = ChaosException.class)
+    public void getVpcIdOfContainerException () {
+        doReturn(new DescribeInstancesResult().withReservations(new Reservation())).when(amazonEC2)
+                                                                                   .describeInstances(any());
+        awsEC2Platform.getVpcIdOfContainer(randomUUID().toString());
+    }
+
+    @Test
+    public void getChaosSecurityGroupIdOfInstance () {
+        String instanceId = randomUUID().toString();
+        String vpcId = randomUUID().toString();
+        String securityGroupId = randomUUID().toString();
+        doReturn(vpcId).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
+        doReturn(securityGroupId).when(awsEC2Platform).lookupChaosSecurityGroup(vpcId);
+        assertEquals(securityGroupId, awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
+        verify(awsEC2Platform, times(1)).lookupChaosSecurityGroup(vpcId);
+        reset(awsEC2Platform);
+        doReturn(vpcId).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
+        assertEquals(securityGroupId, awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
+        verify(awsEC2Platform, never()).lookupChaosSecurityGroup(vpcId);
+    }
+
+    @Test
+    public void createChaosSecurityGroup () {
+        String vpcId = randomUUID().toString();
+        String securityGroupId = randomUUID().toString();
+        ArgumentCaptor<CreateSecurityGroupRequest> createSecurityGroupRequestArgumentCaptor = ArgumentCaptor.forClass(CreateSecurityGroupRequest.class);
+        doReturn(new CreateSecurityGroupResult().withGroupId(securityGroupId)).when(amazonEC2)
+                                                                              .createSecurityGroup(createSecurityGroupRequestArgumentCaptor
+                                                                                      .capture());
+        assertEquals(securityGroupId, awsEC2Platform.createChaosSecurityGroup(vpcId));
+        CreateSecurityGroupRequest request = createSecurityGroupRequestArgumentCaptor.getValue();
+        assertEquals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId, request.getGroupName());
+        assertEquals(vpcId, request.getVpcId());
+        assertEquals(AwsEC2Constants.EC2_DEFAULT_CHAOS_SECURITY_GROUP_DESCRIPTION, request.getDescription());
+        ArgumentCaptor<RevokeSecurityGroupEgressRequest> revokeSecurityGroupEgressRequestArgumentCaptor = ArgumentCaptor
+                .forClass(RevokeSecurityGroupEgressRequest.class);
+        verify(amazonEC2, times(1)).revokeSecurityGroupEgress(revokeSecurityGroupEgressRequestArgumentCaptor.capture());
+        RevokeSecurityGroupEgressRequest revokeSecurityGroupEgressRequest = revokeSecurityGroupEgressRequestArgumentCaptor
+                .getValue();
+        assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeSecurityGroupEgressRequest
+                .getIpPermissions());
+    }
+
+    @Test
+    public void lookupChaosSecurityGroup () {
+        String vpcId = randomUUID().toString();
+        String groupId = randomUUID().toString();
+        ArgumentCaptor<DescribeSecurityGroupsRequest> captor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
+        doReturn(groupId).when(awsEC2Platform).createChaosSecurityGroup(vpcId);
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups(captor.capture());
+        assertEquals(groupId, awsEC2Platform.lookupChaosSecurityGroup(vpcId));
+        verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
+        assertThat(captor.getValue()
+                         .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id").withValues(vpcId)));
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void setInvalidSecurityGroup () {
+        ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
+        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String instanceId = randomUUID().toString();
+        AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
+        exception.setErrorCode(AwsEC2Constants.SECURITY_GROUP_NOT_FOUND);
+        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        doNothing().when(awsEC2Platform).processInvalidGroups(groupListCaptor.capture());
+        try {
+            awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        Collection<String> groupsToRemove = groupListCaptor.getValue();
+        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getInstanceId());
+        assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
+        assertThat(groupsToRemove, IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
+    }
+
+    @Test
+    public void setInvalidSecurityGroupWithDifferentError () {
+        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10)
+                                               .mapToObj(i -> randomUUID().toString())
+                                               .collect(Collectors.toList());
+        String instanceId = randomUUID().toString();
+        AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
+        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        try {
+            awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
+            fail("Expected a ChaosException");
+        } catch (ChaosException ignored) {
+            // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
+        }
+        verify(awsEC2Platform, never()).processInvalidGroups(any());
+        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getInstanceId());
+        assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
+    }
+
+    @Test
+    public void processInvalidGroups () {
+        Map<String, String> vpcToSecurityGroupMap;
+        Collection<String> validSecurityGroups = IntStream.range(0, 10)
+                                                          .mapToObj(i -> randomUUID().toString())
+                                                          .collect(Collectors.toList());
+        String invalidSecurityGroup = randomUUID().toString();
+        String invalidVpc = randomUUID().toString();
+        validSecurityGroups.forEach(s -> {
+            String vpc = randomUUID().toString();
+            String instanceId = randomUUID().toString();
+            doReturn(vpc).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
+            doReturn(s).when(awsEC2Platform).lookupChaosSecurityGroup(vpc);
+            awsEC2Platform.getChaosSecurityGroupForInstance(instanceId);
+        });
+        String instanceId = randomUUID().toString();
+        doReturn(invalidVpc).when(awsEC2Platform).getVpcIdOfContainer(instanceId);
+        doReturn(invalidSecurityGroup).when(awsEC2Platform).lookupChaosSecurityGroup(invalidVpc);
+        awsEC2Platform.getChaosSecurityGroupForInstance(instanceId);
+        // Lookup Security Group Map and make sure it's valid before we start pruning
+        vpcToSecurityGroupMap = awsEC2Platform.getVpcToSecurityGroupMap();
+        Collection<String> expectedSecurityGroups = new ArrayList<>(validSecurityGroups);
+        expectedSecurityGroups.add(invalidSecurityGroup);
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(expectedSecurityGroups
+                .toArray(new String[0])));
+        // Prune out the security group and make sure it's different.
+        awsEC2Platform.processInvalidGroups(Collections.singleton(invalidSecurityGroup));
+        vpcToSecurityGroupMap = awsEC2Platform.getVpcToSecurityGroupMap();
+        assertThat(vpcToSecurityGroupMap.values(), IsIterableContainingInAnyOrder.containsInAnyOrder(validSecurityGroups
+                .toArray(new String[0])));
+    }
+
+    @Test
+    public void getVpcToSecurityGroupMap () {
+        Map<String, String> firstMap = awsEC2Platform.getVpcToSecurityGroupMap();
+        Map<String, String> secondMap = awsEC2Platform.getVpcToSecurityGroupMap();
+        assertNotSame("The VPC To Security Group Map should return a clone, not the same object", firstMap, secondMap);
     }
 
     @Configuration
@@ -436,7 +551,6 @@ public class AwsEC2PlatformTest {
         private ContainerManager containerManager;
         @Autowired
         private AwsEC2SelfAwareness awsEC2SelfAwareness;
-
         @Bean
         AwsEC2Platform awsEC2Platform () {
             return Mockito.spy(new AwsEC2Platform(amazonEC2, containerManager, awsEC2SelfAwareness));

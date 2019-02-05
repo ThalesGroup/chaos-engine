@@ -1,52 +1,56 @@
 package com.gemalto.chaos.notification.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.util.HttpUtils;
-import com.google.gson.Gson;
+import com.gemalto.chaos.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.NotNull;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static com.gemalto.chaos.constants.DataDogConstants.SLACK_NOTIFICATION_SERVER_RESPONSE_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
-    protected static final Integer MAXIMUM_ATTACHMENTS = 20;
+    static final Integer MAXIMUM_ATTACHMENTS = 20;
+    static final String TITLE = "Message";
+    static final String AUTHOR_NAME = "Chaos Event Trace";
+    static final String EXPERIMENT_ID = "Experiment ID";
+    static final String TARGET = "Target";
+    static final String EXPERIMENT_METHOD = "Method";
+    static final String EXPERIMENT_TYPE = "Type";
+    static final String PLATFORM_LAYER = "Platform Layer";
+    static final String RAW_EVENT = "Raw Event";
+    static final String FOOTER_PREFIX = "Chaos Engine - ";
+    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<NotificationLevel, String>(NotificationLevel.class);
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-
-    protected static final String TITLE = "Message";
-    protected static final String AUTHOR_NAME = "Chaos Event Trace";
-    protected static final String EXPERIMENT_ID = "Experiment ID";
-    protected static final String TARGET = "Target";
-    protected static final String EXPERIMENT_METHOD = "Method";
-    protected static final String EXPERIMENT_TYPE = "Type";
-    protected static final String PLATFORM_LAYER = "Platform Layer";
-    protected static final String RAW_EVENT = "Raw Event";
-    protected static final String FOOTER_PREFIX = "Chaos Engine - ";
+    private final Collection<String> knownChaosEventFields = Collections.unmodifiableList(Arrays.asList("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer"));
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
         this.webhookUri = webhookUri;
         this.hostname = HttpUtils.getMachineHostname();
+        slackNotificationColorMap.put(NotificationLevel.GOOD, "good");
+        slackNotificationColorMap.put(NotificationLevel.WARN, "warning");
+
         log.info("Created Slack notification manager against {}", this.webhookUri);
     }
 
@@ -83,74 +87,69 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
-        return SlackAttachment.builder()
-                              .withFallback(chaosEvent.toString())
-                              .withFooter(FOOTER_PREFIX + hostname)
-                              .withTitle(TITLE)
-                              .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
-                              .withText(chaosEvent.getMessage())
-                              .withTs(chaosEvent.getChaosTime().toInstant())
-                              .withAuthor_name(AUTHOR_NAME)
-                              .withPretext(chaosEvent.getNotificationLevel().toString())
-                              .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
-                              .withField(TARGET, chaosEvent.getTargetContainer().getSimpleName())
-                              .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
-                              .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
-                              .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
-                              .withCodeField(RAW_EVENT, chaosEvent.toString())
-                              .withMarkupIn(SlackAttachment.MarkupOpts.fields)
-                              .withMarkupIn(SlackAttachment.MarkupOpts.pretext)
-                              .build();
+        SlackAttachment.SlackAttachmentBuilder builder;
+        builder = SlackAttachment.builder()
+                                 .withFallback(chaosEvent.toString())
+                                 .withFooter(FOOTER_PREFIX + hostname)
+                                 .withTitle(TITLE)
+                                 .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
+                                 .withText(chaosEvent.getMessage())
+                                 .withTs(chaosEvent.getChaosTime().toInstant())
+                                 .withAuthor_name(AUTHOR_NAME)
+                                 .withPretext(chaosEvent.getNotificationLevel().toString())
+                                 .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
+                                 .withField(TARGET, chaosEvent.getTargetContainer().getSimpleName())
+                                 .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
+                                 .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
+                                 .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
+                                 .withCodeField(RAW_EVENT, chaosEvent.toString())
+                                 .withMarkupIn(SlackAttachment.MarkupOpts.fields)
+                                 .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
+        chaosEvent.asMap()
+                  .entrySet()
+                  .stream()
+                  .filter(e -> !knownChaosEventFields.contains(e.getKey().toString()))
+                  .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                          .toString()), e.getValue()
+                                                                                                         .toString()));
+        return builder.build();
     }
 
-    protected String getSlackNotificationColor (NotificationLevel notificationLevel) {
-        switch (notificationLevel) {
-            case GOOD:
-                return "good";
-            case WARN:
-                return "warning";
-            default:
-                return "danger";
-        }
+    String getSlackNotificationColor (NotificationLevel notificationLevel) {
+        return Optional.ofNullable(slackNotificationColorMap.get(notificationLevel)).orElse("danger");
     }
 
-    protected void sendSlackMessage (SlackMessage slackMessage) throws IOException {
-        String payload = new Gson().toJson(slackMessage);
+    void sendSlackMessage (SlackMessage slackMessage) throws IOException {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        ResponseEntity<String> response;
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> httpEntity = new HttpEntity<>(new ObjectMapper().writeValueAsString(slackMessage), headers);
         try {
-            log.debug("Sending slack notification");
-            URL url = new URL(webhookUri);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-            OutputStream outputStream = connection.getOutputStream();
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"))) {
-                bufferedWriter.write(payload);
-                bufferedWriter.flush();
-            } catch (Exception e) {
-                log.error("Unknown exception sending payload " + payload, e);
-            }
-            BufferedReader response = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            log.debug("Slack notification status: {}", keyValue(SLACK_NOTIFICATION_SERVER_RESPONSE_KEY, response.readLine()));
-            if (connection.getResponseCode() > 299 || connection.getResponseCode() < 200) {
-                throw new IOException("Unexpected response from server");
-            }
-        } catch (IOException e) {
-            log.debug("Failed to send payload: " + payload, e);
-            throw e;
+            response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
+        } catch (HttpServerErrorException e) {
+            throw new IOException("unexpected response from server");
+        }
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IOException("unexpected response from server");
         }
     }
 }
 
-@SuppressWarnings("unused")
-        // Variables are used as part of Gson, despite appearing unused.
 class SlackMessage {
     private String text;
     private List<SlackAttachment> attachments;
 
     static SlackMessageBuilder builder () {
         return new SlackMessageBuilder();
+    }
+
+    public String getText () {
+        return text;
+    }
+
+    public List<SlackAttachment> getAttachments () {
+        return attachments;
     }
 
     static final class SlackMessageBuilder {
@@ -197,14 +196,54 @@ class SlackAttachment {
     private String fallback;
     private List<Field> fields;
 
+    static SlackAttachmentBuilder builder () {
+        return new SlackAttachmentBuilder();
+    }
+
+    public String getPretext () {
+        return pretext;
+    }
+
+    public String getAuthor_name () {
+        return author_name;
+    }
+
+    public String getTitle () {
+        return title;
+    }
+
+    public String getTitle_link () {
+        return title_link;
+    }
+
+    public String getText () {
+        return text;
+    }
+
+    public String getColor () {
+        return color;
+    }
+
+    public String getFooter () {
+        return footer;
+    }
+
+    public Long getTs () {
+        return ts;
+    }
+
+    public String getFallback () {
+        return fallback;
+    }
+
+    public List<Field> getFields () {
+        return fields;
+    }
+
     public enum MarkupOpts {
         fields,
         text,
         pretext,
-    }
-
-    static SlackAttachmentBuilder builder () {
-        return new SlackAttachmentBuilder();
     }
 
     public static final class SlackAttachmentBuilder {
@@ -319,5 +358,17 @@ class Field {
         this.title = title;
         this.value = value;
         this.Short = Short;
+    }
+
+    public String getTitle () {
+        return title;
+    }
+
+    public String getValue () {
+        return value;
+    }
+
+    public boolean isShort () {
+        return Short;
     }
 }

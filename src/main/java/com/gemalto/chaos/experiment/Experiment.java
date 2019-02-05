@@ -15,28 +15,29 @@ import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.*;
-import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Experiment {
     private static final Logger log = LoggerFactory.getLogger(Experiment.class);
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private final String id = randomUUID().toString();
     protected Container container;
     protected ExperimentType experimentType;
@@ -62,13 +63,20 @@ public abstract class Experiment {
     private String preferredExperiment;
 
     Boolean isSelfHealingRequired () {
-        return getExperimentState() == ExperimentState.FINISHED ? getSelfHealingCounter().get() > 0 : null;
+        return endTime != null ? getSelfHealingCounter().get() > 0 : null;
+    }
+
+    public AtomicInteger getSelfHealingCounter () {
+        return selfHealingCounter;
+    }
+
+    protected void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
+        this.selfHealingCounter = selfHealingCounter;
     }
 
     public void setPreferredExperiment (String preferredExperiment) {
         this.preferredExperiment = preferredExperiment;
     }
-
 
     NotificationManager getNotificationManager () {
         return notificationManager;
@@ -95,14 +103,6 @@ public abstract class Experiment {
         return container.getContainerType();
     }
 
-    public AtomicInteger getSelfHealingCounter () {
-        return selfHealingCounter;
-    }
-
-    protected void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
-        this.selfHealingCounter = selfHealingCounter;
-    }
-
     @JsonIgnore
     public Method getExperimentMethod () {
         return experimentMethod;
@@ -112,8 +112,8 @@ public abstract class Experiment {
         this.experimentMethod = experimentMethod;
     }
 
-    public String getExperimentMethodName(){
-        if(experimentMethod!=null) {
+    public String getExperimentMethodName () {
+        if (experimentMethod != null) {
             return experimentMethod.getName();
         }
         return EXPERIMENT_METHOD_NOT_SET_YET;
@@ -149,6 +149,56 @@ public abstract class Experiment {
         this.finalizationDuration = finalizationDuration;
     }
 
+    Future<Boolean> startExperiment () {
+        MDC.put(DataDogConstants.DATADOG_EXPERIMENTID_KEY, getId());
+        getContainer().setMappedDiagnosticContext();
+        Map<String, String> existingMDC = MDC.getCopyOfContextMap();
+        MDC.remove(DataDogConstants.DATADOG_EXPERIMENTID_KEY);
+        getContainer().clearMappedDiagnosticContext();
+        return executorService.submit(() -> {
+            try {
+                MDC.setContextMap(existingMDC);
+                if (!adminManager.canRunExperiments()) {
+                    log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
+                    return Boolean.FALSE;
+                }
+                if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
+                    log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
+                    return Boolean.FALSE;
+                }
+                if (container.supportsExperimentType(experimentType)) {
+                    Method chosenMethod = chooseExperimentMethod();
+                    if (chosenMethod == null) return Boolean.FALSE;
+                    log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
+                    setExperimentMethod(chosenMethod);
+                    setExperimentLayer(container.getPlatform());
+                    notificationManager.sendNotification(ChaosEvent.builder()
+                                                                   .fromExperiment(this)
+                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                   .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                   .build());
+                    try {
+                        container.startExperiment(this);
+                    } catch (ChaosException ex) {
+                        notificationManager.sendNotification(ChaosEvent.builder()
+                                                                       .fromExperiment(this)
+                                                                       .withNotificationLevel(NotificationLevel.ERROR)
+                                                                       .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
+                                                                       .build());
+                        return Boolean.FALSE;
+                    }
+                    startTime = Instant.now();
+                    experimentState = ExperimentState.STARTED;
+                } else {
+                    return Boolean.FALSE;
+                }
+                return Boolean.TRUE;
+            } finally {
+                existingMDC.keySet().forEach(MDC::remove);
+            }
+        });
+    }
+
     public String getId () {
         return id;
     }
@@ -157,53 +207,27 @@ public abstract class Experiment {
         return container;
     }
 
-    boolean startExperiment () {
-        if (!adminManager.canRunExperiments()) {
-            log.info("Cannot start experiments right now, system is {}", adminManager.getAdminState());
-            return false;
+    private Method chooseExperimentMethod () {
+        Map<Class<? extends Annotation>, List<Method>> experimentMethods = container.getExperimentMethods();
+        if (!experimentMethods.keySet().contains(experimentType.getAnnotation()) || experimentMethods.get(experimentType
+                .getAnnotation()).isEmpty()) return null;
+        Method chosenMethod = null;
+        if (preferredExperiment != null) {
+            Optional<Method> optionalMethod = experimentMethods.values()
+                                                               .stream()
+                                                               .flatMap(Collection::stream)
+                                                               .filter(method -> method.getName()
+                                                                                       .equals(preferredExperiment))
+                                                               .findFirst();
+            chosenMethod = optionalMethod.orElse(null);
+            log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
         }
-        if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
-            log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
-            return false;
+        if (chosenMethod == null) {
+            List<Method> methods = experimentMethods.get(experimentType.getAnnotation());
+            int index = ThreadLocalRandom.current().nextInt(methods.size());
+            chosenMethod = methods.get(index);
         }
-        if (container.supportsExperimentType(experimentType)) {
-            List<Method> experimentMethods = getMethodsWithAnnotation(container.getClass(), getExperimentType().getAnnotation());
-            if (experimentMethods.isEmpty()) {
-                throw new ChaosException("Could not find an experiment vector");
-            }
-            Method chosenMethod = null;
-            if (preferredExperiment != null && experimentMethods.stream()
-                                                                .map(Method::getName)
-                                                                .anyMatch(s -> s.equals(preferredExperiment))) {
-                Map<String, Method> stringMethodMap = experimentMethods.stream()
-                                                                       .collect(Collectors.toMap(Method::getName, method -> method));
-                chosenMethod = stringMethodMap.get(preferredExperiment);
-                log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
-            }
-            if (chosenMethod == null) {
-                int index = ThreadLocalRandom.current().nextInt(experimentMethods.size());
-                chosenMethod = experimentMethods.get(index);
-            }
-            log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
-            setExperimentMethod(chosenMethod);
-            setExperimentLayer(container.getPlatform());
-            notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                           .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
-                                                           .build());
-            try{
-                container.startExperiment(this);
-            }catch (ChaosException ex){
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
-                                                               .build());
-                return false;
-            }
-            startTime = Instant.now();
-            experimentState = ExperimentState.STARTED;
-        } else return false;
-        return true;
+        return chosenMethod;
     }
 
     public ExperimentType getExperimentType () {
@@ -229,7 +253,6 @@ public abstract class Experiment {
                                                                    .withMessage(String.format("Experiment finished. Container recovered from the experiment. Duration: %d s, Self-healing attempts: %d", getDuration()
                                                                            .getSeconds(), selfHealingCounter.get()))
                                                                    .build());
-
                     return finalizeExperiment();
                 }
                 return ExperimentState.STARTED;
@@ -263,10 +286,9 @@ public abstract class Experiment {
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         }
-
         try {
             return container.getContainerHealth(experimentType);
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Issue while checking container health", e);
             return ContainerHealth.RUNNING_EXPERIMENT;
         }
@@ -279,6 +301,10 @@ public abstract class Experiment {
         boolean finalizable = Instant.now().isAfter(getFinalizationStartTime().plus(finalizationDuration));
         log.debug("Experiment {} is finalizable = {}", id, finalizable);
         return finalizable;
+    }
+
+    protected Duration getDuration () {
+        return Duration.between(getStartTime(), getEndTime());
     }
 
     private ExperimentState finalizeExperiment () {
@@ -312,7 +338,7 @@ public abstract class Experiment {
                 log.warn("The experiment {} has gone on too long, invoking self-healing. \n{}", id, this);
                 ChaosEvent chaosEvent;
                 if (canRunSelfHealing()) {
-                    if(selfHealingCounter.get()<=DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
+                    if (selfHealingCounter.get() <= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
                         StringBuilder message = new StringBuilder();
                         message.append(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING);
                         NotificationLevel notificationLevel = NotificationLevel.ERROR;
@@ -320,7 +346,7 @@ public abstract class Experiment {
                             message.append(ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER)
                                    .append(selfHealingCounter.get())
                                    .append(".");
-                            notificationLevel=NotificationLevel.WARN;
+                            notificationLevel = NotificationLevel.WARN;
                         }
                         chaosEvent = ChaosEvent.builder()
                                                .fromExperiment(this)
@@ -343,14 +369,12 @@ public abstract class Experiment {
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
                                            .build();
-
                     notificationManager.sendNotification(chaosEvent);
                 } else {
                     chaosEvent = ChaosEvent.builder().fromExperiment(this)
                                            .withNotificationLevel(NotificationLevel.WARN)
                                            .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
                                            .build();
-
                     notificationManager.sendNotification(chaosEvent);
                 }
             } catch (ChaosException e) {
@@ -377,6 +401,14 @@ public abstract class Experiment {
         return finalizationStartTime;
     }
 
+    public Instant getStartTime () {
+        return startTime;
+    }
+
+    private Instant getEndTime () {
+        return Optional.ofNullable(endTime).orElseGet(Instant::now);
+    }
+
     protected boolean isOverDuration () {
         return Instant.now().isAfter(getStartTime().plus(maximumDuration));
     }
@@ -397,23 +429,11 @@ public abstract class Experiment {
         }
     }
 
-    public Instant getStartTime () {
-        return startTime;
-    }
-
     private Duration getMinimumTimeBetweenSelfHealing () {
         return container.getMinimumSelfHealingInterval();
     }
 
-    protected Duration getDuration () {
-        return Duration.between(getStartTime(), getEndTime());
-    }
-
-    private Instant getEndTime () {
-        return Optional.ofNullable(endTime).orElse(Instant.now());
-    }
-
-    private void setEndTime (Instant endTime) {
+    void setEndTime (Instant endTime) {
         this.endTime = endTime;
     }
 }
