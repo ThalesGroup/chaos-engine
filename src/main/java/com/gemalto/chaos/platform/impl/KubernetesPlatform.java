@@ -58,6 +58,7 @@ public class KubernetesPlatform extends Platform {
 
     public KubernetesPlatform (ApiClient client) {
         usingAPIClient(client);
+        log.info("Kubernetes Platform created");
     }
 
     private void usingAPIClient (ApiClient client) {
