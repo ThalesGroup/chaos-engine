@@ -2,6 +2,9 @@ package com.gemalto.chaos.services.impl;
 
 import com.gemalto.chaos.services.CloudService;
 import io.kubernetes.client.ApiClient;
+import io.kubernetes.client.Exec;
+import io.kubernetes.client.apis.CoreApi;
+import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.util.Config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,9 +16,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "kubernetes")
 @ConditionalOnProperty({ "kubernetes.url", "kubernetes.token" })
 public class KubernetesService implements CloudService {
-    /*,"kubernetes.validateSSL","kubernetes.debug"
-
-     */
     private String url;
     private String token;
     private Boolean validateSSL = false;
@@ -43,5 +43,23 @@ public class KubernetesService implements CloudService {
         ApiClient apiClient = Config.fromToken(url, token, validateSSL);
         apiClient.setDebugging(debug);
         return apiClient;
+    }
+
+    @Bean
+    @RefreshScope
+    CoreApi coreApi (ApiClient apiClient) {
+        return new CoreApi(apiClient);
+    }
+
+    @Bean
+    @RefreshScope
+    CoreV1Api coreV1Api (ApiClient apiClient) {
+        return new CoreV1Api(apiClient);
+    }
+
+    @Bean
+    @RefreshScope
+    Exec exec (ApiClient apiClient) {
+        return new Exec(apiClient);
     }
 }
