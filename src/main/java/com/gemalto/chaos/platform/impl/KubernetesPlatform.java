@@ -14,9 +14,7 @@ import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.impl.KubernetesSshManager;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
-import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Configuration;
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.CoreApi;
 import io.kubernetes.client.apis.CoreV1Api;
@@ -24,7 +22,6 @@ import io.kubernetes.client.models.V1DeleteOptions;
 import io.kubernetes.client.models.V1DeleteOptionsBuilder;
 import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
-import io.kubernetes.client.util.Config;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,37 +44,20 @@ public class KubernetesPlatform extends Platform {
     private ContainerManager containerManager;
     @Autowired
     private ShResourceService shResourceService;
+    @Autowired
     private CoreApi coreApi;
+    @Autowired
     private CoreV1Api coreV1Api;
+    @Autowired
     private Exec exec;
 
+
     @Autowired
-    public KubernetesPlatform () throws IOException {
-        this(Config.defaultClient());
-    }
-
-    public KubernetesPlatform (ApiClient client) {
-        usingAPIClient(client);
-        log.info("Kubernetes Platform created");
-    }
-
-    private void usingAPIClient (ApiClient client) {
-        Configuration.setDefaultApiClient(client);
-        setCoreApi(new CoreApi());
-        setCoreV1Api(new CoreV1Api());
-        setExec(new Exec());
-    }
-
-    public void setCoreApi (CoreApi coreApi) {
+    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec) {
         this.coreApi = coreApi;
-    }
-
-    public void setCoreV1Api (CoreV1Api coreV1Api) {
         this.coreV1Api = coreV1Api;
-    }
-
-    public void setExec (Exec exec) {
         this.exec = exec;
+        log.info("Kubernetes Platform created");
     }
 
     public boolean stopInstance (KubernetesPodContainer instance) {
@@ -115,6 +95,7 @@ public class KubernetesPlatform extends Platform {
             coreApi.getAPIVersions().getVersions();
             return ApiStatus.OK;
         } catch (ApiException e) {
+            log.error("Kubernetes API health check failed", e);
             return ApiStatus.ERROR;
         }
     }
@@ -135,6 +116,7 @@ public class KubernetesPlatform extends Platform {
                                          .collect(Collectors.toSet());
             return (namespaces.size() > 0) ? PlatformHealth.OK : PlatformHealth.DEGRADED;
         } catch (ApiException e) {
+            log.error("Kubernetes Platform health check failed", e);
             return PlatformHealth.FAILED;
         }
     }
