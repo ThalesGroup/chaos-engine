@@ -35,8 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -51,7 +50,7 @@ public class KubernetesPlatformTest {
     private ShResourceService shResourceService;
 
     @Autowired
-    KubernetesPlatform platform;
+    private KubernetesPlatform platform;
     @Autowired
     private CoreApi coreApi;
     @Autowired
@@ -64,7 +63,7 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), anyBoolean(), any(), anyInt(), any(), any(), anyInt(), any()))
                 .thenReturn(getV1PodList(false));
         assertEquals(1, platform.getRoster().size());
-        assertEquals(false, platform.getRoster().get(0).canExperiment());
+        assertFalse(platform.getRoster().get(0).canExperiment());
     }
 
     @Test
@@ -73,7 +72,7 @@ public class KubernetesPlatformTest {
                 .thenReturn(getV1PodList(true));
         when(platform.getDestructionProbability()).thenReturn(1D);
         assertEquals(1, platform.getRoster().size());
-        assertEquals(true, platform.getRoster().get(0).canExperiment());
+        assertTrue(platform.getRoster().get(0).canExperiment());
     }
 
     @Test
@@ -115,15 +114,6 @@ public class KubernetesPlatformTest {
                                                                                                    .get(0)));
     }
 
-    @Test
-    public void testContainerHealth () throws ApiException {
-        when(coreV1Api.listPodForAllNamespaces(any(), any(), anyBoolean(), any(), anyInt(), any(), any(), anyInt(), any()))
-                .thenReturn(getV1PodList(true));
-            assertEquals(ContainerHealth.NORMAL, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
-                                                                                                       .get(0)));
-
-    }
-
     private static V1PodList getV1PodList (boolean isBackedByController) {
         return getV1PodList(isBackedByController, 1);
     }
@@ -132,7 +122,7 @@ public class KubernetesPlatformTest {
     public void testStopContainer () throws ApiException {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
         boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
-        assertEquals(true, result);
+        assertTrue(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -141,7 +131,7 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
         when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
         boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
-        assertEquals(false, result);
+        assertFalse(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -150,7 +140,7 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
         when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new JsonSyntaxException(""));
         boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
-        assertEquals(true, result);
+        assertTrue(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -193,7 +183,7 @@ public class KubernetesPlatformTest {
     }
 
     @Test
-    public void testCreationFromAPI () throws Exception {
+    public void testCreationFromAPI () {
         KubernetesPodContainer container = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
         TestCase.assertEquals(POD_NAME, container.getPodName());
         TestCase.assertEquals(NAMESPACE_NAME, container.getNamespace());
