@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static net.logstash.logback.argument.StructuredArguments.e;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -86,7 +87,15 @@ public class KubernetesPlatform extends Platform {
     }
 
     public ContainerHealth checkHealth (KubernetesPodContainer instance) {
-        return ContainerHealth.NORMAL;
+        try {
+            V1Pod result = coreV1Api.readNamespacedPodStatus(instance.getPodName(), instance.getNamespace(), "true");
+            //if there's any not ready container, return DOES_NOT_EXIST
+            return (result.getStatus().getContainerStatuses().stream().anyMatch(status -> status.isReady() == false))
+                    ? ContainerHealth.DOES_NOT_EXIST : ContainerHealth.NORMAL;
+        } catch (ApiException e) {
+            log.error("Exception when checking container health", e);
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
     }
 
     @Override

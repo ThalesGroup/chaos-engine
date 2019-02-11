@@ -94,9 +94,10 @@ public class KubernetesPlatformTest {
     }
 
     @Test
-    public void testPlatformHealth () throws ApiException {
-        when(coreV1Api.listPodForAllNamespaces(any(), any(), anyBoolean(), any(), anyInt(), any(), any(), anyInt(), any()))
-                .thenReturn(getV1PodList(true));
+    public void testPlatformHealth () {
+        try {
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
             assertEquals(PlatformHealth.OK, platform.getPlatformHealth());
 
     }
@@ -106,12 +107,95 @@ public class KubernetesPlatformTest {
     }
 
     @Test
-    public void testContainerHealth () throws ApiException {
-        when(coreV1Api.listPodForAllNamespaces(any(), any(), anyBoolean(), any(), anyInt(), any(), any(), anyInt(), any()))
-                .thenReturn(getV1PodList(true));
+    public void testContainerHealthWithApiException () {
+        try {
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
+            when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException());
+
+            assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                       .get(0)));
+        } catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testContainerHealthWithOneContainerHealthy () {
+        try {
+
+            V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus().withReady(true).endContainerStatus().build();
+            V1Pod pod = getV1PodList(true).getItems().get(0);
+            pod.setStatus(status);
+
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
+            when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
+
             assertEquals(ContainerHealth.NORMAL, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
                                                                                                        .get(0)));
 
+    }
+
+    @Test
+    public void testContainerHealthWithOneContainerUnHealthy () {
+        try {
+
+            V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus().withReady(false).endContainerStatus().build();
+            V1Pod pod = getV1PodList(true).getItems().get(0);
+            pod.setStatus(status);
+
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
+            when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
+
+            assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                       .get(0)));
+        } catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testContainerHealthWithSeveralContainerAllHealthy () {
+        try {
+            V1PodStatus status = new V1PodStatusBuilder()
+                    .addNewContainerStatus().withReady(true).endContainerStatus()
+                    .addNewContainerStatus().withReady(true).endContainerStatus()
+                    .addNewContainerStatus().withReady(true).endContainerStatus()
+                    .build();
+            assertEquals(3, status.getContainerStatuses().size());
+            V1Pod pod = getV1PodList(true).getItems().get(0);
+            pod.setStatus(status);
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
+            when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
+            assertEquals(ContainerHealth.NORMAL, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                               .get(0)));
+        } catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testContainerHealthWithSeveralContainerOneUnhealthy () {
+        try {
+            V1PodStatus status = new V1PodStatusBuilder()
+                    .addNewContainerStatus().withReady(true).endContainerStatus()
+                    .addNewContainerStatus().withReady(false).endContainerStatus()
+                    .addNewContainerStatus().withReady(true).endContainerStatus()
+                    .build();
+            assertEquals(3, status.getContainerStatuses().size());
+            V1Pod pod = getV1PodList(true).getItems().get(0);
+            pod.setStatus(status);
+            when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(getV1PodList(true));
+            when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
+            assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                       .get(0)));
+        } catch (Exception e) {
+            fail();
+        }
     }
 
     private static final V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
