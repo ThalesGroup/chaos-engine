@@ -1,18 +1,9 @@
 package com.gemalto.chaos;
 
-import com.gemalto.chaos.container.ContainerManager;
-import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import com.gemalto.chaos.ssh.services.ShResourceService;
-import io.kubernetes.client.ApiClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashMap;
@@ -44,6 +35,8 @@ public class ChaosEngineTest {
         awsModules.put("aws.ec2", "");
         HashMap<String, String> kubernetesModules = new HashMap<>();
         kubernetesModules.put("kubernetes", "");
+        kubernetesModules.put("kubernetes.url", "");
+        kubernetesModules.put("kubernetes.token", "");
         systemPropertiesMap.add(kubernetesModules);
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }
