@@ -50,6 +50,7 @@ public class KubernetesPlatform extends Platform {
     private CoreV1Api coreV1Api;
     @Autowired
     private Exec exec;
+    private String namespace;
 
 
     @Autowired
@@ -58,6 +59,14 @@ public class KubernetesPlatform extends Platform {
         this.coreV1Api = coreV1Api;
         this.exec = exec;
         log.info("Kubernetes Platform created");
+    }
+
+    public String getNamespace () {
+        return namespace;
+    }
+
+    public void setNamespace (String namespace) {
+        this.namespace = namespace;
     }
 
     public boolean stopInstance (KubernetesPodContainer instance) {
@@ -116,7 +125,7 @@ public class KubernetesPlatform extends Platform {
     @Override
     public PlatformHealth getPlatformHealth () {
         try {
-            V1PodList pods = coreV1Api.listPodForAllNamespaces("", "", true, "", 0, "", "", 0, false);
+            V1PodList pods = listAllPodsInNamespace();
             Set<String> namespaces = pods.getItems()
                                          .stream()
                                          .filter(p -> !PROTECTED_NAMESPACES.contains(p.getMetadata().getNamespace()))
@@ -129,11 +138,15 @@ public class KubernetesPlatform extends Platform {
         }
     }
 
+    private V1PodList listAllPodsInNamespace () throws ApiException {
+        return coreV1Api.listNamespacedPod(namespace, "", "", "", true, "", 0, "", 0, false);
+    }
+
     @Override
     protected List<Container> generateRoster () {
         final List<Container> containerList = new ArrayList<>();
         try {
-            V1PodList pods = coreV1Api.listPodForAllNamespaces("", "", true, "", 0, "", "", 0, false);
+            V1PodList pods = listAllPodsInNamespace();
             containerList.addAll(pods.getItems()
                                      .stream()
                                      .filter(p -> !PROTECTED_NAMESPACES.contains(p.getMetadata().getNamespace()))
