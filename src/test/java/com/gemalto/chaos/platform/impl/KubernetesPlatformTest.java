@@ -119,27 +119,27 @@ public class KubernetesPlatformTest {
     }
 
     @Test
-    public void testStopContainer () throws ApiException {
+    public void testDeleteContainer () throws ApiException {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
-        boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
+        boolean result = platform.deleteContainer((KubernetesPodContainer) platform.getRoster().get(0));
         assertTrue(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
-    public void testStopContainerAPIException () throws ApiException {
+    public void testDeleteContainerAPIException () throws ApiException {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
         when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
-        boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
+        boolean result = platform.deleteContainer((KubernetesPodContainer) platform.getRoster().get(0));
         assertFalse(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
-    public void testStopContainerJSONSyntaxException () throws ApiException {
+    public void testDeleteContainerJSONSyntaxException () throws ApiException {
         when(coreV1Api.listPodForAllNamespaces(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getV1PodList(true));
         when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new JsonSyntaxException(""));
-        boolean result = platform.stopInstance((KubernetesPodContainer) platform.getRoster().get(0));
+        boolean result = platform.deleteContainer((KubernetesPodContainer) platform.getRoster().get(0));
         assertTrue(result);
         verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
     }

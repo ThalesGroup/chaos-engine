@@ -71,8 +71,8 @@ public class KubernetesPodContainer extends Container {
     }
 
     @StateExperiment
-    public void stopContainer (Experiment experiment) {
-        kubernetesPlatform.stopInstance(this);
+    public void deleteContainer (Experiment experiment) {
+        kubernetesPlatform.deleteContainer(this);
         experiment.setSelfHealingMethod(() -> {
             return null;
         });
