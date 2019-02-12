@@ -50,7 +50,7 @@ public class KubernetesPlatform extends Platform {
     private CoreV1Api coreV1Api;
     @Autowired
     private Exec exec;
-    private String namespace;
+    private String namespace = "default";
 
 
     @Autowired
