@@ -29,7 +29,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -39,7 +40,6 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConditionalOnProperty("kubernetes")
 @ConfigurationProperties("kubernetes")
 public class KubernetesPlatform extends Platform {
-    private static final Set<String> PROTECTED_NAMESPACES = new HashSet<>(Arrays.asList("kube-system"));
     @Autowired
     private ContainerManager containerManager;
     @Autowired
@@ -98,7 +98,7 @@ public class KubernetesPlatform extends Platform {
         try {
             V1Pod result = coreV1Api.readNamespacedPodStatus(instance.getPodName(), instance.getNamespace(), "true");
             //if there's any not ready container, return DOES_NOT_EXIST
-            return (result.getStatus().getContainerStatuses().stream().anyMatch(status -> status.isReady() == false))
+            return (result.getStatus().getContainerStatuses().stream().anyMatch(status -> !status.isReady()))
                     ? ContainerHealth.DOES_NOT_EXIST : ContainerHealth.NORMAL;
         } catch (ApiException e) {
             log.error("Exception when checking container health", e);
@@ -126,12 +126,7 @@ public class KubernetesPlatform extends Platform {
     public PlatformHealth getPlatformHealth () {
         try {
             V1PodList pods = listAllPodsInNamespace();
-            Set<String> namespaces = pods.getItems()
-                                         .stream()
-                                         .filter(p -> !PROTECTED_NAMESPACES.contains(p.getMetadata().getNamespace()))
-                                         .map(this::getNamespace)
-                                         .collect(Collectors.toSet());
-            return (namespaces.size() > 0) ? PlatformHealth.OK : PlatformHealth.DEGRADED;
+            return (!pods.getItems().isEmpty()) ? PlatformHealth.OK : PlatformHealth.DEGRADED;
         } catch (ApiException e) {
             log.error("Kubernetes Platform health check failed", e);
             return PlatformHealth.FAILED;
@@ -149,7 +144,6 @@ public class KubernetesPlatform extends Platform {
             V1PodList pods = listAllPodsInNamespace();
             containerList.addAll(pods.getItems()
                                      .stream()
-                                     .filter(p -> !PROTECTED_NAMESPACES.contains(p.getMetadata().getNamespace()))
                                      .map(this::fromKubernetesAPIPod)
                                      .collect(Collectors.toSet()));
             return containerList;
@@ -159,7 +153,7 @@ public class KubernetesPlatform extends Platform {
         }
     }
 
-    public KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
+    KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
         KubernetesPodContainer container = containerManager.getMatchingContainer(KubernetesPodContainer.class, pod.getMetadata()
                                                                                                                   .getName());
         if (container == null) {
@@ -180,9 +174,5 @@ public class KubernetesPlatform extends Platform {
             log.debug("Found existing Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
-    }
-
-    private String getNamespace (V1Pod pod) {
-        return pod.getMetadata().getNamespace();
     }
 }
