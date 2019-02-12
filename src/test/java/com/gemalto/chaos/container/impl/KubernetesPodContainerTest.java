@@ -55,11 +55,11 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void stopContainer () {
-        kubernetesPodContainer.stopContainer(experiment);
+    public void deleteContainer () {
+        kubernetesPodContainer.deleteContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(kubernetesPlatform, times(1)).stopInstance(ArgumentMatchers.any());
+        Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(ArgumentMatchers.any());
     }
 
     @Test
