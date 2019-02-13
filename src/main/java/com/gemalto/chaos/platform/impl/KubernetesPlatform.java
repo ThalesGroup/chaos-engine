@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -16,21 +15,19 @@ import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.apis.AppsV1Api;
 import io.kubernetes.client.apis.CoreApi;
 import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1DeleteOptions;
-import io.kubernetes.client.models.V1DeleteOptionsBuilder;
-import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodList;
+import io.kubernetes.client.models.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -48,16 +45,26 @@ public class KubernetesPlatform extends Platform {
     private CoreApi coreApi;
     @Autowired
     private CoreV1Api coreV1Api;
+    protected static final String OWNER_REFERENCE_KIND_RC = "ReplicationController";
     @Autowired
     private Exec exec;
     private String namespace = "default";
+    protected static final String OWNER_REFERENCE_KIND_RS = "ReplicaSet";
+    protected static final String OWNER_REFERENCE_KIND_DP = "Deployment";
+    protected static final String OWNER_REFERENCE_KIND_SS = "StatefulSet";
+    protected static final String OWNER_REFERENCE_KIND_DS = "DaemonSet";
+    protected static final String OWNER_REFERENCE_KIND_JO = "Job";
+    protected static final String OWNER_REFERENCE_KIND_CJ = "CronJob";
+    @Autowired
+    AppsV1Api appsV1Api;
 
 
     @Autowired
-    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec) {
+    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec, AppsV1Api appsV1Api) {
         this.coreApi = coreApi;
         this.coreV1Api = coreV1Api;
         this.exec = exec;
+        this.appsV1Api = appsV1Api;
         log.info("Kubernetes Platform created");
     }
 
@@ -83,15 +90,61 @@ public class KubernetesPlatform extends Platform {
     }
 
     public void sshExperiment (SshExperiment experiment, KubernetesPodContainer container) {
+        SshExperiment sshExperiment = KubernetesSshExperiment.fromExperiment(experiment)
+                                                             .setExec(exec)
+                                                             .setSshManager(new KubernetesSshManager(container.getPodName(), container
+                                                                     .getNamespace()))
+                                                             .setShResourceService(shResourceService);
+        ((KubernetesSshExperiment) sshExperiment).runExperiment();
+    }
+
+    /**
+     * @param instance
+     * @return ContainerHealth
+     * <p>
+     * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
+     * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
+     * ReplicationController, ReplicaSet, StatefulSet, DaemonSet, Deployment, Job and CronJob
+     * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
+     */
+    public ContainerHealth checkDesiredReplicas (KubernetesPodContainer instance) {
         try {
-            KubernetesSshExperiment.fromExperiment(experiment)
-                                   .setExec(exec)
-                                   .setSshManager(new KubernetesSshManager(container.getPodName(), container.getNamespace()))
-                                   .setShResourceService(shResourceService)
-                                   .runExperiment();
-        } catch (IOException e) {
-            throw new ChaosException(e);
+            switch (instance.getOwnerKind()) {
+                case OWNER_REFERENCE_KIND_RC:
+                    V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (rc.getStatus().getReplicas() == rc.getStatus()
+                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                case OWNER_REFERENCE_KIND_RS:
+                    V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (replicaSet.getStatus().getReplicas() == replicaSet.getStatus()
+                                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                case OWNER_REFERENCE_KIND_SS:
+                    V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (statefulSet.getStatus().getReplicas() == statefulSet.getStatus()
+                                                                                .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                case OWNER_REFERENCE_KIND_DS:
+                    V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
+                    return (daemonSet.getStatus().getCurrentNumberScheduled() == daemonSet.getStatus()
+                                                                                          .getDesiredNumberScheduled()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                case OWNER_REFERENCE_KIND_DP:
+                    V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (deployment.getStatus().getReplicas() == deployment.getStatus()
+                                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                case OWNER_REFERENCE_KIND_JO:
+                case OWNER_REFERENCE_KIND_CJ:
+                    log.info("Skipping Job Pod, return ContainerHealth.NORMAL");
+                    break;
+                default:
+                    log.error("Found unsupported owner reference");
+            }
+        } catch (ApiException e) {
+            log.error("ApiException was thrown while checking desired replica count.", e);
         }
+        return ContainerHealth.NORMAL;
     }
 
     public ContainerHealth checkHealth (KubernetesPodContainer instance) {
@@ -167,6 +220,20 @@ public class KubernetesPlatform extends Platform {
                                                                                   .isBackedByController(CollectionUtils.isNotEmpty(pod
                                                                                           .getMetadata()
                                                                                           .getOwnerReferences()))
+                                                                                  .withOwnerKind(Optional.of(pod.getMetadata()
+                                                                                                                .getOwnerReferences())
+                                                                                                         .flatMap(list -> list
+                                                                                                                 .stream()
+                                                                                                                 .findFirst())
+                                                                                                         .map(V1OwnerReference::getKind)
+                                                                                                         .orElse(""))
+                                                                                  .withOwnerName(Optional.of(pod.getMetadata()
+                                                                                                                .getOwnerReferences())
+                                                                                                         .flatMap(list -> list
+                                                                                                                 .stream()
+                                                                                                                 .findFirst())
+                                                                                                         .map(V1OwnerReference::getName)
+                                                                                                         .orElse(""))
                                                                                   .build();
             log.info("Found new Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
@@ -175,4 +242,5 @@ public class KubernetesPlatform extends Platform {
         }
         return container;
     }
+
 }

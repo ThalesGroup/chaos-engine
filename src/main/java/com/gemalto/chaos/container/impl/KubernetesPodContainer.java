@@ -23,6 +23,8 @@ public class KubernetesPodContainer extends Container {
     private Map<String, String> labels = new HashMap<>();
     private boolean isBackedByController = false;
     private transient KubernetesPlatform kubernetesPlatform;
+    private String ownerKind;
+    private String ownerName;
 
     private KubernetesPodContainer () {
         super();
@@ -38,6 +40,14 @@ public class KubernetesPodContainer extends Container {
 
     public String getNamespace () {
         return namespace;
+    }
+
+    public String getOwnerKind () {
+        return ownerKind;
+    }
+
+    public String getOwnerName () {
+        return ownerName;
     }
 
     @Override
@@ -77,7 +87,7 @@ public class KubernetesPodContainer extends Container {
             return null;
         });
         experiment.setCheckContainerHealth(() -> {
-            return ContainerHealth.NORMAL;
+            return kubernetesPlatform.checkDesiredReplicas(this);
         });
     }
 
@@ -93,6 +103,8 @@ public class KubernetesPodContainer extends Container {
         private String namespace;
         private boolean isBackedByController = false;
         private KubernetesPlatform kubernetesPlatform;
+        private String ownerKind;
+        private String ownerName;
 
         public KubernetesPodContainerBuilder () {
         }
@@ -131,6 +143,16 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
+        public KubernetesPodContainerBuilder withOwnerKind (String ownerKind) {
+            this.ownerKind = ownerKind;
+            return this;
+        }
+
+        public KubernetesPodContainerBuilder withOwnerName (String ownerName) {
+            this.ownerName = ownerName;
+            return this;
+        }
+
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
             kubernetesPodContainer.podName = this.podName;
@@ -139,6 +161,9 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.labels.putAll(this.labels);
             kubernetesPodContainer.dataDogTags.putAll(this.dataDogTags);
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
+            kubernetesPodContainer.ownerKind = ownerKind;
+            kubernetesPodContainer.ownerName = ownerName;
+
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
                 kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");
