@@ -5,6 +5,7 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
 import com.gemalto.chaos.platform.enums.ApiStatus;
+import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
@@ -322,8 +323,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_RC);
+            .get(0).setKind(ControllerKind.ReplicationController.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
                                                                                      .get(0)
@@ -353,8 +353,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_RS);
+            .get(0).setKind(ControllerKind.ReplicaSet.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedReplicaSetStatus(eq("dummy"), eq(pods.getItems()
                                                                           .get(0)
@@ -384,8 +383,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_SS);
+            .get(0).setKind(ControllerKind.StatefulSet.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedStatefulSetStatus(eq("dummy"), eq(pods.getItems()
                                                                            .get(0)
@@ -415,8 +413,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_DP);
+            .get(0).setKind(ControllerKind.Deployment.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedDeploymentStatus(eq("dummy"), eq(pods.getItems()
                                                                           .get(0)
@@ -446,8 +443,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_DS);
+            .get(0).setKind(ControllerKind.DaemonSet.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedDaemonSetStatus(eq("dummy"), eq(pods.getItems()
                                                                          .get(0)
@@ -479,8 +475,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_JO);
+            .get(0).setKind(ControllerKind.Job.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
                                                                                                             .get(0)));
@@ -495,8 +490,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_DS);
+            .get(0).setKind(ControllerKind.DaemonSet.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedDaemonSetStatus(eq("dummy"), eq(pods.getItems()
                                                                          .get(0)
@@ -526,8 +520,7 @@ public class KubernetesPlatformTest {
             .get(0)
             .getMetadata()
             .getOwnerReferences()
-            .get(0)
-            .setKind(KubernetesPlatform.OWNER_REFERENCE_KIND_CJ);
+            .get(0).setKind(ControllerKind.CronJob.toString());
         assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
                                                                                                             .get(0)));
     }

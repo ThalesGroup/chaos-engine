@@ -4,6 +4,7 @@ import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
+import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
 import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import org.junit.Before;
@@ -33,7 +34,7 @@ public class KubernetesPodContainerTest {
     private static final String NAME = randomUUID().toString();
     private static final String NAMESPACE_NAME = randomUUID().toString();
     private static final String OWNER_NAME = randomUUID().toString();
-    private static final String OWNER_KIND = randomUUID().toString();
+    private static final String OWNER_KIND = ControllerKind.Deployment.toString();
     private static final Map<String, String> LABELS = Collections.emptyMap();
     private KubernetesPodContainer kubernetesPodContainer;
     @MockBean
@@ -67,7 +68,7 @@ public class KubernetesPodContainerTest {
 
     @Test
     public void testGetOwnerKind () {
-        assertEquals(OWNER_KIND, kubernetesPodContainer.getOwnerKind());
+        assertEquals(ControllerKind.valueOf(OWNER_KIND), kubernetesPodContainer.getOwnerKind());
     }
 
     @Test

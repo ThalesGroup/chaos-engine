@@ -45,18 +45,12 @@ public class KubernetesPlatform extends Platform {
     private CoreApi coreApi;
     @Autowired
     private CoreV1Api coreV1Api;
-    protected static final String OWNER_REFERENCE_KIND_RC = "ReplicationController";
     @Autowired
     private Exec exec;
-    private String namespace = "default";
-    protected static final String OWNER_REFERENCE_KIND_RS = "ReplicaSet";
-    protected static final String OWNER_REFERENCE_KIND_DP = "Deployment";
-    protected static final String OWNER_REFERENCE_KIND_SS = "StatefulSet";
-    protected static final String OWNER_REFERENCE_KIND_DS = "DaemonSet";
-    protected static final String OWNER_REFERENCE_KIND_JO = "Job";
-    protected static final String OWNER_REFERENCE_KIND_CJ = "CronJob";
     @Autowired
     AppsV1Api appsV1Api;
+    private String namespace = "default";
+
 
 
     @Autowired
@@ -108,34 +102,39 @@ public class KubernetesPlatform extends Platform {
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
     public ContainerHealth checkDesiredReplicas (KubernetesPodContainer instance) {
+        //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
+        if (instance.getOwnerKind() == null) {
+            return ContainerHealth.NORMAL;
+        }
+
         try {
             switch (instance.getOwnerKind()) {
-                case OWNER_REFERENCE_KIND_RC:
+                case ReplicationController:
                     V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (rc.getStatus().getReplicas() == rc.getStatus()
                                                               .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-                case OWNER_REFERENCE_KIND_RS:
+                case ReplicaSet:
                     V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (replicaSet.getStatus().getReplicas() == replicaSet.getStatus()
                                                                               .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-                case OWNER_REFERENCE_KIND_SS:
+                case StatefulSet:
                     V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (statefulSet.getStatus().getReplicas() == statefulSet.getStatus()
                                                                                 .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-                case OWNER_REFERENCE_KIND_DS:
+                case DaemonSet:
                     V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
                     return (daemonSet.getStatus().getCurrentNumberScheduled() == daemonSet.getStatus()
                                                                                           .getDesiredNumberScheduled()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-                case OWNER_REFERENCE_KIND_DP:
+                case Deployment:
                     V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (deployment.getStatus().getReplicas() == deployment.getStatus()
                                                                               .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-                case OWNER_REFERENCE_KIND_JO:
-                case OWNER_REFERENCE_KIND_CJ:
+                case Job:
+                case CronJob:
                     log.info("Skipping Job Pod, return ContainerHealth.NORMAL");
                     break;
                 default:
