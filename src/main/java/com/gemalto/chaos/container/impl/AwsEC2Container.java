@@ -6,6 +6,7 @@ import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.CattleExperiment;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -81,6 +82,15 @@ public class AwsEC2Container extends AwsContainer {
         return uniqueIdentifier.equals(instanceId);
     }
 
+    @Override
+    protected boolean isCattle () {
+        return isMemberOfScaledGroup();
+    }
+
+    boolean isMemberOfScaledGroup () {
+        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
+    }
+
     @StateExperiment
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
@@ -118,10 +128,6 @@ public class AwsEC2Container extends AwsContainer {
         } : baseMethod;
     }
 
-    boolean isMemberOfScaledGroup () {
-        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
-    }
-
     Boolean isNativeAwsAutoscaling () {
         return nativeAwsAutoscaling;
     }
@@ -137,6 +143,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @StateExperiment
+    @CattleExperiment
     public void terminateASGContainer (Experiment experiment) {
         if (!isNativeAwsAutoscaling()) {
             log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
@@ -159,6 +166,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     public static final class AwsEC2ContainerBuilder {
+        private final Map<String, String> dataDogTags = new HashMap<>();
         private String instanceId;
         private String keyName;
         private String name;
@@ -166,7 +174,6 @@ public class AwsEC2Container extends AwsContainer {
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
         private boolean nativeAwsAutoscaling = false;
-        private final Map<String, String> dataDogTags = new HashMap<>();
 
         private AwsEC2ContainerBuilder () {
         }
@@ -178,6 +185,11 @@ public class AwsEC2Container extends AwsContainer {
         public AwsEC2ContainerBuilder instanceId (String instanceId) {
             this.instanceId = instanceId;
             return this.withDataDogTag(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, instanceId);
+        }
+
+        public AwsEC2ContainerBuilder withDataDogTag (String key, String value) {
+            dataDogTags.put(key, value);
+            return this;
         }
 
         public AwsEC2ContainerBuilder keyName (String keyName) {
@@ -207,11 +219,6 @@ public class AwsEC2Container extends AwsContainer {
 
         public AwsEC2ContainerBuilder nativeAwsAutoscaling (boolean nativeAwsAutoscaling) {
             this.nativeAwsAutoscaling = nativeAwsAutoscaling;
-            return this;
-        }
-
-        public AwsEC2ContainerBuilder withDataDogTag (String key, String value) {
-            dataDogTags.put(key, value);
             return this;
         }
 

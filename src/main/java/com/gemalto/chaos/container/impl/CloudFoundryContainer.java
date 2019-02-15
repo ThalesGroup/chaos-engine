@@ -38,6 +38,21 @@ public class CloudFoundryContainer extends Container {
     };
     private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
+    private CloudFoundryContainer () {
+        super();
+    }
+
+    CloudFoundryContainer (String applicationId, String name, Integer instance) {
+        super();
+        this.applicationId = applicationId;
+        this.name = name;
+        this.instance = instance;
+    }
+
+    public static CloudFoundryContainerBuilder builder () {
+        return CloudFoundryContainerBuilder.builder();
+    }
+
     private Callable<ContainerHealth> sshHealthCheck(CloudFoundryContainer container,String command,int expectedExitStatus){
         return () -> {
             ContainerHealth instanceState = isInstanceRunning.call();
@@ -57,19 +72,15 @@ public class CloudFoundryContainer extends Container {
         cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
     }
 
-    private CloudFoundryContainer () {
-        super();
-    }
-
-    CloudFoundryContainer (String applicationId, String name, Integer instance) {
-        super();
-        this.applicationId = applicationId;
-        this.name = name;
-        this.instance = instance;
-    }
-
-    public static CloudFoundryContainerBuilder builder () {
-        return CloudFoundryContainerBuilder.builder();
+    private Callable<ContainerHealth> sshHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
+        return () -> {
+            ContainerHealth instanceState = isInstanceRunning.call();
+            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(container, command, errorExitStatus);
+            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
+                return ContainerHealth.NORMAL;
+            }
+            return ContainerHealth.RUNNING_EXPERIMENT;
+        };
     }
 
     @Override
@@ -97,6 +108,11 @@ public class CloudFoundryContainer extends Container {
         return uniqueIdentifier.equals(name + "-" + instance);
     }
 
+    @Override
+    protected boolean isCattle () {
+        return true;
+    }
+
     @StateExperiment
     public void restartContainer (Experiment experiment) {
         experiment.setSelfHealingMethod(restageApplication);
@@ -111,17 +127,6 @@ public class CloudFoundryContainer extends Container {
                                                                                                                .build();
         log.info("{}", restartApplicationInstanceRequest);
         return restartApplicationInstanceRequest;
-    }
-
-    private Callable<ContainerHealth> sshHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
-        return () -> {
-            ContainerHealth instanceState = isInstanceRunning.call();
-            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(container, command, errorExitStatus);
-            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
-                return ContainerHealth.NORMAL;
-            }
-            return ContainerHealth.RUNNING_EXPERIMENT;
-        };
     }
 
     @StateExperiment

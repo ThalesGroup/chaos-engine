@@ -32,11 +32,11 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected final Map<String, String> dataDogTags = new HashMap<>();
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
     private Method lastExperimentMethod;
     private Experiment currentExperiment;
-    protected final Map<String, String> dataDogTags = new HashMap<>();
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -215,5 +215,12 @@ public abstract class Container implements ExperimentalObject {
 
     public final boolean supportsShellBasedExperiments () {
         return getPlatform() instanceof ShellBasedExperiment;
+    }
+
+    /**
+     * @return Return true if the container can be treated as cattle and destroyed or replaced as necessary
+     */
+    protected boolean isCattle () {
+        return false;
     }
 }
