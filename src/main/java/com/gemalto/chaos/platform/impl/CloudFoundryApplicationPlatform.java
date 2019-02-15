@@ -80,6 +80,11 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
+            if ("CF-NotStaged".matches(e.getErrorCode()) && 170002 == e.getCode() && "App has not finished staging".matches(e
+                    .getDescription())) {
+                log.warn("Platform returned ignorable exception: {} ", e.getMessage(), e);
+                return ContainerHealth.RUNNING_EXPERIMENT;
+            }
             log.error("Cannot get application instances: {}", e.getMessage(), e);
             return ContainerHealth.DOES_NOT_EXIST;
         }
