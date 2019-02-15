@@ -42,7 +42,7 @@ public class AwsEC2Platform extends Platform {
     private ContainerManager containerManager;
     private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
-    private List<String> groupingTags;
+    private List<String> groupingTags = Collections.singletonList(AWS_ASG_NAME_TAG_KEY);
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
 
