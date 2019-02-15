@@ -102,9 +102,13 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void forkBomb () {
+    public void forkBomb () throws Exception {
         kubernetesPodContainer.forkBomb(experiment);
         Mockito.verify(kubernetesPlatform, times(1)).sshExperiment(any(ForkBomb.class), eq(kubernetesPodContainer));
+        experiment.getCheckContainerHealth().call();
+        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
+        experiment.getSelfHealingMethod().call();
+        Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(eq(kubernetesPodContainer));
     }
 
     @Test

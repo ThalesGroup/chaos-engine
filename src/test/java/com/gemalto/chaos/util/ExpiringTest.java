@@ -69,12 +69,14 @@ public class ExpiringTest {
 
     @Test
     public void testConstructor () {
-        Expiring<Object> t = new Expiring<>(object, Instant.now());
+        final Expiring<Object> t = new Expiring<>(object, Instant.now());
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t.isExpired());
         assertNull(t.computeIfAbsent(() -> {
             throw new Exception();
         }, -1000L));
-        t = new Expiring<>(object, -1000L);
-        assertNull(t.computeIfAbsent(() -> {
+        final Expiring<Object> t2 = new Expiring<>(object, -1000L);
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t2.isExpired());
+        assertNull(t2.computeIfAbsent(() -> {
             throw new Exception();
         }, -1000L));
     }

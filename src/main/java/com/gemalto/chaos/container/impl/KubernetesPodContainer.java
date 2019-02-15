@@ -96,6 +96,13 @@ public class KubernetesPodContainer extends Container {
     @StateExperiment
     public void forkBomb (Experiment experiment) {
         kubernetesPlatform.sshExperiment(new ForkBomb(), this);
+        experiment.setSelfHealingMethod(() -> {
+            kubernetesPlatform.deleteContainer(this);
+            return null;
+        });
+        experiment.setCheckContainerHealth(() -> {
+            return kubernetesPlatform.checkDesiredReplicas(this);
+        });
     }
 
     public static final class KubernetesPodContainerBuilder {
