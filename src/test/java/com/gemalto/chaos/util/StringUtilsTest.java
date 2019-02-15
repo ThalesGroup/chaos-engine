@@ -19,4 +19,14 @@ public class StringUtilsTest {
         assertEquals("Many Many Test Cases", StringUtils.convertCamelCaseToSentence("manyManyTestCases"));
         assertNotEquals("Not Camel case", StringUtils.convertCamelCaseToSentence("notCamcelcase"));
     }
+
+    @Test
+    public void trimSpaces () {
+        assertEquals("short", StringUtils.trimSpaces(" short "));
+        assertEquals("short", StringUtils.trimSpaces("short "));
+        assertEquals("short", StringUtils.trimSpaces(" short"));
+        assertEquals("longer sentence", StringUtils.trimSpaces(" longer sentence "));
+        assertEquals("longer sentence", StringUtils.trimSpaces(" longer sentence"));
+        assertEquals("longer sentence", StringUtils.trimSpaces("longer sentence "));
+    }
 }

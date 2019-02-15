@@ -29,7 +29,12 @@ public class ScriptManagerTest {
 
     @Test
     public void getScripts () {
-        assertThat(scriptManager.getScripts(), hasSize(2));
+
+        /*
+        The size is dependent on the number of files in the test/resources/ssh/experiments folder.
+        Adding more scripts for testing may require this size to be adjusted.
+         */
+        assertThat(scriptManager.getScripts(), hasSize(3));
     }
 
     @Test

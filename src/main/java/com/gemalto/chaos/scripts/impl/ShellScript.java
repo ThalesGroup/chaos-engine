@@ -3,6 +3,7 @@ package com.gemalto.chaos.scripts.impl;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.scripts.Script;
+import com.gemalto.chaos.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -28,6 +29,9 @@ public class ShellScript implements Script {
     private String scriptContents;
     private String description;
     private String shebang;
+    private String healthCheckCommand;
+    private String selfHealingCommand;
+    private boolean requiresCattle;
 
     public static ShellScript fromResource (Resource resource) {
         ShellScript script = new ShellScript();
@@ -49,6 +53,9 @@ public class ShellScript implements Script {
             buildShebang();
             buildDependencies();
             buildDescription();
+            buildRequiresCattle();
+            buildHealthCheckCommand();
+            buildSelfHealingCommand();
         }
     }
 
@@ -92,6 +99,20 @@ public class ShellScript implements Script {
         log.debug("Description evaluated to be {}", description);
     }
 
+    private void buildRequiresCattle () {
+        requiresCattle = Boolean.valueOf(getOptionalFieldFromCommentBlock("Cattle").orElse(null));
+    }
+
+    private void buildHealthCheckCommand () {
+        if (requiresCattle) return;
+        healthCheckCommand = getOptionalFieldFromCommentBlock("Health check").orElse(null);
+    }
+
+    private void buildSelfHealingCommand () {
+        if (requiresCattle) return;
+        selfHealingCommand = getOptionalFieldFromCommentBlock("Self healing").orElse(null);
+    }
+
     private static String stripNonAlphasFromEnd (String s) {
         return s.replaceAll("^[^A-Za-z0-9]+", "").replaceAll("[^A-Za-z0-9]+$", "");
     }
@@ -100,7 +121,20 @@ public class ShellScript implements Script {
         return commentBlock.stream()
                            .filter(s -> s.startsWith("# " + demarcation + ":"))
                            .map(s -> s.replaceAll("^# " + demarcation + ": *", ""))
+                           .map(StringUtils::trimSpaces)
                            .findFirst();
+    }
+
+    public String getHealthCheckCommand () {
+        return healthCheckCommand;
+    }
+
+    public String getSelfHealingCommand () {
+        return selfHealingCommand;
+    }
+
+    public boolean isRequiresCattle () {
+        return requiresCattle;
     }
 
     public String getDescription () {

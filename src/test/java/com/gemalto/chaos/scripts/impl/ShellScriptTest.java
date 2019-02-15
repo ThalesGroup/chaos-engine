@@ -105,4 +105,47 @@ public class ShellScriptTest {
         assertFalse(formattedShellScript.doesNotUseMissingDependencies(Arrays.asList("ps", "sort")));
         assertFalse(basicShellScript.doesNotUseMissingDependencies(Arrays.asList("kill", "grep")));
     }
+
+    @Test
+    public void requiresCattle () throws Exception {
+        String cattleScriptBody = "# Cattle: true \nwhoami";
+        String nonCattleScriptBody = "# Cattle: this isn't a statement! \n whoami";
+        doReturn(new ByteArrayInputStream(cattleScriptBody.getBytes()), new ByteArrayInputStream(nonCattleScriptBody.getBytes()))
+                .when(resource)
+                .getInputStream();
+        ShellScript cattleScript = ShellScript.fromResource(resource);
+        ShellScript nonCattleScript = ShellScript.fromResource(resource);
+        assertTrue(cattleScript.isRequiresCattle());
+        assertFalse(nonCattleScript.isRequiresCattle());
+    }
+
+    @Test
+    public void selfHealingCommand () throws Exception {
+        String complexScriptBody = "# Self healing: whoami\necho 'hello, world'";
+        String complexCattleScriptBody = "# Cattle: true\n" + complexScriptBody;
+        doReturn(new ByteArrayInputStream(complexScriptBody.getBytes()), new ByteArrayInputStream(complexCattleScriptBody
+                .getBytes())).when(resource).getInputStream();
+        ShellScript complexScript = ShellScript.fromResource(resource);
+        ShellScript complexCattleScript = ShellScript.fromResource(resource);
+        assertEquals("whoami", complexScript.getSelfHealingCommand());
+        assertNull(complexCattleScript.getSelfHealingCommand());
+        assertNull(basicShellScript.getSelfHealingCommand());
+        assertNull(formattedShellScript.getSelfHealingCommand());
+    }
+
+    @Test
+    public void healthCheckCommand () throws Exception {
+        String complexScriptBody = "# Health check: whoami\necho 'hello, world'";
+        String complexCattleScriptBody = "# Cattle: true\n" + complexScriptBody;
+        doReturn(new ByteArrayInputStream(complexScriptBody.getBytes()), new ByteArrayInputStream(complexCattleScriptBody
+                .getBytes())).when(resource).getInputStream();
+        ShellScript complexScript = ShellScript.fromResource(resource);
+        ShellScript complexCattleScript = ShellScript.fromResource(resource);
+        assertEquals("whoami", complexScript.getHealthCheckCommand());
+        assertNull(complexCattleScript.getHealthCheckCommand());
+        assertNull(basicShellScript.getHealthCheckCommand());
+        assertNull(formattedShellScript.getHealthCheckCommand());
+    }
+
+
 }
