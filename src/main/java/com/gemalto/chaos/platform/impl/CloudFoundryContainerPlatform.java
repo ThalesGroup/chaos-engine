@@ -6,6 +6,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshExperiment;
@@ -40,7 +41,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Primary
 @ConditionalOnProperty({ "cf.containerChaos" })
 @ConfigurationProperties("cf")
-public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
+public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implements SshBasedExperiment<CloudFoundryContainer> {
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired

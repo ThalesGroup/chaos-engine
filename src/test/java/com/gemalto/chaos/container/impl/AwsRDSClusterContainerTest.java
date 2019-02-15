@@ -21,8 +21,7 @@ import java.util.*;
 
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.collection.IsIn.isIn;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -47,6 +46,11 @@ public class AwsRDSClusterContainerTest {
     @Test
     public void getDbClusterIdentifier () {
         assertEquals(dbClusterIdentifier, awsRDSClusterContainer.getDbClusterIdentifier());
+    }
+
+    @Test
+    public void supportsShellBasedExperiments () {
+        assertFalse(awsRDSClusterContainer.supportsShellBasedExperiments());
     }
 
     @Test

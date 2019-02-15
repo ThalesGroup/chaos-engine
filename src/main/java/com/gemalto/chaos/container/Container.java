@@ -9,6 +9,7 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.ShellBasedExperiment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -210,5 +211,9 @@ public abstract class Container implements ExperimentalObject {
         return Arrays.stream(ExperimentType.values())
                      .map(ExperimentType::getAnnotation)
                      .collect(Collectors.toMap(Function.identity(), (k) -> getMethodsWithAnnotation(this.getClass(), k)));
+    }
+
+    public final boolean supportsShellBasedExperiments () {
+        return getPlatform() instanceof ShellBasedExperiment;
     }
 }
