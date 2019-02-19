@@ -48,7 +48,7 @@ public class KubernetesPlatform extends Platform {
     @Autowired
     private Exec exec;
     @Autowired
-    AppsV1Api appsV1Api;
+    private AppsV1Api appsV1Api;
     private String namespace = "default";
 
 
@@ -150,8 +150,10 @@ public class KubernetesPlatform extends Platform {
         try {
             V1Pod result = coreV1Api.readNamespacedPodStatus(instance.getPodName(), instance.getNamespace(), "true");
             //if there's any not ready container, return DOES_NOT_EXIST
-            return (result.getStatus().getContainerStatuses().stream().anyMatch(status -> !status.isReady()))
-                    ? ContainerHealth.DOES_NOT_EXIST : ContainerHealth.NORMAL;
+            return (result.getStatus()
+                          .getContainerStatuses()
+                          .stream()
+                          .anyMatch(status -> !status.isReady())) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL;
         } catch (ApiException e) {
             log.error("Exception when checking container health", e);
             return ContainerHealth.DOES_NOT_EXIST;

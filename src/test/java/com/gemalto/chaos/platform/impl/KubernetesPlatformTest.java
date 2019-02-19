@@ -240,8 +240,8 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
-                                                                                                           .get(0)));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                               .get(0)));
     }
 
     @Test
@@ -289,8 +289,8 @@ public class KubernetesPlatformTest {
         when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
-                                                                                                           .get(0)));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
+                                                                                                               .get(0)));
     }
 
     @Test
