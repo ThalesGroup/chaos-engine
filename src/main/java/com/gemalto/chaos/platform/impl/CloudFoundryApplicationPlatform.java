@@ -6,6 +6,7 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
+import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -80,8 +81,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
-            if ("CF-NotStaged".matches(e.getErrorCode()) && 170002 == e.getCode() && "App has not finished staging".matches(e
-                    .getDescription())) {
+            if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
                 log.warn("Platform returned ignorable exception: {} ", e.getMessage(), e);
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
