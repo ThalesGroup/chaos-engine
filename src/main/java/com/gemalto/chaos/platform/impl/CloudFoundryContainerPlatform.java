@@ -6,6 +6,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshExperiment;
 import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
@@ -66,6 +67,10 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
                                                             .block()
                                                             .getInstances();
         } catch (ClientV2Exception e) {
+            if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
+                log.warn("Platform returned ignorable exception: {} ", e.getMessage(), e);
+                return ContainerHealth.RUNNING_EXPERIMENT;
+            }
             log.error("Cannot get application instances: {}", e.getMessage(), e);
             return ContainerHealth.DOES_NOT_EXIST;
         }

@@ -7,6 +7,7 @@ import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.gemalto.chaos.selfawareness.CloudFoundrySelfAwareness;
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.*;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.client.v2.routes.RouteResource;
@@ -271,6 +272,23 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryApplicationPlatform.checkPlatformHealth());
+    }
+
+    @Test
+    public void checkHealthIgnorableException () {
+        Integer INSTANCE_ID = 0;
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder().build();
+        Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        doReturn(applicationInstancesResponseMono).when(applicationsV2)
+                                                  .instances(any(ApplicationInstancesRequest.class));
+        Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1);
+        doReturn(applications).when(cloudFoundryOperations).applications();
+        doReturn(applicationsFlux).when(applications).list();
+        doThrow(new ClientV2Exception(0, 170002, "App has not finished staging", "CF-NotStaged")).when(cloudFoundryClient)
+                                                                                                 .applicationsV2();
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryApplicationPlatform.checkPlatformHealth());
     }
 
