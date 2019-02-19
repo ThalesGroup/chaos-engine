@@ -37,6 +37,8 @@ public class ChaosEngineTest {
         kubernetesModules.put("kubernetes", "");
         kubernetesModules.put("kubernetes.url", "");
         kubernetesModules.put("kubernetes.token", "");
+        kubernetesModules.put("kubernetes.validateSSL", "true");
+        kubernetesModules.put("kubernetes.debug", "true");
         systemPropertiesMap.add(kubernetesModules);
         systemPropertiesMap.forEach(properties -> properties.forEach(System::setProperty));
     }

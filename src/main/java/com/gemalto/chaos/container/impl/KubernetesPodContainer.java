@@ -8,8 +8,10 @@ import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
 import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
+import com.google.common.base.Enums;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -23,6 +25,8 @@ public class KubernetesPodContainer extends Container {
     private Map<String, String> labels = new HashMap<>();
     private boolean isBackedByController = false;
     private transient KubernetesPlatform kubernetesPlatform;
+    private ControllerKind ownerKind;
+    private String ownerName;
 
     private KubernetesPodContainer () {
         super();
@@ -38,6 +42,14 @@ public class KubernetesPodContainer extends Container {
 
     public String getNamespace () {
         return namespace;
+    }
+
+    public ControllerKind getOwnerKind () {
+        return ownerKind;
+    }
+
+    public String getOwnerName () {
+        return ownerName;
     }
 
     @Override
@@ -77,13 +89,20 @@ public class KubernetesPodContainer extends Container {
             return null;
         });
         experiment.setCheckContainerHealth(() -> {
-            return ContainerHealth.NORMAL;
+            return kubernetesPlatform.checkDesiredReplicas(this);
         });
     }
 
     @StateExperiment
     public void forkBomb (Experiment experiment) {
         kubernetesPlatform.sshExperiment(new ForkBomb(), this);
+        experiment.setSelfHealingMethod(() -> {
+            kubernetesPlatform.deleteContainer(this);
+            return null;
+        });
+        experiment.setCheckContainerHealth(() -> {
+            return kubernetesPlatform.checkDesiredReplicas(this);
+        });
     }
 
     public static final class KubernetesPodContainerBuilder {
@@ -93,6 +112,8 @@ public class KubernetesPodContainer extends Container {
         private String namespace;
         private boolean isBackedByController = false;
         private KubernetesPlatform kubernetesPlatform;
+        private String ownerKind;
+        private String ownerName;
 
         public KubernetesPodContainerBuilder () {
         }
@@ -131,6 +152,16 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
+        public KubernetesPodContainerBuilder withOwnerKind (String ownerKind) {
+            this.ownerKind = ownerKind;
+            return this;
+        }
+
+        public KubernetesPodContainerBuilder withOwnerName (String ownerName) {
+            this.ownerName = ownerName;
+            return this;
+        }
+
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
             kubernetesPodContainer.podName = this.podName;
@@ -139,6 +170,9 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.labels.putAll(this.labels);
             kubernetesPodContainer.dataDogTags.putAll(this.dataDogTags);
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
+            kubernetesPodContainer.ownerKind = Enums.getIfPresent(ControllerKind.class, ownerKind).orNull();
+            kubernetesPodContainer.ownerName = ownerName;
+
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
                 kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");

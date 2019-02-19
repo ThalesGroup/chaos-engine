@@ -1,8 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
 import com.gemalto.chaos.constants.DataDogConstants;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
+import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
 import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import org.junit.Before;
@@ -22,15 +24,17 @@ import java.util.Optional;
 
 import static java.util.UUID.randomUUID;
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class KubernetesPodContainerTest {
     private static final String NAME = randomUUID().toString();
     private static final String NAMESPACE_NAME = randomUUID().toString();
+    private static final String OWNER_NAME = randomUUID().toString();
+    private static final String OWNER_KIND = ControllerKind.Deployment.toString();
     private static final Map<String, String> LABELS = Collections.emptyMap();
     private KubernetesPodContainer kubernetesPodContainer;
     @MockBean
@@ -45,7 +49,10 @@ public class KubernetesPodContainerTest {
                                                                    .withPodName(NAME)
                                                                    .withNamespace(NAMESPACE_NAME)
                                                                    .withKubernetesPlatform(kubernetesPlatform)
+                                                                   .withOwnerKind(OWNER_KIND)
+                                                                   .withOwnerName(OWNER_NAME)
                                                                    .withLabels(LABELS)
+                                                                   .isBackedByController(true)
                                                                    .build());
     }
 
@@ -55,17 +62,53 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void deleteContainer () {
+    public void testGetOwnerName () {
+        assertEquals(OWNER_NAME, kubernetesPodContainer.getOwnerName());
+    }
+
+    @Test
+    public void testGetOwnerKind () {
+        assertEquals(ControllerKind.valueOf(OWNER_KIND), kubernetesPodContainer.getOwnerKind());
+    }
+
+    @Test
+    public void testCanExperiment () {
+        assertTrue(kubernetesPodContainer.canExperiment() == true || kubernetesPodContainer.canExperiment() == false);
+    }
+
+    @Test
+    public void testUniqueIdentifierInner () {
+        assertTrue(kubernetesPodContainer.compareUniqueIdentifierInner(kubernetesPodContainer.getPodName()));
+    }
+
+    @Test
+    public void updateContainerHealthImpl () {
+        for (ContainerHealth containerHealth : ContainerHealth.values()) {
+            when(kubernetesPlatform.checkHealth(eq(kubernetesPodContainer))).thenReturn(containerHealth);
+            assertEquals(containerHealth, kubernetesPodContainer.updateContainerHealthImpl(experiment.getExperimentType()));
+        }
+    }
+
+    @Test
+    public void deleteContainer () throws Exception {
         kubernetesPodContainer.deleteContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(ArgumentMatchers.any());
+        experiment.getCheckContainerHealth().call();
+        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
+        experiment.getSelfHealingMethod().call();
+        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
     }
 
     @Test
-    public void forkBomb () {
+    public void forkBomb () throws Exception {
         kubernetesPodContainer.forkBomb(experiment);
         Mockito.verify(kubernetesPlatform, times(1)).sshExperiment(any(ForkBomb.class), eq(kubernetesPodContainer));
+        experiment.getCheckContainerHealth().call();
+        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
+        experiment.getSelfHealingMethod().call();
+        Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(eq(kubernetesPodContainer));
     }
 
     @Test

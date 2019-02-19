@@ -3,6 +3,7 @@ package com.gemalto.chaos.services.impl;
 import com.gemalto.chaos.services.CloudService;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.apis.AppsV1Api;
 import io.kubernetes.client.apis.CoreApi;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.util.Config;
@@ -62,4 +63,11 @@ public class KubernetesService implements CloudService {
     Exec exec (ApiClient apiClient) {
         return new Exec(apiClient);
     }
+
+    @Bean
+    @RefreshScope
+    AppsV1Api appsV1Api (ApiClient apiClient) {
+        return new AppsV1Api(apiClient);
+    }
+
 }

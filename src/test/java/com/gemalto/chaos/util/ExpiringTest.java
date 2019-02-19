@@ -66,4 +66,27 @@ public class ExpiringTest {
         assertEquals(object, expiringObject.computeIfAbsent(callable, Duration.ZERO));
         verify(callable, never()).call();
     }
+
+    @Test
+    public void testConstructor () {
+        final Expiring<Object> t = new Expiring<>(object, Instant.now());
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t.isExpired());
+        assertNull(t.computeIfAbsent(() -> {
+            throw new Exception();
+        }, -1000L));
+        final Expiring<Object> t2 = new Expiring<>(object, -1000L);
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t2.isExpired());
+        assertNull(t2.computeIfAbsent(() -> {
+            throw new Exception();
+        }, -1000L));
+    }
+
+    @Test
+    public void testToString () {
+        Instant expiryTime = Instant.now();
+        Object to = new Object();
+        Expiring<Object> t = new Expiring<>(to, expiryTime);
+        assertTrue(t.toString().contains(String.format("%s", to)));
+    }
+
 }
