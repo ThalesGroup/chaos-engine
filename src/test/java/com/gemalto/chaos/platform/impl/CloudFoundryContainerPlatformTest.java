@@ -231,6 +231,16 @@ public class CloudFoundryContainerPlatformTest {
     }
 
     @Test
+    public void checkHealthException () {
+        doThrow(new ClientV2Exception(0, 170001, "Any other exception", "CF-NotStaged")).when(cloudFoundryClient)
+                                                                                        .applicationsV2();
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
+        doThrow(new ClientV2Exception(0, 170002, "Any other exception", "CF-Staged")).when(cloudFoundryClient)
+                                                                                     .applicationsV2();
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
+    }
+
+    @Test
     public void checkHealthNormal () {
         Integer INSTANCE_ID = 0;
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
