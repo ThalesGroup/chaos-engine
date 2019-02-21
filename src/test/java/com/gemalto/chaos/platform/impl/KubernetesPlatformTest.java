@@ -337,11 +337,11 @@ public class KubernetesPlatformTest {
                                                                                                                                    .withReadyReplicas(1)
                                                                                                                                    .build())
                                                                                                                            .build());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                          .get(0)));
     }
 
     @Test
@@ -367,11 +367,11 @@ public class KubernetesPlatformTest {
                                                                                                                         .withReadyReplicas(1)
                                                                                                                         .build())
                                                                                                                 .build());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                          .get(0)));
     }
 
     @Test
@@ -397,11 +397,11 @@ public class KubernetesPlatformTest {
                                                                                                                          .withReadyReplicas(1)
                                                                                                                          .build())
                                                                                                                  .build());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                          .get(0)));
     }
 
     @Test
@@ -427,11 +427,11 @@ public class KubernetesPlatformTest {
                                                                                                                         .withReadyReplicas(1)
                                                                                                                         .build())
                                                                                                                 .build());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                          .get(0)));
     }
 
     @Test
@@ -459,11 +459,11 @@ public class KubernetesPlatformTest {
                                                                                                                        .withCurrentNumberScheduled(1)
                                                                                                                        .build())
                                                                                                                .build());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                          .get(0)));
     }
 
     @Test
@@ -477,8 +477,8 @@ public class KubernetesPlatformTest {
             .getOwnerReferences()
             .get(0).setKind(ControllerKind.Job.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                           .get(0)));
     }
 
     @Test
@@ -496,23 +496,23 @@ public class KubernetesPlatformTest {
                                                                          .get(0)
                                                                          .getMetadata()
                                                                          .getNamespace()), eq("true"))).thenThrow(new ApiException());
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                           .get(0)));
     }
 
     @Test
-    public void testCheckDesiredReplicasCronJob () throws ApiException {
+    public void testCheckDesiredReplicasUnsupportedKind () throws ApiException {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Unsupported");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                           .get(0)));
     }
 
     @Test
-    public void testCheckDesiredReplicasUnsupportedKind () throws ApiException {
+    public void testCheckDesiredReplicasCronJob () throws ApiException {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
@@ -521,8 +521,8 @@ public class KubernetesPlatformTest {
             .getMetadata()
             .getOwnerReferences()
             .get(0).setKind(ControllerKind.CronJob.toString());
-        assertEquals(ContainerHealth.NORMAL, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                                            .get(0)));
+        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
+                                                                                           .get(0)));
     }
 
     @Configuration

@@ -51,8 +51,6 @@ public class KubernetesPlatform extends Platform {
     private AppsV1Api appsV1Api;
     private String namespace = "default";
 
-
-
     @Autowired
     KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec, AppsV1Api appsV1Api) {
         this.coreApi = coreApi;
@@ -75,7 +73,7 @@ public class KubernetesPlatform extends Platform {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().build();
             coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);
         } catch (JsonSyntaxException e1) {
-            log.info("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
+            log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
         } catch (ApiException e) {
             log.error("Could not delete pod", e);
             return false;
@@ -92,6 +90,10 @@ public class KubernetesPlatform extends Platform {
         ((KubernetesSshExperiment) sshExperiment).runExperiment();
     }
 
+    public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
+        return checkDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
     /**
      * @param instance
      * @return ContainerHealth
@@ -101,54 +103,61 @@ public class KubernetesPlatform extends Platform {
      * ReplicationController, ReplicaSet, StatefulSet, DaemonSet, Deployment, Job and CronJob
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
-    public ContainerHealth checkDesiredReplicas (KubernetesPodContainer instance) {
+    public boolean checkDesiredReplicas (KubernetesPodContainer instance) {
         //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
         if (instance.getOwnerKind() == null) {
-            return ContainerHealth.NORMAL;
+            return false;
         }
-
         try {
             switch (instance.getOwnerKind()) {
                 case ReplicationController:
                     V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
-                    return (rc.getStatus().getReplicas() == rc.getStatus()
-                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                    return (rc.getStatus().getReplicas().equals(rc.getStatus().getReadyReplicas()));
                 case ReplicaSet:
                     V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
-                    return (replicaSet.getStatus().getReplicas() == replicaSet.getStatus()
-                                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                    return (replicaSet.getStatus().getReplicas().equals(replicaSet.getStatus().getReadyReplicas()));
                 case StatefulSet:
                     V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
-                    return (statefulSet.getStatus().getReplicas() == statefulSet.getStatus()
-                                                                                .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                    return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
                 case DaemonSet:
                     V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
-                    return (daemonSet.getStatus().getCurrentNumberScheduled() == daemonSet.getStatus()
-                                                                                          .getDesiredNumberScheduled()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                    return (daemonSet.getStatus()
+                                     .getCurrentNumberScheduled()
+                                     .equals(daemonSet.getStatus().getDesiredNumberScheduled()));
                 case Deployment:
                     V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
-                    return (deployment.getStatus().getReplicas() == deployment.getStatus()
-                                                                              .getReadyReplicas()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+                    return (deployment.getStatus().getReplicas().equals(deployment.getStatus().getReadyReplicas()));
                 case Job:
                 case CronJob:
-                    log.info("Skipping Job Pod, return ContainerHealth.NORMAL");
-                    break;
+                    log.warn("Job containers are not supported");
+                    return false;
                 default:
-                    log.error("Found unsupported owner reference");
+                    log.error("Found unsupported owner reference {}", instance.getOwnerKind());
+                    return false;
             }
         } catch (ApiException e) {
             log.error("ApiException was thrown while checking desired replica count.", e);
+            return false;
         }
-        return ContainerHealth.NORMAL;
     }
 
-    public ContainerHealth checkHealth (KubernetesPodContainer instance) {
+    private boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
-            V1Pod result = coreV1Api.readNamespacedPodStatus(instance.getPodName(), instance.getNamespace(), "true");
+            return coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer.getNamespace(), "true") == null;
+        } catch (ApiException e) {
+            log.debug("Container {} no more exists", kubernetesPodContainer.getPodName(), kubernetesPodContainer);
+        }
+        return false;
+    }
+
+    public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
+        try {
+            V1Pod result = coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer
+                    .getNamespace(), "true");
             //if there's any not ready container, return DOES_NOT_EXIST
             return (result.getStatus()
                           .getContainerStatuses()
@@ -196,10 +205,7 @@ public class KubernetesPlatform extends Platform {
         final List<Container> containerList = new ArrayList<>();
         try {
             V1PodList pods = listAllPodsInNamespace();
-            containerList.addAll(pods.getItems()
-                                     .stream()
-                                     .map(this::fromKubernetesAPIPod)
-                                     .collect(Collectors.toSet()));
+            containerList.addAll(pods.getItems().stream().map(this::fromKubernetesAPIPod).collect(Collectors.toSet()));
             return containerList;
         } catch (ApiException e) {
             log.error("Could not generate Kubernetes roster", e);
@@ -243,5 +249,4 @@ public class KubernetesPlatform extends Platform {
         }
         return container;
     }
-
 }
