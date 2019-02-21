@@ -203,7 +203,7 @@ public abstract class Container implements ExperimentalObject {
                      .collect(Collectors.toMap(Function.identity(), k -> getMethodsWithAnnotation(this.getClass(), k)));
     }
 
-    public final boolean supportsShellBasedExperiments () {
+    public boolean supportsShellBasedExperiments () {
         return getPlatform() instanceof ShellBasedExperiment;
     }
 
