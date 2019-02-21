@@ -16,6 +16,7 @@ import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.scripts.ScriptManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +59,8 @@ public class ExperimentTest {
     private NetworkContainer networkContainer;
     private ResourceContainer resourceContainer;
     @MockBean
+    private ScriptManager scriptManager;
+    @MockBean
     private NotificationManager notificationManager;
     @MockBean
     private AdminManager adminManager;
@@ -93,7 +96,7 @@ public class ExperimentTest {
     }
 
     @Test
-    public void experimentClassTest () throws ExecutionException, InterruptedException {
+    public void experimentClassTest () {
         final Platform platform = mock(Platform.class);
         doReturn(ContainerHealth.NORMAL).when(stateContainer).getContainerHealth(STATE);
         doReturn(true).when(stateContainer).supportsExperimentType(STATE);
@@ -159,7 +162,7 @@ public class ExperimentTest {
     }
 
     @Test
-    public void startExperimentFailedToStart () throws ExecutionException, InterruptedException {
+    public void startExperimentFailedToStart () {
         Experiment experiment = Mockito.spy(GenericContainerExperiment.builder()
                                                                       .withExperimentType(STATE)
                                                                       .withContainer(stateContainer)
@@ -516,7 +519,8 @@ public class ExperimentTest {
             doReturn(ContainerHealth.NORMAL).when(mockContainer).getContainerHealth(STATE);
             doReturn(true).when(mockContainer).supportsExperimentType(STATE);
             experiment.startExperiment();
-            await().until(() -> experiment.getExperimentMethod().getName().equals(doAnotherThing));
+            await().atLeast(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
+                   .until(() -> experiment.getExperimentMethod().getExperimentName().equals(doAnotherThing));
         });
     }
 

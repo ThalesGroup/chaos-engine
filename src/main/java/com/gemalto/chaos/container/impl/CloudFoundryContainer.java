@@ -109,7 +109,7 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
-    protected boolean isCattle () {
+    public boolean isCattle () {
         return true;
     }
 

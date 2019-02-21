@@ -136,4 +136,6 @@ public abstract class Platform implements ExperimentalObject {
     public List<Container> generateExperimentRoster () {
         return getRoster();
     }
+
+    public abstract boolean isContainerRecycled (Container container);
 }

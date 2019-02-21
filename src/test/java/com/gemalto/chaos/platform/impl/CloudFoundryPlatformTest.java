@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.platform.enums.ApiStatus;
@@ -163,6 +164,10 @@ public class CloudFoundryPlatformTest {
         @Bean
         CloudFoundryPlatform cloudFoundryPlatform () {
             CloudFoundryPlatform platform = new CloudFoundryPlatform() {
+                @Override
+                public boolean isContainerRecycled (Container container) {
+                    return false;
+                }
             };
             return spy(platform);
         }

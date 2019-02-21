@@ -32,6 +32,7 @@ public class ShellScript implements Script {
     private String healthCheckCommand;
     private String selfHealingCommand;
     private boolean requiresCattle;
+    private String finalizeCommand;
 
     public static ShellScript fromResource (Resource resource) {
         ShellScript script = new ShellScript();
@@ -56,7 +57,13 @@ public class ShellScript implements Script {
             buildRequiresCattle();
             buildHealthCheckCommand();
             buildSelfHealingCommand();
+            buildFinalizeCommand();
         }
+    }
+
+    private void buildFinalizeCommand () {
+        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse("No finalization command provided");
+        log.debug("Finalize Command evaluated to be {}", finalizeCommand);
     }
 
     private void buildCommentBlock () {
@@ -125,16 +132,24 @@ public class ShellScript implements Script {
                            .findFirst();
     }
 
+    @Override
     public String getHealthCheckCommand () {
         return healthCheckCommand;
     }
 
+    @Override
     public String getSelfHealingCommand () {
         return selfHealingCommand;
     }
 
+    @Override
     public boolean isRequiresCattle () {
         return requiresCattle;
+    }
+
+    @Override
+    public String getFinalizeCommand () {
+        return finalizeCommand;
     }
 
     public String getDescription () {

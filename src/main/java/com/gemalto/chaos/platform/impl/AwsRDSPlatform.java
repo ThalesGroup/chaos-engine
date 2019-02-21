@@ -158,6 +158,11 @@ public class AwsRDSPlatform extends Platform {
         return chosenSet;
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        throw new ChaosException("RDS Containers cannot be recycled, this code should be unreachable for this platform.");
+    }
+
     private Collection<DBCluster> getAllDBClusters () {
         Collection<DBCluster> dbClusters = new HashSet<>();
         DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest();

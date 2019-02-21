@@ -83,7 +83,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @Override
-    protected boolean isCattle () {
+    public boolean isCattle () {
         return isMemberOfScaledGroup();
     }
 

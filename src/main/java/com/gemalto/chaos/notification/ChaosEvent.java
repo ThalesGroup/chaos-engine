@@ -55,6 +55,7 @@ public class ChaosEvent {
     }
 
     @JsonIgnore
+    @SuppressWarnings("unchecked")
     public Map<Object, Object> asMap () {
         return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
     }
@@ -136,7 +137,7 @@ public class ChaosEvent {
             this.experimentType = experiment.getExperimentType();
             this.experimentId = experiment.getId();
             this.experimentMethod = experiment.getExperimentMethod() != null ? experiment.getExperimentMethod()
-                                                                                         .getName() : "";
+                                                                                         .getExperimentName() : "";
             return this;
         }
 

@@ -6,7 +6,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
-import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import com.gemalto.chaos.ssh.SshCommandResult;
 import com.gemalto.chaos.ssh.SshExperiment;
@@ -26,6 +25,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Primary
 @ConditionalOnProperty({ "cf.containerChaos" })
 @ConfigurationProperties("cf")
-public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implements SshBasedExperiment<CloudFoundryContainer> {
+public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
@@ -58,6 +58,32 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         log.info("PCF Container Platform created");
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        if (!(container instanceof CloudFoundryContainer)) {
+            return false;
+        }
+        CloudFoundryContainer cloudFoundryContainer = (CloudFoundryContainer) container;
+        Instant timeInState = getTimeInState(cloudFoundryContainer);
+        return timeInState.isAfter(cloudFoundryContainer.getExperimentStartTime()) && ContainerHealth.NORMAL.equals(checkHealth(cloudFoundryContainer
+                .getApplicationId(), cloudFoundryContainer.getInstance()));
+    }
+
+    private Instant getTimeInState (CloudFoundryContainer container) {
+        String applicationId = container.getApplicationId();
+        String instanceIndex = container.getInstance().toString();
+        Double since = cloudFoundryClient.applicationsV2()
+                                         .instances(ApplicationInstancesRequest.builder()
+                                                                               .applicationId(applicationId)
+                                                                               .build())
+                                         .blockOptional()
+                                         .orElseThrow(ChaosException::new)
+                                         .getInstances()
+                                         .get(instanceIndex)
+                                         .getSince();
+        return Instant.ofEpochMilli(since.longValue());
+    }
+
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
         Map<String, ApplicationInstanceInfo> applicationInstanceResponse;
         try {
@@ -65,7 +91,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                                                             .instances(ApplicationInstancesRequest.builder()
                                                                                                   .applicationId(applicationId)
                                                                                                   .build())
-                                                            .block()
+                                                            .blockOptional()
+                                                            .orElseThrow(ChaosException::new)
                                                             .getInstances();
         } catch (ClientV2Exception e) {
             if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {

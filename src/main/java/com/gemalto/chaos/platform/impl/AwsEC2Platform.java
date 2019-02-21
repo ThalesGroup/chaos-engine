@@ -161,6 +161,16 @@ public class AwsEC2Platform extends Platform {
         return eligibleExperimentTargets;
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        AwsEC2Container awsEC2Container;
+        if (!(container instanceof AwsEC2Container)) return false;
+        awsEC2Container = (AwsEC2Container) container;
+        String instanceId = awsEC2Container.getInstanceId();
+        return getInstanceStream().filter(instance -> !instance.getState().getCode().equals(AWS_TERMINATED_CODE))
+                                  .noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
+    }
+
     Collection<Filter> generateSearchFilters () {
         return filter.entrySet().stream().map(this::createFilterFromEntry)
                      .collect(Collectors.toSet());
