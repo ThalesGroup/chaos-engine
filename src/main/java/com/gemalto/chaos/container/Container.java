@@ -241,10 +241,10 @@ public abstract class Container implements ExperimentalObject {
     }
 
     @SuppressWarnings("unchecked")
-    public String runCommand (String selfHealingCommand) {
+    public String runCommand (String command) {
         if (!supportsShellBasedExperiments())
             throw new ChaosException("Attempted to run a shell command on a container that does not support it");
-        return getScriptPlatform().runCommand(this, selfHealingCommand);
+        return getScriptPlatform().runCommand(this, command);
     }
 
     public boolean isContainerRecycled () {

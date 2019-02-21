@@ -61,7 +61,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         Callable<ContainerHealth> checkContainerHealthMethod = () -> {
             if (cattle && container.isContainerRecycled()) return ContainerHealth.NORMAL;
             try {
-                container.runCommand(script.getSelfHealingCommand());
+                container.runCommand(script.getHealthCheckCommand());
                 return ContainerHealth.NORMAL;
             } catch (RuntimeException e) {
                 return ContainerHealth.RUNNING_EXPERIMENT;
