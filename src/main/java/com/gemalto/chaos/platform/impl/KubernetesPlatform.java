@@ -70,7 +70,7 @@ public class KubernetesPlatform extends Platform {
 
     public boolean deletePod (KubernetesPodContainer instance) {
         try {
-            V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().build();
+            V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
             coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);
         } catch (JsonSyntaxException e1) {
             log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
