@@ -15,6 +15,7 @@ import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.gemalto.chaos.util.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesResponse;
@@ -220,6 +221,23 @@ public class CloudFoundryContainerPlatformTest {
         doReturn(applicationInstancesResponseMono).when(applicationsV2)
                                                   .instances(any(ApplicationInstancesRequest.class));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
+    }
+
+    @Test
+    public void checkHealthIgnorableException () {
+        doThrow(new ClientV2Exception(0, 170002, "App has not finished staging", "CF-NotStaged")).when(cloudFoundryClient)
+                                                                                                 .applicationsV2();
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
+    }
+
+    @Test
+    public void checkHealthException () {
+        doThrow(new ClientV2Exception(0, 170001, "Any other exception", "CF-NotStaged")).when(cloudFoundryClient)
+                                                                                        .applicationsV2();
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
+        doThrow(new ClientV2Exception(0, 170002, "Any other exception", "CF-Staged")).when(cloudFoundryClient)
+                                                                                     .applicationsV2();
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
     }
 
     @Test
