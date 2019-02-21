@@ -90,11 +90,11 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
-    public void deleteContainer () throws Exception {
-        kubernetesPodContainer.deleteContainer(experiment);
+    public void deletePod () throws Exception {
+        kubernetesPodContainer.deletePod(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(ArgumentMatchers.any());
+        Mockito.verify(kubernetesPlatform, times(1)).deletePod(ArgumentMatchers.any());
         experiment.getCheckContainerHealth().call();
         Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
         experiment.getSelfHealingMethod().call();
@@ -108,7 +108,7 @@ public class KubernetesPodContainerTest {
         experiment.getCheckContainerHealth().call();
         Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
         experiment.getSelfHealingMethod().call();
-        Mockito.verify(kubernetesPlatform, times(1)).deleteContainer(eq(kubernetesPodContainer));
+        Mockito.verify(kubernetesPlatform, times(1)).deletePod(eq(kubernetesPodContainer));
     }
 
     @Test

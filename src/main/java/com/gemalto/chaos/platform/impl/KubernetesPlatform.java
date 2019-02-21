@@ -70,7 +70,7 @@ public class KubernetesPlatform extends Platform {
         this.namespace = namespace;
     }
 
-    public boolean deleteContainer (KubernetesPodContainer instance) {
+    public boolean deletePod (KubernetesPodContainer instance) {
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().build();
             coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);

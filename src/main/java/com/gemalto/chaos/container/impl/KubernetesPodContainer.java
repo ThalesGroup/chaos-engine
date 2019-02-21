@@ -83,8 +83,8 @@ public class KubernetesPodContainer extends Container {
     }
 
     @StateExperiment
-    public void deleteContainer (Experiment experiment) {
-        kubernetesPlatform.deleteContainer(this);
+    public void deletePod (Experiment experiment) {
+        kubernetesPlatform.deletePod(this);
         experiment.setSelfHealingMethod(() -> {
             return null;
         });
@@ -97,7 +97,7 @@ public class KubernetesPodContainer extends Container {
     public void forkBomb (Experiment experiment) {
         kubernetesPlatform.sshExperiment(new ForkBomb(), this);
         experiment.setSelfHealingMethod(() -> {
-            kubernetesPlatform.deleteContainer(this);
+            kubernetesPlatform.deletePod(this);
             return null;
         });
         experiment.setCheckContainerHealth(() -> {
