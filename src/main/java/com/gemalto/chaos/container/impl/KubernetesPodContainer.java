@@ -16,6 +16,7 @@ import com.google.common.base.Enums;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
@@ -27,6 +28,11 @@ public class KubernetesPodContainer extends Container {
     private transient KubernetesPlatform kubernetesPlatform;
     private ControllerKind ownerKind;
     private String ownerName;
+    private transient Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
+    private transient Callable<Void> deletePod = () -> {
+        kubernetesPlatform.deletePod(this);
+        return null;
+    };
 
     private KubernetesPodContainer () {
         super();
@@ -84,25 +90,15 @@ public class KubernetesPodContainer extends Container {
 
     @StateExperiment
     public void deletePod (Experiment experiment) {
+        experiment.setCheckContainerHealth(replicaSetRecovered);
         kubernetesPlatform.deletePod(this);
-        experiment.setSelfHealingMethod(() -> {
-            return null;
-        });
-        experiment.setCheckContainerHealth(() -> {
-            return kubernetesPlatform.checkDesiredReplicas(this);
-        });
     }
 
     @StateExperiment
     public void forkBomb (Experiment experiment) {
+        experiment.setSelfHealingMethod(deletePod);
+        experiment.setCheckContainerHealth(replicaSetRecovered);
         kubernetesPlatform.sshExperiment(new ForkBomb(), this);
-        experiment.setSelfHealingMethod(() -> {
-            kubernetesPlatform.deletePod(this);
-            return null;
-        });
-        experiment.setCheckContainerHealth(() -> {
-            return kubernetesPlatform.checkDesiredReplicas(this);
-        });
     }
 
     public static final class KubernetesPodContainerBuilder {
@@ -172,7 +168,6 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
             kubernetesPodContainer.ownerKind = Enums.getIfPresent(ControllerKind.class, ownerKind).orNull();
             kubernetesPodContainer.ownerName = ownerName;
-
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
                 kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");

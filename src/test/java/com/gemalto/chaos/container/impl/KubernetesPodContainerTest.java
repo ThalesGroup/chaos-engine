@@ -45,15 +45,16 @@ public class KubernetesPodContainerTest {
 
     @Before
     public void setUp () {
-        kubernetesPodContainer = Mockito.spy(KubernetesPodContainer.builder()
-                                                                   .withPodName(NAME)
-                                                                   .withNamespace(NAMESPACE_NAME)
-                                                                   .withKubernetesPlatform(kubernetesPlatform)
-                                                                   .withOwnerKind(OWNER_KIND)
-                                                                   .withOwnerName(OWNER_NAME)
-                                                                   .withLabels(LABELS)
-                                                                   .isBackedByController(true)
-                                                                   .build());
+        kubernetesPodContainer = KubernetesPodContainer.builder()
+                                                       .withPodName(NAME)
+                                                       .withNamespace(NAMESPACE_NAME)
+                                                       .withKubernetesPlatform(kubernetesPlatform)
+                                                       .withOwnerKind(OWNER_KIND)
+                                                       .withOwnerName(OWNER_NAME)
+                                                       .withLabels(LABELS)
+                                                       .isBackedByController(true)
+                                                       .build();
+        when(experiment.getContainer()).thenReturn(kubernetesPodContainer);
     }
 
     @Test
@@ -93,12 +94,10 @@ public class KubernetesPodContainerTest {
     public void deletePod () throws Exception {
         kubernetesPodContainer.deletePod(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(kubernetesPlatform, times(1)).deletePod(ArgumentMatchers.any());
+        verify(experiment, never()).setSelfHealingMethod(ArgumentMatchers.any());
+        Mockito.verify(kubernetesPlatform, times(1)).deletePod(kubernetesPodContainer);
         experiment.getCheckContainerHealth().call();
-        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
-        experiment.getSelfHealingMethod().call();
-        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
+        Mockito.verify(kubernetesPlatform, times(1)).replicaSetRecovered(kubernetesPodContainer);
     }
 
     @Test
@@ -106,9 +105,9 @@ public class KubernetesPodContainerTest {
         kubernetesPodContainer.forkBomb(experiment);
         Mockito.verify(kubernetesPlatform, times(1)).sshExperiment(any(ForkBomb.class), eq(kubernetesPodContainer));
         experiment.getCheckContainerHealth().call();
-        Mockito.verify(kubernetesPlatform, times(1)).checkDesiredReplicas(eq(kubernetesPodContainer));
+        Mockito.verify(kubernetesPlatform, times(1)).replicaSetRecovered(kubernetesPodContainer);
         experiment.getSelfHealingMethod().call();
-        Mockito.verify(kubernetesPlatform, times(1)).deletePod(eq(kubernetesPodContainer));
+        Mockito.verify(kubernetesPlatform, times(1)).deletePod(kubernetesPodContainer);
     }
 
     @Test
