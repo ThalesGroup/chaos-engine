@@ -91,7 +91,7 @@ public class KubernetesPlatform extends Platform {
     }
 
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
-        return checkDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     /**
@@ -103,7 +103,7 @@ public class KubernetesPlatform extends Platform {
      * ReplicationController, ReplicaSet, StatefulSet, DaemonSet, Deployment, Job and CronJob
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
-    public boolean checkDesiredReplicas (KubernetesPodContainer instance) {
+    public boolean isDesiredReplicas (KubernetesPodContainer instance) {
         //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
         if (instance.getOwnerKind() == null) {
             return false;

@@ -337,11 +337,10 @@ public class KubernetesPlatformTest {
                                                                                                                                    .withReadyReplicas(1)
                                                                                                                                    .build())
                                                                                                                            .build());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                          .get(0)));
+        assertEquals(true, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -367,11 +366,10 @@ public class KubernetesPlatformTest {
                                                                                                                         .withReadyReplicas(1)
                                                                                                                         .build())
                                                                                                                 .build());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                          .get(0)));
+        assertEquals(true, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -397,11 +395,10 @@ public class KubernetesPlatformTest {
                                                                                                                          .withReadyReplicas(1)
                                                                                                                          .build())
                                                                                                                  .build());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                          .get(0)));
+        assertEquals(true, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -427,11 +424,10 @@ public class KubernetesPlatformTest {
                                                                                                                         .withReadyReplicas(1)
                                                                                                                         .build())
                                                                                                                 .build());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                          .get(0)));
+        assertEquals(true, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -459,11 +455,10 @@ public class KubernetesPlatformTest {
                                                                                                                        .withCurrentNumberScheduled(1)
                                                                                                                        .build())
                                                                                                                .build());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        assertEquals(true, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                          .get(0)));
+        assertEquals(true, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -477,8 +472,7 @@ public class KubernetesPlatformTest {
             .getOwnerReferences()
             .get(0).setKind(ControllerKind.Job.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                           .get(0)));
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -496,8 +490,7 @@ public class KubernetesPlatformTest {
                                                                          .get(0)
                                                                          .getMetadata()
                                                                          .getNamespace()), eq("true"))).thenThrow(new ApiException());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                           .get(0)));
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -507,8 +500,7 @@ public class KubernetesPlatformTest {
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Unsupported");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                           .get(0)));
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
     @Test
@@ -521,8 +513,79 @@ public class KubernetesPlatformTest {
             .getMetadata()
             .getOwnerReferences()
             .get(0).setKind(ControllerKind.CronJob.toString());
-        assertEquals(false, platform.checkDesiredReplicas((KubernetesPodContainer) platform.getRoster()
-                                                                                           .get(0)));
+        assertEquals(false, platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
+    }
+
+    @Test
+    public void replicaSetRecovered () throws ApiException {
+        V1PodList pods = getV1PodList(true);
+        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException());
+        pods.getItems()
+            .get(0)
+            .getMetadata()
+            .getOwnerReferences()
+            .get(0)
+            .setKind(ControllerKind.ReplicationController.toString());
+        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
+        when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
+                                                                                     .get(0)
+                                                                                     .getMetadata()
+                                                                                     .getNamespace()), eq("true"))).thenReturn(new V1ReplicationControllerBuilder()
+                .withStatus(new V1ReplicationControllerStatusBuilder().withReplicas(1).withReadyReplicas(1).build())
+                .build());
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
+        assertEquals(ContainerHealth.NORMAL, platform.replicaSetRecovered(kubernetesPodContainer));
+    }
+
+    @Test
+    public void replicaSetRecoveredContainerExists () throws ApiException {
+        V1PodList pods = getV1PodList(true);
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(pods);
+        pods.getItems()
+            .get(0)
+            .getMetadata()
+            .getOwnerReferences()
+            .get(0)
+            .setKind(ControllerKind.ReplicationController.toString());
+        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
+        when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
+                                                                                     .get(0)
+                                                                                     .getMetadata()
+                                                                                     .getNamespace()), eq("true"))).thenReturn(new V1ReplicationControllerBuilder()
+                .withStatus(new V1ReplicationControllerStatusBuilder().withReplicas(1).withReadyReplicas(1).build())
+                .build());
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
+    }
+
+    @Test
+    public void replicaSetRecoveredNotInDesiredState () throws ApiException {
+        V1PodList pods = getV1PodList(true);
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(pods);
+        pods.getItems()
+            .get(0)
+            .getMetadata()
+            .getOwnerReferences()
+            .get(0)
+            .setKind(ControllerKind.ReplicationController.toString());
+        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
+        when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
+                                                                                     .get(0)
+                                                                                     .getMetadata()
+                                                                                     .getNamespace()), eq("true"))).thenReturn(new V1ReplicationControllerBuilder()
+                .withStatus(new V1ReplicationControllerStatusBuilder().withReplicas(1).withReadyReplicas(0).build())
+                .build());
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
+        when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
+                                                                                     .get(0)
+                                                                                     .getMetadata()
+                                                                                     .getNamespace()), eq("true"))).thenReturn(new V1ReplicationControllerBuilder()
+                .withStatus(new V1ReplicationControllerStatusBuilder().withReplicas(2).withReadyReplicas(1).build())
+                .build());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
     }
 
     @Configuration
