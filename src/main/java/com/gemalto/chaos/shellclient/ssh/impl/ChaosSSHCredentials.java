@@ -97,7 +97,7 @@ public class ChaosSSHCredentials implements SSHCredentials {
                     }
                 }));
             } catch (ChaosException e) {
-                log.error("Could not create password-based authentication token");
+                log.error("Could not create password-based authentication token", e);
             }
         }
         return authMethods;
