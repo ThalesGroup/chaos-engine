@@ -2,9 +2,7 @@ package com.gemalto.chaos.shellclient.ssh;
 
 import com.gemalto.chaos.shellclient.ShellClient;
 
-import java.io.Closeable;
-
-public interface SSHClientWrapper extends ShellClient, Closeable {
+public interface SSHClientWrapper extends ShellClient {
     SSHClientWrapper connect ();
 
     SSHClientWrapper withSSHCredentials (SSHCredentials sshCredentials);
