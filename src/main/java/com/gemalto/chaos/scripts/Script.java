@@ -1,5 +1,8 @@
 package com.gemalto.chaos.scripts;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.core.io.Resource;
+
 import java.util.Collection;
 
 public interface Script {
@@ -14,4 +17,7 @@ public interface Script {
     boolean doesNotUseMissingDependencies (Collection<String> knownMissingDependencies);
 
     String getFinalizeCommand ();
+
+    @JsonIgnore
+    Resource getResource ();
 }

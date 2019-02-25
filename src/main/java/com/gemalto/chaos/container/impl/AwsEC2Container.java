@@ -59,6 +59,18 @@ public class AwsEC2Container extends AwsContainer {
         return groupIdentifier;
     }
 
+    public String getKeyName () {
+        return keyName;
+    }
+
+    public String getName () {
+        return name;
+    }
+
+    public String getPublicAddress () {
+        return publicAddress;
+    }
+
     @Override
     public Platform getPlatform () {
         return awsEC2Platform;
@@ -93,6 +105,10 @@ public class AwsEC2Container extends AwsContainer {
     public boolean supportsShellBasedExperiments () {
         return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
                 .hasKey(keyName);
+    }
+
+    public boolean isSSHCapable () {
+        return supportsShellBasedExperiments();
     }
 
     boolean isMemberOfScaledGroup () {

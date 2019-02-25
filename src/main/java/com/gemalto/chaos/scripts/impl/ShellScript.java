@@ -1,6 +1,5 @@
 package com.gemalto.chaos.scripts.impl;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.util.StringUtils;
@@ -61,11 +60,6 @@ public class ShellScript implements Script {
         }
     }
 
-    private void buildFinalizeCommand () {
-        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse("No finalization command provided");
-        log.debug("Finalize Command evaluated to be {}", finalizeCommand);
-    }
-
     private void buildCommentBlock () {
         commentBlock = new ArrayList<>();
         for (String s : scriptContents.split("\n")) {
@@ -120,6 +114,11 @@ public class ShellScript implements Script {
         selfHealingCommand = getOptionalFieldFromCommentBlock("Self healing").orElse(null);
     }
 
+    private void buildFinalizeCommand () {
+        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse("No finalization command provided");
+        log.debug("Finalize Command evaluated to be {}", finalizeCommand);
+    }
+
     private static String stripNonAlphasFromEnd (String s) {
         return s.replaceAll("^[^A-Za-z0-9]+", "").replaceAll("[^A-Za-z0-9]+$", "");
     }
@@ -148,8 +147,23 @@ public class ShellScript implements Script {
     }
 
     @Override
+    public String getScriptName () {
+        return scriptName;
+    }
+
+    @Override
+    public boolean doesNotUseMissingDependencies (Collection<String> knownMissingDependencies) {
+        return dependencies.stream().noneMatch(knownMissingDependencies::contains);
+    }
+
+    @Override
     public String getFinalizeCommand () {
         return finalizeCommand;
+    }
+
+    @Override
+    public Resource getResource () {
+        return scriptResource;
     }
 
     public String getDescription () {
@@ -168,18 +182,4 @@ public class ShellScript implements Script {
         return scriptContents;
     }
 
-    @JsonIgnore
-    public Resource getScriptResource () {
-        return scriptResource;
-    }
-
-    @Override
-    public String getScriptName () {
-        return scriptName;
-    }
-
-    @Override
-    public boolean doesNotUseMissingDependencies (Collection<String> knownMissingDependencies) {
-        return dependencies.stream().noneMatch(knownMissingDependencies::contains);
-    }
 }

@@ -19,6 +19,7 @@ public abstract class AwsEC2Constants {
     public static final IpPermission DEFAULT_IP_PERMISSIONS = new IpPermission().withIpProtocol("-1")
                                                                                 .withIpv4Ranges(new IpRange().withCidrIp("0.0.0.0/0"));
     public static final String SECURITY_GROUP_NOT_FOUND = "InvalidGroup.NotFound";
+    public static final String DEFAULT_EC2_CLI_USER = "ec2-user";
 
     private AwsEC2Constants () {
     }
