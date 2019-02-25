@@ -7,6 +7,7 @@ import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsConstants;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
@@ -231,12 +232,17 @@ public class AwsEC2Platform extends Platform {
             groupIdentifier = groupingTag == null ? null : groupingTag.getValue();
             nativeAwsAutoscaling = groupingTag != null && AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
         }
+        Placement placement = instance.getPlacement();
+        String availabilityZone = placement != null ? placement.getAvailabilityZone() : AwsConstants.NO_AZ_INFORMATION;
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(Optional.ofNullable(instance.getKeyName()).orElse(NO_ASSIGNED_KEY))
                               .name(name)
                               .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
                               .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
+                              .availabilityZone(Optional.ofNullable(availabilityZone)
+                                                        .orElse(AwsConstants.NO_AZ_INFORMATION))
+                              .publicAddress(instance.getPublicIpAddress())
                               .build();
     }
 

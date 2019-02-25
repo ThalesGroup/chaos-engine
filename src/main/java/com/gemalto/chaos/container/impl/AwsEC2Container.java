@@ -32,6 +32,8 @@ public class AwsEC2Container extends AwsContainer {
     private String instanceId;
     private String keyName;
     private String name;
+    private String publicAddress;
+
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
     private transient AwsEC2Platform awsEC2Platform;
@@ -174,6 +176,7 @@ public class AwsEC2Container extends AwsContainer {
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
         private boolean nativeAwsAutoscaling = false;
+        private String publicAddress;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -222,6 +225,11 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
+        public AwsEC2ContainerBuilder publicAddress (String publicAddress) {
+            this.publicAddress = publicAddress;
+            return this;
+        }
+
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -231,6 +239,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.availabilityZone = this.availabilityZone;
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
+            awsEC2Container.publicAddress = this.publicAddress;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
             try {
                 awsEC2Container.setMappedDiagnosticContext();

@@ -250,10 +250,15 @@ public class AwsEC2PlatformTest {
         String instanceId = UUID.randomUUID().toString();
         String name = UUID.randomUUID().toString();
         String keyName = UUID.randomUUID().toString();
+        String availabilityZone = UUID.randomUUID().toString();
+        Placement placement = new Placement().withAvailabilityZone(availabilityZone);
         Instance instance;
         AwsEC2Container container;
         // With Name
-        instance = new Instance().withInstanceId(instanceId).withTags(new Tag("Name", name)).withKeyName(keyName);
+        instance = new Instance().withInstanceId(instanceId)
+                                 .withTags(new Tag("Name", name))
+                                 .withKeyName(keyName)
+                                 .withPlacement(placement);
         container = AwsEC2Container.builder().instanceId(instanceId).keyName(keyName).name(name).build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
         // With no name
