@@ -84,8 +84,8 @@ public class ShellScriptTest {
 
     @Test
     public void getScriptResource () {
-        assertEquals(resource, formattedShellScript.getScriptResource());
-        assertEquals(resource, basicShellScript.getScriptResource());
+        assertEquals(resource, formattedShellScript.getResource());
+        assertEquals(resource, basicShellScript.getResource());
     }
 
     @Test
