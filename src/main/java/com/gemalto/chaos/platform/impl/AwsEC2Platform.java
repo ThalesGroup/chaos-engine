@@ -44,6 +44,7 @@ public class AwsEC2Platform extends Platform {
     private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private List<String> groupingTags = Collections.singletonList(AWS_ASG_NAME_TAG_KEY);
+    private Map<String, String> sshPrivateKeys = Collections.emptyMap();
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
 
@@ -71,6 +72,11 @@ public class AwsEC2Platform extends Platform {
     public void setGroupingTags (List<String> groupingTags) {
         log.info("EC2 Instances will consider designated survivors based on the following tags: {}", v("groupingIdentifiers", groupingTags));
         this.groupingTags = groupingTags;
+    }
+
+    public void setSSHPrivateKeys (@NotNull Map<String, String> sshPrivateKeys) {
+        log.info("Loading private keys for keynames: {}", v("key-name", sshPrivateKeys.keySet()));
+        this.sshPrivateKeys = sshPrivateKeys;
     }
 
     /**
@@ -403,5 +409,8 @@ public class AwsEC2Platform extends Platform {
                                                                           .withShouldRespectGracePeriod(false));
     }
 
+    public boolean hasKey (String keyName) {
+        return sshPrivateKeys.keySet().contains(keyName);
+    }
 
 }

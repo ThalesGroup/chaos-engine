@@ -89,6 +89,12 @@ public class AwsEC2Container extends AwsContainer {
         return isMemberOfScaledGroup();
     }
 
+    @Override
+    public boolean supportsShellBasedExperiments () {
+        return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
+                .hasKey(keyName);
+    }
+
     boolean isMemberOfScaledGroup () {
         return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
