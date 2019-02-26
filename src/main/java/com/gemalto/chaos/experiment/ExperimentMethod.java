@@ -72,6 +72,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
             return null;
         };
         final ExperimentMethod experimentMethod = new ExperimentMethod();
+        experimentMethod.experimentType = script.getExperimentType();
         experimentMethod.cattleOnly = cattle;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {

@@ -1,6 +1,7 @@
 package com.gemalto.chaos.scripts;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import org.springframework.core.io.Resource;
 
 import java.util.Collection;
@@ -20,4 +21,6 @@ public interface Script {
 
     @JsonIgnore
     Resource getResource ();
+
+    ExperimentType getExperimentType ();
 }

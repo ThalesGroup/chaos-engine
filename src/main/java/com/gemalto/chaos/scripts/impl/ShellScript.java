@@ -1,6 +1,7 @@
 package com.gemalto.chaos.scripts.impl;
 
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.util.StringUtils;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class ShellScript implements Script {
     private String selfHealingCommand;
     private boolean requiresCattle;
     private String finalizeCommand;
+    private ExperimentType experimentType;
 
     public static ShellScript fromResource (Resource resource) {
         ShellScript script = new ShellScript();
@@ -57,6 +59,17 @@ public class ShellScript implements Script {
             buildHealthCheckCommand();
             buildSelfHealingCommand();
             buildFinalizeCommand();
+            buildExperimentType();
+        }
+    }
+
+    private void buildExperimentType () {
+        String experimentType = getOptionalFieldFromCommentBlock("Experiment type").orElse("State");
+        try {
+            this.experimentType = ExperimentType.valueOf(experimentType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.error("Illegal experiment type in script header. Defaulting to state", e);
+            this.experimentType = ExperimentType.STATE;
         }
     }
 
@@ -164,6 +177,11 @@ public class ShellScript implements Script {
     @Override
     public Resource getResource () {
         return scriptResource;
+    }
+
+    @Override
+    public ExperimentType getExperimentType () {
+        return Optional.ofNullable(experimentType).orElse(ExperimentType.STATE);
     }
 
     public String getDescription () {
