@@ -14,7 +14,6 @@ import org.mockito.Mockito;
 import org.springframework.core.io.Resource;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -154,18 +153,14 @@ public class ChaosSSHClientTest {
         Resource resourceFile = Mockito.mock(Resource.class, RETURNS_DEEP_STUBS);
         String SCRIPT_NAME = randomUUID().toString();
         String output = randomUUID().toString();
-        String absolutePath = randomUUID().toString();
-        File file = resourceFile.getFile();
-        doReturn(absolutePath).when(file).getAbsolutePath();
         doReturn(SCRIPT_NAME).when(resourceFile).getFilename();
         SSHClient sshClient = Mockito.mock(SSHClient.class, RETURNS_DEEP_STUBS);
         Session session = sshClient.startSession();
         SCPFileTransfer scpFileTransfer = sshClient.newSCPFileTransfer();
-        Session.Command command = session.exec("source /tmp/" + SCRIPT_NAME);
-        doReturn(new ByteArrayInputStream(output.getBytes())).when(command).getInputStream();
+        String command = "nohup /tmp/" + SCRIPT_NAME + " &";
+        doReturn(output).when(chaosSSHClient).runCommandInShell(session, command);
         doReturn(sshClient).when(chaosSSHClient).getSshClient();
         assertEquals(output, chaosSSHClient.runResource(resourceFile));
-        verify(scpFileTransfer, times(1)).upload(absolutePath, "/tmp/");
     }
 
     @Test

@@ -4,17 +4,20 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
+import com.gemalto.chaos.ssh.JarResourceFile;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 
 public class ChaosSSHClient implements SSHClientWrapper {
@@ -25,7 +28,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     private Integer port;
 
     @Override
-    public SSHClientWrapper connect () {
+    public SSHClientWrapper connect (int connectionTimeout) {
         boolean opened = false;
         Objects.requireNonNull(hostname);
         Objects.requireNonNull(port);
@@ -33,6 +36,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
         sshClient = buildNewSSHClient();
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
         try {
+            sshClient.setConnectTimeout(connectionTimeout);
             sshClient.connect(hostname, port);
         } catch (IOException e) {
             throw new ChaosException(e);
@@ -102,6 +106,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     @Override
     public String runCommand (String command) {
         try (Session session = getSshClient().startSession()) {
+            session.allocateDefaultPTY();
             try (Session.Command exec = session.exec(command)) {
                 exec.join();
                 int exitCode = exec.getExitStatus();
@@ -121,18 +126,29 @@ public class ChaosSSHClient implements SSHClientWrapper {
     public String runResource (Resource resource) {
         try (Session session = getSshClient().startSession()) {
             getSshClient().newSCPFileTransfer()
-                          .upload(resource.getFile().getAbsolutePath(), SSHConstants.TEMP_DIRECTORY);
-            try (Session.Command exec = session.exec("source " + SSHConstants.TEMP_DIRECTORY + resource.getFilename())) {
-                exec.join();
-                int exitCode = exec.getExitStatus();
-                String output = IOUtils.readFully(exec.getInputStream()).toString();
-                if (exitCode != 0) {
-                    throw new ChaosException("Received a non-zero exit code when running SSH Command");
-                }
-                return output;
-            }
+                          .upload(new JarResourceFile(resource, true), SSHConstants.TEMP_DIRECTORY);
+            String shellCommand = "nohup " + SSHConstants.TEMP_DIRECTORY + resource.getFilename() + " &";
+            log.debug("About to run {}", shellCommand);
+            return runCommandInShell(session, shellCommand);
         } catch (IOException e) {
             log.error("Error running SSH Command", e);
+            throw new ChaosException(e);
+        }
+    }
+
+    String runCommandInShell (Session session, String command) {
+        try {
+            session.allocateDefaultPTY();
+            try (Session.Shell shell = session.startShell()) {
+                try (OutputStream outputStream = shell.getOutputStream()) {
+                    outputStream.write((command + "\n").getBytes());
+                    outputStream.flush();
+                }
+                // TODO Get a meaningful output to use for logging. May be useful if the Resource
+                //  intends to return something for logging (i.e., ID of PID killed)
+                return Strings.EMPTY;
+            }
+        } catch (IOException e) {
             throw new ChaosException(e);
         }
     }
