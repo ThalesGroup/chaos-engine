@@ -11,14 +11,13 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Objects;
+import java.util.concurrent.*;
 
 public class ChaosSSHClient implements SSHClientWrapper {
     private static final Logger log = LoggerFactory.getLogger(ChaosSSHClient.class);
@@ -35,10 +34,18 @@ public class ChaosSSHClient implements SSHClientWrapper {
         Objects.requireNonNull(sshCredentials);
         sshClient = buildNewSSHClient();
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
-        try {
             sshClient.setConnectTimeout(connectionTimeout);
-            sshClient.connect(hostname, port);
-        } catch (IOException e) {
+        Future<Void> connection = Executors.newSingleThreadExecutor().submit(() -> {
+            try {
+                sshClient.connect(hostname, port);
+                return null;
+            } catch (IOException e) {
+                throw new ChaosException(e);
+            }
+        });
+        try {
+            connection.get(connectionTimeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new ChaosException(e);
         }
         try {
@@ -124,10 +131,14 @@ public class ChaosSSHClient implements SSHClientWrapper {
 
     @Override
     public String runResource (Resource resource) {
-        try (Session session = getSshClient().startSession()) {
+        try {
             getSshClient().newSCPFileTransfer()
                           .upload(new JarResourceFile(resource, true), SSHConstants.TEMP_DIRECTORY);
-            String shellCommand = "nohup " + SSHConstants.TEMP_DIRECTORY + resource.getFilename() + " &";
+        } catch (IOException e) {
+            throw new ChaosException(e);
+        }
+        try (Session session = getSshClient().startSession()) {
+            String shellCommand = SSHConstants.TEMP_DIRECTORY + resource.getFilename();
             log.debug("About to run {}", shellCommand);
             return runCommandInShell(session, shellCommand);
         } catch (IOException e) {
@@ -138,15 +149,9 @@ public class ChaosSSHClient implements SSHClientWrapper {
 
     String runCommandInShell (Session session, String command) {
         try {
-            session.allocateDefaultPTY();
-            try (Session.Shell shell = session.startShell()) {
-                try (OutputStream outputStream = shell.getOutputStream()) {
-                    outputStream.write((command + "\n").getBytes());
-                    outputStream.flush();
-                }
-                // TODO Get a meaningful output to use for logging. May be useful if the Resource
-                //  intends to return something for logging (i.e., ID of PID killed)
-                return Strings.EMPTY;
+            try (Session.Command shell = session.exec(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, command))) {
+                shell.join();
+                return IOUtils.readFully(shell.getInputStream()).toString();
             }
         } catch (IOException e) {
             throw new ChaosException(e);

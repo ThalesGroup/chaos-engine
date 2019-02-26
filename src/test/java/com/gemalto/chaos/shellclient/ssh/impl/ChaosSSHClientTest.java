@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.*;
@@ -81,9 +82,9 @@ public class ChaosSSHClientTest {
         doThrow(new IOException()).when(sshClient).connect(hostname, port);
         try {
             chaosSSHClient.connect();
-            fail("Expected a thrown IOException to produce a ChaosException");
+            fail("Expected a thrown ExecutionException to produce a ChaosException");
         } catch (ChaosException e) {
-            assertEquals(e.getCause().getClass(), IOException.class);
+            assertEquals(e.getCause().getClass(), ExecutionException.class);
         }
         //
         //
@@ -148,7 +149,7 @@ public class ChaosSSHClientTest {
         assertEquals(output, chaosSSHClient.runCommand(shellCommand));
     }
 
-    @Test
+    @Test(timeout = 2000L)
     public void runResource () throws Exception {
         Resource resourceFile = Mockito.mock(Resource.class, RETURNS_DEEP_STUBS);
         String SCRIPT_NAME = randomUUID().toString();
@@ -157,7 +158,7 @@ public class ChaosSSHClientTest {
         SSHClient sshClient = Mockito.mock(SSHClient.class, RETURNS_DEEP_STUBS);
         Session session = sshClient.startSession();
         SCPFileTransfer scpFileTransfer = sshClient.newSCPFileTransfer();
-        String command = "nohup /tmp/" + SCRIPT_NAME + " &";
+        String command = "/tmp/" + SCRIPT_NAME;
         doReturn(output).when(chaosSSHClient).runCommandInShell(session, command);
         doReturn(sshClient).when(chaosSSHClient).getSshClient();
         assertEquals(output, chaosSSHClient.runResource(resourceFile));
