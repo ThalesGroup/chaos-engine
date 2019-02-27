@@ -15,12 +15,12 @@ public interface ShellBasedExperiment<T extends Container> {
      * If it does not return successfully, should throw a RuntimeException.
      *
      * @param container          The container to run the command against
-     * @param selfHealingCommand The command to be run
+     * @param command The command to be run
      * @return The output of the command
      */
-    default String runCommand (T container, String selfHealingCommand) {
+    default String runCommand (T container, String command) {
         try (ShellClient shellClient = getConnectedShellClient(container)) {
-            return shellClient.runCommand(selfHealingCommand);
+            return shellClient.runCommand(command);
         } catch (IOException e) {
             throw new ChaosException(e);
         }

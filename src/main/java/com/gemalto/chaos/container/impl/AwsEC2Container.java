@@ -104,7 +104,7 @@ public class AwsEC2Container extends AwsContainer {
     @Override
     public boolean supportsShellBasedExperiments () {
         return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
-                .hasKey(keyName);
+                .hasKey(keyName); // TODO Support for internal private address
     }
 
     public boolean isSSHCapable () {

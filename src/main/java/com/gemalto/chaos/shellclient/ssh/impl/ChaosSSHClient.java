@@ -34,7 +34,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
         Objects.requireNonNull(sshCredentials);
         sshClient = buildNewSSHClient();
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
-            sshClient.setConnectTimeout(connectionTimeout);
+        sshClient.setConnectTimeout(connectionTimeout);
         Future<Void> connection = Executors.newSingleThreadExecutor().submit(() -> {
             try {
                 sshClient.connect(hostname, port);
