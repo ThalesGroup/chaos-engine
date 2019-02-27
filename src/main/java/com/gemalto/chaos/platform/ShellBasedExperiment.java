@@ -1,7 +1,11 @@
 package com.gemalto.chaos.platform;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.scripts.Script;
+import com.gemalto.chaos.shellclient.ShellClient;
+
+import java.io.IOException;
 
 public interface ShellBasedExperiment<T extends Container> {
     void recycleContainer (T container);
@@ -14,7 +18,15 @@ public interface ShellBasedExperiment<T extends Container> {
      * @param selfHealingCommand The command to be run
      * @return The output of the command
      */
-    String runCommand (T container, String selfHealingCommand);
+    default String runCommand (T container, String selfHealingCommand) {
+        try (ShellClient shellClient = getConnectedShellClient(container)) {
+            return shellClient.runCommand(selfHealingCommand);
+        } catch (IOException e) {
+            throw new ChaosException(e);
+        }
+    }
+
+    ShellClient getConnectedShellClient (T container);
 
     /**
      * This will run a script against a container and return the output.
@@ -24,5 +36,12 @@ public interface ShellBasedExperiment<T extends Container> {
      * @param script    The script to be run
      * @return The output of the script
      */
-    String runScript (T container, Script script);
+    default String runScript (T container, Script script) {
+        try (ShellClient shellClient = getConnectedShellClient(container)) {
+            return shellClient.runResource(script.getResource());
+        } catch (IOException e) {
+            throw new ChaosException(e);
+        }
+    }
+
 }

@@ -19,12 +19,8 @@ import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
-import com.gemalto.chaos.shellclient.ShellClient;
-import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
-import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHClient;
 import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,7 +28,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -40,7 +35,6 @@ import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.gemalto.chaos.constants.DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -69,7 +63,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         log.info("AWS EC2 Platform created");
     }
 
-    public Map<String, String> getVpcToSecurityGroupMap () {
+    Map<String, String> getVpcToSecurityGroupMap () {
         return new HashMap<>(vpcToSecurityGroupMap);
     }
 
@@ -428,33 +422,13 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     @Override
-    public String runCommand (AwsEC2Container container, String selfHealingCommand) {
-        try (ShellClient shellClient = getConnectedShellClient(container)) {
-            return shellClient.runCommand(selfHealingCommand);
-        } catch (IOException e) {
-            log.error("Error running SSH Command against container {}", v(DEFAULT_DATADOG_IDENTIFIER_KEY, container), e);
-            throw new ChaosException(e);
-        }
-    }
-
-    private SSHClientWrapper getConnectedShellClient (AwsEC2Container container) {
-        return new ChaosSSHClient().withEndpoint(container.getPublicAddress())
-                                   .withSSHCredentials(getSshCredentials(container))
-                                   .connect();
-    }
-
-    private SSHCredentials getSshCredentials (AwsEC2Container container) {
-        return new ChaosSSHCredentials().withUsername(DEFAULT_EC2_CLI_USER)
-                                        .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
+    public String getEndpoint (AwsEC2Container container) {
+        return container.getPublicAddress();
     }
 
     @Override
-    public String runScript (AwsEC2Container container, Script script) {
-        try (ShellClient shellClient = getConnectedShellClient(container)) {
-            return shellClient.runResource(script.getResource());
-        } catch (IOException e) {
-            log.error("Error running SSH Command against container {}", v(DEFAULT_DATADOG_IDENTIFIER_KEY, container), e);
-            throw new ChaosException(e);
-        }
+    public SSHCredentials getSshCredentials (AwsEC2Container container) {
+        return new ChaosSSHCredentials().withUsername(DEFAULT_EC2_CLI_USER)
+                                        .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
     }
 }
