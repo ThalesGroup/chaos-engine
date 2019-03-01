@@ -8,10 +8,6 @@ import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.ssh.KubernetesSshExperiment;
-import com.gemalto.chaos.ssh.SshExperiment;
-import com.gemalto.chaos.ssh.impl.KubernetesSshManager;
-import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
@@ -39,8 +35,6 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class KubernetesPlatform extends Platform {
     @Autowired
     private ContainerManager containerManager;
-    @Autowired
-    private ShResourceService shResourceService;
     @Autowired
     private CoreApi coreApi;
     @Autowired
@@ -79,15 +73,6 @@ public class KubernetesPlatform extends Platform {
             return false;
         }
         return true;
-    }
-
-    public void sshExperiment (SshExperiment experiment, KubernetesPodContainer container) {
-        SshExperiment sshExperiment = KubernetesSshExperiment.fromExperiment(experiment)
-                                                             .setExec(exec)
-                                                             .setSshManager(new KubernetesSshManager(container.getPodName(), container
-                                                                     .getNamespace()))
-                                                             .setShResourceService(shResourceService);
-        ((KubernetesSshExperiment) sshExperiment).runExperiment();
     }
 
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {

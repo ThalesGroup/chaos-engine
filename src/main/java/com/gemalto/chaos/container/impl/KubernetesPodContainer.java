@@ -10,7 +10,6 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import com.google.common.base.Enums;
 
 import javax.validation.constraints.NotNull;
@@ -92,13 +91,6 @@ public class KubernetesPodContainer extends Container {
     public void deletePod (Experiment experiment) {
         experiment.setCheckContainerHealth(replicaSetRecovered);
         kubernetesPlatform.deletePod(this);
-    }
-
-    @StateExperiment
-    public void forkBomb (Experiment experiment) {
-        experiment.setSelfHealingMethod(deletePod);
-        experiment.setCheckContainerHealth(replicaSetRecovered);
-        kubernetesPlatform.sshExperiment(new ForkBomb(), this);
     }
 
     public static final class KubernetesPodContainerBuilder {

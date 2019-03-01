@@ -1,6 +1,5 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
@@ -8,7 +7,6 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
@@ -30,8 +28,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -161,21 +157,6 @@ public class KubernetesPlatformTest {
         assertEquals(0, platform.getRoster().size());
     }
 
-    @Test
-    public void testSshExperiment () throws ApiException, IOException {
-        when(exec.exec(anyString(), anyString(), any(String[].class), anyBoolean(), anyBoolean())).thenReturn(new TestProcess(new ByteArrayInputStream("test data"
-                .getBytes())));
-        KubernetesPodContainer container = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
-        platform.sshExperiment(new ForkBomb(), container);
-    }
-
-    @Test(expected = ChaosException.class)
-    public void testSshExperimentWithException () throws ApiException, IOException {
-        when(exec.exec(anyString(), anyString(), any(String[].class), anyBoolean(), anyBoolean())).thenThrow(new IOException());
-        KubernetesPodContainer container = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
-        platform.sshExperiment(new ForkBomb(), container);
-    }
-
     private static V1PodList getV1PodList (boolean isBackedByController) {
         return getV1PodList(isBackedByController, 1);
     }
@@ -197,12 +178,6 @@ public class KubernetesPlatformTest {
         return list;
     }
 
-    @Test(expected = ChaosException.class)
-    public void testSshExperimentWithIOException () throws ApiException, IOException {
-        when(exec.exec(anyString(), anyString(), any(String[].class), anyBoolean(), anyBoolean())).thenThrow(new IOException());
-        KubernetesPodContainer container = platform.fromKubernetesAPIPod(getV1PodList(true).getItems().get(0));
-        platform.sshExperiment(new ForkBomb(), container);
-    }
 
     @Test
     public void testPlatformHealthNoNamespacesToTest () throws ApiException {
