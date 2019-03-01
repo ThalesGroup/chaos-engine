@@ -213,6 +213,11 @@ public class KubernetesPlatform extends Platform {
         }
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        return false;
+    }
+
     KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
         KubernetesPodContainer container = containerManager.getMatchingContainer(KubernetesPodContainer.class, pod.getMetadata()
                                                                                                                   .getName());
