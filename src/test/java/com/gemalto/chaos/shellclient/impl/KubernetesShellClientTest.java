@@ -4,8 +4,6 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
-import io.kubernetes.client.models.V1Container;
-import io.kubernetes.client.models.V1Pod;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,19 +27,19 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 @RunWith(MockitoJUnitRunner.class)
 public class KubernetesShellClientTest {
     private static final String CONTAINER_NAME = randomUUID().toString();
+    private static final String POD_NAME = randomUUID().toString();
+    private static final String NAMESPACE = randomUUID().toString();
     private KubernetesShellClient kubernetesShellClient;
     @Mock
     private Exec exec;
-    @Mock
-    private V1Pod v1pod;
-    private V1Container v1Container = new V1Container().name(CONTAINER_NAME);
 
     @Before
     public void setUp () {
         kubernetesShellClient = Mockito.spy(KubernetesShellClient.builder()
                                                                  .withExec(exec)
-                                                                 .withV1pod(v1pod)
-                                                                 .withContainer(v1Container)
+                                                                 .withNamespace(NAMESPACE)
+                                                                 .withPodName(POD_NAME)
+                                                                 .withContainerName(CONTAINER_NAME)
                                                                  .build());
     }
 
@@ -59,12 +57,12 @@ public class KubernetesShellClientTest {
         String expectedOutput = randomUUID().toString();
         Process process = mock(Process.class);
         String command = randomUUID().toString();
-        doReturn(process).when(exec).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         doReturn(0).when(process).waitFor();
         doReturn(new ByteArrayInputStream(expectedOutput.getBytes())).when(process).getInputStream();
         String output = kubernetesShellClient.runCommand(command, true);
         assertEquals(expectedOutput, output);
-        verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
     }
 
@@ -74,11 +72,11 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         String command = randomUUID().toString();
         Throwable exception = new InterruptedException();
-        doReturn(process).when(exec).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         doThrow(exception).when(process).waitFor();
         String output = kubernetesShellClient.runCommand(command, true);
         assertEquals(expectedOutput, output);
-        verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
         try {
             Thread.sleep(0);
@@ -93,7 +91,7 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         String command = randomUUID().toString();
         Throwable exception = new ApiException();
-        doThrow(exception).when(exec).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        doThrow(exception).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         try {
             kubernetesShellClient.runCommand(command, true);
             fail("Expected an API exception");
@@ -101,7 +99,7 @@ public class KubernetesShellClientTest {
             assertEquals(exception, e.getCause());
         }
         verify(process, never()).waitFor();
-        verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, never()).destroy();
     }
 
@@ -110,7 +108,7 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         String command = randomUUID().toString();
         Throwable exception = new IOException();
-        doThrow(exception).when(exec).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        doThrow(exception).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         try {
             kubernetesShellClient.runCommand(command, true);
             fail("Expected an API exception");
@@ -118,7 +116,7 @@ public class KubernetesShellClientTest {
             assertEquals(exception, e.getCause());
         }
         verify(process, never()).waitFor();
-        verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, never()).destroy();
     }
 
@@ -127,10 +125,10 @@ public class KubernetesShellClientTest {
         String expectedOutput = "";
         Process process = mock(Process.class);
         String command = randomUUID().toString();
-        doReturn(process).when(exec).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         String output = kubernetesShellClient.runCommand(command, false);
         assertEquals(expectedOutput, output);
-        verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, never()).waitFor();
         verify(process, never()).getInputStream();
         verify(process, times(1)).destroy();
@@ -176,7 +174,8 @@ public class KubernetesShellClientTest {
         String finalPath = "/tmp/" + filename;
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
-        doReturn(process).when(exec).exec(v1pod, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+        doReturn(process).when(exec)
+                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         assertEquals(finalPath, kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
         verify(outputStream, times(1)).write(0x04); // Make sure it sent an EOF!
@@ -246,7 +245,8 @@ public class KubernetesShellClientTest {
         Resource resource = testResource(filename);
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
-        doReturn(process).when(exec).exec(v1pod, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+        doReturn(process).when(exec)
+                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         for (int i : new int[]{ -1, 2, 100, -100 }) {
             doReturn(i).when(process).exitValue();
@@ -266,7 +266,8 @@ public class KubernetesShellClientTest {
         String filename = randomUUID().toString();
         Resource resource = testResource(filename);
         Throwable exception = new ApiException();
-        doThrow(exception).when(exec).exec(v1pod, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+        doThrow(exception).when(exec)
+                          .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         try {
             kubernetesShellClient.copyResourceToPath(resource, "/tmp/");
             fail("Expected an exception");
@@ -283,7 +284,8 @@ public class KubernetesShellClientTest {
         String finalPath = "/tmp/" + filename;
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
-        doReturn(process).when(exec).exec(v1pod, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+        doReturn(process).when(exec)
+                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         doThrow(exception).when(process).waitFor();
         assertEquals("", kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));

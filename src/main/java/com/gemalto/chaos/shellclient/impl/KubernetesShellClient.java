@@ -5,11 +5,8 @@ import com.gemalto.chaos.constants.SSHConstants;
 import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellConstants;
 import com.gemalto.chaos.util.ShellUtils;
-import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
-import io.kubernetes.client.models.V1Container;
-import io.kubernetes.client.models.V1Pod;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.logging.log4j.util.Strings;
@@ -22,15 +19,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Optional;
 
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class KubernetesShellClient implements ShellClient {
     private static final Logger log = LoggerFactory.getLogger(KubernetesShellClient.class);
     private Exec exec;
-    private V1Pod v1pod;
-    private V1Container container;
+    private String namespace;
+    private String podName;
+    private String containerName;
 
     public static KubernetesShellClientBuilder builder () {
         return KubernetesShellClientBuilder.aKubernetesShellClient();
@@ -45,7 +42,7 @@ public class KubernetesShellClient implements ShellClient {
         log.debug("Running command {}, waiting for output = {}", v("command", command), getOutput);
         Process proc = null;
         try {
-            proc = exec.exec(v1pod, command.split(" "), container.getName(), false, false);
+            proc = exec.exec(namespace, podName, command.split(" "), containerName, false, false);
             if (getOutput) {
                 proc.waitFor();
                 return StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset());
@@ -78,12 +75,12 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     String copyResourceToPath (Resource resource, String path) throws IOException {
-        log.debug("Transferring {} to {} in path {}", resource, v1pod, path);
+        log.debug("Transferring {} to {}/{} in path {}", resource, namespace, podName, path);
         String finalPath = path + (path.endsWith("/") ? Strings.EMPTY : "/") + resource.getFilename();
         String[] command = new String[]{ "tar", "xf", "-", "-C", path };
         Process proc = null;
         try {
-            proc = exec.exec(v1pod, command, container.getName(), true, false);
+            proc = exec.exec(namespace, podName, command, containerName, true, false);
             try (OutputStream os = proc.getOutputStream()) {
                 try (TarArchiveOutputStream tarOS = new TarArchiveOutputStream(os)) {
                     TarArchiveEntry archiveEntry = new TarArchiveEntry(resource.getFile(), resource.getFilename());
@@ -127,31 +124,16 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     public static final class KubernetesShellClientBuilder {
-        private ApiClient apiClient;
-        private V1Pod v1pod;
-        private V1Container container;
         private Exec exec;
+        private String namespace;
+        private String podName;
+        private String containerName;
 
         private KubernetesShellClientBuilder () {
         }
 
-        static KubernetesShellClientBuilder aKubernetesShellClient () {
+        public static KubernetesShellClientBuilder aKubernetesShellClient () {
             return new KubernetesShellClientBuilder();
-        }
-
-        public KubernetesShellClientBuilder withApiClient (ApiClient apiClient) {
-            this.apiClient = apiClient;
-            return this;
-        }
-
-        public KubernetesShellClientBuilder withV1pod (V1Pod v1pod) {
-            this.v1pod = v1pod;
-            return this;
-        }
-
-        public KubernetesShellClientBuilder withContainer (V1Container container) {
-            this.container = container;
-            return this;
         }
 
         public KubernetesShellClientBuilder withExec (Exec exec) {
@@ -159,11 +141,27 @@ public class KubernetesShellClient implements ShellClient {
             return this;
         }
 
+        public KubernetesShellClientBuilder withNamespace (String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public KubernetesShellClientBuilder withPodName (String podName) {
+            this.podName = podName;
+            return this;
+        }
+
+        public KubernetesShellClientBuilder withContainerName (String containerName) {
+            this.containerName = containerName;
+            return this;
+        }
+
         public KubernetesShellClient build () {
             KubernetesShellClient kubernetesShellClient = new KubernetesShellClient();
-            kubernetesShellClient.exec = Optional.ofNullable(this.exec).orElseGet(() -> new Exec(apiClient));
-            kubernetesShellClient.v1pod = this.v1pod;
-            kubernetesShellClient.container = this.container;
+            kubernetesShellClient.exec = this.exec;
+            kubernetesShellClient.podName = this.podName;
+            kubernetesShellClient.namespace = this.namespace;
+            kubernetesShellClient.containerName = this.containerName;
             return kubernetesShellClient;
         }
     }
