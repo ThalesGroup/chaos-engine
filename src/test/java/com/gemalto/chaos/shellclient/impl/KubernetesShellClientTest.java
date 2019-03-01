@@ -80,7 +80,12 @@ public class KubernetesShellClientTest {
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(v1pod, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
-        assertTrue(Thread.currentThread().isInterrupted());
+        try {
+            Thread.sleep(0);
+            fail("Thread should have been interrupted");
+        } catch (InterruptedException ignored) {
+        }
+
     }
 
     @Test
@@ -284,6 +289,11 @@ public class KubernetesShellClientTest {
         assertEquals("", kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
         verify(process, atLeastOnce()).destroy();
         verify(process, never()).exitValue();
-        assertTrue(Thread.currentThread().isInterrupted());
+        try {
+            Thread.sleep(0);
+            fail("Thread should have been interrupted");
+        } catch (InterruptedException ignored) {
+        }
+
     }
 }
