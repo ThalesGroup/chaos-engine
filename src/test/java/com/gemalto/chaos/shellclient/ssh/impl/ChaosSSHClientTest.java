@@ -146,7 +146,7 @@ public class ChaosSSHClientTest {
         Session.Command command = session.exec(shellCommand);
         doReturn(new ByteArrayInputStream(output.getBytes())).when(command).getInputStream();
         doReturn(sshClient).when(chaosSSHClient).getSshClient();
-        assertEquals(output, chaosSSHClient.runCommand(shellCommand));
+        assertEquals(output, chaosSSHClient.runCommand(shellCommand).getStdOut());
     }
 
     @Test(timeout = 2000L)

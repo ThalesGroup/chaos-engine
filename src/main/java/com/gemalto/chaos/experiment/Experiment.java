@@ -254,9 +254,12 @@ public abstract class Experiment {
     @SuppressWarnings("unchecked")
     private <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
         if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
-        // TODO Scripting Dependencies
+        final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
         return scriptManager.getScripts()
                             .stream()
+                            .filter(script -> script.getDependencies()
+                                                    .stream()
+                                                    .noneMatch(knownMissingCapabilities::contains))
                             .map(script -> ExperimentMethod.fromScript(getContainer(), script))
                             .map(method -> (ExperimentMethod<T>) method)
                             .collect(Collectors.toSet());

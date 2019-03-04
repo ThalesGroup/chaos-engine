@@ -188,6 +188,7 @@ public class ShellScript implements Script {
         return description;
     }
 
+    @Override
     public Collection<String> getDependencies () {
         return dependencies;
     }

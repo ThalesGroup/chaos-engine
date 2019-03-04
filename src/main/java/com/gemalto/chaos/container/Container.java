@@ -12,6 +12,7 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.ShellBasedExperiment;
 import com.gemalto.chaos.scripts.Script;
+import com.gemalto.chaos.shellclient.ShellOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -39,6 +40,7 @@ public abstract class Container implements ExperimentalObject {
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
     private Experiment currentExperiment;
+    private final Map<String, Boolean> shellCapabilities = new HashMap<>();
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -46,6 +48,10 @@ public abstract class Container implements ExperimentalObject {
                 supportedExperimentTypes.add(experimentType);
             }
         }
+    }
+
+    public Map<String, Boolean> getShellCapabilities () {
+        return shellCapabilities;
     }
 
     @Override
@@ -241,7 +247,7 @@ public abstract class Container implements ExperimentalObject {
     }
 
     @SuppressWarnings("unchecked")
-    public String runCommand (String command) {
+    public ShellOutput runCommand (String command) {
         if (!supportsShellBasedExperiments())
             throw new ChaosException("Attempted to run a shell command on a container that does not support it");
         return getScriptPlatform().runCommand(this, command);
@@ -262,5 +268,13 @@ public abstract class Container implements ExperimentalObject {
 
     public Instant getExperimentStartTime () {
         return currentExperiment != null ? currentExperiment.getStartTime() : null;
+    }
+
+    public Collection<String> getKnownMissingCapabilities () {
+        return shellCapabilities.entrySet()
+                                .stream()
+                                .filter(stringBooleanEntry -> !Boolean.TRUE.equals(stringBooleanEntry.getValue()))
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.toSet());
     }
 }

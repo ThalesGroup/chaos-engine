@@ -4,6 +4,7 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
 import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellConstants;
+import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.util.ShellUtils;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
@@ -35,39 +36,42 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     @Override
-    public String runCommand (String command) {
+    public String runResource (Resource resource) {
+        try {
+            return runCommand(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource)), false).getStdErr();
+        } catch (IOException e) {
+            throw new ChaosException(e);
+        }
+    }
+
+    @Override
+    public ShellOutput runCommand (String command) {
         return runCommand(command, true);
     }
 
-    String runCommand (String command, boolean getOutput) {
+    ShellOutput runCommand (String command, boolean getOutput) {
         log.debug("Running command {}, waiting for output = {}", v("command", command), getOutput);
         Process proc = null;
         try {
             proc = exec.exec(namespace, podName, command.split(" "), containerName, false, false);
             if (getOutput) {
-                proc.waitFor();
-                return StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset());
+                int exitCode = proc.waitFor();
+                return ShellOutput.builder()
+                                  .withExitCode(exitCode)
+                                  .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset()))
+                                  .build();
             } else {
-                return Strings.EMPTY;
+                return ShellOutput.EMPTY_SHELL_OUTPUT;
             }
         } catch (InterruptedException e) {
             log.error("Interrupted while processing, throwing Interrupt up thread", e);
             Thread.currentThread().interrupt();
-            return Strings.EMPTY;
+            return ShellOutput.EMPTY_SHELL_OUTPUT;
         } catch (IOException | ApiException e) {
             log.error("Received exception while processing command", e);
             throw new ChaosException(e);
         } finally {
             if (proc != null) proc.destroy();
-        }
-    }
-
-    @Override
-    public String runResource (Resource resource) {
-        try {
-            return runCommand(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource)), false);
-        } catch (IOException e) {
-            throw new ChaosException(e);
         }
     }
 

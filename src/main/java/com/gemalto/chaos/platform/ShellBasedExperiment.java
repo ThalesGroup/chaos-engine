@@ -4,6 +4,7 @@ import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.shellclient.ShellClient;
+import com.gemalto.chaos.shellclient.ShellOutput;
 
 import java.io.IOException;
 
@@ -18,7 +19,7 @@ public interface ShellBasedExperiment<T extends Container> {
      * @param command The command to be run
      * @return The output of the command
      */
-    default String runCommand (T container, String command) {
+    default ShellOutput runCommand (T container, String command) {
         try (ShellClient shellClient = getConnectedShellClient(container)) {
             return shellClient.runCommand(command);
         } catch (IOException e) {
@@ -38,6 +39,12 @@ public interface ShellBasedExperiment<T extends Container> {
      */
     default String runScript (T container, Script script) {
         try (ShellClient shellClient = getConnectedShellClient(container)) {
+            if (script.getDependencies()
+                      .stream()
+                      .map(s -> container.getShellCapabilities().computeIfAbsent(s, shellClient::checkDependency))
+                      .anyMatch(Boolean.FALSE::equals)) {
+                throw new ChaosException("Found that some dependencies were missing while initializing script");
+            }
             return shellClient.runResource(script.getResource());
         } catch (IOException e) {
             throw new ChaosException(e);

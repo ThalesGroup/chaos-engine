@@ -2,6 +2,7 @@ package com.gemalto.chaos.shellclient.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.shellclient.ShellOutput;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import org.apache.logging.log4j.util.Strings;
@@ -47,8 +48,8 @@ public class KubernetesShellClientTest {
     public void runCommandSimple () {
         String command = randomUUID().toString();
         String output = randomUUID().toString();
-        doReturn(output).when(kubernetesShellClient).runCommand(command, true);
-        assertEquals(output, kubernetesShellClient.runCommand(command));
+        doReturn(new ShellOutput(0, output)).when(kubernetesShellClient).runCommand(command, true);
+        assertEquals(output, kubernetesShellClient.runCommand(command).getStdOut());
         verify(kubernetesShellClient, times(1)).runCommand(command, true);
     }
 
@@ -60,7 +61,7 @@ public class KubernetesShellClientTest {
         doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         doReturn(0).when(process).waitFor();
         doReturn(new ByteArrayInputStream(expectedOutput.getBytes())).when(process).getInputStream();
-        String output = kubernetesShellClient.runCommand(command, true);
+        String output = kubernetesShellClient.runCommand(command, true).getStdOut();
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
@@ -74,7 +75,7 @@ public class KubernetesShellClientTest {
         Throwable exception = new InterruptedException();
         doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         doThrow(exception).when(process).waitFor();
-        String output = kubernetesShellClient.runCommand(command, true);
+        String output = kubernetesShellClient.runCommand(command, true).getStdOut();
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
@@ -126,7 +127,7 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         String command = randomUUID().toString();
         doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
-        String output = kubernetesShellClient.runCommand(command, false);
+        String output = kubernetesShellClient.runCommand(command, false).getStdOut();
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, never()).waitFor();

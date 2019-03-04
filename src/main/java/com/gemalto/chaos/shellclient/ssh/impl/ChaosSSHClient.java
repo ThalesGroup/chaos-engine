@@ -2,6 +2,7 @@ package com.gemalto.chaos.shellclient.ssh.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
 import com.gemalto.chaos.ssh.JarResourceFile;
@@ -45,7 +46,10 @@ public class ChaosSSHClient implements SSHClientWrapper {
         });
         try {
             connection.get(connectionTimeout, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ChaosException(e);
+        } catch (ExecutionException | TimeoutException e) {
             throw new ChaosException(e);
         }
         try {
@@ -111,17 +115,14 @@ public class ChaosSSHClient implements SSHClientWrapper {
     }
 
     @Override
-    public String runCommand (String command) {
+    public ShellOutput runCommand (String command) {
         try (Session session = getSshClient().startSession()) {
             session.allocateDefaultPTY();
             try (Session.Command exec = session.exec(command)) {
                 exec.join();
                 int exitCode = exec.getExitStatus();
                 String output = IOUtils.readFully(exec.getInputStream()).toString();
-                if (exitCode != 0) {
-                    throw new ChaosException("Received a non-zero exit code when running SSH Command");
-                }
-                return output;
+                return ShellOutput.builder().withExitCode(exitCode).withStdOut(output).build();
             }
         } catch (IOException e) {
             log.error("Error running SSH Command", e);

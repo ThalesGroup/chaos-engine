@@ -23,4 +23,6 @@ public interface Script {
     Resource getResource ();
 
     ExperimentType getExperimentType ();
+
+    Collection<String> getDependencies ();
 }
