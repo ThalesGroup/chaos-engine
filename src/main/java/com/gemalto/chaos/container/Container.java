@@ -247,8 +247,10 @@ public abstract class Container implements ExperimentalObject {
         return getScriptPlatform().runCommand(this, command);
     }
 
-    public boolean isContainerRecycled () {
-        return !isCattle() || getPlatform().isContainerRecycled(this);
+    @JsonIgnore
+    public Boolean isContainerRecycled () {
+        if (!isCattle()) return Boolean.FALSE;
+        return getPlatform().isContainerRecycled(this);
     }
 
     @SuppressWarnings("unchecked")

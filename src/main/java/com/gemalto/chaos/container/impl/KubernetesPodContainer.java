@@ -1,5 +1,6 @@
 package com.gemalto.chaos.container.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -13,8 +14,7 @@ import com.gemalto.chaos.platform.impl.KubernetesPlatform;
 import com.google.common.base.Enums;
 
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -27,6 +27,8 @@ public class KubernetesPodContainer extends Container {
     private transient KubernetesPlatform kubernetesPlatform;
     private ControllerKind ownerKind;
     private String ownerName;
+    private Collection<String> subcontainers = new HashSet<>();
+    private transient String targetedSubcontainer;
     private transient Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
     private transient Callable<Void> deletePod = () -> {
         kubernetesPlatform.deletePod(this);
@@ -55,6 +57,25 @@ public class KubernetesPodContainer extends Container {
 
     public String getOwnerName () {
         return ownerName;
+    }
+
+    @Override
+    public void startExperiment (Experiment experiment) {
+        this.targetedSubcontainer = null;
+        super.startExperiment(experiment);
+    }
+
+    @Override
+    public boolean isCattle () {
+        return isBackedByController;
+    }
+
+    public String getTargetedSubcontainer () {
+        return Optional.ofNullable(targetedSubcontainer)
+                       .orElseGet(() -> (targetedSubcontainer = subcontainers.stream()
+                                                                             .min(Comparator.comparingInt(i -> new Random()
+                                                                                     .nextInt()))
+                                                                             .orElseThrow(() -> new ChaosException("Need a Kubernetes Pod's Containers but found none"))));
     }
 
     @Override
@@ -102,8 +123,9 @@ public class KubernetesPodContainer extends Container {
         private KubernetesPlatform kubernetesPlatform;
         private String ownerKind;
         private String ownerName;
+        private Collection<String> subcontainers;
 
-        public KubernetesPodContainerBuilder () {
+        private KubernetesPodContainerBuilder () {
         }
 
         static KubernetesPodContainerBuilder aKubernetesPodContainer () {
@@ -150,6 +172,11 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
+        public KubernetesPodContainerBuilder withSubcontainers (Collection<String> subcontainers) {
+            this.subcontainers = subcontainers;
+            return this;
+        }
+
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
             kubernetesPodContainer.podName = this.podName;
@@ -160,6 +187,7 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
             kubernetesPodContainer.ownerKind = Enums.getIfPresent(ControllerKind.class, ownerKind).orNull();
             kubernetesPodContainer.ownerName = ownerName;
+            kubernetesPodContainer.subcontainers = this.subcontainers;
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
                 kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");

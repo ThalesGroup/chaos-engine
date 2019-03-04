@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.concurrent.TimeUnit;
 
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -97,7 +98,9 @@ public class KubernetesShellClient implements ShellClient {
                 }
             }
             proc.destroy();
-            proc.waitFor();
+            if (!proc.waitFor(5000, TimeUnit.MILLISECONDS)) {
+                throw new ChaosException("Failed to transfer Script in a reasonable time.");
+            }
             int i = proc.exitValue();
             if (ShellUtils.isTarSuccessful(i)) {
                 proc = null;
@@ -133,7 +136,7 @@ public class KubernetesShellClient implements ShellClient {
         private KubernetesShellClientBuilder () {
         }
 
-        public static KubernetesShellClientBuilder aKubernetesShellClient () {
+        static KubernetesShellClientBuilder aKubernetesShellClient () {
             return new KubernetesShellClientBuilder();
         }
 

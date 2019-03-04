@@ -177,11 +177,12 @@ public class KubernetesShellClientTest {
         doReturn(process).when(exec)
                          .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
+        doReturn(true).when(process).waitFor(anyLong(), any());
         assertEquals(finalPath, kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
         verify(outputStream, times(1)).write(0x04); // Make sure it sent an EOF!
         verify(outputStream, atLeastOnce()).flush();
         verify(process, times(1)).destroy();
-        verify(process, times(1)).waitFor();
+        verify(process, times(1)).waitFor(anyLong(), any());
         verify(process, times(1)).exitValue();
     }
 
@@ -248,6 +249,8 @@ public class KubernetesShellClientTest {
         doReturn(process).when(exec)
                          .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
+        doReturn(true).when(process).waitFor(anyLong(), any());
+
         for (int i : new int[]{ -1, 2, 100, -100 }) {
             doReturn(i).when(process).exitValue();
             try {
@@ -258,7 +261,7 @@ public class KubernetesShellClientTest {
             }
         }
         verify(process, atLeastOnce()).destroy();
-        verify(process, atLeastOnce()).waitFor();
+        verify(process, atLeastOnce()).waitFor(anyLong(), any());
     }
 
     @Test
@@ -287,7 +290,7 @@ public class KubernetesShellClientTest {
         doReturn(process).when(exec)
                          .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
-        doThrow(exception).when(process).waitFor();
+        doThrow(exception).when(process).waitFor(anyLong(), any());
         assertEquals("", kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
         verify(process, atLeastOnce()).destroy();
         verify(process, never()).exitValue();
