@@ -83,7 +83,8 @@ public class KubernetesShellClient implements ShellClient {
             proc = exec.exec(namespace, podName, command, containerName, true, false);
             try (OutputStream os = proc.getOutputStream()) {
                 try (TarArchiveOutputStream tarOS = new TarArchiveOutputStream(os)) {
-                    TarArchiveEntry archiveEntry = new TarArchiveEntry(resource.getFile(), resource.getFilename());
+                    TarArchiveEntry archiveEntry = new TarArchiveEntry(resource.getFilename());
+                    archiveEntry.setSize(resource.contentLength());
                     archiveEntry.setMode(TarArchiveEntry.DEFAULT_FILE_MODE | ShellConstants.EXEC_BIT);
                     tarOS.putArchiveEntry(archiveEntry);
                     try (InputStream inputStream = resource.getInputStream()) {
