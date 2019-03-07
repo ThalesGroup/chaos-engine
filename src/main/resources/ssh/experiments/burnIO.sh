@@ -1,6 +1,6 @@
 #!/bin/sh
 # Cattle:  true
-# Dependencies: dd, while
+# Dependencies: dd
 
 
 while [[ true ]] ; do

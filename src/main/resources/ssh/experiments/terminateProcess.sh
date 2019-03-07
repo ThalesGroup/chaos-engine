@@ -1,6 +1,6 @@
 #!/bin/sh
 # Description: Terminate random processes
-# Dependencies: kill, cd, ls, grep, sort,  head
+# Dependencies: kill, ls, grep, sort,  head
 # Cattle: true
 
 
