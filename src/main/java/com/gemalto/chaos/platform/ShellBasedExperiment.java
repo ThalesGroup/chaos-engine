@@ -9,6 +9,12 @@ import com.gemalto.chaos.shellclient.ShellOutput;
 import java.io.IOException;
 
 public interface ShellBasedExperiment<T extends Container> {
+    /**
+     * Recycle a container to give it a new life. Do something with it so the
+     * platform will get rid of it, and create new container(s) in its place.
+     *
+     * @param container The container to be "recycled" by the platform.
+     */
     void recycleContainer (T container);
 
     /**
@@ -27,6 +33,12 @@ public interface ShellBasedExperiment<T extends Container> {
         }
     }
 
+    /**
+     * Create a Shell Client that can access the shell in the container.
+     *
+     * @param container The container to connect into.
+     * @return A Shell Client that is used by the runCommand and runScript methods.
+     */
     ShellClient getConnectedShellClient (T container);
 
     /**
