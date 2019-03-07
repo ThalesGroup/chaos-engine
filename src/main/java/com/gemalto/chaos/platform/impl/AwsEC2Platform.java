@@ -231,7 +231,7 @@ public class AwsEC2Platform extends Platform {
     }
 
     private Stream<Instance> getInstanceStream () {
-        return getInstanceStream(new DescribeInstancesRequest());
+        return getInstanceStream(new DescribeInstancesRequest().withFilters(generateSearchFilters()));
     }
 
     private Stream<Instance> getInstanceStream (DescribeInstancesRequest describeInstancesRequest) {
