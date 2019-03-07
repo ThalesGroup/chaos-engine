@@ -34,7 +34,7 @@ public class KubernetesShellClient implements ShellClient {
     @Override
     public String runResource (Resource resource) {
         try {
-            return runCommand(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource)), false).getStdErr();
+            return runCommand(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource)), false).getStdOut();
         } catch (IOException e) {
             throw new ChaosException(e);
         }
@@ -50,8 +50,8 @@ public class KubernetesShellClient implements ShellClient {
         Process proc = null;
         try {
             proc = exec.exec(namespace, podName, command.split(" "), containerName, false, false);
+            int exitCode = proc.waitFor();
             if (getOutput) {
-                int exitCode = proc.waitFor();
                 return ShellOutput.builder()
                                   .withExitCode(exitCode)
                                   .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset()))

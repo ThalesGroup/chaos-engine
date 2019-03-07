@@ -79,12 +79,7 @@ public class KubernetesShellClientTest {
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
         verify(process, times(1)).destroy();
-        try {
-            Thread.sleep(0);
-            fail("Thread should have been interrupted");
-        } catch (InterruptedException ignored) {
-        }
-
+        assertTrue(Thread.interrupted());
     }
 
     @Test
@@ -130,7 +125,7 @@ public class KubernetesShellClientTest {
         String output = kubernetesShellClient.runCommand(command, false).getStdOut();
         assertEquals(expectedOutput, output);
         verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ command }, CONTAINER_NAME, false, false);
-        verify(process, never()).waitFor();
+        verify(process, times(1)).waitFor();
         verify(process, never()).getInputStream();
         verify(process, times(1)).destroy();
     }
@@ -141,6 +136,7 @@ public class KubernetesShellClientTest {
         String finalPath = randomUUID().toString();
         String command = String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, finalPath);
         doReturn(finalPath).when(kubernetesShellClient).copyResourceToPath(resource, "/tmp/");
+        doReturn(ShellOutput.EMPTY_SHELL_OUTPUT).when(kubernetesShellClient).runCommand(command, false);
         kubernetesShellClient.runResource(resource);
         verify(kubernetesShellClient, times(1)).copyResourceToPath(resource, "/tmp/");
         verify(kubernetesShellClient, times(1)).runCommand(command, false);
@@ -300,11 +296,6 @@ public class KubernetesShellClientTest {
         assertEquals("", kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
         verify(process, atLeastOnce()).destroy();
         verify(process, never()).exitValue();
-        try {
-            Thread.sleep(0);
-            fail("Thread should have been interrupted");
-        } catch (InterruptedException ignored) {
-        }
-
+        assertTrue(Thread.interrupted());
     }
 }
