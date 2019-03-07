@@ -176,11 +176,12 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
         doReturn(process).when(exec)
-                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+                         .exec(NAMESPACE, POD_NAME, ("dd if=/dev/stdin of=/tmp/" + filename + " bs=" + resource.contentLength() + " count=1")
+                                 .split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         doReturn(true).when(process).waitFor(anyLong(), any());
+        doReturn(new ShellOutput(0, "OK")).when(kubernetesShellClient).runCommand(any());
         assertEquals(finalPath, kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));
-        verify(outputStream, times(1)).write(0x04); // Make sure it sent an EOF!
         verify(outputStream, atLeastOnce()).flush();
         verify(process, times(1)).destroy();
         verify(process, times(1)).waitFor(anyLong(), any());
@@ -248,7 +249,8 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
         doReturn(process).when(exec)
-                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+                         .exec(NAMESPACE, POD_NAME, ("dd if=/dev/stdin of=/tmp/" + filename + " bs=" + resource.contentLength() + " count=1")
+                                 .split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         doReturn(true).when(process).waitFor(anyLong(), any());
 
@@ -269,9 +271,12 @@ public class KubernetesShellClientTest {
     public void copyResourceToPathApiException () throws Exception {
         String filename = randomUUID().toString();
         Resource resource = testResource(filename);
+        long contentLength = resource.contentLength();
+
         Throwable exception = new ApiException();
         doThrow(exception).when(exec)
-                          .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+                          .exec(NAMESPACE, POD_NAME, ("dd if=/dev/stdin of=/tmp/" + filename + " bs=" + contentLength + " count=1")
+                                  .split(" "), CONTAINER_NAME, true, false);
         try {
             kubernetesShellClient.copyResourceToPath(resource, "/tmp/");
             fail("Expected an exception");
@@ -285,11 +290,11 @@ public class KubernetesShellClientTest {
         Throwable exception = new InterruptedException();
         String filename = randomUUID().toString();
         Resource resource = testResource(filename);
-        String finalPath = "/tmp/" + filename;
         Process process = mock(Process.class);
         OutputStream outputStream = mock(OutputStream.class);
         doReturn(process).when(exec)
-                         .exec(NAMESPACE, POD_NAME, "tar xf - -C /tmp/".split(" "), CONTAINER_NAME, true, false);
+                         .exec(NAMESPACE, POD_NAME, ("dd if=/dev/stdin of=/tmp/" + filename + " bs=" + resource.contentLength() + " count=1")
+                                 .split(" "), CONTAINER_NAME, true, false);
         doReturn(outputStream).when(process).getOutputStream();
         doThrow(exception).when(process).waitFor(anyLong(), any());
         assertEquals("", kubernetesShellClient.copyResourceToPath(resource, "/tmp/"));

@@ -3,13 +3,9 @@ package com.gemalto.chaos.shellclient.impl;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
 import com.gemalto.chaos.shellclient.ShellClient;
-import com.gemalto.chaos.shellclient.ShellConstants;
 import com.gemalto.chaos.shellclient.ShellOutput;
-import com.gemalto.chaos.util.ShellUtils;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,34 +76,27 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     String copyResourceToPath (Resource resource, String path) throws IOException {
-        log.debug("Transferring {} to {}/{} in path {}", resource, namespace, podName, path);
+        long contentLength = resource.contentLength();
         String finalPath = path + (path.endsWith("/") ? Strings.EMPTY : "/") + resource.getFilename();
-        String[] command = new String[]{ "tar", "xf", "-", "-C", path };
+        String[] command = new String[]{ "dd", "if=/dev/stdin", "of=" + finalPath, "bs=" + contentLength, "count=1" };
+
+
+        log.debug("Transferring {} to {}/{} in path {}", resource, namespace, podName, path);
         Process proc = null;
         try {
             proc = exec.exec(namespace, podName, command, containerName, true, false);
             try (OutputStream os = proc.getOutputStream()) {
-                try (TarArchiveOutputStream tarOS = new TarArchiveOutputStream(os)) {
-                    TarArchiveEntry archiveEntry = new TarArchiveEntry(resource.getFilename());
-                    archiveEntry.setSize(resource.contentLength());
-                    archiveEntry.setMode(TarArchiveEntry.DEFAULT_FILE_MODE | ShellConstants.EXEC_BIT);
-                    tarOS.putArchiveEntry(archiveEntry);
-                    try (InputStream inputStream = resource.getInputStream()) {
-                        StreamUtils.copy(inputStream, tarOS);
-                    }
-                    tarOS.closeArchiveEntry();
-                    os.flush();
-                    tarOS.flush();
-                    os.write(ShellConstants.EOT_CHARACTER);
+                try (InputStream is = resource.getInputStream()) {
+                    StreamUtils.copy(is, os);
                 }
             }
-            proc.destroy();
             if (!proc.waitFor(5000, TimeUnit.MILLISECONDS)) {
                 throw new ChaosException("Failed to transfer Script in a reasonable time.");
             }
             int i = proc.exitValue();
-            if (ShellUtils.isTarSuccessful(i)) {
-                proc = null;
+            if (i == 0) {
+                String command1 = "chmod 755 " + finalPath;
+                runCommand(command1);
                 return finalPath;
             }
             throw new ChaosException("Received exit code " + i + " when transferring file");
