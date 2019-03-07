@@ -121,8 +121,8 @@ public class ChaosSSHClientTest {
 
     @Test
     public void withEndpoint () {
-        assertSame(chaosSSHClient, chaosSSHClient.withEndpoint(null));
-        assertSame(chaosSSHClient, chaosSSHClient.withEndpoint(null, 1));
+        assertSame(chaosSSHClient, chaosSSHClient.withEndpoint(randomUUID().toString()));
+        assertSame(chaosSSHClient, chaosSSHClient.withEndpoint(randomUUID().toString(), 1));
     }
 
     @Test
