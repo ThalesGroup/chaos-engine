@@ -70,6 +70,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     public boolean deletePod (KubernetesPodContainer instance) {
+        log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
             coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);
@@ -272,6 +273,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     @Override
     public ShellClient getConnectedShellClient (KubernetesPodContainer container) {
+        log.debug("Creating shell client into {}", v(DATADOG_CONTAINER_KEY, container));
         return KubernetesShellClient.builder()
                                     .withExec(exec)
                                     .withContainerName(container.getTargetedSubcontainer())
