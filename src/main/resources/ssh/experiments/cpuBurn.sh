@@ -1,7 +1,7 @@
 #!/bin/sh
 # Cattle:  true
 # Description: Simulates high CPU usage on all available processing units
-# Dependencies: nproc
+# Dependencies: nproc, yes, grep
 
 limit=$(nproc)
 counter=1
