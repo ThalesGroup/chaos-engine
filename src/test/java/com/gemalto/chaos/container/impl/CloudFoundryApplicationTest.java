@@ -19,14 +19,12 @@ import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -69,6 +67,11 @@ public class CloudFoundryApplicationTest {
                                                                          .build();
         cloudFoundryApplicationRoutes.add(route);
         return cloudFoundryApplicationRoutes;
+    }
+
+    @Test
+    public void supportsShellBasedExperiments () {
+        assertFalse(cloudFoundryApplication.supportsShellBasedExperiments());
     }
 
     @Test

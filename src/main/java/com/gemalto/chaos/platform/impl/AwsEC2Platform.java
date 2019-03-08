@@ -7,6 +7,7 @@ import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.AwsConstants;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
@@ -14,10 +15,13 @@ import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
+import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,13 +40,14 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Component
 @ConditionalOnProperty("aws.ec2")
 @ConfigurationProperties("aws.ec2")
-public class AwsEC2Platform extends Platform {
+public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC2Container> {
     private final Map<String, String> vpcToSecurityGroupMap = new ConcurrentHashMap<>();
     private AmazonEC2 amazonEC2;
     private ContainerManager containerManager;
     private Map<String, List<String>> filter = new HashMap<>();
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private List<String> groupingTags = Collections.singletonList(AWS_ASG_NAME_TAG_KEY);
+    private Map<String, String> sshPrivateKeys = Collections.emptyMap();
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
 
@@ -58,7 +63,7 @@ public class AwsEC2Platform extends Platform {
         log.info("AWS EC2 Platform created");
     }
 
-    public Map<String, String> getVpcToSecurityGroupMap () {
+    Map<String, String> getVpcToSecurityGroupMap () {
         return new HashMap<>(vpcToSecurityGroupMap);
     }
 
@@ -70,6 +75,11 @@ public class AwsEC2Platform extends Platform {
     public void setGroupingTags (List<String> groupingTags) {
         log.info("EC2 Instances will consider designated survivors based on the following tags: {}", v("groupingIdentifiers", groupingTags));
         this.groupingTags = groupingTags;
+    }
+
+    public void setSSHPrivateKeys (@NotNull Map<String, String> sshPrivateKeys) {
+        log.info("Loading private keys for keynames: {}", v("key-name", sshPrivateKeys.keySet()));
+        this.sshPrivateKeys = sshPrivateKeys;
     }
 
     /**
@@ -161,6 +171,16 @@ public class AwsEC2Platform extends Platform {
         return eligibleExperimentTargets;
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        AwsEC2Container awsEC2Container;
+        if (!(container instanceof AwsEC2Container)) return false;
+        awsEC2Container = (AwsEC2Container) container;
+        String instanceId = awsEC2Container.getInstanceId();
+        return getInstanceStream().filter(instance -> !instance.getState().getCode().equals(AWS_TERMINATED_CODE))
+                                  .noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
+    }
+
     Collection<Filter> generateSearchFilters () {
         return filter.entrySet().stream().map(this::createFilterFromEntry)
                      .collect(Collectors.toSet());
@@ -221,12 +241,17 @@ public class AwsEC2Platform extends Platform {
             groupIdentifier = groupingTag == null ? null : groupingTag.getValue();
             nativeAwsAutoscaling = groupingTag != null && AWS_ASG_NAME_TAG_KEY.equals(groupingTag.getKey());
         }
+        Placement placement = instance.getPlacement();
+        String availabilityZone = placement != null ? placement.getAvailabilityZone() : AwsConstants.NO_AZ_INFORMATION;
         return AwsEC2Container.builder().awsEC2Platform(this)
                               .instanceId(instance.getInstanceId())
                               .keyName(Optional.ofNullable(instance.getKeyName()).orElse(NO_ASSIGNED_KEY))
                               .name(name)
                               .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
                               .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
+                              .availabilityZone(Optional.ofNullable(availabilityZone)
+                                                        .orElse(AwsConstants.NO_AZ_INFORMATION))
+                              .publicAddress(instance.getPublicIpAddress())
                               .build();
     }
 
@@ -380,6 +405,15 @@ public class AwsEC2Platform extends Platform {
         return desiredCapacity == actualCapacity;
     }
 
+    public boolean hasKey (String keyName) {
+        return sshPrivateKeys.keySet().contains(keyName);
+    }
+
+    @Override
+    public void recycleContainer (AwsEC2Container container) {
+        triggerAutoscalingUnhealthy(container.getInstanceId());
+    }
+
     public void triggerAutoscalingUnhealthy (String instanceId) {
         log.info("Manually setting instance {} as Unhealthy so Autoscaling corrects it.", v(DataDogConstants.RDS_INSTANCE_ID, instanceId));
         amazonAutoScaling.setInstanceHealth(new SetInstanceHealthRequest().withHealthStatus("Unhealthy")
@@ -387,5 +421,14 @@ public class AwsEC2Platform extends Platform {
                                                                           .withShouldRespectGracePeriod(false));
     }
 
+    @Override
+    public String getEndpoint (AwsEC2Container container) {
+        return container.getPublicAddress();
+    }
 
+    @Override
+    public SSHCredentials getSshCredentials (AwsEC2Container container) {
+        return new ChaosSSHCredentials().withUsername(DEFAULT_EC2_CLI_USER)
+                                        .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
+    }
 }

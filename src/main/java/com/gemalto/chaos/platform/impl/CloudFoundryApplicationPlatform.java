@@ -1,5 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -78,7 +79,8 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                             .instances(ApplicationInstancesRequest.builder()
                                                                                                   .applicationId(applicationID)
                                                                                                   .build())
-                                                            .block()
+                                                            .blockOptional()
+                                                            .orElseThrow(ChaosException::new)
                                                             .getInstances();
         } catch (ClientV2Exception e) {
             if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
@@ -132,6 +134,11 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                      .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        throw new ChaosException("Cloud Foundry Applications cannot be recycled, this code should be unreachable.");
+    }
+
     CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {
         CloudFoundryApplication container = containerManager.getMatchingContainer(CloudFoundryApplication.class, applicationSummary
                 .getName());
@@ -159,7 +166,8 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                                 .build();
         ListApplicationRoutesResponse listApplicationRoutesResponse = cloudFoundryClient.applicationsV2()
                                                                                         .listRoutes(listApplicationRoutesRequest)
-                                                                                        .block();
+                                                                                        .blockOptional()
+                                                                                        .orElseThrow(ChaosException::new);
         List<RouteResource> routeResources = listApplicationRoutesResponse.getResources();
         if (routeResources != null) {
             for (RouteResource route : routeResources) {

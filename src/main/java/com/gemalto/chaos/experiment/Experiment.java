@@ -13,22 +13,23 @@ import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.scripts.ScriptManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.*;
 import static java.util.UUID.randomUUID;
@@ -45,12 +46,14 @@ public abstract class Experiment {
     protected Duration maximumDuration = Duration.ofMinutes(ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES);
     protected Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
     private Platform experimentLayer;
-    private Method experimentMethod;
+    private ExperimentMethod experimentMethod;
     private ExperimentState experimentState = ExperimentState.NOT_YET_STARTED;
     @Autowired
     private NotificationManager notificationManager;
     @Autowired
     private AdminManager adminManager;
+    @Autowired
+    private ScriptManager scriptManager;
     private Callable<Void> selfHealingMethod = () -> null;
     private Callable<ContainerHealth> checkContainerHealth;
     private Callable<Void> finalizeMethod;
@@ -61,6 +64,10 @@ public abstract class Experiment {
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
     @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
+
+    public void setScriptManager (ScriptManager scriptManager) {
+        this.scriptManager = scriptManager;
+    }
 
     Boolean isSelfHealingRequired () {
         return endTime != null ? getSelfHealingCounter().get() > 0 : null;
@@ -104,17 +111,17 @@ public abstract class Experiment {
     }
 
     @JsonIgnore
-    public Method getExperimentMethod () {
+    public ExperimentMethod getExperimentMethod () {
         return experimentMethod;
     }
 
-    private void setExperimentMethod (Method experimentMethod) {
+    private void setExperimentMethod (ExperimentMethod experimentMethod) {
         this.experimentMethod = experimentMethod;
     }
 
     public String getExperimentMethodName () {
         if (experimentMethod != null) {
-            return experimentMethod.getName();
+            return experimentMethod.getExperimentName();
         }
         return EXPERIMENT_METHOD_NOT_SET_YET;
     }
@@ -167,9 +174,9 @@ public abstract class Experiment {
                     return Boolean.FALSE;
                 }
                 if (container.supportsExperimentType(experimentType)) {
-                    Method chosenMethod = chooseExperimentMethod();
+                    ExperimentMethod chosenMethod = chooseExperimentMethodConsumer();
                     if (chosenMethod == null) return Boolean.FALSE;
-                    log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
+                    log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getExperimentName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
                     setExperimentMethod(chosenMethod);
                     setExperimentLayer(container.getPlatform());
                     notificationManager.sendNotification(ChaosEvent.builder()
@@ -207,27 +214,55 @@ public abstract class Experiment {
         return container;
     }
 
-    private Method chooseExperimentMethod () {
-        Map<Class<? extends Annotation>, List<Method>> experimentMethods = container.getExperimentMethods();
-        if (!experimentMethods.keySet().contains(experimentType.getAnnotation()) || experimentMethods.get(experimentType
-                .getAnnotation()).isEmpty()) return null;
-        Method chosenMethod = null;
-        if (preferredExperiment != null) {
-            Optional<Method> optionalMethod = experimentMethods.values()
-                                                               .stream()
-                                                               .flatMap(Collection::stream)
-                                                               .filter(method -> method.getName()
-                                                                                       .equals(preferredExperiment))
-                                                               .findFirst();
-            chosenMethod = optionalMethod.orElse(null);
-            log.debug("Preferred method {} was mapped to {} method", preferredExperiment, chosenMethod);
+    private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
+        Collection<ExperimentMethod<T>> reflectionBasedMethods = getReflectionBasedMethods();
+        Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods();
+        Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
+                                                           .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
+                                                           .collect(Collectors.toSet());
+        Optional<ExperimentMethod<T>> preferredMethod = allMethods.stream()
+                                                                  .filter(method -> method.getExperimentName()
+                                                                                          .equals(preferredExperiment))
+                                                                  .findFirst();
+        ExperimentMethod<T> method;
+        if (preferredMethod.isPresent()) {
+            method = preferredMethod.get();
+            ExperimentType newExperimentType = method.getExperimentType();
+            log.info("Preferred experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
+            this.experimentType = newExperimentType;
+        } else {
+            method = allMethods.stream()
+                               .filter(m -> m.getExperimentType().equals(experimentType))
+                               .sorted(Comparator.comparingInt(i -> new Random().nextInt()))
+                               .findAny()
+                               .orElse(null);
         }
-        if (chosenMethod == null) {
-            List<Method> methods = experimentMethods.get(experimentType.getAnnotation());
-            int index = ThreadLocalRandom.current().nextInt(methods.size());
-            chosenMethod = methods.get(index);
-        }
-        return chosenMethod;
+        return method;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Container> Collection<ExperimentMethod<T>> getReflectionBasedMethods () {
+        return getContainer().getExperimentMethods()
+                             .values()
+                             .stream()
+                             .flatMap(Collection::stream)
+                             .map(ExperimentMethod::fromMethod)
+                             .map(method -> (ExperimentMethod<T>) method)
+                             .collect(Collectors.toSet());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
+        if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
+        final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
+        return scriptManager.getScripts()
+                            .stream()
+                            .filter(script -> script.getDependencies()
+                                                    .stream()
+                                                    .noneMatch(knownMissingCapabilities::contains))
+                            .map(script -> ExperimentMethod.fromScript(getContainer(), script))
+                            .map(method -> (ExperimentMethod<T>) method)
+                            .collect(Collectors.toSet());
     }
 
     public ExperimentType getExperimentType () {

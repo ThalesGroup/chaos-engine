@@ -13,6 +13,8 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.TimeUnit;
+
 @Configuration
 @ConfigurationProperties(prefix = "kubernetes")
 @ConditionalOnProperty({ "kubernetes.url", "kubernetes.token" })
@@ -43,6 +45,8 @@ public class KubernetesService implements CloudService {
     ApiClient apiClient () {
         ApiClient apiClient = Config.fromToken(url, token, validateSSL);
         apiClient.setDebugging(debug);
+        apiClient.getHttpClient().setConnectTimeout(24, TimeUnit.HOURS);
+        apiClient.getHttpClient().setReadTimeout(24, TimeUnit.HOURS);
         return apiClient;
     }
 

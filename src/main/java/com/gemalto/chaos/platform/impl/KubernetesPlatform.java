@@ -1,17 +1,19 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.constants.DataDogConstants;
+import com.gemalto.chaos.constants.KubernetesConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.ShellBasedExperiment;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.ssh.KubernetesSshExperiment;
-import com.gemalto.chaos.ssh.SshExperiment;
-import com.gemalto.chaos.ssh.impl.KubernetesSshManager;
-import com.gemalto.chaos.ssh.services.ShResourceService;
+import com.gemalto.chaos.shellclient.ShellClient;
+import com.gemalto.chaos.shellclient.impl.KubernetesShellClient;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,11 +39,9 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Component
 @ConditionalOnProperty("kubernetes")
 @ConfigurationProperties("kubernetes")
-public class KubernetesPlatform extends Platform {
+public class KubernetesPlatform extends Platform implements ShellBasedExperiment<KubernetesPodContainer> {
     @Autowired
     private ContainerManager containerManager;
-    @Autowired
-    private ShResourceService shResourceService;
     @Autowired
     private CoreApi coreApi;
     @Autowired
@@ -81,21 +82,12 @@ public class KubernetesPlatform extends Platform {
         return true;
     }
 
-    public void sshExperiment (SshExperiment experiment, KubernetesPodContainer container) {
-        SshExperiment sshExperiment = KubernetesSshExperiment.fromExperiment(experiment)
-                                                             .setExec(exec)
-                                                             .setSshManager(new KubernetesSshManager(container.getPodName(), container
-                                                                     .getNamespace()))
-                                                             .setShResourceService(shResourceService);
-        ((KubernetesSshExperiment) sshExperiment).runExperiment();
-    }
-
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
         return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     /**
-     * @param instance
+     * @param instance The Kubernetes Pod Container to retrieve Owner information from
      * @return ContainerHealth
      * <p>
      * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
@@ -147,9 +139,9 @@ public class KubernetesPlatform extends Platform {
 
     private boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
-            return coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer.getNamespace(), "true") == null;
+            return coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer.getNamespace(), "true") != null;
         } catch (ApiException e) {
-            log.debug("Container {} no more exists", kubernetesPodContainer.getPodName(), kubernetesPodContainer);
+            log.debug("Container {} no more exists", v(DataDogConstants.DATADOG_CONTAINER_KEY, kubernetesPodContainer));
         }
         return false;
     }
@@ -213,40 +205,78 @@ public class KubernetesPlatform extends Platform {
         }
     }
 
+    @Override
+    public boolean isContainerRecycled (Container container) {
+        KubernetesPodContainer kubernetesPodContainer = (KubernetesPodContainer) container;
+        return isContainerRestarted(kubernetesPodContainer, ((KubernetesPodContainer) container).getTargetedSubcontainer());
+    }
+
+    private boolean isContainerRestarted (KubernetesPodContainer container, String subContainerName) {
+        V1Pod v1Pod;
+        try {
+            v1Pod = coreV1Api.readNamespacedPodStatus(container.getPodName(), container.getNamespace(), "true");
+        } catch (ApiException e) {
+            if (e.getMessage().equals(KubernetesConstants.KUBERNETES_POD_NOT_FOUND_ERROR_MESSAGE)) {
+                return replicaSetRecovered(container) == ContainerHealth.NORMAL;
+            }
+            throw new ChaosException("Received unexpected API Exception looking up Container Restart Status", e);
+        }
+        return v1Pod.getStatus()
+                    .getContainerStatuses()
+                    .stream()
+                    .filter(v1ContainerStatus -> v1ContainerStatus.getName().equals(subContainerName))
+                    .map(v1ContainerStatus -> v1ContainerStatus.getState().getRunning())
+                    .filter(Objects::nonNull)
+                    .anyMatch(v1ContainerStateRunning -> v1ContainerStateRunning.getStartedAt()
+                                                                                .isAfter(container.getExperimentStartTime()
+                                                                                                  .toEpochMilli()));
+    }
+
     KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
         KubernetesPodContainer container = containerManager.getMatchingContainer(KubernetesPodContainer.class, pod.getMetadata()
                                                                                                                   .getName());
         if (container == null) {
-            container = new KubernetesPodContainer.KubernetesPodContainerBuilder().withPodName(pod.getMetadata()
-                                                                                                  .getName())
-                                                                                  .withNamespace(pod.getMetadata()
-                                                                                                    .getNamespace())
-                                                                                  .withLabels(pod.getMetadata()
-                                                                                                 .getLabels())
-                                                                                  .withKubernetesPlatform(this)
-                                                                                  .isBackedByController(CollectionUtils.isNotEmpty(pod
-                                                                                          .getMetadata()
-                                                                                          .getOwnerReferences()))
-                                                                                  .withOwnerKind(Optional.of(pod.getMetadata()
-                                                                                                                .getOwnerReferences())
-                                                                                                         .flatMap(list -> list
-                                                                                                                 .stream()
-                                                                                                                 .findFirst())
-                                                                                                         .map(V1OwnerReference::getKind)
-                                                                                                         .orElse(""))
-                                                                                  .withOwnerName(Optional.of(pod.getMetadata()
-                                                                                                                .getOwnerReferences())
-                                                                                                         .flatMap(list -> list
-                                                                                                                 .stream()
-                                                                                                                 .findFirst())
-                                                                                                         .map(V1OwnerReference::getName)
-                                                                                                         .orElse(""))
-                                                                                  .build();
+            container = KubernetesPodContainer.builder()
+                                              .withPodName(pod.getMetadata().getName())
+                                              .withNamespace(pod.getMetadata().getNamespace())
+                                              .withLabels(pod.getMetadata().getLabels())
+                                              .withKubernetesPlatform(this)
+                                              .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata()
+                                                                                                  .getOwnerReferences()))
+                                              .withOwnerKind(Optional.of(pod.getMetadata().getOwnerReferences())
+                                                                     .flatMap(list -> list.stream().findFirst())
+                                                                     .map(V1OwnerReference::getKind)
+                                                                     .orElse(""))
+                                              .withOwnerName(Optional.of(pod.getMetadata().getOwnerReferences())
+                                                                     .flatMap(list -> list.stream().findFirst())
+                                                                     .map(V1OwnerReference::getName)
+                                                                     .orElse(""))
+                                              .withSubcontainers(pod.getSpec()
+                                                                    .getContainers()
+                                                                    .stream()
+                                                                    .map(V1Container::getName)
+                                                                    .collect(Collectors.toList()))
+                                              .build();
             log.info("Found new Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
         } else {
             log.debug("Found existing Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
+    }
+
+    @Override
+    public void recycleContainer (KubernetesPodContainer container) {
+        deletePod(container);
+    }
+
+    @Override
+    public ShellClient getConnectedShellClient (KubernetesPodContainer container) {
+        return KubernetesShellClient.builder()
+                                    .withExec(exec)
+                                    .withContainerName(container.getTargetedSubcontainer())
+                                    .withPodName(container.getPodName())
+                                    .withNamespace(container.getNamespace())
+                                    .build();
     }
 }

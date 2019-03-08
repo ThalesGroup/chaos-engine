@@ -6,6 +6,7 @@ import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.annotations.CattleExperiment;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -31,6 +32,8 @@ public class AwsEC2Container extends AwsContainer {
     private String instanceId;
     private String keyName;
     private String name;
+    private String publicAddress;
+
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
     private transient AwsEC2Platform awsEC2Platform;
@@ -56,6 +59,18 @@ public class AwsEC2Container extends AwsContainer {
         return groupIdentifier;
     }
 
+    public String getKeyName () {
+        return keyName;
+    }
+
+    public String getName () {
+        return name;
+    }
+
+    public String getPublicAddress () {
+        return publicAddress;
+    }
+
     @Override
     public Platform getPlatform () {
         return awsEC2Platform;
@@ -79,6 +94,25 @@ public class AwsEC2Container extends AwsContainer {
     @Override
     protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
         return uniqueIdentifier.equals(instanceId);
+    }
+
+    @Override
+    public boolean isCattle () {
+        return isMemberOfScaledGroup();
+    }
+
+    @Override
+    public boolean supportsShellBasedExperiments () {
+        return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
+                .hasKey(keyName); // TODO Support for internal private address
+    }
+
+    public boolean isSSHCapable () {
+        return supportsShellBasedExperiments();
+    }
+
+    boolean isMemberOfScaledGroup () {
+        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
 
     @StateExperiment
@@ -118,10 +152,6 @@ public class AwsEC2Container extends AwsContainer {
         } : baseMethod;
     }
 
-    boolean isMemberOfScaledGroup () {
-        return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
-    }
-
     Boolean isNativeAwsAutoscaling () {
         return nativeAwsAutoscaling;
     }
@@ -137,6 +167,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @StateExperiment
+    @CattleExperiment
     public void terminateASGContainer (Experiment experiment) {
         if (!isNativeAwsAutoscaling()) {
             log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
@@ -159,6 +190,7 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     public static final class AwsEC2ContainerBuilder {
+        private final Map<String, String> dataDogTags = new HashMap<>();
         private String instanceId;
         private String keyName;
         private String name;
@@ -166,7 +198,7 @@ public class AwsEC2Container extends AwsContainer {
         private String availabilityZone;
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
         private boolean nativeAwsAutoscaling = false;
-        private final Map<String, String> dataDogTags = new HashMap<>();
+        private String publicAddress;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -178,6 +210,11 @@ public class AwsEC2Container extends AwsContainer {
         public AwsEC2ContainerBuilder instanceId (String instanceId) {
             this.instanceId = instanceId;
             return this.withDataDogTag(DataDogConstants.DEFAULT_DATADOG_IDENTIFIER_KEY, instanceId);
+        }
+
+        public AwsEC2ContainerBuilder withDataDogTag (String key, String value) {
+            dataDogTags.put(key, value);
+            return this;
         }
 
         public AwsEC2ContainerBuilder keyName (String keyName) {
@@ -210,8 +247,8 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
-        public AwsEC2ContainerBuilder withDataDogTag (String key, String value) {
-            dataDogTags.put(key, value);
+        public AwsEC2ContainerBuilder publicAddress (String publicAddress) {
+            this.publicAddress = publicAddress;
             return this;
         }
 
@@ -224,6 +261,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.availabilityZone = this.availabilityZone;
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
+            awsEC2Container.publicAddress = this.publicAddress;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
             try {
                 awsEC2Container.setMappedDiagnosticContext();

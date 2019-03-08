@@ -10,6 +10,7 @@ import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.NotificationManager;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.scripts.ScriptManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,8 @@ public class ExperimentControllerTest {
     private NotificationManager notificationManager;
     @MockBean
     private AdminManager adminManager;
+    @MockBean
+    private ScriptManager scriptManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
     private Experiment experiment1;

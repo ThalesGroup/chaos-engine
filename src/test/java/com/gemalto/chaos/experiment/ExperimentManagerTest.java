@@ -15,8 +15,8 @@ import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
-import io.kubernetes.client.ApiClient;
 import org.hamcrest.collection.IsEmptyCollection;
+import com.gemalto.chaos.scripts.ScriptManager;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +52,8 @@ public class ExperimentManagerTest {
     private PlatformManager platformManager;
     @MockBean
     private HolidayManager holidayManager;
+    @MockBean
+    private ScriptManager scriptManager;
     @Mock
     private Experiment experiment1;
     @Mock
@@ -266,6 +268,11 @@ public class ExperimentManagerTest {
             protected List<Container> generateRoster () {
                 return null;
             }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
+            }
         });
         Platform platform2 = Mockito.spy(new Platform() {
             @Override
@@ -286,6 +293,11 @@ public class ExperimentManagerTest {
             @Override
             protected List<Container> generateRoster () {
                 return null;
+            }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
             }
         });
         Platform platform3 = Mockito.spy(new Platform() {
@@ -308,6 +320,11 @@ public class ExperimentManagerTest {
             protected List<Container> generateRoster () {
                 return null;
             }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
+            }
         });
         Platform platform4 = Mockito.spy(new Platform() {
             @Override
@@ -328,6 +345,11 @@ public class ExperimentManagerTest {
             @Override
             protected List<Container> generateRoster () {
                 return null;
+            }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
             }
         });
         doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();
@@ -374,6 +396,11 @@ public class ExperimentManagerTest {
             protected List<Container> generateRoster () {
                 return null;
             }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
+            }
         });
         Platform platform2 = Mockito.spy(new Platform() {
             @Override
@@ -394,6 +421,11 @@ public class ExperimentManagerTest {
             @Override
             protected List<Container> generateRoster () {
                 return null;
+            }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
             }
         });
         Platform platform3 = Mockito.spy(new Platform() {
@@ -416,6 +448,11 @@ public class ExperimentManagerTest {
             protected List<Container> generateRoster () {
                 return null;
             }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
+            }
         });
         Platform platform4 = Mockito.spy(new Platform() {
             @Override
@@ -436,6 +473,11 @@ public class ExperimentManagerTest {
             @Override
             protected List<Container> generateRoster () {
                 return null;
+            }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
             }
         });
         doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();

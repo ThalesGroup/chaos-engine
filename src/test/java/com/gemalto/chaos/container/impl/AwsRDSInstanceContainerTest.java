@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -50,6 +51,11 @@ public class AwsRDSInstanceContainerTest {
     @Test
     public void getPlatform () {
         assertEquals(awsRDSPlatform, awsRDSInstanceContainer.getPlatform());
+    }
+
+    @Test
+    public void supportsShellBasedExperiments () {
+        assertFalse(awsRDSInstanceContainer.supportsShellBasedExperiments());
     }
 
     @Test

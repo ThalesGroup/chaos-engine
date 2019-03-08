@@ -52,6 +52,11 @@ public class CloudFoundryContainerTest {
     }
 
     @Test
+    public void supportsShellBasedExperiments () {
+//        assertTrue(cloudFoundryContainer.supportsShellBasedExperiments());
+    }
+
+    @Test
     public void getIdentity () {
         cloudFoundryContainer = new CloudFoundryContainer("AppID", "ApplicationEngine", 1);
         CRC32 checksum = new CRC32();

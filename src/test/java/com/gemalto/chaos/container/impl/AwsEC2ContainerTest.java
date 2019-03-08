@@ -60,6 +60,11 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
+    public void supportsShellBasedExperiments () {
+        assertFalse(awsEC2Container.supportsShellBasedExperiments());
+    }
+
+    @Test
     public void updateContainerHealthImpl () {
         for (ContainerHealth containerHealth : ContainerHealth.values()) {
             when(awsEC2Platform.checkHealth(any(String.class))).thenReturn(containerHealth);

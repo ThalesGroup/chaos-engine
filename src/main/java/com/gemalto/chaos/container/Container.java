@@ -4,11 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.Experiment;
+import com.gemalto.chaos.experiment.ExperimentMethod;
 import com.gemalto.chaos.experiment.ExperimentalObject;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.experiment.impl.GenericContainerExperiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
+import com.gemalto.chaos.platform.ShellBasedExperiment;
+import com.gemalto.chaos.scripts.Script;
+import com.gemalto.chaos.shellclient.ShellOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -16,11 +20,12 @@ import org.slf4j.MDC;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
@@ -31,11 +36,11 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected final Map<String, String> dataDogTags = new HashMap<>();
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private ContainerHealth containerHealth;
-    private Method lastExperimentMethod;
     private Experiment currentExperiment;
-    protected final Map<String, String> dataDogTags = new HashMap<>();
+    private final Map<String, Boolean> shellCapabilities = new HashMap<>();
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -43,6 +48,10 @@ public abstract class Container implements ExperimentalObject {
                 supportedExperimentTypes.add(experimentType);
             }
         }
+    }
+
+    public Map<String, Boolean> getShellCapabilities () {
+        return shellCapabilities;
     }
 
     @Override
@@ -157,22 +166,10 @@ public abstract class Container implements ExperimentalObject {
     @SuppressWarnings("unchecked")
     private void experimentWithAnnotation (Experiment experiment) {
         try {
-            lastExperimentMethod = experiment.getExperimentMethod();
-            lastExperimentMethod.invoke(this, experiment);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+            ExperimentMethod lastExperimentMethod = experiment.getExperimentMethod();
+            lastExperimentMethod.accept(this, experiment);
+        } catch (Exception e) {
             log.error("Failed to run experiment {} on container {}: {}", experiment.getId(), this, e);
-            throw new ChaosException(e);
-        }
-    }
-
-    public void repeatExperiment (Experiment experiment) {
-        if (lastExperimentMethod == null) {
-            throw new ChaosException("Trying to repeat an experiment without having a prior one");
-        }
-        containerHealth = ContainerHealth.RUNNING_EXPERIMENT;
-        try {
-            lastExperimentMethod.invoke(this, experiment);
-        } catch (InvocationTargetException | IllegalAccessException e) {
             throw new ChaosException(e);
         }
     }
@@ -209,6 +206,75 @@ public abstract class Container implements ExperimentalObject {
     public Map<Class<? extends Annotation>, List<Method>> getExperimentMethods () {
         return Arrays.stream(ExperimentType.values())
                      .map(ExperimentType::getAnnotation)
-                     .collect(Collectors.toMap(Function.identity(), (k) -> getMethodsWithAnnotation(this.getClass(), k)));
+                     .collect(Collectors.toMap(Function.identity(), k -> getMethodsWithAnnotation(this.getClass(), k)));
+    }
+
+    public boolean supportsShellBasedExperiments () {
+        return getPlatform() instanceof ShellBasedExperiment;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Callable<Void> recycleCattle () {
+        if (!isCattle() || !supportsShellBasedExperiments()) {
+            throw new ChaosException("Attempted to recycle a container that should not be recycled");
+        }
+        return () -> {
+            getScriptPlatform().recycleContainer(this);
+            return null;
+        };
+    }
+
+    /**
+     * @return Return true if the container can be treated as cattle and destroyed or replaced as necessary
+     */
+    public boolean isCattle () {
+        return false;
+    }
+
+    private ShellBasedExperiment getScriptPlatform () {
+        return getScriptPlatform(this.getClass());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Container> ShellBasedExperiment getScriptPlatform (Class<T> ignored) {
+        Platform platform = getPlatform();
+        try {
+            if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment<T>) platform;
+        } catch (ClassCastException e) {
+            throw new ChaosException("Error using Platform " + platform + " as a Shell Based Experiment platform", e);
+        }
+        throw new ChaosException("Platform does not support Shell Based Experiments");
+    }
+
+    @SuppressWarnings("unchecked")
+    public ShellOutput runCommand (String command) {
+        if (!supportsShellBasedExperiments())
+            throw new ChaosException("Attempted to run a shell command on a container that does not support it");
+        return getScriptPlatform().runCommand(this, command);
+    }
+
+    @JsonIgnore
+    public Boolean isContainerRecycled () {
+        if (!isCattle()) return Boolean.FALSE;
+        return getPlatform().isContainerRecycled(this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public String runScript (Script script) {
+        if (!supportsShellBasedExperiments())
+            throw new ChaosException("Attempted to run a shell command on a container that does not support it");
+        return getScriptPlatform().runScript(this, script);
+    }
+
+    public Instant getExperimentStartTime () {
+        return currentExperiment != null ? currentExperiment.getStartTime() : null;
+    }
+
+    public Collection<String> getKnownMissingCapabilities () {
+        return shellCapabilities.entrySet()
+                                .stream()
+                                .filter(stringBooleanEntry -> !Boolean.TRUE.equals(stringBooleanEntry.getValue()))
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.toSet());
     }
 }

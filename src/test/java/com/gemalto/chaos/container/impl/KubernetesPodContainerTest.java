@@ -6,7 +6,6 @@ import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +24,6 @@ import java.util.Optional;
 import static java.util.UUID.randomUUID;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -98,16 +96,6 @@ public class KubernetesPodContainerTest {
         Mockito.verify(kubernetesPlatform, times(1)).deletePod(kubernetesPodContainer);
         experiment.getCheckContainerHealth().call();
         Mockito.verify(kubernetesPlatform, times(1)).replicaSetRecovered(kubernetesPodContainer);
-    }
-
-    @Test
-    public void forkBomb () throws Exception {
-        kubernetesPodContainer.forkBomb(experiment);
-        Mockito.verify(kubernetesPlatform, times(1)).sshExperiment(any(ForkBomb.class), eq(kubernetesPodContainer));
-        experiment.getCheckContainerHealth().call();
-        Mockito.verify(kubernetesPlatform, times(1)).replicaSetRecovered(kubernetesPodContainer);
-        experiment.getSelfHealingMethod().call();
-        Mockito.verify(kubernetesPlatform, times(1)).deletePod(kubernetesPodContainer);
     }
 
     @Test

@@ -49,6 +49,11 @@ public class PlatformTest {
             public List<Container> generateRoster () {
                 return Collections.singletonList(container);
             }
+
+            @Override
+            public boolean isContainerRecycled (Container container) {
+                return false;
+            }
         });
     }
 
