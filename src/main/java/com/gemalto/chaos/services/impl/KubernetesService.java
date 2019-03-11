@@ -45,8 +45,8 @@ public class KubernetesService implements CloudService {
     ApiClient apiClient () {
         ApiClient apiClient = Config.fromToken(url, token, validateSSL);
         apiClient.setDebugging(debug);
-        apiClient.getHttpClient().setConnectTimeout(24, TimeUnit.HOURS);
-        apiClient.getHttpClient().setReadTimeout(24, TimeUnit.HOURS);
+        apiClient.getHttpClient().setConnectTimeout(60, TimeUnit.SECONDS);
+        apiClient.getHttpClient().setReadTimeout(60, TimeUnit.SECONDS);
         return apiClient;
     }
 
