@@ -34,7 +34,8 @@ public class KubernetesShellClient implements ShellClient {
     @Override
     public String runResource (Resource resource) {
         try {
-            return runCommand(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource)), false).getStdOut();
+            String innerCommand = String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource));
+            return runCommand(new String[]{ "sh", "-c", innerCommand }, false).getStdOut();
         } catch (IOException e) {
             throw new ChaosException(e);
         }
@@ -45,11 +46,11 @@ public class KubernetesShellClient implements ShellClient {
         return runCommand(command, true);
     }
 
-    ShellOutput runCommand (String command, boolean getOutput) {
+    ShellOutput runCommand (String[] command, boolean getOutput) {
         log.debug("Running command {}, waiting for output = {}", v("command", command), getOutput);
         Process proc = null;
         try {
-            proc = exec.exec(namespace, podName, command.split(" "), containerName, false, false);
+            proc = exec.exec(namespace, podName, command, containerName, false, false);
             int exitCode = proc.waitFor();
             if (getOutput) {
                 return ShellOutput.builder()
@@ -69,6 +70,10 @@ public class KubernetesShellClient implements ShellClient {
         } finally {
             if (proc != null) proc.destroy();
         }
+    }
+
+    ShellOutput runCommand (String command, boolean getOutput) {
+        return runCommand(command.split(" "), getOutput);
     }
 
     String copyResourceToPath (Resource resource) throws IOException {

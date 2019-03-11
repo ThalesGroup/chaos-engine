@@ -136,10 +136,11 @@ public class KubernetesShellClientTest {
         String finalPath = randomUUID().toString();
         String command = String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, finalPath);
         doReturn(finalPath).when(kubernetesShellClient).copyResourceToPath(resource, "/tmp/");
-        doReturn(ShellOutput.EMPTY_SHELL_OUTPUT).when(kubernetesShellClient).runCommand(command, false);
+        doReturn(ShellOutput.EMPTY_SHELL_OUTPUT).when(kubernetesShellClient)
+                                                .runCommand(new String[]{ "sh", "-c", command }, false);
         kubernetesShellClient.runResource(resource);
         verify(kubernetesShellClient, times(1)).copyResourceToPath(resource, "/tmp/");
-        verify(kubernetesShellClient, times(1)).runCommand(command, false);
+        verify(kubernetesShellClient, times(1)).runCommand(new String[]{ "sh", "-c", command }, false);
     }
 
     @Test
