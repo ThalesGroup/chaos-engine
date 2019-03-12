@@ -240,31 +240,6 @@ public class KubernetesShellClientTest {
     }
 
     @Test
-    public void copyResourceToPathUnsuccessfulTar () throws Exception {
-        String filename = randomUUID().toString();
-        Resource resource = testResource(filename);
-        Process process = mock(Process.class);
-        OutputStream outputStream = mock(OutputStream.class);
-        doReturn(process).when(exec)
-                         .exec(NAMESPACE, POD_NAME, ("dd if=/dev/stdin of=/tmp/" + filename + " bs=" + resource.contentLength() + " count=1")
-                                 .split(" "), CONTAINER_NAME, true, false);
-        doReturn(outputStream).when(process).getOutputStream();
-        doReturn(true).when(process).waitFor(anyLong(), any());
-
-        for (int i : new int[]{ -1, 2, 100, -100 }) {
-            doReturn(i).when(process).exitValue();
-            try {
-                kubernetesShellClient.copyResourceToPath(resource, "/tmp/");
-                fail("Expected a Chaos Exception from an unsuccessful TAR");
-            } catch (ChaosException e) {
-                assertTrue(e.getMessage().contains(" " + i + " "));
-            }
-        }
-        verify(process, atLeastOnce()).destroy();
-        verify(process, atLeastOnce()).waitFor(anyLong(), any());
-    }
-
-    @Test
     public void copyResourceToPathApiException () throws Exception {
         String filename = randomUUID().toString();
         Resource resource = testResource(filename);
