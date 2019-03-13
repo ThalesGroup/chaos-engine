@@ -97,7 +97,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     @Override
     public SSHClientWrapper withEndpoint (String hostname) {
         int chosenPort = SSHConstants.DEFAULT_SSH_PORT;
-        if (hostname.matches(".*:[1-9]+[0-9]*$")) {
+        if (hostname.matches(".*:[1-9][0-9]*$")) {
             int split = hostname.lastIndexOf(':');
             chosenPort = Integer.parseInt(hostname.substring(split + 1));
             hostname = hostname.substring(0, split);
