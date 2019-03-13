@@ -20,6 +20,7 @@ import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -101,5 +102,10 @@ public class CloudFoundryContainerTest {
     public void getDataDogIdentifier () {
         assertEquals(dataDogIdentifier().withKey("host")
                                         .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
+    }
+
+    @Test
+    public void supportShellBasedExperiments () {
+        assertTrue(cloudFoundryContainer.supportsShellBasedExperiments());
     }
 }
