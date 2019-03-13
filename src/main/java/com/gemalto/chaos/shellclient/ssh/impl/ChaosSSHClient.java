@@ -5,7 +5,6 @@ import com.gemalto.chaos.constants.SSHConstants;
 import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
-import com.gemalto.chaos.ssh.JarResourceFile;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -28,7 +27,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     private Integer port;
 
     @Override
-    public SSHClientWrapper connect (int connectionTimeout) {
+    public SSHClientWrapper connect (int connectionTimeout) throws IOException {
         boolean opened = false;
         Objects.requireNonNull(hostname);
         Objects.requireNonNull(port);
@@ -63,11 +62,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
             throw new ChaosException(e);
         } finally {
             if (!opened) {
-                try {
-                    close();
-                } catch (IOException e) {
-                    throw new ChaosException("Error closing failed SSH connection", e);
-                }
+                close();
             }
         }
         return this;

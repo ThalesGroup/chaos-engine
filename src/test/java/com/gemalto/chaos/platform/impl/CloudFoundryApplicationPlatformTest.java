@@ -65,8 +65,6 @@ public class CloudFoundryApplicationPlatformTest {
     private ApplicationSummary applicationSummary_1;
     private ApplicationSummary applicationSummary_2;
     @MockBean
-    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
     @SpyBean
     private ContainerManager containerManager;

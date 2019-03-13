@@ -34,8 +34,6 @@ import static org.mockito.Mockito.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryPlatformTest {
     @MockBean
-    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @MockBean
     private CloudFoundryOperations cloudFoundryOperations;
     @MockBean
     private ContainerManager containerManager;
@@ -141,12 +139,6 @@ public class CloudFoundryPlatformTest {
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
         assertEquals(PlatformHealth.FAILED, cfp.getPlatformHealth());
-    }
-
-    @Test
-    public void getCloudFoundryPlatformInfo () {
-        cfp.getCloudFoundryPlatformInfo();
-        verify(cloudFoundryPlatformInfo, times(1)).fetchInfo();
     }
 
     @Test

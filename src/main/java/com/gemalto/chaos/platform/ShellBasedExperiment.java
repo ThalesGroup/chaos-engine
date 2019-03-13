@@ -39,7 +39,7 @@ public interface ShellBasedExperiment<T extends Container> {
      * @param container The container to connect into.
      * @return A Shell Client that is used by the runCommand and runScript methods.
      */
-    ShellClient getConnectedShellClient (T container);
+    ShellClient getConnectedShellClient (T container) throws IOException;
 
     /**
      * This will run a script against a container and return the output.

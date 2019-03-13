@@ -7,7 +7,6 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.ssh.services.ShResourceService;
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
@@ -43,9 +42,6 @@ public class KubernetesPlatformTest {
 
     @SpyBean
     private ContainerManager containerManager;
-    @SpyBean
-    private ShResourceService shResourceService;
-
     @Autowired
     private KubernetesPlatform platform;
     @Autowired
@@ -557,8 +553,6 @@ public class KubernetesPlatformTest {
     static class ContextConfiguration {
         @Autowired
         private ContainerManager containerManager;
-        @Autowired
-        private ShResourceService shResourceService;
         @MockBean
         private CoreApi coreApi;
         @MockBean

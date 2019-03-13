@@ -6,15 +6,15 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
+import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
-import com.gemalto.chaos.ssh.SshCommandResult;
-import com.gemalto.chaos.ssh.SshExperiment;
-import com.gemalto.chaos.ssh.impl.CloudFoundrySshManager;
-import com.gemalto.chaos.ssh.services.ShResourceService;
+import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
+import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
+import org.cloudfoundry.client.v2.info.GetInfoRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
@@ -24,12 +24,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,17 +41,13 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @Primary
 @ConditionalOnProperty({ "cf.containerChaos" })
 @ConfigurationProperties("cf")
-public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
+public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implements SshBasedExperiment<CloudFoundryContainer> {
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
     @Autowired
     private ContainerManager containerManager;
     @Autowired
-    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
-    @Autowired
     private CloudFoundryClient cloudFoundryClient;
-    @Autowired
-    private ShResourceService shResourceService;
 
     @Autowired
     public CloudFoundryContainerPlatform () {
@@ -159,61 +155,31 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform {
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
-    public ContainerHealth sshBasedHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
-        CloudFoundrySshManager ssh = getSSHManager();
-        try {
-            ssh.connect(container);
-            SshCommandResult result = ssh.executeCommand(command);
-            if (errorExitStatus == result.getExitStatus()) {
-                return ContainerHealth.RUNNING_EXPERIMENT;
-            }
-        } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}", e.getMessage(), e);
-            return ContainerHealth.RUNNING_EXPERIMENT;
-        } finally {
-            ssh.disconnect();
-        }
-        return ContainerHealth.NORMAL;
+    @Override
+    public String getEndpoint (CloudFoundryContainer container) {
+        return cloudFoundryClient.info()
+                                 .get(GetInfoRequest.builder().build())
+                                 .blockOptional()
+                                 .orElseThrow(ChaosException::new)
+                                 .getApplicationSshEndpoint();
     }
 
-    CloudFoundrySshManager getSSHManager () {
-        return new CloudFoundrySshManager(getCloudFoundryPlatformInfo());
+    @Override
+    public SSHCredentials getSshCredentials (CloudFoundryContainer container) {
+        String username = "cf:" + container.getApplicationId() + '/' + container.getInstance();
+        Callable<String> passwordGenerator = this::getSSHOneTimePassword;
+        return new ChaosSSHCredentials().withUsername(username).withPasswordGenerator(passwordGenerator);
     }
 
-    public ContainerHealth sshBasedHealthCheck (CloudFoundryContainer container, String command, int expectedExitStatus) {
-        CloudFoundrySshManager ssh = getSSHManager();
-        try {
-            ssh.connect(container);
-            SshCommandResult result = ssh.executeCommand(command);
-            if (expectedExitStatus == result.getExitStatus()) {
-                return ContainerHealth.NORMAL;
-            }
-        } catch (IOException e) {
-            log.warn("Unsuccessful ssh health check: {}", e.getMessage(), e);
-        } finally {
-            ssh.disconnect();
-        }
-        return ContainerHealth.RUNNING_EXPERIMENT;
+    String getSSHOneTimePassword () {
+        return cloudFoundryOperations.advanced().sshCode().blockOptional().orElseThrow(ChaosException::new);
     }
 
-    public void sshExperiment (SshExperiment sshExperiment, CloudFoundryContainer container) {
-        CloudFoundrySshManager ssh = getSSHManager();
-        try {
-            sshExperiment.setSshManager(ssh);
-            sshExperiment.setShResourceService(shResourceService);
-            if (ssh.connect(container)) {
-                if (container.getDetectedCapabilities() != null) {
-                    sshExperiment.setDetectedShellSessionCapabilities(container.getDetectedCapabilities());
-                }
-                sshExperiment.runExperiment();
-                if (container.getDetectedCapabilities() == null || container.getDetectedCapabilities() != sshExperiment.getDetectedShellSessionCapabilities()) {
-                    container.setDetectedCapabilities(sshExperiment.getDetectedShellSessionCapabilities());
-                }
-            }
-        } catch (IOException e) {
-            throw new ChaosException(e);
-        } finally {
-            ssh.disconnect();
-        }
+    @Override
+    public void recycleContainer (CloudFoundryContainer container) {
+        restartInstance(RestartApplicationInstanceRequest.builder()
+                                                         .name(container.getName())
+                                                         .instanceIndex(container.getInstance())
+                                                         .build());
     }
 }
