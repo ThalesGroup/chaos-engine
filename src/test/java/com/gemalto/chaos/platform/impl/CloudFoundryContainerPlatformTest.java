@@ -15,6 +15,7 @@ import org.cloudfoundry.client.v2.applications.ApplicationsV2;
 import org.cloudfoundry.client.v2.info.GetInfoResponse;
 import org.cloudfoundry.client.v2.info.Info;
 import org.cloudfoundry.operations.CloudFoundryOperations;
+import org.cloudfoundry.operations.advanced.Advanced;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
@@ -296,6 +297,23 @@ public class CloudFoundryContainerPlatformTest {
                                                                                         .name(name)
                                                                                         .instanceIndex(index)
                                                                                         .build());
+    }
+
+    @Test
+    public void getOneTimePassword () {
+        String sshCode = randomUUID().toString();
+        Advanced advanced = mock(Advanced.class);
+        doReturn(advanced).when(cloudFoundryOperations).advanced();
+        doReturn(Mono.just(sshCode)).when(advanced).sshCode();
+        assertEquals(sshCode, cloudFoundryContainerPlatform.getSSHOneTimePassword());
+    }
+
+    @Test(expected = ChaosException.class)
+    public void getOneTimePasswordException () {
+        Advanced advanced = mock(Advanced.class);
+        doReturn(advanced).when(cloudFoundryOperations).advanced();
+        doReturn(Mono.empty()).when(advanced).sshCode();
+        cloudFoundryContainerPlatform.getSSHOneTimePassword();
     }
 
     @Configuration
