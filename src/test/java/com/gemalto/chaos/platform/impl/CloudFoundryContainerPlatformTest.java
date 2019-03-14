@@ -1,6 +1,7 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
@@ -35,9 +36,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.Random;
-import java.util.UUID;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.*;
@@ -314,6 +315,79 @@ public class CloudFoundryContainerPlatformTest {
         doReturn(advanced).when(cloudFoundryOperations).advanced();
         doReturn(Mono.empty()).when(advanced).sshCode();
         cloudFoundryContainerPlatform.getSSHOneTimePassword();
+    }
+
+    @Test
+    public void getTimeInState () {
+        String applicationId = UUID.randomUUID().toString();
+        Integer index = new Random().nextInt(100) + 1;
+        CloudFoundryContainer container = CloudFoundryContainer.builder()
+                                                               .applicationId(applicationId)
+                                                               .instance(index)
+                                                               .build();
+        // Return an applicationsV2 mock
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        // Calculate a time that it is up since
+        Double since = 1552569958455D; // Pi day!
+        // Add the uptime into an ApplicationInstanceInfo
+        ApplicationInstanceInfo instanceInfo = ApplicationInstanceInfo.builder().since(since).build();
+        // Return a mono of an ApplicationInstancesResponse
+        ApplicationInstancesResponse response = ApplicationInstancesResponse.builder()
+                                                                            .instance(index.toString(), instanceInfo)
+                                                                            .build();
+        doReturn(Mono.just(response)).when(applicationsV2)
+                                     .instances(ApplicationInstancesRequest.builder()
+                                                                           .applicationId(applicationId)
+                                                                           .build());
+        Instant expected = DateTimeFormatter.ISO_INSTANT.parse("2019-03-14T13:25:58.455Z", Instant::from);
+        assertEquals(expected, cloudFoundryContainerPlatform.getTimeInState(container));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void getTimeInStateChaosException () {
+        String applicationId = UUID.randomUUID().toString();
+        Integer index = new Random().nextInt(100) + 1;
+        CloudFoundryContainer container = CloudFoundryContainer.builder()
+                                                               .applicationId(applicationId)
+                                                               .instance(index)
+                                                               .build();
+        // Return an applicationsV2 mock
+        ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
+        doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
+        // Return a mono of an ApplicationInstancesResponse
+        doReturn(Mono.empty()).when(applicationsV2)
+                              .instances(ApplicationInstancesRequest.builder().applicationId(applicationId).build());
+        cloudFoundryContainerPlatform.getTimeInState(container);
+    }
+
+    @Test
+    public void isContainerRecycled () {
+        CloudFoundryContainer container = mock(CloudFoundryContainer.class);
+        String applicationId = UUID.randomUUID().toString();
+        Integer index = new Random().nextInt(100) + 1;
+        doReturn(applicationId).when(container).getApplicationId();
+        doReturn(index).when(container).getInstance();
+        Map<ContainerHealth, Boolean> containerHealthMap;
+        containerHealthMap = new HashMap<>();
+        containerHealthMap.put(ContainerHealth.NORMAL, Boolean.TRUE);
+        containerHealthMap.put(ContainerHealth.RUNNING_EXPERIMENT, Boolean.FALSE);
+        containerHealthMap.put(ContainerHealth.DOES_NOT_EXIST, Boolean.FALSE);
+        for (Map.Entry<ContainerHealth, Boolean> entry : containerHealthMap.entrySet()) {
+            doReturn(entry.getKey()).when(cloudFoundryContainerPlatform).checkHealth(applicationId, index);
+            doReturn(Instant.ofEpochMilli(1552569958455L)).when(cloudFoundryContainerPlatform)
+                                                          .getTimeInState(container);
+            doReturn(Instant.ofEpochMilli(1552569958454L), Instant.ofEpochMilli(1552569958456L)).when(container)
+                                                                                                .getExperimentStartTime();
+            assertEquals(entry.getValue(), cloudFoundryContainerPlatform.isContainerRecycled(container));
+            assertFalse(cloudFoundryContainerPlatform.isContainerRecycled(container));
+        }
+    }
+
+    @Test
+    public void isContainerRecycledError () {
+        Container container = mock(Container.class);
+        assertFalse(cloudFoundryContainerPlatform.isContainerRecycled(container));
     }
 
     @Configuration

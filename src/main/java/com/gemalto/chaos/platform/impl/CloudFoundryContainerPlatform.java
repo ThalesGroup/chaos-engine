@@ -65,7 +65,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                 .getApplicationId(), cloudFoundryContainer.getInstance()));
     }
 
-    private Instant getTimeInState (CloudFoundryContainer container) {
+    Instant getTimeInState (CloudFoundryContainer container) {
         String applicationId = container.getApplicationId();
         String instanceIndex = container.getInstance().toString();
         Double since = cloudFoundryClient.applicationsV2()
