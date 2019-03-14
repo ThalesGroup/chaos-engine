@@ -2,6 +2,7 @@ package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
+import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
@@ -35,6 +36,8 @@ import java.util.stream.IntStream;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -56,16 +59,22 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
 
     @Override
     public boolean isContainerRecycled (Container container) {
+        log.debug("Recycling container {}", v(DATADOG_CONTAINER_KEY, container));
         if (!(container instanceof CloudFoundryContainer)) {
+            log.warn("Was passed another Platform's container");
             return false;
         }
         CloudFoundryContainer cloudFoundryContainer = (CloudFoundryContainer) container;
         Instant timeInState = getTimeInState(cloudFoundryContainer);
-        return timeInState.isAfter(cloudFoundryContainer.getExperimentStartTime()) && ContainerHealth.NORMAL.equals(checkHealth(cloudFoundryContainer
-                .getApplicationId(), cloudFoundryContainer.getInstance()));
+        ContainerHealth containerHealth = checkHealth(cloudFoundryContainer.getApplicationId(), cloudFoundryContainer.getInstance());
+        Instant experimentStartTime = cloudFoundryContainer.getExperimentStartTime();
+        boolean isContainerRecycled = timeInState.isAfter(experimentStartTime) && ContainerHealth.NORMAL.equals(containerHealth);
+        log.debug("Evaluating if the container is recycled. {} {} {}", kv("Container Health", containerHealth), kv("Container Start Time", timeInState), kv("Experiment Start Time", experimentStartTime));
+        return isContainerRecycled;
     }
 
     Instant getTimeInState (CloudFoundryContainer container) {
+        log.debug("Looking for time in state of {}", v(DATADOG_CONTAINER_KEY, container));
         String applicationId = container.getApplicationId();
         String instanceIndex = container.getInstance().toString();
         Double since = cloudFoundryClient.applicationsV2()
@@ -152,11 +161,13 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
     }
 
     public void restartInstance (RestartApplicationInstanceRequest restartApplicationInstanceRequest) {
+        log.debug("Requesting a restart of container {}", v("RestartApplicationInstanceRequest", restartApplicationInstanceRequest));
         cloudFoundryOperations.applications().restartInstance(restartApplicationInstanceRequest).block();
     }
 
     @Override
     public String getEndpoint (CloudFoundryContainer container) {
+        log.debug("Retrieving SSH Endpoint for {}", v(DATADOG_PLATFORM_KEY, this));
         return cloudFoundryClient.info()
                                  .get(GetInfoRequest.builder().build())
                                  .blockOptional()
@@ -166,12 +177,14 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
 
     @Override
     public SSHCredentials getSshCredentials (CloudFoundryContainer container) {
+        log.debug("Retrieving SSH Credentials for {}", v(DATADOG_CONTAINER_KEY, container));
         String username = "cf:" + container.getApplicationId() + '/' + container.getInstance();
         Callable<String> passwordGenerator = this::getSSHOneTimePassword;
         return new ChaosSSHCredentials().withUsername(username).withPasswordGenerator(passwordGenerator);
     }
 
     String getSSHOneTimePassword () {
+        log.debug("Requesting a one-time SSH password for {}", v(DataDogConstants.DATADOG_PLATFORM_KEY, this));
         return cloudFoundryOperations.advanced().sshCode().blockOptional().orElseThrow(ChaosException::new);
     }
 
