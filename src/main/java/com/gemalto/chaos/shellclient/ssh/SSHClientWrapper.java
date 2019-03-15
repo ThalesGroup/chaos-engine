@@ -6,11 +6,11 @@ import com.gemalto.chaos.shellclient.ShellClient;
 import java.io.IOException;
 
 public interface SSHClientWrapper extends ShellClient {
-    default SSHClientWrapper connect () throws IOException {
+    default ShellClient connect () throws IOException {
         return connect(SSHConstants.THIRTY_SECONDS_IN_MILLIS);
     }
 
-    SSHClientWrapper connect (int connectionTimeout) throws IOException;
+    ShellClient connect (int connectionTimeout) throws IOException;
 
     SSHClientWrapper withSSHCredentials (SSHCredentials sshCredentials);
 

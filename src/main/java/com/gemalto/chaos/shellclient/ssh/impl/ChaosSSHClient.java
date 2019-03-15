@@ -2,6 +2,7 @@ package com.gemalto.chaos.shellclient.ssh.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
@@ -27,7 +28,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     private Integer port;
 
     @Override
-    public SSHClientWrapper connect (int connectionTimeout) throws IOException {
+    public ShellClient connect (int connectionTimeout) throws IOException {
         boolean opened = false;
         Objects.requireNonNull(hostname);
         Objects.requireNonNull(port);
