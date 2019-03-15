@@ -228,6 +228,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                     .filter(v1ContainerStatus -> v1ContainerStatus.getName().equals(subContainerName))
                     .map(v1ContainerStatus -> v1ContainerStatus.getState().getRunning())
                     .filter(Objects::nonNull)
+                    .peek(v1ContainerStateRunning -> log.debug("Evaluating last restart time from {}", v("v1ContainerStateRunning", v1ContainerStateRunning)))
                     .anyMatch(v1ContainerStateRunning -> v1ContainerStateRunning.getStartedAt()
                                                                                 .isAfter(container.getExperimentStartTime()
                                                                                                   .toEpochMilli()));
