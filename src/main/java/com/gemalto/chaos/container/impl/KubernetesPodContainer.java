@@ -30,10 +30,6 @@ public class KubernetesPodContainer extends Container {
     private Collection<String> subcontainers = new HashSet<>();
     private transient String targetedSubcontainer;
     private transient Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
-    private transient Callable<Void> deletePod = () -> {
-        kubernetesPlatform.deletePod(this);
-        return null;
-    };
 
     private KubernetesPodContainer () {
         super();
