@@ -329,7 +329,7 @@ public class CloudFoundryContainerPlatformTest {
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         // Calculate a time that it is up since
-        Double since = 1552569958455D; // Pi day!
+        Double since = 1552569958D; // Pi day!
         // Add the uptime into an ApplicationInstanceInfo
         ApplicationInstanceInfo instanceInfo = ApplicationInstanceInfo.builder().since(since).build();
         // Return a mono of an ApplicationInstancesResponse
@@ -340,7 +340,7 @@ public class CloudFoundryContainerPlatformTest {
                                      .instances(ApplicationInstancesRequest.builder()
                                                                            .applicationId(applicationId)
                                                                            .build());
-        Instant expected = DateTimeFormatter.ISO_INSTANT.parse("2019-03-14T13:25:58.455Z", Instant::from);
+        Instant expected = DateTimeFormatter.ISO_INSTANT.parse("2019-03-14T13:25:58Z", Instant::from);
         assertEquals(expected, cloudFoundryContainerPlatform.getTimeInState(container));
     }
 
