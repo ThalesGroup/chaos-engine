@@ -1,0 +1,15 @@
+version: '3.4'
+services:
+  splunk:
+    image: splunk/splunk:7.0.3-monitor
+    privileged: true
+    environment:
+      SPLUNK_START_ARGS: "--accept-license --answer-yes"
+      SPLUNK_PASSWORD: "changeit"
+      SPLUNK_ENABLE_LISTEN: 9997
+      SPLUNK_USER: root
+    volumes:
+      - /var/lib/docker/containers:/host/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "9000:8000"
