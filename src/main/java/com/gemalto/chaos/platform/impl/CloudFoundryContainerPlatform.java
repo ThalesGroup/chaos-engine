@@ -86,7 +86,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                                          .getInstances()
                                          .get(instanceIndex)
                                          .getSince();
-        return Instant.ofEpochMilli(since.longValue());
+        return Instant.ofEpochSecond(since.longValue());
     }
 
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
