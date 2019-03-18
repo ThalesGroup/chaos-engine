@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
@@ -84,7 +86,7 @@ public class CloudFoundryContainer extends Container {
                                                                                                                .name(name)
                                                                                                                .instanceIndex(instance)
                                                                                                                .build();
-        log.info("{}", restartApplicationInstanceRequest);
+        log.info("{}", v("restartApplicationInstanceRequest", restartApplicationInstanceRequest));
         return restartApplicationInstanceRequest;
     }
 
