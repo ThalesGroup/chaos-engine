@@ -69,7 +69,8 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         Instant timeInState = getTimeInState(cloudFoundryContainer);
         ContainerHealth containerHealth = checkHealth(cloudFoundryContainer.getApplicationId(), cloudFoundryContainer.getInstance());
         Instant experimentStartTime = cloudFoundryContainer.getExperimentStartTime();
-        boolean isContainerRecycled = timeInState.isAfter(experimentStartTime) && ContainerHealth.NORMAL.equals(containerHealth);
+        boolean isContainerRecycled = timeInState != null && timeInState.isAfter(experimentStartTime) && ContainerHealth.NORMAL
+                .equals(containerHealth);
         log.debug("Evaluating if the container is recycled. {} {} {}", kv("Container Health", containerHealth), kv("Container Start Time", timeInState), kv("Experiment Start Time", experimentStartTime));
         return isContainerRecycled;
     }
@@ -90,7 +91,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                                          .getInstances()
                                          .get(instanceIndex)
                                          .getSince();
-        return Instant.ofEpochSecond(since.longValue());
+        return since == null ? null : Instant.ofEpochSecond(since.longValue());
     }
 
     public ContainerHealth checkHealth (String applicationId, Integer instanceId) {
