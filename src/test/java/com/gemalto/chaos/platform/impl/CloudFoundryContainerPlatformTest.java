@@ -390,6 +390,19 @@ public class CloudFoundryContainerPlatformTest {
         assertFalse(cloudFoundryContainerPlatform.isContainerRecycled(container));
     }
 
+    @Test
+    public void isContainerRecycledNullSince () {
+        CloudFoundryContainer container = mock(CloudFoundryContainer.class);
+        String applicationId = UUID.randomUUID().toString();
+        Integer index = new Random().nextInt(100) + 1;
+        doReturn(applicationId).when(container).getApplicationId();
+        doReturn(index).when(container).getInstance();
+        doReturn(null).when(cloudFoundryContainerPlatform).getTimeInState(container);
+        doReturn(Instant.ofEpochMilli(1552569958454L)).when(container).getExperimentStartTime();
+        doReturn(ContainerHealth.NORMAL).when(cloudFoundryContainerPlatform).checkHealth(applicationId, index);
+        assertFalse(cloudFoundryContainerPlatform.isContainerRecycled(container));
+    }
+
     @Configuration
     static class ContextConfiguration {
 
