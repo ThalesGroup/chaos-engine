@@ -15,6 +15,7 @@ import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
 import org.cloudfoundry.client.v2.applications.ApplicationInstancesRequest;
+import org.cloudfoundry.client.v2.applications.ApplicationInstancesResponse;
 import org.cloudfoundry.client.v2.info.GetInfoRequest;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -77,12 +78,15 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         log.debug("Looking for time in state of {}", v(DATADOG_CONTAINER_KEY, container));
         String applicationId = container.getApplicationId();
         String instanceIndex = container.getInstance().toString();
-        Double since = cloudFoundryClient.applicationsV2()
-                                         .instances(ApplicationInstancesRequest.builder()
-                                                                               .applicationId(applicationId)
-                                                                               .build())
-                                         .blockOptional()
-                                         .orElseThrow(ChaosException::new)
+        final ApplicationInstancesResponse applicationInstancesResponse = cloudFoundryClient.applicationsV2()
+                                                                                            .instances(ApplicationInstancesRequest
+                                                                                                    .builder()
+                                                                                                    .applicationId(applicationId)
+                                                                                                    .build())
+                                                                                            .blockOptional()
+                                                                                            .orElseThrow(ChaosException::new);
+        log.debug("Time in state from Application Instance Response: {}", v("applicationInstancesResponse", applicationInstancesResponse));
+        Double since = applicationInstancesResponse
                                          .getInstances()
                                          .get(instanceIndex)
                                          .getSince();
