@@ -206,6 +206,12 @@ public class SlackNotificationsTest {
                                                                                          .equals("12345"))));
     }
 
+    @Test
+    public void getObfuscatedWebhookURI () {
+        assertEquals("https://hooks.slack.com/services/T0A******/B01******/0a1*********************", SlackNotifications
+                .getObfuscatedWebhookURI("https://hooks.slack.com/services/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"));
+    }
+
     private class SlackHandler implements HttpHandler {
         @Override
         public void handle (HttpExchange httpExchange) throws IOException {

@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
@@ -37,7 +39,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     static final String PLATFORM_LAYER = "Platform Layer";
     static final String RAW_EVENT = "Raw Event";
     static final String FOOTER_PREFIX = "Chaos Engine - ";
-    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<NotificationLevel, String>(NotificationLevel.class);
+    private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<>(NotificationLevel.class);
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
@@ -50,8 +52,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
         this.hostname = HttpUtils.getMachineHostname();
         slackNotificationColorMap.put(NotificationLevel.GOOD, "good");
         slackNotificationColorMap.put(NotificationLevel.WARN, "warning");
-
-        log.info("Created Slack notification manager against {}", this.webhookUri);
+        log.info("Created Slack notification manager against {}", getObfuscatedWebhookURI(this.webhookUri));
     }
 
     @Override
@@ -133,6 +134,25 @@ public class SlackNotifications extends BufferedNotificationMethod {
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IOException("unexpected response from server");
         }
+    }
+
+    static String getObfuscatedWebhookURI (String webhookUri) {
+        String obfuscatedWebhookURI = webhookUri;
+        Pattern webhookPattern = Pattern.compile("^https?://hooks.slack.com/services/T..(.*?)/B..(.*?)/...(.*?)/?$");
+        Matcher matcher = webhookPattern.matcher(webhookUri);
+        if (matcher.find()) {
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                int start = matcher.start(i);
+                int end = matcher.end(i);
+                String section = obfuscatedWebhookURI.substring(start, end);
+                String obfuscation = new String(new char[section.length()]).replace('\0', '*');
+                obfuscatedWebhookURI = obfuscatedWebhookURI.replace(section, obfuscation);
+            }
+        }
+        if (obfuscatedWebhookURI.equals(webhookUri)) {
+            return null;
+        }
+        return obfuscatedWebhookURI;
     }
 }
 
