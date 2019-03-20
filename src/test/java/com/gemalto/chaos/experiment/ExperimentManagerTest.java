@@ -15,8 +15,8 @@ import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
-import org.hamcrest.collection.IsEmptyCollection;
 import com.gemalto.chaos.scripts.ScriptManager;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +32,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
@@ -39,6 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -569,6 +572,26 @@ public class ExperimentManagerTest {
         verify(experimentB, times(1).description("Expected ExperimentB's getId to be evaluated for logging")).getId();
     }
 
+    @Test
+    public void experimentStartInterrupted () throws InterruptedException, ExecutionException {
+        doReturn(false).when(holidayManager).isOutsideWorkingHours();
+        doReturn(false).when(holidayManager).isHoliday();
+        Experiment experimentA = Mockito.mock(Experiment.class);
+        Experiment experimentB = Mockito.mock(Experiment.class);
+        experimentManager.addExperiment(experimentA);
+        experimentManager.addExperiment(experimentB);
+        Future interruptedStartup = mock(Future.class);
+        doReturn(true).when(interruptedStartup).isDone();
+        doThrow(new InterruptedException()).when(interruptedStartup).get();
+        CompletableFuture<Boolean> successfulStartup = new CompletableFuture<>();
+        successfulStartup.complete(Boolean.TRUE);
+        doReturn(successfulStartup).when(experimentA).startExperiment();
+        doReturn(interruptedStartup).when(experimentB).startExperiment();
+        experimentManager.startNewExperiments();
+        assertThat(experimentManager.getActiveExperiments(), IsIterableContainingInAnyOrder.containsInAnyOrder(experimentA));
+        verify(experimentB, times(1).description("Expected ExperimentB's getId to be evaluated for logging")).getId();
+        assertTrue(Thread.interrupted());
+    }
 
     @Configuration
     static class ExperimentManagerTestConfiguration {
