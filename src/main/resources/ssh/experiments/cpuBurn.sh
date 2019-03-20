@@ -3,7 +3,7 @@
 # Description: Simulates high CPU usage on all available processing units
 # Dependencies: nproc, yes, grep
 
-limit=$(nproc)
+limit=$(grep proc /proc/cpuinfo | wc -l)
 counter=1
 
 while [ $counter -le $limit ]; do
