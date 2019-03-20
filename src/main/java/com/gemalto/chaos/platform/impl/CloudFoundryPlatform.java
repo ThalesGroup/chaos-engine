@@ -1,6 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
@@ -21,8 +21,6 @@ import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APP
 public abstract class CloudFoundryPlatform extends Platform {
     @Autowired
     private CloudFoundryOperations cloudFoundryOperations;
-    @Autowired
-    private CloudFoundryPlatformInfo cloudFoundryPlatformInfo;
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
 
     @Autowired
@@ -33,12 +31,6 @@ public abstract class CloudFoundryPlatform extends Platform {
     @Autowired(required = false)
     void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
         this.cloudFoundrySelfAwareness = cloudFoundrySelfAwareness;
-    }
-
-    @JsonIgnore
-    CloudFoundryPlatformInfo getCloudFoundryPlatformInfo () {
-        cloudFoundryPlatformInfo.fetchInfo();
-        return cloudFoundryPlatformInfo;
     }
 
     public boolean isChaosEngine (String applicationName) {
@@ -70,13 +62,11 @@ public abstract class CloudFoundryPlatform extends Platform {
                                                                                         .equals(CLOUDFOUNDRY_APPLICATION_STARTED));
         if (runningInstances.filter(a -> a.getInstances() > 0)
                             .filter(a -> a.getRunningInstances() == 0)
-                            .hasElements()
-                            .block()) {
+                            .hasElements().blockOptional().orElseThrow(ChaosException::new)) {
             return PlatformHealth.FAILED;
         } else if (runningInstances.filter(a -> a.getInstances() > 0)
                                    .filter(a -> a.getRunningInstances() < a.getInstances())
-                                   .hasElements()
-                                   .block()) {
+                                   .hasElements().blockOptional().orElseThrow(ChaosException::new)) {
             return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;

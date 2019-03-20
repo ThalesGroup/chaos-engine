@@ -5,8 +5,10 @@ import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
 import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHClient;
 
+import java.io.IOException;
+
 public interface SshBasedExperiment<T extends Container> extends ShellBasedExperiment<T> {
-    default ShellClient getConnectedShellClient (T container) {
+    default ShellClient getConnectedShellClient (T container) throws IOException {
         return new ChaosSSHClient().withEndpoint(getEndpoint(container))
                                    .withSSHCredentials(getSshCredentials(container))
                                    .connect();

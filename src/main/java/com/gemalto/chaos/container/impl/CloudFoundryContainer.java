@@ -8,32 +8,23 @@ import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
-import com.gemalto.chaos.ssh.ShellSessionCapability;
-import com.gemalto.chaos.ssh.SshExperiment;
-import com.gemalto.chaos.ssh.enums.ShellCommand;
-import com.gemalto.chaos.ssh.impl.experiments.ForkBomb;
-import com.gemalto.chaos.ssh.impl.experiments.RandomProcessTermination;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class CloudFoundryContainer extends Container {
     private String applicationId;
     private String name;
     private Integer instance;
-    private transient List<ShellSessionCapability> detectedCapabilities;
     private transient CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
     private transient Callable<Void> restageApplication = () -> {
         cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
-        return null;
-    };
-    private transient Callable<Void> restartContainer = () -> {
-        cloudFoundryContainerPlatform.restartInstance(getRestartApplicationInstanceRequest());
         return null;
     };
     private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
@@ -51,36 +42,6 @@ public class CloudFoundryContainer extends Container {
 
     public static CloudFoundryContainerBuilder builder () {
         return CloudFoundryContainerBuilder.builder();
-    }
-
-    private Callable<ContainerHealth> sshHealthCheck(CloudFoundryContainer container,String command,int expectedExitStatus){
-        return () -> {
-            ContainerHealth instanceState = isInstanceRunning.call();
-            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheck(container, command, expectedExitStatus);
-            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
-                return ContainerHealth.NORMAL;
-            }
-            return ContainerHealth.RUNNING_EXPERIMENT;
-        };
-    }
-
-    @StateExperiment
-    public void forkBomb (Experiment experiment) {
-        experiment.setSelfHealingMethod(restartContainer);
-        String healthCheckCommand = ShellCommand.BINARYEXISTS + SshExperiment.DEFAULT_UPLOAD_PATH + ForkBomb.EXPERIMENT_SCRIPT;
-        experiment.setCheckContainerHealth(sshHealthCheckInverse(this, healthCheckCommand, 0));
-        cloudFoundryContainerPlatform.sshExperiment(new ForkBomb(), this);
-    }
-
-    private Callable<ContainerHealth> sshHealthCheckInverse (CloudFoundryContainer container, String command, int errorExitStatus) {
-        return () -> {
-            ContainerHealth instanceState = isInstanceRunning.call();
-            ContainerHealth shellBasedHealthCheck = cloudFoundryContainerPlatform.sshBasedHealthCheckInverse(container, command, errorExitStatus);
-            if (instanceState == ContainerHealth.NORMAL && shellBasedHealthCheck == ContainerHealth.NORMAL) {
-                return ContainerHealth.NORMAL;
-            }
-            return ContainerHealth.RUNNING_EXPERIMENT;
-        };
     }
 
     @Override
@@ -125,15 +86,8 @@ public class CloudFoundryContainer extends Container {
                                                                                                                .name(name)
                                                                                                                .instanceIndex(instance)
                                                                                                                .build();
-        log.info("{}", restartApplicationInstanceRequest);
+        log.info("{}", v("restartApplicationInstanceRequest", restartApplicationInstanceRequest));
         return restartApplicationInstanceRequest;
-    }
-
-    @StateExperiment
-    public void terminateProcess (Experiment experiment) {
-        experiment.setSelfHealingMethod(restartContainer);
-        experiment.setCheckContainerHealth(isInstanceRunning); // TODO Real healthcheck
-        cloudFoundryContainerPlatform.sshExperiment(new RandomProcessTermination(), this);
     }
 
     private RestageApplicationRequest getRestageApplicationRequest () {
@@ -152,14 +106,6 @@ public class CloudFoundryContainer extends Container {
 
     public Integer getInstance () {
         return instance;
-    }
-
-    public List<ShellSessionCapability> getDetectedCapabilities () {
-        return detectedCapabilities;
-    }
-
-    public void setDetectedCapabilities (List<ShellSessionCapability> detectedCapabilities) {
-        this.detectedCapabilities = detectedCapabilities;
     }
 
     public static final class CloudFoundryContainerBuilder {

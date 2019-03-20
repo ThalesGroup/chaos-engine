@@ -1,30 +1,25 @@
-package com.gemalto.chaos.ssh;
+package com.gemalto.chaos.shellclient.ssh.impl;
 
+import com.gemalto.chaos.shellclient.ShellConstants;
 import net.schmizz.sshj.xfer.FileSystemFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class JarResourceFile extends FileSystemFile {
-    private static final Logger log = LoggerFactory.getLogger(JarResourceFile.class);
     private Resource resource;
-    private boolean executable=false;
+    private boolean executable;
 
-    public JarResourceFile (Resource resource,boolean isExecutable) {
+    JarResourceFile (Resource resource, boolean isExecutable) {
         super(resource.getFilename());
         this.resource=resource;
         this.executable=isExecutable;
     }
 
     @Override
-    public int getPermissions()
-            throws IOException {
-        if(executable) {
-            return 0744;
-        }
-        return 0644;
+    public boolean isFile () {
+        return true;
     }
 
     @Override
@@ -38,25 +33,25 @@ public class JarResourceFile extends FileSystemFile {
     }
 
     @Override
-    public InputStream getInputStream()
-            throws IOException {
+    public InputStream getInputStream () throws IOException {
         return resource.getInputStream();
     }
 
     @Override
-    public long getLastAccessTime()
-            throws IOException {
+    public long getLastAccessTime () {
         return System.currentTimeMillis() / 1000;
     }
 
     @Override
-    public long getLastModifiedTime()
-            throws IOException {
+    public long getLastModifiedTime () {
         return System.currentTimeMillis() / 1000;
     }
 
     @Override
-    public boolean isFile () {
-        return true;
+    public int getPermissions () {
+        if (executable) {
+            return ShellConstants.CHMOD_744;
+        }
+        return ShellConstants.CHMOD_644;
     }
 }

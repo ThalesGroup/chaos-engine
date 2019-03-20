@@ -2,10 +2,10 @@ package com.gemalto.chaos.shellclient.ssh.impl;
 
 import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
-import com.gemalto.chaos.ssh.JarResourceFile;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -28,11 +28,12 @@ public class ChaosSSHClient implements SSHClientWrapper {
     private Integer port;
 
     @Override
-    public SSHClientWrapper connect (int connectionTimeout) {
+    public ShellClient connect (int connectionTimeout) throws IOException {
         boolean opened = false;
         Objects.requireNonNull(hostname);
         Objects.requireNonNull(port);
         Objects.requireNonNull(sshCredentials);
+        log.debug("Creating connection to {}:{} with {} second timeout", hostname, port, connectionTimeout);
         sshClient = buildNewSSHClient();
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
         sshClient.setConnectTimeout(connectionTimeout);
@@ -50,9 +51,11 @@ public class ChaosSSHClient implements SSHClientWrapper {
             Thread.currentThread().interrupt();
             throw new ChaosException(e);
         } catch (ExecutionException | TimeoutException e) {
+            log.error("Failed to connect within the timeout", e);
             throw new ChaosException(e);
         }
         try {
+            log.debug("Connection made, sending authentication");
             sshClient.auth(sshCredentials.getUsername(), sshCredentials.getAuthMethods());
             opened = true;
         } catch (UserAuthException e) {
@@ -63,11 +66,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
             throw new ChaosException(e);
         } finally {
             if (!opened) {
-                try {
-                    close();
-                } catch (IOException e) {
-                    throw new ChaosException("Error closing failed SSH connection", e);
-                }
+                close();
             }
         }
         return this;
@@ -102,10 +101,12 @@ public class ChaosSSHClient implements SSHClientWrapper {
     @Override
     public SSHClientWrapper withEndpoint (String hostname) {
         int chosenPort = SSHConstants.DEFAULT_SSH_PORT;
-        if (hostname.matches(".*:[1-9]+[0-9]*$")) {
+        if (hostname.matches(".*:[1-9][0-9]*$")) {
+            log.debug("Parsing hostname with port {}", hostname);
             int split = hostname.lastIndexOf(':');
             chosenPort = Integer.parseInt(hostname.substring(split + 1));
             hostname = hostname.substring(0, split);
+            log.debug("Evaluated as {} port {}", hostname, chosenPort);
         }
         return withEndpoint(hostname, chosenPort);
     }
@@ -121,24 +122,9 @@ public class ChaosSSHClient implements SSHClientWrapper {
     }
 
     @Override
-    public ShellOutput runCommand (String command) {
-        try (Session session = getSshClient().startSession()) {
-            session.allocateDefaultPTY();
-            try (Session.Command exec = session.exec(command)) {
-                exec.join();
-                int exitCode = exec.getExitStatus();
-                String output = IOUtils.readFully(exec.getInputStream()).toString();
-                return ShellOutput.builder().withExitCode(exitCode).withStdOut(output).build();
-            }
-        } catch (IOException e) {
-            log.error("Error running SSH Command", e);
-            throw new ChaosException(e);
-        }
-    }
-
-    @Override
     public String runResource (Resource resource) {
         try {
+            log.info("Transferring resource {}", resource);
             getSshClient().newSCPFileTransfer()
                           .upload(new JarResourceFile(resource, true), SSHConstants.TEMP_DIRECTORY);
         } catch (IOException e) {
@@ -148,6 +134,23 @@ public class ChaosSSHClient implements SSHClientWrapper {
             String shellCommand = SSHConstants.TEMP_DIRECTORY + resource.getFilename();
             log.debug("About to run {}", shellCommand);
             return runCommandInShell(session, shellCommand);
+        } catch (IOException e) {
+            log.error("Error running SSH Command", e);
+            throw new ChaosException(e);
+        }
+    }
+
+    @Override
+    public ShellOutput runCommand (String command) {
+        log.info("About to run command {}", command);
+        try (Session session = getSshClient().startSession()) {
+            session.allocateDefaultPTY();
+            try (Session.Command exec = session.exec(command)) {
+                exec.join();
+                int exitCode = exec.getExitStatus();
+                String output = IOUtils.readFully(exec.getInputStream()).toString();
+                return ShellOutput.builder().withExitCode(exitCode).withStdOut(output).build();
+            }
         } catch (IOException e) {
             log.error("Error running SSH Command", e);
             throw new ChaosException(e);

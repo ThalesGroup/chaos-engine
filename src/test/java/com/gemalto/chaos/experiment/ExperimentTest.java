@@ -520,7 +520,8 @@ public class ExperimentTest {
             doReturn(true).when(mockContainer).supportsExperimentType(STATE);
             experiment.startExperiment();
             await().atLeast(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
-                   .until(() -> experiment.getExperimentMethod().getExperimentName().equals(doAnotherThing));
+                   .until(() -> experiment.getExperimentMethod() != null && doAnotherThing.equals(experiment.getExperimentMethod()
+                                                                                                            .getExperimentName()));
         });
     }
 
