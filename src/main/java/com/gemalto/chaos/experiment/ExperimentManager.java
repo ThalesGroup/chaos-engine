@@ -90,7 +90,13 @@ public class ExperimentManager {
                                                                          try {
                                                                              return !experimentFutureEntry.getValue()
                                                                                                           .get();
-                                                                         } catch (InterruptedException | ExecutionException e) {
+                                                                         } catch (InterruptedException e) {
+                                                                             Thread.currentThread().interrupt();
+                                                                             log.error("Interrupted during asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
+                                                                                     .getKey()
+                                                                                     .getId()), e);
+                                                                             return true;
+                                                                         } catch (ExecutionException e) {
                                                                              log.error("Error in asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
                                                                                      .getKey()
                                                                                      .getId()), e);
