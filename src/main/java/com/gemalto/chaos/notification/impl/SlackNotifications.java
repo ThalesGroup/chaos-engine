@@ -1,7 +1,7 @@
 package com.gemalto.chaos.notification.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.notification.BufferedNotificationMethod;
 import com.gemalto.chaos.notification.ChaosEvent;
 import com.gemalto.chaos.notification.enums.NotificationLevel;

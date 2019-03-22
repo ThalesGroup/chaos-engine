@@ -1,8 +1,8 @@
 package com.gemalto.chaos.shellclient.ssh;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.exception.ChaosException;
 import net.schmizz.sshj.userauth.method.AuthMethod;
 
 import java.math.BigInteger;

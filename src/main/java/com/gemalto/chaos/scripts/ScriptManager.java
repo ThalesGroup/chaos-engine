@@ -1,6 +1,6 @@
 package com.gemalto.chaos.scripts;
 
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.scripts.impl.ShellScript;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;

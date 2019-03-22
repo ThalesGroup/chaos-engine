@@ -1,7 +1,7 @@
 package com.gemalto.chaos.platform;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellOutput;

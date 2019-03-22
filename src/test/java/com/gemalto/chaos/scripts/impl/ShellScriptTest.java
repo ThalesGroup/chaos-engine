@@ -1,6 +1,6 @@
 package com.gemalto.chaos.scripts.impl;
 
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;

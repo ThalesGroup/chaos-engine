@@ -1,12 +1,12 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.constants.KubernetesConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.ShellBasedExperiment;
 import com.gemalto.chaos.platform.enums.ApiStatus;

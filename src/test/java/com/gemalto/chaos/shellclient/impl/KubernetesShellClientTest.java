@@ -1,7 +1,7 @@
 package com.gemalto.chaos.shellclient.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.shellclient.ShellOutput;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;

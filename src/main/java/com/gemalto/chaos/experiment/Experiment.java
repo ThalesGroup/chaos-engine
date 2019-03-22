@@ -1,12 +1,12 @@
 package com.gemalto.chaos.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.AdminManager;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.constants.ExperimentConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.enums.ExperimentState;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.ChaosEvent;
