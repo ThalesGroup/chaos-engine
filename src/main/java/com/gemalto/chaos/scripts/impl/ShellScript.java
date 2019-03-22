@@ -1,6 +1,6 @@
 package com.gemalto.chaos.scripts.impl;
 
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.scripts.Script;
 import com.gemalto.chaos.util.StringUtils;

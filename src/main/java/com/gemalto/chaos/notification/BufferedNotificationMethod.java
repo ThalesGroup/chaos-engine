@@ -1,6 +1,6 @@
 package com.gemalto.chaos.notification;
 
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.backoff.BackOffExecution;

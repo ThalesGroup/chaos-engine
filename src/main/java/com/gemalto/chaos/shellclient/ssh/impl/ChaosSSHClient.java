@@ -1,7 +1,7 @@
 package com.gemalto.chaos.shellclient.ssh.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.SSHConstants;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.shellclient.ShellClient;
 import com.gemalto.chaos.shellclient.ShellOutput;
 import com.gemalto.chaos.shellclient.ssh.SSHClientWrapper;

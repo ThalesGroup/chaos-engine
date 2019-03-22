@@ -6,7 +6,6 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsConstants;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
@@ -14,6 +13,7 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.AwsEC2Container;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.ApiStatus;

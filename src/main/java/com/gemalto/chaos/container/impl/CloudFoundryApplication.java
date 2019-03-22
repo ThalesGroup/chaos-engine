@@ -1,8 +1,8 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.ResourceExperiment;

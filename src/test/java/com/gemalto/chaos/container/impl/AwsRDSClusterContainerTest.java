@@ -1,10 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBClusterSnapshot;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsRDSPlatform;

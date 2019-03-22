@@ -1,8 +1,8 @@
 package com.gemalto.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.ExperimentMethod;
 import com.gemalto.chaos.experiment.ExperimentalObject;

@@ -1,7 +1,7 @@
 package com.gemalto.chaos.admin;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.admin.enums.AdminState;
+import com.gemalto.chaos.exception.ChaosException;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;

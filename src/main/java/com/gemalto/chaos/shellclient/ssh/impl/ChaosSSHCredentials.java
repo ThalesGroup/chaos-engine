@@ -1,6 +1,6 @@
 package com.gemalto.chaos.shellclient.ssh.impl;
 
-import com.gemalto.chaos.ChaosException;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
 import net.schmizz.sshj.userauth.keyprovider.KeyPairWrapper;
 import net.schmizz.sshj.userauth.method.AuthMethod;

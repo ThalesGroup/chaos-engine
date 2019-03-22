@@ -1,8 +1,8 @@
 package com.gemalto.chaos.experiment;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.annotations.CattleExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.scripts.Script;

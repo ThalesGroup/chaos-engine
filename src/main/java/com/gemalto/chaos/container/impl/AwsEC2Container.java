@@ -1,10 +1,10 @@
 package com.gemalto.chaos.container.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
 import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.annotations.CattleExperiment;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;

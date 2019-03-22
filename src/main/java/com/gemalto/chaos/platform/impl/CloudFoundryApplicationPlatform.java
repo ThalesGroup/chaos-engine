@@ -1,12 +1,12 @@
 package com.gemalto.chaos.platform.impl;
 
-import com.gemalto.chaos.ChaosException;
 import com.gemalto.chaos.constants.CloudFoundryConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;

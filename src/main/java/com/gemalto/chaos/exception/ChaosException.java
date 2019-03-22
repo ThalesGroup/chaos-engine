@@ -1,4 +1,4 @@
-package com.gemalto.chaos;
+package com.gemalto.chaos.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
