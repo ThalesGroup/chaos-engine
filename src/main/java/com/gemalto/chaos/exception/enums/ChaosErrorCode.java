@@ -46,4 +46,9 @@ public enum ChaosErrorCode implements ErrorCode {
     public ResourceBundle getResourceBundle () {
         return translationBundle;
     }
+
+    @Override
+    public String getShortName () {
+        return shortName;
+    }
 }

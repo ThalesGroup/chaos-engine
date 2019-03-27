@@ -22,4 +22,6 @@ public interface ErrorCode {
     String getMessage ();
 
     ResourceBundle getResourceBundle ();
+
+    String getShortName ();
 }
