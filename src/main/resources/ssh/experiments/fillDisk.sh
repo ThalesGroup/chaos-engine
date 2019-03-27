@@ -1,5 +1,6 @@
 #!/bin/sh
 # Cattle: true
+# Description: Creates 65GiB file in system root partition
 # Dependencies: dd
 
-dd if=/dev/urandom of=/burn bs=1M count=65536
+dd if=/dev/zero of=/burn bs=1M count=65536
