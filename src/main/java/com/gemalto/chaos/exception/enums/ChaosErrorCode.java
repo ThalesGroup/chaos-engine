@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 public enum ChaosErrorCode implements ErrorCode {
     GENERIC_FAILURE(10000),
     API_EXCEPTION(15000),
+    PLATFORM_DOES_NOT_SUPPORT_RECYCLING(10001)
     ;
     private static final ResourceBundle translationBundle;
 
@@ -22,9 +23,9 @@ public enum ChaosErrorCode implements ErrorCode {
         translationBundle = tempResourceBundle;
     }
 
-    private int errorCode;
-    private String shortName;
-    private String message;
+    private final int errorCode;
+    private final String shortName;
+    private final String message;
 
     ChaosErrorCode (int errorCode) {
         this.errorCode = errorCode;

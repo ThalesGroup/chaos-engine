@@ -7,6 +7,7 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.gemalto.chaos.exception.ChaosException;
+import com.gemalto.chaos.exception.enums.ChaosErrorCode;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
@@ -137,7 +138,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
 
     @Override
     public boolean isContainerRecycled (Container container) {
-        throw new ChaosException("Cloud Foundry Applications cannot be recycled, this code should be unreachable.");
+        throw new ChaosException(ChaosErrorCode.PLATFORM_DOES_NOT_SUPPORT_RECYCLING);
     }
 
     CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {

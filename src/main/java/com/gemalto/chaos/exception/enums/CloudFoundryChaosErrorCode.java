@@ -7,7 +7,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public enum CloudFoundryChaosErrorCode implements ErrorCode {
-    EMPTY_RESPONSE(30000);
+    EMPTY_RESPONSE(30000),
+    NO_ROUTES(30001);
     private static final ResourceBundle translationBundle;
 
     static {
@@ -20,9 +21,9 @@ public enum CloudFoundryChaosErrorCode implements ErrorCode {
         translationBundle = tempResourceBundle;
     }
 
-    private int errorCode;
-    private String shortName;
-    private String message;
+    private final int errorCode;
+    private final String shortName;
+    private final String message;
 
     CloudFoundryChaosErrorCode (int errorCode) {
         this.errorCode = errorCode;
