@@ -29,4 +29,6 @@ public interface ErrorCode {
     default Supplier<ChaosException> asChaosException () {
         return () -> new ChaosException(this);
     }
+
+    void clearCachedResourceBundle ();
 }

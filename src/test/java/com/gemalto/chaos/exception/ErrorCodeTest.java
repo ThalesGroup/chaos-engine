@@ -3,6 +3,8 @@ package com.gemalto.chaos.exception;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.reflections.Reflections;
 
 import java.util.*;
@@ -10,15 +12,32 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
+@RunWith(Parameterized.class)
 public class ErrorCodeTest {
+    private final Locale locale;
     private Collection<Collection<ErrorCode>> allErrorCodes = new HashSet<>();
+
+    public ErrorCodeTest (Locale locale) {
+        this.locale = locale;
+    }
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> getLocales () {
+        final List<Object[]> locales = new ArrayList<>();
+        locales.add(new Locale[]{ Locale.US });
+        for (Locale availableLocale : Locale.getAvailableLocales()) {
+            locales.add(new Locale[]{ availableLocale });
+        }
+        return locales;
+    }
 
     @Before
     public void setUp () {
-        Locale.setDefault(Locale.US);
+        Locale.setDefault(locale);
         allErrorCodes = new Reflections("com.gemalto.chaos").getSubTypesOf(ErrorCode.class)
                                                             .stream()
                                                             .map(this::getAllErrorCodes)
+                                                            .peek(errorCodes -> errorCodes.forEach(ErrorCode::clearCachedResourceBundle))
                                                             .collect(Collectors.toList());
     }
 
@@ -40,7 +59,7 @@ public class ErrorCodeTest {
         allErrorCodes.stream().flatMap(Collection::stream).forEach(errorCode -> {
             final String message = errorCode.getMessage();
             final String localizedMessage = errorCode.getLocalizedMessage();
-            assertNotEquals(message + " should contain a translation", message, localizedMessage);
+            assertNotEquals(message + " should contain a translation for locale " + locale, message, localizedMessage);
         });
     }
 
