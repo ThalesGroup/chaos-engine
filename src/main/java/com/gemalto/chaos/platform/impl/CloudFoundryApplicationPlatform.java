@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -80,7 +81,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                                   .applicationId(applicationID)
                                                                                                   .build())
                                                             .blockOptional()
-                                                            .orElseThrow(ChaosException::new)
+                                                            .orElseThrow(EMPTY_RESPONSE.asChaosException())
                                                             .getInstances();
         } catch (ClientV2Exception e) {
             if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
@@ -167,7 +168,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         ListApplicationRoutesResponse listApplicationRoutesResponse = cloudFoundryClient.applicationsV2()
                                                                                         .listRoutes(listApplicationRoutesRequest)
                                                                                         .blockOptional()
-                                                                                        .orElseThrow(ChaosException::new);
+                                                                                        .orElseThrow(EMPTY_RESPONSE.asChaosException());
         List<RouteResource> routeResources = listApplicationRoutesResponse.getResources();
         if (routeResources != null) {
             for (RouteResource route : routeResources) {

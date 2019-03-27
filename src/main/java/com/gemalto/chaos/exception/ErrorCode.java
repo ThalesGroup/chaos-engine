@@ -2,6 +2,7 @@ package com.gemalto.chaos.exception;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.function.Supplier;
 
 public interface ErrorCode {
     default String getFormattedMessage () {
@@ -24,4 +25,8 @@ public interface ErrorCode {
     ResourceBundle getResourceBundle ();
 
     String getShortName ();
+
+    default Supplier<ChaosException> asChaosException () {
+        return () -> new ChaosException(this);
+    }
 }
