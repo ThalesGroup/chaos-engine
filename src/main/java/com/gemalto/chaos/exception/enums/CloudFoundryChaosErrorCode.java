@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public enum CloudFoundryChaosErrorCode implements ErrorCode {
-    EMPTY_RESPONSE(30000),
-    NO_ROUTES(30001);
+    EMPTY_RESPONSE(31001),
+    NO_ROUTES(32001);
     private final int errorCode;
     private final String shortName;
     private final String message;
