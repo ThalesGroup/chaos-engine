@@ -1,10 +1,7 @@
 package com.gemalto.chaos.exception;
 
 import com.gemalto.chaos.exception.enums.ChaosErrorCode;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 public class ChaosException extends RuntimeException {
     /**
      * @deprecated Constructs a new runtime exception with {@code null} as its
