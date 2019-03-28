@@ -50,6 +50,40 @@ public class ErrorCodeTest {
                                  .getErrorCode()))))
                          .forEach(errorCode -> assertThat(errorCode.getFormattedMessage(), endsWith(errorCode.getLocalizedMessage())));
         }
+
+        @Test
+        public void errorCodeRangeOverlap () {
+            final Map<? extends Class<? extends ErrorCode>, Set<Integer>> moduleIntegerSetMap = allErrorCodes.stream()
+                                                                                                             .flatMap(Collection::stream)
+                                                                                                             .collect(Collectors
+                                                                                                                     .groupingBy(ErrorCode::getClass, Collectors
+                                                                                                                             .mapping(ErrorCode::getErrorCode, Collectors
+                                                                                                                                     .toSet())));
+            final List<Class<? extends ErrorCode>> classes = new ArrayList<>(moduleIntegerSetMap.keySet());
+            for (int i = 0; i < classes.size(); i++) {
+                final Class<? extends ErrorCode> firstClass = classes.get(i);
+                for (int j = i + 1; j < classes.size(); j++) {
+                    final Class<? extends ErrorCode> secondClass = classes.get(j);
+                    final int firstClassMax = moduleIntegerSetMap.get(firstClass)
+                                                                 .stream()
+                                                                 .max(Comparator.naturalOrder())
+                                                                 .orElse(-1);
+                    final int firstClassMin = moduleIntegerSetMap.get(firstClass)
+                                                                 .stream()
+                                                                 .min(Comparator.naturalOrder())
+                                                                 .orElse(-1);
+                    final int secondClassMax = moduleIntegerSetMap.get(secondClass)
+                                                                  .stream()
+                                                                  .max(Comparator.naturalOrder())
+                                                                  .orElse(-1);
+                    final int secondClassMin = moduleIntegerSetMap.get(secondClass)
+                                                                  .stream()
+                                                                  .min(Comparator.naturalOrder())
+                                                                  .orElse(-1);
+                    assertTrue(String.format("Ranges %s-%s (%s) and %s-%s (%s) overlap", firstClassMin, firstClassMax, firstClass, secondClassMin, secondClassMax, secondClass), firstClassMin < secondClassMax && secondClassMin > firstClassMax || secondClassMin < firstClassMax && firstClassMin > secondClassMax);
+                }
+            }
+        }
     }
 
     @RunWith(Parameterized.class)
