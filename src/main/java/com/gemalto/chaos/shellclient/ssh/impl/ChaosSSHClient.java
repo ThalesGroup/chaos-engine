@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.*;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SHELL_CLIENT_CONNECT_FAILURE;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SSH_CLIENT_INSTANTIATION_ERROR;
+
 public class ChaosSSHClient implements SSHClientWrapper {
     private static final Logger log = LoggerFactory.getLogger(ChaosSSHClient.class);
     private SSHClient sshClient;
@@ -42,17 +45,17 @@ public class ChaosSSHClient implements SSHClientWrapper {
                 sshClient.connect(hostname, port);
                 return null;
             } catch (IOException e) {
-                throw new ChaosException(e);
+                throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
             }
         });
         try {
             connection.get(connectionTimeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         } catch (ExecutionException | TimeoutException e) {
             log.error("Failed to connect within the timeout", e);
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         }
         try {
             log.debug("Connection made, sending authentication");
@@ -60,10 +63,10 @@ public class ChaosSSHClient implements SSHClientWrapper {
             opened = true;
         } catch (UserAuthException e) {
             log.error("Authentication failure connecting to SSH", e);
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         } catch (TransportException e) {
             log.error("Networking exception connecting to SSH", e);
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         } finally {
             if (!opened) {
                 close();
@@ -87,7 +90,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
 
     SSHClient getSshClient () {
         if (sshClient == null) {
-            throw new ChaosException("Attempted to use an SSH Client that was not instantiated");
+            throw new ChaosException(SSH_CLIENT_INSTANTIATION_ERROR);
         }
         return sshClient;
     }

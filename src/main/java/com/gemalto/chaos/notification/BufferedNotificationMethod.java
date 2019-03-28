@@ -11,6 +11,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.gemalto.chaos.constants.MathUtils.PHI;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_BUFFER_ERROR;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_BUFFER_RETRY_EXCEEDED;
 
 public abstract class BufferedNotificationMethod implements NotificationMethods {
     private static final Integer FORCED_FLUSH_SIZE = 50;
@@ -46,7 +48,7 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
             try {
                 flushBufferInternal(chaosEvent);
             } catch (Exception e) {
-                throw new ChaosException(e);
+                throw new ChaosException(NOTIFICATION_BUFFER_ERROR, e);
             }
         }
     }
@@ -61,7 +63,7 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
                 log.error("Caught IO Exception when sending notification.");
                 waitTime = backOffExecution.nextBackOff();
                 if (waitTime == BackOffExecution.STOP) {
-                    throw new ChaosException("Repeatedly failed to send notification", e);
+                    throw new ChaosException(NOTIFICATION_BUFFER_RETRY_EXCEEDED, e);
                 }
             }
             try {

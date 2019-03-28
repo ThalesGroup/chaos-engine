@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.INVALID_STATE;
+
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
@@ -32,7 +34,7 @@ public class AdminController {
             newAdminState = AdminState.valueOf(newAdminStateString);
         } catch (IllegalArgumentException e) {
             log.error("Tried to set an invalid state", e);
-            throw new ChaosException("Tried to set an invalid state", e);
+            throw new ChaosException(INVALID_STATE, e);
         }
         adminManager.setAdminState(newAdminState);
     }

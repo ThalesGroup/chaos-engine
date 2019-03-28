@@ -10,7 +10,13 @@ import java.util.ResourceBundle;
 public enum ChaosErrorCode implements ErrorCode {
     GENERIC_FAILURE(10000),
     API_EXCEPTION(11000),
-    PLATFORM_DOES_NOT_SUPPORT_RECYCLING(11001);
+    INVALID_STATE(19001),
+    NOTIFICATION_BUFFER_ERROR(18201),
+    NOTIFICATION_BUFFER_RETRY_EXCEEDED(18202),
+    PLATFORM_DOES_NOT_SUPPORT_RECYCLING(11001),
+    SHELL_CLIENT_CONNECT_FAILURE(15001),
+    SSH_CLIENT_INSTANTIATION_ERROR(15101),
+    ;
     private final int errorCode;
     private final String shortName;
     private final String message;
