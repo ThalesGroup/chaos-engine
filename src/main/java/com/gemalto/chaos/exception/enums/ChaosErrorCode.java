@@ -9,8 +9,8 @@ import java.util.ResourceBundle;
 
 public enum ChaosErrorCode implements ErrorCode {
     GENERIC_FAILURE(10000),
-    API_EXCEPTION(15000),
-    PLATFORM_DOES_NOT_SUPPORT_RECYCLING(10001);
+    API_EXCEPTION(11000),
+    PLATFORM_DOES_NOT_SUPPORT_RECYCLING(11001);
     private final int errorCode;
     private final String shortName;
     private final String message;
