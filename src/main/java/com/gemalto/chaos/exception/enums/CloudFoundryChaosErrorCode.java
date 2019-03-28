@@ -50,9 +50,9 @@ public enum CloudFoundryChaosErrorCode implements ErrorCode {
         if (translationBundle != null) return translationBundle;
         try {
             final Locale defaultLocale = Locale.getDefault();
-            translationBundle = ResourceBundle.getBundle("errors.ChaosErrorCode", defaultLocale);
+            translationBundle = ResourceBundle.getBundle("exception.ChaosErrorCode", defaultLocale);
         } catch (MissingResourceException e) {
-            translationBundle = ResourceBundle.getBundle("errors.ChaosErrorCode", Locale.US);
+            translationBundle = ResourceBundle.getBundle("exception.ChaosErrorCode", Locale.US);
         }
         return translationBundle;
     }
