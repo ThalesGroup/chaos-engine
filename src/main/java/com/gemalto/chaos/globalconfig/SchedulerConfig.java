@@ -26,7 +26,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
                                         .findFirst()
                                         .map(LoggerFactory::getLogger)
                                         .orElseGet(() -> LoggerFactory.getLogger(ChaosEngine.class));
-            logger.error("Unhandled ChaosException in Scheduled Thread", ex);
+            logger.error("Unhandled Exception in Scheduled Thread", ex);
         });
         threadPoolTaskScheduler.initialize();
         scheduledTaskRegistrar.setTaskScheduler(threadPoolTaskScheduler);
