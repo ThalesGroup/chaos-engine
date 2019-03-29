@@ -10,7 +10,9 @@ import java.util.ResourceBundle;
 public enum ChaosErrorCode implements ErrorCode {
     GENERIC_FAILURE(10000),
     API_EXCEPTION(11000),
-
+    EXPERIMENT_START_FAILURE(12001),
+    RECYCLING_UNSUPPORTED(12002),
+    PLATFORM_DOES_NOT_SUPPORT_SHELL(12003),
     INVALID_STATE(19001),
     NOTIFICATION_SEND_ERROR(18001),
     NOTIFICATION_BUFFER_ERROR(18201),
@@ -26,8 +28,7 @@ public enum ChaosErrorCode implements ErrorCode {
     SSH_CREDENTIAL_PASSWORD_CALL_FAILURE(15201),
     SSH_CREDENTIALS_INVALID_KEY_FORMAT(15202),
     SHELL_SCRIPT_READ_FAILURE(15901),
-    SHELL_SCRIPT_LOOKUP_FAILURE(15902)
-    ;
+    SHELL_SCRIPT_LOOKUP_FAILURE(15902);
     private final int errorCode;
     private final String shortName;
     private final String message;
