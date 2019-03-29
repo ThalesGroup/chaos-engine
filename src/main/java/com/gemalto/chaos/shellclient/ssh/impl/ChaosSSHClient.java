@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.*;
 
-import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SHELL_CLIENT_CONNECT_FAILURE;
-import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SSH_CLIENT_INSTANTIATION_ERROR;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.*;
 
 public class ChaosSSHClient implements SSHClientWrapper {
     private static final Logger log = LoggerFactory.getLogger(ChaosSSHClient.class);
@@ -131,7 +130,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
             getSshClient().newSCPFileTransfer()
                           .upload(new JarResourceFile(resource, true), SSHConstants.TEMP_DIRECTORY);
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CLIENT_TRANSFER_ERROR, e);
         }
         try (Session session = getSshClient().startSession()) {
             String shellCommand = SSHConstants.TEMP_DIRECTORY + resource.getFilename();
@@ -139,7 +138,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
             return runCommandInShell(session, shellCommand);
         } catch (IOException e) {
             log.error("Error running SSH Command", e);
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
     }
 
@@ -156,7 +155,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
             }
         } catch (IOException e) {
             log.error("Error running SSH Command", e);
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
     }
 
@@ -167,7 +166,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
                 return IOUtils.readFully(shell.getInputStream()).toString();
             }
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
     }
 }
