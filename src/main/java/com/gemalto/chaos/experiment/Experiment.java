@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.ExperimentConstants.*;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SELF_HEALING_CALL_ERROR;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -458,7 +459,7 @@ public abstract class Experiment {
         try {
             selfHealingMethod.call();
         } catch (Exception e) {
-            throw new ChaosException("Exception while self healing.", e);
+            throw new ChaosException(SELF_HEALING_CALL_ERROR, e);
         } finally {
             lastSelfHealingTime = Instant.now();
         }
