@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 @RunWith(Enclosed.class)
 public class ErrorCodeTest {
@@ -89,6 +90,7 @@ public class ErrorCodeTest {
     @RunWith(Parameterized.class)
     public static class LocaleTests {
         private final Locale locale;
+        private static boolean containsUSTranslation = false;
         private Collection<Collection<ErrorCode>> allErrorCodes = new HashSet<>();
 
         public LocaleTests (Locale locale) {
@@ -117,11 +119,14 @@ public class ErrorCodeTest {
 
         @Test
         public void containsTranslation () {
+            final boolean checkingUSLocale = Locale.US.equals(locale);
+            assumeTrue(checkingUSLocale || containsUSTranslation);
             allErrorCodes.stream().flatMap(Collection::stream).forEach(errorCode -> {
                 final String message = errorCode.getMessage();
                 final String localizedMessage = errorCode.getLocalizedMessage();
                 assertNotEquals(message + " should contain a translation for locale " + locale, message, localizedMessage);
             });
+            containsUSTranslation |= checkingUSLocale;
         }
     }
 }
