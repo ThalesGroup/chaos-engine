@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SHELL_SCRIPT_READ_FAILURE;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class ShellScript implements Script {
@@ -42,7 +43,7 @@ public class ShellScript implements Script {
         try {
             script.scriptContents = StreamUtils.copyToString(resource.getInputStream(), Charset.defaultCharset());
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_SCRIPT_READ_FAILURE, e);
         }
         script.buildFields();
         log.debug("Created script {}", v("ShellScript", script));

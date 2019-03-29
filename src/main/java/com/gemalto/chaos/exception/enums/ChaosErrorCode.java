@@ -22,6 +22,7 @@ public enum ChaosErrorCode implements ErrorCode {
     SSH_CLIENT_COMMAND_ERROR(15103),
     SSH_CREDENTIAL_PASSWORD_CALL_FAILURE(15201),
     SSH_CREDENTIALS_INVALID_KEY_FORMAT(15202),
+    SHELL_SCRIPT_READ_FAILURE(15901),
     ;
     private final int errorCode;
     private final String shortName;
