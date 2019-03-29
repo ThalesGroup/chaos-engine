@@ -3,7 +3,6 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
-import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.annotations.StateExperiment;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
@@ -17,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+import static com.gemalto.chaos.exception.enums.KubernetesChaosErrorCode.POD_HAS_NO_CONTAINERS;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class KubernetesPodContainer extends Container {
@@ -71,7 +71,7 @@ public class KubernetesPodContainer extends Container {
                        .orElseGet(() -> (targetedSubcontainer = subcontainers.stream()
                                                                              .min(Comparator.comparingInt(i -> new Random()
                                                                                      .nextInt()))
-                                                                             .orElseThrow(() -> new ChaosException("Need a Kubernetes Pod's Containers but found none"))));
+                                                                             .orElseThrow(POD_HAS_NO_CONTAINERS.asChaosException())));
     }
 
     @Override

@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.exception.enums.KubernetesChaosErrorCode.K8S_API_ERROR;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -220,7 +221,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
             if (e.getMessage().equals(KubernetesConstants.KUBERNETES_POD_NOT_FOUND_ERROR_MESSAGE)) {
                 return replicaSetRecovered(container) == ContainerHealth.NORMAL;
             }
-            throw new ChaosException("Received unexpected API Exception looking up Container Restart Status", e);
+            throw new ChaosException(K8S_API_ERROR, e);
         }
         return v1Pod.getStatus()
                     .getContainerStatuses()
