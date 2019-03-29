@@ -10,6 +10,10 @@ import java.util.ResourceBundle;
 public enum KubernetesChaosErrorCode implements ErrorCode {
     K8S_API_ERROR(41000),
     POD_HAS_NO_CONTAINERS(42001),
+    K8S_SHELL_CLIENT_ERROR(45000),
+    K8S_SHELL_TRANSFER_TIMEOUT(45001),
+    K8S_SHELL_TRANSFER_FAIL(45002),
+
     ;
     private final int errorCode;
     private final String shortName;
