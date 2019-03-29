@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SHELL_SCRIPT_LOOKUP_FAILURE;
+
 @Component
 public class ScriptManager {
     private static final String SCRIPT_SEARCH_PATTERN = "classpath:ssh/experiments/*";
@@ -29,7 +31,7 @@ public class ScriptManager {
         try {
             return resolver.getResources(SCRIPT_SEARCH_PATTERN);
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_SCRIPT_LOOKUP_FAILURE, e);
         }
     }
 
