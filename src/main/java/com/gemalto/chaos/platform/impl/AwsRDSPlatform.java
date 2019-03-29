@@ -46,6 +46,7 @@ import static com.gemalto.chaos.constants.AwsRDSConstants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
@@ -55,6 +56,7 @@ import static net.logstash.logback.argument.StructuredArguments.*;
 @ConfigurationProperties("aws.rds")
 @Component
 public class AwsRDSPlatform extends Platform {
+    private final Map<String, String> vpcToSecurityGroupMap = new ConcurrentHashMap<>();
     @Autowired
     private AmazonRDS amazonRDS;
     @Autowired
@@ -62,33 +64,18 @@ public class AwsRDSPlatform extends Platform {
     @Autowired
     private ContainerManager containerManager;
     private Map<String, String> filter = new HashMap<>();
-    private final Map<String, String> vpcToSecurityGroupMap = new ConcurrentHashMap<>();
+
     @Autowired
     public AwsRDSPlatform () {
     }
+
     AwsRDSPlatform (AmazonRDS amazonRDS, AmazonEC2 amazonEC2) {
         this.amazonRDS = amazonRDS;
         this.amazonEC2 = amazonEC2;
     }
 
-    public Map<String, String> getFilter () {
-        return filter;
-    }
-
     public Map<String, String> getVpcToSecurityGroupMap () {
         return new HashMap<>(vpcToSecurityGroupMap);
-    }
-
-
-    private Collection<Tag> generateTagsFromFilters () {
-        return getFilter().entrySet()
-                          .stream()
-                          .map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue()))
-                          .collect(Collectors.toSet());
-    }
-
-    public void setFilter (Map<String, String> filter) {
-        this.filter = filter;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -160,7 +147,30 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public boolean isContainerRecycled (Container container) {
-        throw new ChaosException("RDS Containers cannot be recycled, this code should be unreachable for this platform.");
+        throw new ChaosException(RDS_DOES_NOT_SUPPORT_RECYCLING);
+    }
+
+    private Collection<DBInstance> getAllDBInstances () {
+        Collection<DBInstance> dbInstances = new HashSet<>();
+        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
+        DescribeDBInstancesResult describeDBInstancesResult;
+        int i = 0;
+        do {
+            log.debug("Running describeDBInstances, page {}", ++i);
+            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
+            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
+            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
+        } while (describeDBInstancesRequest.getMarker() != null);
+        return dbInstances.parallelStream().filter(this::filterDBInstance).collect(Collectors.toSet());
+    }
+
+    boolean filterDBInstance (DBInstance dbInstance) {
+        Collection<Tag> tags = generateTagsFromFilters();
+        if (tags.isEmpty()) return true;
+        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
+                .withResourceName(dbInstance.getDBInstanceArn()));
+        List<Tag> tagList = listTagsForResourceResult.getTagList();
+        return tagList.containsAll(tags);
     }
 
     private Collection<DBCluster> getAllDBClusters () {
@@ -186,27 +196,19 @@ public class AwsRDSPlatform extends Platform {
         return tagList.containsAll(tags);
     }
 
-    private Collection<DBInstance> getAllDBInstances () {
-        Collection<DBInstance> dbInstances = new HashSet<>();
-        DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest();
-        DescribeDBInstancesResult describeDBInstancesResult;
-        int i = 0;
-        do {
-            log.debug("Running describeDBInstances, page {}", ++i);
-            describeDBInstancesResult = amazonRDS.describeDBInstances(describeDBInstancesRequest);
-            dbInstances.addAll(describeDBInstancesResult.getDBInstances());
-            describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
-        } while (describeDBInstancesRequest.getMarker() != null);
-        return dbInstances.parallelStream().filter(this::filterDBInstance).collect(Collectors.toSet());
+    private Collection<Tag> generateTagsFromFilters () {
+        return getFilter().entrySet()
+                          .stream()
+                          .map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue()))
+                          .collect(Collectors.toSet());
     }
 
-    boolean filterDBInstance (DBInstance dbInstance) {
-        Collection<Tag> tags = generateTagsFromFilters();
-        if (tags.isEmpty()) return true;
-        ListTagsForResourceResult listTagsForResourceResult = amazonRDS.listTagsForResource(new ListTagsForResourceRequest()
-                .withResourceName(dbInstance.getDBInstanceArn()));
-        List<Tag> tagList = listTagsForResourceResult.getTagList();
-        return tagList.containsAll(tags);
+    public Map<String, String> getFilter () {
+        return filter;
+    }
+
+    public void setFilter (Map<String, String> filter) {
+        this.filter = filter;
     }
 
     AwsRDSInstanceContainer createContainerFromDBInstance (DBInstance dbInstance) {
@@ -357,7 +359,7 @@ public class AwsRDSPlatform extends Platform {
             if (e.getErrorCode().equals(INVALID_PARAMETER_VALUE)) {
                 processInvalidSecurityGroupId(vpcSecurityGroupIds);
             }
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         }
     }
 
@@ -382,7 +384,8 @@ public class AwsRDSPlatform extends Platform {
                         .stream()
                         .map(DBInstance::getVpcSecurityGroups)
                         .flatMap(Collection::stream)
-                        .map(VpcSecurityGroupMembership::getVpcSecurityGroupId).collect(toSet());
+                        .map(VpcSecurityGroupMembership::getVpcSecurityGroupId)
+                        .collect(toSet());
     }
 
     public String getChaosSecurityGroup (String dbInstanceIdentifier) {
@@ -396,9 +399,7 @@ public class AwsRDSPlatform extends Platform {
                         .getDBInstances()
                         .stream()
                         .map(DBInstance::getDBSubnetGroup)
-                        .map(DBSubnetGroup::getVpcId)
-                        .findFirst()
-                        .orElseThrow(() -> new ChaosException("Could not find a VPC for instance " + dbInstanceIdentifier));
+                        .map(DBSubnetGroup::getVpcId).findFirst().orElseThrow(RDS_NO_VPC_FOUND.asChaosException());
     }
 
     String getChaosSecurityGroupOfVpc (String vpcId) {
@@ -417,7 +418,6 @@ public class AwsRDSPlatform extends Platform {
 
     private String createChaosSecurityGroup (String vpcId) {
         log.debug("Creating a Chaos Security Group of VPC {}", v("VPC", vpcId));
-
         String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
                                                                                        .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
                                                                                        .withVpcId(vpcId)).getGroupId();
@@ -439,13 +439,13 @@ public class AwsRDSPlatform extends Platform {
             return amazonRDS.createDBSnapshot(createDBSnapshotRequest);
         } catch (DBSnapshotAlreadyExistsException e) {
             log.error("A snapshot by that name already exists", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (InvalidDBInstanceStateException e) {
             log.error("Cannot snapshot database in an invalid state", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (DBInstanceNotFoundException e) {
             log.error("DB Instance not found to take snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (SnapshotQuotaExceededException e) {
             if (!retry) {
                 log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
@@ -453,14 +453,14 @@ public class AwsRDSPlatform extends Platform {
                 return snapshotDBInstance(dbInstanceIdentifier, true);
             } else {
                 log.error("Exceeded snapshot quota", e);
-                throw new ChaosException(e);
+                throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
             }
         } catch (AmazonRDSException e) {
             log.error("AWS RDS Exception occurred while taking a snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (RuntimeException e) {
             log.error("Unknown error occurred while taking a snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         }
     }
 
@@ -468,7 +468,6 @@ public class AwsRDSPlatform extends Platform {
         String snapshotIdentifier = AwsRDSUtils.generateSnapshotName(dbInstanceIdentifier);
         log.debug("{} will use {}", kv(DataDogConstants.RDS_INSTANCE_ID, dbInstanceIdentifier), kv(DataDogConstants.RDS_INSTANCE_SNAPSHOT, snapshotIdentifier));
         return snapshotIdentifier;
-
     }
 
     public DBClusterSnapshot snapshotDBCluster (String dbClusterIdentifier) {
@@ -483,13 +482,13 @@ public class AwsRDSPlatform extends Platform {
             return amazonRDS.createDBClusterSnapshot(createDBClusterSnapshotRequest);
         } catch (DBClusterSnapshotAlreadyExistsException e) {
             log.error("A cluster snapshot by that name already exists", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (InvalidDBClusterStateException e) {
             log.error("DB Cluster is in invalid state for snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (DBClusterNotFoundException e) {
             log.error("DB Cluster not found to take snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (SnapshotQuotaExceededException e) {
             if (!retry) {
                 log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
@@ -497,17 +496,17 @@ public class AwsRDSPlatform extends Platform {
                 return snapshotDBCluster(dbClusterIdentifier, true);
             } else {
                 log.error("Exceeded snapshot quota", e);
-                throw new ChaosException(e);
+                throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
             }
         } catch (InvalidDBClusterSnapshotStateException e) {
             log.error("DB Cluster Snapshot in invalid state", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (AmazonRDSException e) {
             log.error("AWS RDS Exception occurred while taking a snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         } catch (RuntimeException e) {
             log.error("Unknown error occurred while taking a snapshot", e);
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_RDS_GENERIC_API_ERROR, e);
         }
     }
 

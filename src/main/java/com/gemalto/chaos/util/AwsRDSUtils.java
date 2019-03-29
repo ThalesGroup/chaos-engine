@@ -11,6 +11,8 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.INVALID_SNAPSHOT_NAME;
+
 public class AwsRDSUtils {
     private static final Pattern chaosSnapshotPattern = Pattern.compile("ChaosSnapshot-(.*)-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}(-[0-9]{0,3})?Z)", Pattern.CASE_INSENSITIVE);
     private static final Logger log = LoggerFactory.getLogger(AwsRDSUtils.class);
@@ -23,7 +25,6 @@ public class AwsRDSUtils {
                                                                                                      .appendZoneId()
                                                                                                      .toFormatter();
 
-
     private AwsRDSUtils () {
     }
 
@@ -31,18 +32,22 @@ public class AwsRDSUtils {
         String timestamp = Instant.now().toString();
         String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp)
                               .replaceAll(":", "-")
-                              .replaceAll(",", "-").replaceAll("\\.", "-").replaceAll("--+", "-");
+                              .replaceAll(",", "-")
+                              .replaceAll("\\.", "-")
+                              .replaceAll("--+", "-");
         int identifierTrim = 0;
         while (!isValidSnapshotName(output)) {
             output = String.format("ChaosSnapshot-%s-%s", identifier.substring(0, identifier.length() - ++identifierTrim), timestamp)
                            .replaceAll(":", "-")
-                           .replaceAll(",", "-").replaceAll("\\.", "-").replaceAll("--+", "-");
+                           .replaceAll(",", "-")
+                           .replaceAll("\\.", "-")
+                           .replaceAll("--+", "-");
             if (identifierTrim == identifier.length()) {
                 /*
                 I could not find a way to trigger this! Exception is here just in case, but I can't find a way to
                 make this happen.
                 */
-                throw new ChaosException("Could not shorten " + identifier + " to fit in a valid snapshot name");
+                throw new ChaosException(INVALID_SNAPSHOT_NAME);
             }
         }
         return output;
