@@ -8,6 +8,8 @@ import com.gemalto.chaos.shellclient.ShellOutput;
 
 import java.io.IOException;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.*;
+
 public interface ShellBasedExperiment<T extends Container> {
     /**
      * Recycle a container to give it a new life. Do something with it so the
@@ -21,15 +23,15 @@ public interface ShellBasedExperiment<T extends Container> {
      * This will run a command against a container and return the output.
      * If it does not return successfully, should throw a RuntimeException.
      *
-     * @param container          The container to run the command against
-     * @param command The command to be run
+     * @param container The container to run the command against
+     * @param command   The command to be run
      * @return The output of the command
      */
     default ShellOutput runCommand (T container, String command) {
         try (ShellClient shellClient = getConnectedShellClient(container)) {
             return shellClient.runCommand(command);
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_COMMAND_ERROR, e);
         }
     }
 
@@ -55,12 +57,11 @@ public interface ShellBasedExperiment<T extends Container> {
                       .stream()
                       .map(s -> container.getShellCapabilities().computeIfAbsent(s, shellClient::checkDependency))
                       .anyMatch(Boolean.FALSE::equals)) {
-                throw new ChaosException("Found that some dependencies were missing while initializing script");
+                throw new ChaosException(SHELL_CLIENT_DEPENDENCY_ERROR);
             }
             return shellClient.runResource(script.getResource());
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SHELL_CLIENT_TRANSFER_ERROR, e);
         }
     }
-
 }
