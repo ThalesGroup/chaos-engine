@@ -34,7 +34,7 @@ public class AdminManager {
     }
 
     public boolean canRunExperiments () {
-        return AdminState.geExperimentStates().contains(adminState);
+        return AdminState.getExperimentStates().contains(adminState);
     }
 
     public boolean canRunSelfHealing () {
