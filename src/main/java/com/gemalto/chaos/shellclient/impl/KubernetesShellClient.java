@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
+import static com.gemalto.chaos.exception.enums.KubernetesChaosErrorCode.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class KubernetesShellClient implements ShellClient {
@@ -37,7 +38,7 @@ public class KubernetesShellClient implements ShellClient {
             String innerCommand = String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, copyResourceToPath(resource));
             return runCommand(new String[]{ "sh", "-c", innerCommand }, false).getStdOut();
         } catch (IOException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(K8S_SHELL_CLIENT_ERROR, e);
         }
     }
 
@@ -66,7 +67,7 @@ public class KubernetesShellClient implements ShellClient {
             return ShellOutput.EMPTY_SHELL_OUTPUT;
         } catch (IOException | ApiException e) {
             log.error("Received exception while processing command", e);
-            throw new ChaosException(e);
+            throw new ChaosException(K8S_SHELL_CLIENT_ERROR, e);
         } finally {
             if (proc != null) proc.destroy();
         }
@@ -96,7 +97,7 @@ public class KubernetesShellClient implements ShellClient {
                 }
             }
             if (!proc.waitFor(5000, TimeUnit.MILLISECONDS)) {
-                throw new ChaosException("Failed to transfer Script in a reasonable time.");
+                throw new ChaosException(K8S_SHELL_TRANSFER_TIMEOUT);
             }
             int i = proc.exitValue();
             if (i == 0) {
@@ -104,10 +105,10 @@ public class KubernetesShellClient implements ShellClient {
                 runCommand(command1);
                 return finalPath;
             }
-            throw new ChaosException("Received exit code " + i + " when transferring file");
+            throw new ChaosException(K8S_SHELL_TRANSFER_FAIL);
         } catch (ApiException e) {
             log.error("Received exception while processing command", e);
-            throw new ChaosException(e);
+            throw new ChaosException(K8S_SHELL_TRANSFER_FAIL, e);
         } catch (InterruptedException e) {
             log.error("Interrupted while processing, throwing Interrupt up thread", e);
             Thread.currentThread().interrupt();

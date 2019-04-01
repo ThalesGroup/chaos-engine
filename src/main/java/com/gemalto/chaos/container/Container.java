@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.*;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -38,9 +39,9 @@ public abstract class Container implements ExperimentalObject {
     protected final transient Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
+    private final Map<String, Boolean> shellCapabilities = new HashMap<>();
     private ContainerHealth containerHealth;
     private Experiment currentExperiment;
-    private final Map<String, Boolean> shellCapabilities = new HashMap<>();
 
     protected Container () {
         for (ExperimentType experimentType : ExperimentType.values()) {
@@ -56,7 +57,7 @@ public abstract class Container implements ExperimentalObject {
 
     @Override
     public boolean canExperiment () {
-        if(!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()){
+        if (!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()) {
             return true;
         }
         log.debug("Cannot experiment on the container right now", v(DATADOG_CONTAINER_KEY, this));
@@ -169,8 +170,9 @@ public abstract class Container implements ExperimentalObject {
             ExperimentMethod lastExperimentMethod = experiment.getExperimentMethod();
             lastExperimentMethod.accept(this, experiment);
         } catch (Exception e) {
-            log.error("Failed to run experiment {} on container {}: {}", experiment.getId(), this, e);
-            throw new ChaosException(e);
+            final ChaosException chaosException = new ChaosException(EXPERIMENT_START_FAILURE, e);
+            log.error("Failed to run experiment {} on container {}: {}", experiment.getId(), this, chaosException);
+            throw chaosException;
         }
     }
 
@@ -209,14 +211,10 @@ public abstract class Container implements ExperimentalObject {
                      .collect(Collectors.toMap(Function.identity(), k -> getMethodsWithAnnotation(this.getClass(), k)));
     }
 
-    public boolean supportsShellBasedExperiments () {
-        return getPlatform() instanceof ShellBasedExperiment;
-    }
-
     @SuppressWarnings("unchecked")
     public Callable<Void> recycleCattle () {
         if (!isCattle() || !supportsShellBasedExperiments()) {
-            throw new ChaosException("Attempted to recycle a container that should not be recycled");
+            throw new ChaosException(RECYCLING_UNSUPPORTED);
         }
         return () -> {
             getScriptPlatform().recycleContainer(this);
@@ -231,6 +229,10 @@ public abstract class Container implements ExperimentalObject {
         return false;
     }
 
+    public boolean supportsShellBasedExperiments () {
+        return getPlatform() instanceof ShellBasedExperiment;
+    }
+
     private ShellBasedExperiment getScriptPlatform () {
         return getScriptPlatform(this.getClass());
     }
@@ -241,15 +243,14 @@ public abstract class Container implements ExperimentalObject {
         try {
             if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment<T>) platform;
         } catch (ClassCastException e) {
-            throw new ChaosException("Error using Platform " + platform + " as a Shell Based Experiment platform", e);
+            throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL, e);
         }
-        throw new ChaosException("Platform does not support Shell Based Experiments");
+        throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL);
     }
 
     @SuppressWarnings("unchecked")
     public ShellOutput runCommand (String command) {
-        if (!supportsShellBasedExperiments())
-            throw new ChaosException("Attempted to run a shell command on a container that does not support it");
+        if (!supportsShellBasedExperiments()) throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL);
         return getScriptPlatform().runCommand(this, command);
     }
 
@@ -261,8 +262,7 @@ public abstract class Container implements ExperimentalObject {
 
     @SuppressWarnings("unchecked")
     public String runScript (Script script) {
-        if (!supportsShellBasedExperiments())
-            throw new ChaosException("Attempted to run a shell command on a container that does not support it");
+        if (!supportsShellBasedExperiments()) throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL);
         return getScriptPlatform().runScript(this, script);
     }
 

@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SSH_CREDENTIAL_PASSWORD_CALL_FAILURE;
+
 public class ChaosSSHCredentials implements SSHCredentials {
     private static final Logger log = LoggerFactory.getLogger(ChaosSSHCredentials.class);
 
@@ -87,7 +89,7 @@ public class ChaosSSHCredentials implements SSHCredentials {
                         try {
                             return passwordGenerator.call().toCharArray();
                         } catch (Exception e) {
-                            throw new ChaosException(e);
+                            throw new ChaosException(SSH_CREDENTIAL_PASSWORD_CALL_FAILURE, e);
                         }
                     }
 

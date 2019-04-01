@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NOT_PART_OF_ASG;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -171,7 +172,7 @@ public class AwsEC2Container extends AwsContainer {
     public void terminateASGContainer (Experiment experiment) {
         if (!isNativeAwsAutoscaling()) {
             log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
-            throw new ChaosException(String.format("Instance %s is not part of an autoscaling group, won't terminate it.", instanceId));
+            throw new ChaosException(NOT_PART_OF_ASG);
         }
         awsEC2Platform.terminateInstance(instanceId);
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> ContainerHealth.RUNNING_EXPERIMENT));

@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static com.gemalto.chaos.constants.AwsConstants.NO_AZ_INFORMATION;
 import static com.gemalto.chaos.constants.AwsRDSConstants.AWS_RDS_CLUSTER_DATADOG_IDENTIFIER;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.SINGLE_INSTANCE_CLUSTER;
 import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
@@ -99,7 +100,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
         Collections.shuffle(members, ThreadLocalRandom.current());
         // If there are 0 or 1 members in a cluster, we cannot choose a subset.
         if (members.size() <= 1) {
-            throw new ChaosException("Cluster contains less than 2 instances. Cannot operate on a subset.");
+            throw new ChaosException(SINGLE_INSTANCE_CLUSTER);
         } else if (members.size() == 2) {
             // If there are exactly 2 members, the only valid subset is of size 1. Since the set is shuffled,
             // we can just return index 0 (as a set).

@@ -7,6 +7,7 @@ import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryApplication;
 import com.gemalto.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.gemalto.chaos.exception.ChaosException;
+import com.gemalto.chaos.exception.enums.ChaosErrorCode;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -80,7 +82,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                                                                                                   .applicationId(applicationID)
                                                                                                   .build())
                                                             .blockOptional()
-                                                            .orElseThrow(ChaosException::new)
+                                                            .orElseThrow(EMPTY_RESPONSE.asChaosException())
                                                             .getInstances();
         } catch (ClientV2Exception e) {
             if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
@@ -136,7 +138,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
 
     @Override
     public boolean isContainerRecycled (Container container) {
-        throw new ChaosException("Cloud Foundry Applications cannot be recycled, this code should be unreachable.");
+        throw new ChaosException(ChaosErrorCode.PLATFORM_DOES_NOT_SUPPORT_RECYCLING);
     }
 
     CloudFoundryApplication createApplicationFromApplicationSummary (ApplicationSummary applicationSummary) {
@@ -167,7 +169,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         ListApplicationRoutesResponse listApplicationRoutesResponse = cloudFoundryClient.applicationsV2()
                                                                                         .listRoutes(listApplicationRoutesRequest)
                                                                                         .blockOptional()
-                                                                                        .orElseThrow(ChaosException::new);
+                                                                                        .orElseThrow(EMPTY_RESPONSE.asChaosException());
         List<RouteResource> routeResources = listApplicationRoutesResponse.getResources();
         if (routeResources != null) {
             for (RouteResource route : routeResources) {

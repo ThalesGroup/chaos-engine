@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA;
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.PLATFORM_DOES_NOT_SUPPORT_SHELL_EXPERIMENTS;
+
 public class ExperimentMethod<T extends Container> implements BiConsumer<T, Experiment> {
     private BiConsumer<T, Experiment> actualBiconsumer;
     private String experimentName;
@@ -26,16 +29,16 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         try {
             Class<? extends Container> declaringClass = (Class<? extends Container>) method.getDeclaringClass();
         } catch (ClassCastException e) {
-            throw new ChaosException("Trying to create an experiment method from a non-container method", e);
+            throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
         }
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.actualBiconsumer = (container, experiment) -> {
             try {
                 method.invoke(container, experiment);
             } catch (IllegalAccessException e) {
-                throw new ChaosException("Tried to start an experiment via reflection without proper method permissions", e);
+                throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
             } catch (InvocationTargetException e) {
-                throw new ChaosException("Issue starting an experiment via reflection", e);
+                throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
             }
         };
         experimentMethod.experimentName = method.getName();
@@ -51,7 +54,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
 
     static <T extends Container> ExperimentMethod fromScript (T container, Script script) {
         if (!container.supportsShellBasedExperiments()) {
-            throw new ChaosException("Cannot create script-based experiment for a container that doesn't support script-based experiments");
+            throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL_EXPERIMENTS);
         }
         final boolean cattle = script.isRequiresCattle();
         final Callable<Void> selfHealingMethod = cattle ? container.recycleCattle() : () -> {

@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SSH_CREDENTIALS_INVALID_KEY_FORMAT;
+
 @JsonIgnoreType
 public interface SSHCredentials {
     static PrivateKey privateKeyFromString (String privateKey) {
@@ -29,7 +31,7 @@ public interface SSHCredentials {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePrivate(keySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CREDENTIALS_INVALID_KEY_FORMAT, e);
         }
     }
 
@@ -40,7 +42,7 @@ public interface SSHCredentials {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePublic(keySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(SSH_CREDENTIALS_INVALID_KEY_FORMAT, e);
         }
     }
 

@@ -1,7 +1,6 @@
 package com.gemalto.chaos.platform.impl;
 
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.gemalto.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 
 public abstract class CloudFoundryPlatform extends Platform {
     @Autowired
@@ -62,11 +62,15 @@ public abstract class CloudFoundryPlatform extends Platform {
                                                                                         .equals(CLOUDFOUNDRY_APPLICATION_STARTED));
         if (runningInstances.filter(a -> a.getInstances() > 0)
                             .filter(a -> a.getRunningInstances() == 0)
-                            .hasElements().blockOptional().orElseThrow(ChaosException::new)) {
+                            .hasElements()
+                            .blockOptional()
+                            .orElseThrow(EMPTY_RESPONSE.asChaosException())) {
             return PlatformHealth.FAILED;
         } else if (runningInstances.filter(a -> a.getInstances() > 0)
                                    .filter(a -> a.getRunningInstances() < a.getInstances())
-                                   .hasElements().blockOptional().orElseThrow(ChaosException::new)) {
+                                   .hasElements()
+                                   .blockOptional()
+                                   .orElseThrow(EMPTY_RESPONSE.asChaosException())) {
             return PlatformHealth.DEGRADED;
         }
         return PlatformHealth.OK;

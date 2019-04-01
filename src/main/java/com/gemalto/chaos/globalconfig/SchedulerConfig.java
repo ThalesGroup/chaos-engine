@@ -1,5 +1,6 @@
 package com.gemalto.chaos.globalconfig;
 
+import com.gemalto.chaos.util.ErrorUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -14,6 +15,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
         threadPoolTaskScheduler.setPoolSize(POOL_SIZE);
         threadPoolTaskScheduler.setThreadNamePrefix("chaos-");
+        threadPoolTaskScheduler.setErrorHandler(ErrorUtils::logStacktraceUsingLastValidLogger);
         threadPoolTaskScheduler.initialize();
         scheduledTaskRegistrar.setTaskScheduler(threadPoolTaskScheduler);
     }

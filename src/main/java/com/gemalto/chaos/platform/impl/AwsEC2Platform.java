@@ -35,6 +35,8 @@ import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.AWS_EC2_GENERIC_API_ERROR;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NO_INSTANCES_RETURNED;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -181,15 +183,10 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                   .noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
     }
 
-    Collection<Filter> generateSearchFilters () {
-        return filter.entrySet().stream().map(this::createFilterFromEntry)
-                     .collect(Collectors.toSet());
-    }
-
     /**
      * Creates a Container object from an EC2 Instance and appends it to a provided list of containers.
      *
-     * @param instance      An EC2 Instance object to have a container created.
+     * @param instance An EC2 Instance object to have a container created.
      */
     AwsEC2Container createContainerFromInstance (Instance instance) {
         if (instance.getState().getCode() == AwsEC2Constants.AWS_TERMINATED_CODE) return null;
@@ -204,17 +201,6 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         return container;
     }
 
-    private Filter createFilterFromEntry (Map.Entry<String, List<String>> entry) {
-        Filter newFilter = new Filter().withValues(entry.getValue());
-        String name = entry.getKey();
-        if (name.startsWith("tag.")) {
-            newFilter.setName("tag:" + name.substring(4));
-        } else {
-            newFilter.setName(name.replaceAll("(?<!^)([A-Z])", "-$1").toLowerCase());
-        }
-        return newFilter;
-    }
-
     /**
      * Creates a Container object given an EC2 Instance object.
      *
@@ -224,8 +210,6 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     AwsEC2Container buildContainerFromInstance (Instance instance) {
         String groupIdentifier = null;
         Boolean nativeAwsAutoscaling = null;
-
-
         String name = instance.getTags()
                               .stream()
                               .filter(tag -> tag.getKey().equals("Name"))
@@ -265,6 +249,21 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .stream()
                         .map(Reservation::getInstances)
                         .flatMap(List::stream);
+    }
+
+    Collection<Filter> generateSearchFilters () {
+        return filter.entrySet().stream().map(this::createFilterFromEntry).collect(Collectors.toSet());
+    }
+
+    private Filter createFilterFromEntry (Map.Entry<String, List<String>> entry) {
+        Filter newFilter = new Filter().withValues(entry.getValue());
+        String name = entry.getKey();
+        if (name.startsWith("tag.")) {
+            newFilter.setName("tag:" + name.substring(4));
+        } else {
+            newFilter.setName(name.replaceAll("(?<!^)([A-Z])", "-$1").toLowerCase());
+        }
+        return newFilter;
     }
 
     public ContainerHealth checkHealth (String instanceId) {
@@ -316,7 +315,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                 log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
                 processInvalidGroups(securityGroupIds);
             }
-            throw new ChaosException(e);
+            throw new ChaosException(AWS_EC2_GENERIC_API_ERROR, e);
         }
     }
 
@@ -337,8 +336,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .map(Reservation::getInstances)
                         .flatMap(Collection::stream)
                         .peek(instance -> log.info("Lookup of VPCs for Instance {} shows {}", instanceId, instance.getVpcId()))
-                        .findFirst()
-                        .orElseThrow(() -> new ChaosException("No instances returned"))
+                        .findFirst().orElseThrow(NO_INSTANCES_RETURNED.asChaosException())
                         .getVpcId();
     }
 

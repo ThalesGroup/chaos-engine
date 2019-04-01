@@ -6,7 +6,6 @@ import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.CloudFoundryContainer;
-import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.SshBasedExperiment;
 import com.gemalto.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
@@ -37,6 +36,7 @@ import java.util.stream.IntStream;
 import static com.gemalto.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+import static com.gemalto.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -84,7 +84,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                                                                                                     .applicationId(applicationId)
                                                                                                     .build())
                                                                                   .blockOptional()
-                                                                                  .orElseThrow(ChaosException::new)
+                                                                                  .orElseThrow(EMPTY_RESPONSE.asChaosException())
                                                                                   .getInstances()
                                                                                   .get(instanceIndex);
         log.debug("Time in state from Application Instance Info: {}", v("applicationInstanceInfo", applicationInstanceInfo));
@@ -101,7 +101,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
                                                                                                   .applicationId(applicationId)
                                                                                                   .build())
                                                             .blockOptional()
-                                                            .orElseThrow(ChaosException::new)
+                                                            .orElseThrow(EMPTY_RESPONSE.asChaosException())
                                                             .getInstances();
         } catch (ClientV2Exception e) {
             if (CloudFoundryIgnoredClientExceptions.isIgnorable(e)) {
@@ -174,8 +174,7 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         log.debug("Retrieving SSH Endpoint for {}", v(DATADOG_PLATFORM_KEY, this));
         return cloudFoundryClient.info()
                                  .get(GetInfoRequest.builder().build())
-                                 .blockOptional()
-                                 .orElseThrow(ChaosException::new)
+                                 .blockOptional().orElseThrow(EMPTY_RESPONSE.asChaosException())
                                  .getApplicationSshEndpoint();
     }
 
@@ -189,7 +188,10 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
 
     String getSSHOneTimePassword () {
         log.debug("Requesting a one-time SSH password for {}", v(DataDogConstants.DATADOG_PLATFORM_KEY, this));
-        return cloudFoundryOperations.advanced().sshCode().blockOptional().orElseThrow(ChaosException::new);
+        return cloudFoundryOperations.advanced()
+                                     .sshCode()
+                                     .blockOptional()
+                                     .orElseThrow(EMPTY_RESPONSE.asChaosException());
     }
 
     @Override

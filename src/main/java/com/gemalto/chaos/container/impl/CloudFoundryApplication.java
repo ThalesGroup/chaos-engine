@@ -3,6 +3,7 @@ package com.gemalto.chaos.container.impl;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.exception.ChaosException;
+import com.gemalto.chaos.exception.enums.CloudFoundryChaosErrorCode;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.experiment.annotations.NetworkExperiment;
 import com.gemalto.chaos.experiment.annotations.ResourceExperiment;
@@ -141,7 +142,7 @@ public class CloudFoundryApplication extends Container {
             cloudFoundryApplicationPlatform.unmapRoute(routeUnderExperiment.getUnmapRouteRequest());
         } else {
             log.warn("Application {} has no routes set, stopping the experiment {}", name, experiment.getId());
-            throw new ChaosException("Application has no routes set, stopping the experiment" );
+            throw new ChaosException(CloudFoundryChaosErrorCode.NO_ROUTES);
         }
     }
 

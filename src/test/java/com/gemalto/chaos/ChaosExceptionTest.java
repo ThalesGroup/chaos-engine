@@ -1,11 +1,13 @@
 package com.gemalto.chaos;
 
 import com.gemalto.chaos.exception.ChaosException;
+import com.gemalto.chaos.exception.enums.ChaosErrorCode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChaosExceptionTest {
@@ -36,8 +38,8 @@ public class ChaosExceptionTest {
     public void throwableConstructor () {
         Exception causeException = new Exception();
         ChaosException chaosException = new ChaosException(causeException);
-        assertEquals(chaosException.getCause().toString(), chaosException.getMessage());
-        assertEquals(causeException, chaosException.getCause());
+        assertSame(causeException, chaosException.getCause());
+        assertEquals(ChaosErrorCode.GENERIC_FAILURE.getFormattedMessage(), chaosException.getMessage());
         throw chaosException;
     }
 }

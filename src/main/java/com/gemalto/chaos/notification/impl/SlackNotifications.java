@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_SEND_ERROR;
+
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
 public class SlackNotifications extends BufferedNotificationMethod {
@@ -75,7 +77,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
         try {
             sendSlackMessage(slackMessage);
         } catch (Exception e) {
-            throw new ChaosException(e);
+            throw new ChaosException(NOTIFICATION_SEND_ERROR, e);
         }
     }
 
