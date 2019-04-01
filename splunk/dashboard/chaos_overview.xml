@@ -528,7 +528,6 @@
                 <option name="dataOverlayMode">heatmap</option>
                 <option name="drilldown">none</option>
                 <option name="percentagesRow">false</option>
-                <option name="refresh.display">progressbar</option>
                 <option name="rowNumbers">false</option>
                 <option name="totalsRow">false</option>
                 <option name="wrap">true</option>
@@ -536,6 +535,10 @@
                     <colorPalette type="map">
                         {"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}
                     </colorPalette>
+                </format>
+                <format type="color" field="normalizedContainerName">
+                    <colorPalette type="sharedList"></colorPalette>
+                    <scale type="sharedCategory"></scale>
                 </format>
             </table>
         </panel>
