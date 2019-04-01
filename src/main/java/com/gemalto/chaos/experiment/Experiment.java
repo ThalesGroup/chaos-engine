@@ -446,7 +446,7 @@ public abstract class Experiment {
     }
 
     protected boolean isOverDuration () {
-        return Instant.now().isAfter(getStartTime().plus(maximumDuration));
+        return adminManager.mustRunSelfHealing() || Instant.now().isAfter(getStartTime().plus(maximumDuration));
     }
 
     protected boolean canRunSelfHealing () {

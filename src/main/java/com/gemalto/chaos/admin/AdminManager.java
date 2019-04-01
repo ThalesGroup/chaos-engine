@@ -50,4 +50,8 @@ public class AdminManager {
         stateTimer = Instant.now();
         adminState = newAdminState;
     }
+
+    public boolean mustRunSelfHealing () {
+        return AdminState.ABORT.equals(adminState);
+    }
 }
