@@ -11,5 +11,6 @@ services:
     volumes:
       - /var/lib/docker/containers:/host/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./splunk/dashboard:/opt/splunk/etc/users/admin/search/local/data/ui/views
     ports:
       - "9000:8000"
