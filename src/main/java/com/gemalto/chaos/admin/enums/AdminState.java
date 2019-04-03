@@ -7,18 +7,19 @@ public enum AdminState {
     STARTING,
     STARTED,
     PAUSED,
-    DRAIN;
+    DRAIN,
+    ABORT,
+    ;
 
-    public static Set<AdminState> geExperimentStates () {
+    public static Set<AdminState> getExperimentStates () {
         return EnumSet.of(STARTED);
     }
 
     public static Set<AdminState> getSelfHealingStates () {
-        return EnumSet.of(STARTED, DRAIN);
+        return EnumSet.of(STARTED, DRAIN, ABORT);
     }
 
     public static Set<AdminState> getHealthyStates () {
-        return EnumSet.of(STARTED, DRAIN, PAUSED);
+        return EnumSet.of(STARTED, DRAIN, PAUSED, ABORT);
     }
-
 }

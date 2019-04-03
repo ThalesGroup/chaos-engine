@@ -34,7 +34,7 @@ public class AdminManager {
     }
 
     public boolean canRunExperiments () {
-        return AdminState.geExperimentStates().contains(adminState);
+        return AdminState.getExperimentStates().contains(adminState);
     }
 
     public boolean canRunSelfHealing () {
@@ -49,5 +49,9 @@ public class AdminManager {
     private void setAdminStateInner (AdminState newAdminState) {
         stateTimer = Instant.now();
         adminState = newAdminState;
+    }
+
+    public boolean mustRunSelfHealing () {
+        return AdminState.ABORT.equals(adminState);
     }
 }
