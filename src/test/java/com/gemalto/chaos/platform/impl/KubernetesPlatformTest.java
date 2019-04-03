@@ -29,8 +29,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
+import static java.util.UUID.randomUUID;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -167,7 +171,7 @@ public class KubernetesPlatformTest {
                                                          .build();
         V1Pod pod = new V1Pod();
         pod.setMetadata(metadata);
-        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(UUID.randomUUID()
+        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID()
                                                                                                     .toString()))));
         V1PodList list = new V1PodList();
         for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
@@ -547,6 +551,27 @@ public class KubernetesPlatformTest {
                 .withStatus(new V1ReplicationControllerStatusBuilder().withReplicas(2).withReadyReplicas(1).build())
                 .build());
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
+    }
+
+    @Test
+    public void checkHealthNullPointerExceptionTest () throws Exception {
+        final String podName = randomUUID().toString();
+        final String namespace = randomUUID().toString();
+        final KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        doReturn(podName).when(kubernetesPodContainer).getPodName();
+        doReturn(namespace).when(kubernetesPodContainer).getNamespace();
+        final V1Pod v1Pod = mock(V1Pod.class);
+        final V1PodStatus v1PodStatus = mock(V1PodStatus.class);
+        final V1ContainerStatus v1ContainerStatus = mock(V1ContainerStatus.class);
+        doReturn(null, v1Pod).when(coreV1Api).readNamespacedPodStatus(podName, namespace, "true");
+        doReturn(null, v1PodStatus).when(v1Pod).getStatus();
+        doReturn(null, Collections.singletonList(v1ContainerStatus)).when(v1PodStatus).getContainerStatuses();
+        doReturn(false, true).when(v1ContainerStatus).isReady();
+        assertEquals("Null pod", ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
+        assertEquals("Null pod status", ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
+        assertEquals("Null container statuses", ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
+        assertEquals("No ready containers", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth(kubernetesPodContainer));
+        assertEquals("Containers ready", ContainerHealth.NORMAL, platform.checkHealth(kubernetesPodContainer));
     }
 
     @Configuration
