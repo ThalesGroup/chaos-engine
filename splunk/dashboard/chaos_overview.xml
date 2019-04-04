@@ -437,7 +437,8 @@
                 <option name="totalsRow">false</option>
                 <option name="wrap">true</option>
                 <format type="color" field="ChaosEvent.targetContainer.containerType">
-                    <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484}
+                    <colorPalette type="map">
+                        {"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}
                     </colorPalette>
                 </format>
                 <format type="color" field="ChaosEvent.notificationLevel">
@@ -473,8 +474,9 @@
                 <option name="rowNumbers">false</option>
                 <option name="totalsRow">false</option>
                 <option name="wrap">true</option>
-                <format type="color" field="ChaosEvent.targetContainer.containerType">
-                    <colorPalette type="map">{"CloudFoundryContainer":#4FA484,"CloudFoundryApplication":#708794}
+                <format type="color" field="platform">
+                    <colorPalette type="map">
+                        {"CloudFoundryApplicationPlatform":#708794,"CloudFoundryContainerPlatform":#4FA484,"AwsEC2Platform":#3FE4ED,"AwsRDSPlatform":#ED3FCA,"KubernetesPlatform":#3E89ED}
                     </colorPalette>
                 </format>
             </table>
@@ -517,6 +519,15 @@
                 <option name="rowNumbers">false</option>
                 <option name="totalsRow">false</option>
                 <option name="wrap">true</option>
+                <format type="color" field="ChaosEvent.targetContainer.containerType">
+                    <colorPalette type="map">
+                        {"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}
+                    </colorPalette>
+                </format>
+                <format type="color" field="normalizedContainerName">
+                    <colorPalette type="sharedList"></colorPalette>
+                    <scale type="sharedCategory"></scale>
+                </format>
             </table>
         </panel>
     </row>
@@ -621,8 +632,8 @@
                     <query>sourcetype="container:log" timestamp event | spath input=log | stats count by
                         ChaosEvent.experimentMethod, ChaosEvent.notificationLevel
                     </query>
-                    <earliest>-24h@h</earliest>
-                    <latest>now</latest>
+                    <earliest>$field1.earliest$</earliest>
+                    <latest>$field1.latest$</latest>
                     <sampleRatio>1</sampleRatio>
                 </search>
                 <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -656,7 +667,7 @@
                 <option name="refresh.display">progressbar</option>
                 <option name="trellis.enabled">1</option>
                 <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
+                <option name="trellis.size">small</option>
             </chart>
         </panel>
     </row>
