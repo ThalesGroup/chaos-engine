@@ -673,36 +673,12 @@
     </row>
     <row>
         <panel>
-            <title>Error Chaos Events</title>
-            <event>
-                <search>
-                    <query>sourcetype="container:log" Chaos Event| spath input=log | search
-                        ChaosEvent.notificationLevel=ERROR
-                    </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">5</option>
-                <option name="list.drilldown">none</option>
-                <option name="list.wrap">1</option>
-                <option name="maxLines">5</option>
-                <option name="raw.drilldown">none</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="rowNumbers">0</option>
-                <option name="table.drilldown">none</option>
-                <option name="table.sortDirection">asc</option>
-                <option name="table.wrap">1</option>
-                <option name="type">list</option>
-            </event>
-        </panel>
-    </row>
-    <row>
-        <panel>
             <title>Chaos Engine Errors</title>
             <event>
                 <search>
-                    <query>sourcetype="container:log" timestamp "error" OR "failed" OR "exception" OR "fatal"</query>
+                    <query>sourcetype="container:log" timestamp "error" OR "failed" OR "exception" OR "fatal" and NOT
+                        "Chaos Event"
+                    </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
                     <sampleRatio>1</sampleRatio>
