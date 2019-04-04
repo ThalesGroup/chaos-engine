@@ -307,11 +307,11 @@
                     <sampleRatio>1</sampleRatio>
                 </search>
                 <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
+                <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
                 <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
+                <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+                <option name="rangeValues">[0]</option>
                 <option name="refresh.display">progressbar</option>
                 <option name="showSparkline">1</option>
                 <option name="showTrendIndicator">1</option>
@@ -321,7 +321,7 @@
                 <option name="trendColorInterpretation">standard</option>
                 <option name="trendDisplayMode">absolute</option>
                 <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
+                <option name="useColors">1</option>
                 <option name="useThousandSeparators">1</option>
             </single>
             <chart>
