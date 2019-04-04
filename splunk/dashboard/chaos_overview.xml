@@ -98,8 +98,9 @@
             <title>Failed Experiments</title>
             <single>
                 <search>
-                    <query>sourcetype="container:log" "message=The experiment has gone on too long, invoking
-                        self-healing"| eval startTime=_time | spath input=log | stats count
+                    <query>sourcetype="container:log"
+                        "message=The experiment has gone on too long, invoking self-healing"
+                        | eval startTime=_time | spath input=log | stats count
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -158,8 +159,8 @@
             <title>Scheduled Experiments</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time | spath
-                        input=log | chart count by ChaosEvent.experimentMethod
+                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+                        | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -203,8 +204,8 @@
             <title>Failed To Start Experiements</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Failed to start experiment"| eval startTime=_time | spath
-                        input=log | chart count by ChaosEvent.experimentMethod
+                    <query>sourcetype="container:log" "message=Failed to start experiment"| eval startTime=_time
+                        | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -248,8 +249,10 @@
             <title>Succesfull Experiments</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Experiment finished. Container recovered from the
-                        experiment"| eval startTime=_time | spath input=log | chart count by ChaosEvent.experimentMethod
+                    <query>sourcetype="container:log"
+                        "message=Experiment finished. Container recovered from the experiment"
+                        | eval startTime=_time | spath input=log
+                        | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -293,8 +296,9 @@
             <title>Failed Experiments</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=The experiment has gone on too long, invoking
-                        self-healing"| eval startTime=_time | spath input=log | chart count by
+                    <query>sourcetype="container:log"
+                        "message=The experiment has gone on too long, invoking self-healing"
+                        | eval startTime=_time | spath input=log | chart count by
                         ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
@@ -339,8 +343,8 @@
             <title>Failed To Heal</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Maximum self healing retries reached"| eval
-                        startTime=_time | spath input=log | chart count by ChaosEvent.experimentMethod
+                    <query>sourcetype="container:log" "message=Maximum self healing retries reached"
+                        | eval startTime=_time | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -386,8 +390,8 @@
             <title>Chaos Events Timeline</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" Chaos Event| spath input=log | timechart count by
-                        ChaosEvent.notificationLevel
+                    <query>sourcetype="container:log" Chaos Event| spath input=log
+                        | timechart count by ChaosEvent.notificationLevel
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -498,8 +502,8 @@
             <title>Experiment Recovery Duration Per Container And Method</title>
             <table>
                 <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time | spath
-                        input=log
+                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+                        | spath input=log
                         |join ChaosEvent.experimentId [search sourcetype="container:log" "message=Experiment finished.*"
                         | spath input=log| eval finishTime=_time]
                         |eval experimentDuration=finishTime-startTime
@@ -538,8 +542,8 @@
             <title>Experiment Distribution Per Platform Layer</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log | chart count
-                        by ChaosEvent.experimentMethod ChaosEvent.targetContainer.containerType
+                    <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log
+                        | chart count by ChaosEvent.experimentMethod ChaosEvent.targetContainer.containerType
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
@@ -584,8 +588,8 @@
             <title>Chaos Events By Status</title>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" Chaos Event| spath input=log | chart count by
-                        ChaosEvent.notificationLevel
+                    <query>sourcetype="container:log" Chaos Event| spath input=log
+                        | chart count by ChaosEvent.notificationLevel
                     </query>
                     <earliest>$field1.earliest$</earliest>
                     <latest>$field1.latest$</latest>
