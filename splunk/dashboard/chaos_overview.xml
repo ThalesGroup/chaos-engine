@@ -11,7 +11,7 @@
     </fieldset>
     <row>
         <panel>
-            <title>Scheduled Experiments</title>
+            <title>Scheduled experiments</title>
             <single>
                 <search>
                     <query>sourcetype="container:log" "message=Starting new experiment" | stats count</query>
@@ -37,126 +37,6 @@
                 <option name="useColors">0</option>
                 <option name="useThousandSeparators">1</option>
             </single>
-        </panel>
-        <panel>
-            <title>Failed To Start Experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "message=Failed to start experiment" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-        </panel>
-        <panel>
-            <title>Successful Experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "message=Experiment finished.*" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">block</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-        </panel>
-        <panel>
-            <title>Failed Experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log"
-                        "message=The experiment has gone on too long, invoking self-healing"
-                        | eval startTime=_time | spath input=log | stats count
-                    </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-        </panel>
-        <panel>
-            <title>Failed To Heal</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "Maximum self healing retries reached" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Scheduled Experiments</title>
             <chart>
                 <search>
                     <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
@@ -201,7 +81,32 @@
             </chart>
         </panel>
         <panel>
-            <title>Failed To Start Experiements</title>
+            <title>Failed to start experiments</title>
+            <single>
+                <search>
+                    <query>sourcetype="container:log" "message=Failed to start experiment" | stats count</query>
+                    <earliest>$field1.earliest$</earliest>
+                    <latest>$field1.latest$</latest>
+                    <sampleRatio>1</sampleRatio>
+                </search>
+                <option name="colorBy">value</option>
+                <option name="colorMode">none</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+                <option name="rangeValues">[0,30,70,100]</option>
+                <option name="refresh.display">progressbar</option>
+                <option name="showSparkline">1</option>
+                <option name="showTrendIndicator">1</option>
+                <option name="trellis.enabled">0</option>
+                <option name="trellis.scales.shared">1</option>
+                <option name="trellis.size">medium</option>
+                <option name="trendColorInterpretation">standard</option>
+                <option name="trendDisplayMode">absolute</option>
+                <option name="unitPosition">after</option>
+                <option name="useColors">0</option>
+                <option name="useThousandSeparators">1</option>
+            </single>
             <chart>
                 <search>
                     <query>sourcetype="container:log" "message=Failed to start experiment"| eval startTime=_time
@@ -246,7 +151,32 @@
             </chart>
         </panel>
         <panel>
-            <title>Succesfull Experiments</title>
+            <title>Finished experiments</title>
+            <single>
+                <search>
+                    <query>sourcetype="container:log" "message=Experiment finished.*" | stats count</query>
+                    <earliest>$field1.earliest$</earliest>
+                    <latest>$field1.latest$</latest>
+                    <sampleRatio>1</sampleRatio>
+                </search>
+                <option name="colorBy">value</option>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+                <option name="rangeValues">[0,30,70,100]</option>
+                <option name="refresh.display">progressbar</option>
+                <option name="showSparkline">1</option>
+                <option name="showTrendIndicator">1</option>
+                <option name="trellis.enabled">0</option>
+                <option name="trellis.scales.shared">1</option>
+                <option name="trellis.size">medium</option>
+                <option name="trendColorInterpretation">standard</option>
+                <option name="trendDisplayMode">absolute</option>
+                <option name="unitPosition">after</option>
+                <option name="useColors">0</option>
+                <option name="useThousandSeparators">1</option>
+            </single>
             <chart>
                 <search>
                     <query>sourcetype="container:log"
@@ -293,7 +223,35 @@
             </chart>
         </panel>
         <panel>
-            <title>Failed Experiments</title>
+            <title>Self-healing required</title>
+            <single>
+                <search>
+                    <query>sourcetype="container:log"
+                        "message=The experiment has gone on too long, invoking self-healing"
+                        | eval startTime=_time | spath input=log | stats count
+                    </query>
+                    <earliest>$field1.earliest$</earliest>
+                    <latest>$field1.latest$</latest>
+                    <sampleRatio>1</sampleRatio>
+                </search>
+                <option name="colorBy">value</option>
+                <option name="colorMode">none</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+                <option name="rangeValues">[0,30,70,100]</option>
+                <option name="refresh.display">progressbar</option>
+                <option name="showSparkline">1</option>
+                <option name="showTrendIndicator">1</option>
+                <option name="trellis.enabled">0</option>
+                <option name="trellis.scales.shared">1</option>
+                <option name="trellis.size">medium</option>
+                <option name="trendColorInterpretation">standard</option>
+                <option name="trendDisplayMode">absolute</option>
+                <option name="unitPosition">after</option>
+                <option name="useColors">0</option>
+                <option name="useThousandSeparators">1</option>
+            </single>
             <chart>
                 <search>
                     <query>sourcetype="container:log"
@@ -340,7 +298,32 @@
             </chart>
         </panel>
         <panel>
-            <title>Failed To Heal</title>
+            <title>Failed to heal</title>
+            <single>
+                <search>
+                    <query>sourcetype="container:log" "Maximum self healing retries reached" | stats count</query>
+                    <earliest>$field1.earliest$</earliest>
+                    <latest>$field1.latest$</latest>
+                    <sampleRatio>1</sampleRatio>
+                </search>
+                <option name="colorBy">value</option>
+                <option name="colorMode">none</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+                <option name="rangeValues">[0,30,70,100]</option>
+                <option name="refresh.display">progressbar</option>
+                <option name="showSparkline">1</option>
+                <option name="showTrendIndicator">1</option>
+                <option name="trellis.enabled">0</option>
+                <option name="trellis.scales.shared">1</option>
+                <option name="trellis.size">medium</option>
+                <option name="trendColorInterpretation">standard</option>
+                <option name="trendDisplayMode">absolute</option>
+                <option name="unitPosition">after</option>
+                <option name="useColors">0</option>
+                <option name="useThousandSeparators">1</option>
+            </single>
             <chart>
                 <search>
                     <query>sourcetype="container:log" "message=Maximum self healing retries reached"
