@@ -27,10 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -153,10 +150,13 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
             V1Pod result = coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer
                     .getNamespace(), "true");
             //if there's any not ready container, return DOES_NOT_EXIST
-            return (result.getStatus()
-                          .getContainerStatuses()
-                          .stream()
-                          .anyMatch(status -> !status.isReady())) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL;
+            return Optional.ofNullable(result)
+                           .map(V1Pod::getStatus)
+                           .map(V1PodStatus::getContainerStatuses)
+                           .map(Collection::stream)
+                           .map(s -> s.anyMatch(status -> !status.isReady()))
+                           .map(aBoolean -> aBoolean ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL)
+                           .orElse(ContainerHealth.DOES_NOT_EXIST);
         } catch (ApiException e) {
             log.error("Exception when checking container health", e);
             return ContainerHealth.DOES_NOT_EXIST;

@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -29,7 +30,7 @@ public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Collection<Experiment> activeExperiments = new HashSet<>();
     private final Collection<Experiment> newExperimentQueue = new HashSet<>();
-    private final Map<Experiment, Future<Boolean>> startedExperiments = new HashMap<>();
+    private final Map<Experiment, Future<Boolean>> startedExperiments = new ConcurrentHashMap<>();
     private PlatformManager platformManager;
     private HolidayManager holidayManager;
     @Autowired
