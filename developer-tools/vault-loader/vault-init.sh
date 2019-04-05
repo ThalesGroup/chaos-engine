@@ -1,0 +1,1 @@
+vault kv put secret/chaosengine - < vault-secrets.json

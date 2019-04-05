@@ -11,7 +11,7 @@ services:
     environment:
       VAULT_10: "true"
     depends_on:
-    - vault
+      - vault-loader
     - datadog
   datadog:
     image: datadog/agent:latest
@@ -52,3 +52,8 @@ services:
     - IPC_LOCK
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: "00000000-0000-0000-0000-000000000000"
+  vault-loader:
+    build:
+      context: developer-tools/vault-loader
+    depends_on:
+      - vault
