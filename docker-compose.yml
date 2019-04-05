@@ -12,7 +12,7 @@ services:
       VAULT_10: "true"
     depends_on:
       - vault-loader
-    - datadog
+      - datadog
   datadog:
     image: datadog/agent:latest
     environment:
