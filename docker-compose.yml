@@ -57,3 +57,6 @@ services:
       context: developer-tools/vault-loader
     depends_on:
       - vault
+    environment:
+      VAULT_ADDR: "http://vault:8200/"
+      VAULT_TOKEN: "00000000-0000-0000-0000-000000000000"
