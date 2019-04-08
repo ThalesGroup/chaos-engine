@@ -33,4 +33,7 @@ ci/secret-vars.yml
 *.iws
 
 .env
+
+# Ignore files needed to startup development environment
 .datadog_api_key
+developer-tools/vault-loader/vault-secrets.json
