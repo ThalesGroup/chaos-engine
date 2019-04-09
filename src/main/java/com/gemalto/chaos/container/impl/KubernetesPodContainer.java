@@ -10,7 +10,6 @@ import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.impl.KubernetesPlatform;
-import com.google.common.base.Enums;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
@@ -181,7 +180,7 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.labels.putAll(this.labels);
             kubernetesPodContainer.dataDogTags.putAll(this.dataDogTags);
             kubernetesPodContainer.kubernetesPlatform = this.kubernetesPlatform;
-            kubernetesPodContainer.ownerKind = Enums.getIfPresent(ControllerKind.class, ownerKind).orNull();
+            kubernetesPodContainer.ownerKind = ControllerKind.mapFromString(this.ownerKind);
             kubernetesPodContainer.ownerName = ownerName;
             kubernetesPodContainer.subcontainers = this.subcontainers;
             try {

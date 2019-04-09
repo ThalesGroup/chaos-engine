@@ -67,7 +67,7 @@ public class KubernetesPodContainerTest {
 
     @Test
     public void testGetOwnerKind () {
-        assertEquals(ControllerKind.valueOf(OWNER_KIND), kubernetesPodContainer.getOwnerKind());
+        assertEquals(ControllerKind.DEPLOYMENT, kubernetesPodContainer.getOwnerKind());
     }
 
     @Test
