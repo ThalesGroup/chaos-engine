@@ -91,7 +91,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
      * <p>
      * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
      * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
-     * ReplicationController, ReplicaSet, StatefulSet, DaemonSet, Deployment, Job and CronJob
+     * REPLICATION_CONTROLLER, REPLICA_SET, STATEFUL_SET, DAEMON_SET, DEPLOYMENT, JOB and CRON_JOB
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
     public boolean isDesiredReplicas (KubernetesPodContainer instance) {
@@ -101,29 +101,29 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         }
         try {
             switch (instance.getOwnerKind()) {
-                case ReplicationController:
+                case REPLICATION_CONTROLLER:
                     V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (rc.getStatus().getReplicas().equals(rc.getStatus().getReadyReplicas()));
-                case ReplicaSet:
+                case REPLICA_SET:
                     V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (replicaSet.getStatus().getReplicas().equals(replicaSet.getStatus().getReadyReplicas()));
-                case StatefulSet:
+                case STATEFUL_SET:
                     V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
-                case DaemonSet:
+                case DAEMON_SET:
                     V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
                     return (daemonSet.getStatus()
                                      .getCurrentNumberScheduled()
                                      .equals(daemonSet.getStatus().getDesiredNumberScheduled()));
-                case Deployment:
+                case DEPLOYMENT:
                     V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
                     return (deployment.getStatus().getReplicas().equals(deployment.getStatus().getReadyReplicas()));
-                case Job:
-                case CronJob:
+                case JOB:
+                case CRON_JOB:
                     log.warn("Job containers are not supported");
                     return false;
                 default:

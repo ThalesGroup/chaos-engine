@@ -32,7 +32,7 @@ public class KubernetesPodContainerTest {
     private static final String NAME = randomUUID().toString();
     private static final String NAMESPACE_NAME = randomUUID().toString();
     private static final String OWNER_NAME = randomUUID().toString();
-    private static final String OWNER_KIND = ControllerKind.Deployment.toString();
+    private static final String OWNER_KIND = "Deployment";
     private static final Map<String, String> LABELS = Collections.emptyMap();
     private KubernetesPodContainer kubernetesPodContainer;
     @MockBean
@@ -67,7 +67,7 @@ public class KubernetesPodContainerTest {
 
     @Test
     public void testGetOwnerKind () {
-        assertEquals(ControllerKind.valueOf(OWNER_KIND), kubernetesPodContainer.getOwnerKind());
+        assertEquals(ControllerKind.DEPLOYMENT, kubernetesPodContainer.getOwnerKind());
     }
 
     @Test
