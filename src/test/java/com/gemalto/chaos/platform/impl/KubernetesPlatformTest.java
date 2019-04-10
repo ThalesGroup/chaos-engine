@@ -76,6 +76,35 @@ public class KubernetesPlatformTest {
     }
 
     @Test
+    public void testContainerHealthWithException () throws ApiException {
+        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
+                                                     .withReady(false)
+                                                     .endContainerStatus()
+                                                     .build();
+        V1Pod pod = getV1PodList(true).getItems().get(0);
+        pod.setStatus(status);
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(getV1PodList(true));
+        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException(HttpStatus.SC_NOT_FOUND, "Not Found"))
+                                                                    .thenThrow(new ApiException(HttpStatus.SC_FORBIDDEN, "Forbidden"));
+        assertEquals("Container no more exists", ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform
+                .getRoster()
+                .get(0)));
+        assertEquals("Undefined exception", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform
+                .getRoster()
+                .get(0)));
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenThrow(new ApiException());
+        assertEquals("Error while checking container presence", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform
+                .getRoster()
+                .get(0)));
+    }
+
+    private static V1PodList getV1PodList (boolean isBackedByController) {
+        return getV1PodList(isBackedByController, 1);
+    }
+
+    @Test
     public void testApiStatus () throws ApiException {
         V1APIVersions v1APIVersions = new V1APIVersionsBuilder().addToVersions("1")
                                                                 .withApiVersion("apiVersion")
@@ -105,29 +134,6 @@ public class KubernetesPlatformTest {
         when(platform.getDestructionProbability()).thenReturn(1D);
         assertEquals(1, platform.getRoster().size());
         assertTrue(platform.getRoster().get(0).canExperiment());
-    }
-
-    private static V1PodList getV1PodList (boolean isBackedByController) {
-        return getV1PodList(isBackedByController, 1);
-    }
-
-    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
-        List<V1OwnerReference> ownerReferences = new ArrayList<>();
-        if (isBackedByController) {
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
-                                                         .withName(POD_NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
-        V1PodList list = new V1PodList();
-        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
-        return list;
     }
 
     @Test
@@ -289,21 +295,23 @@ public class KubernetesPlatformTest {
                                                                                                                .get(0)));
     }
 
-    @Test
-    public void testContainerHealthWithException () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(false)
-                                                     .endContainerStatus()
-                                                     .build();
-        V1Pod pod = getV1PodList(true).getItems().get(0);
-        pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
-                .thenReturn(getV1PodList(true));
-        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException(HttpStatus.SC_NOT_FOUND, "Not Found"), new ApiException(HttpStatus.SC_FORBIDDEN, "Forbidden"));
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
-                                                                                                           .get(0)));
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
-                                                                                                               .get(0)));
+    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
+        List<V1OwnerReference> ownerReferences = new ArrayList<>();
+        if (isBackedByController) {
+            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
+        }
+        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
+                                                         .withName(POD_NAME)
+                                                         .withNamespace(NAMESPACE_NAME)
+                                                         .withLabels(new HashMap<>())
+                                                         .withOwnerReferences(ownerReferences)
+                                                         .build();
+        V1Pod pod = new V1Pod();
+        pod.setMetadata(metadata);
+        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
+        V1PodList list = new V1PodList();
+        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
+        return list;
     }
 
     @Test
@@ -319,8 +327,7 @@ public class KubernetesPlatformTest {
         //Test ReplicationController
         pods.getItems()
             .get(0)
-            .getMetadata()
-            .getOwnerReferences().get(0).setKind(ControllerKind.ReplicationController.toString());
+            .getMetadata().getOwnerReferences().get(0).setKind(ControllerKind.ReplicationController.toString());
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"), eq(pods.getItems()
                                                                                      .get(0)
