@@ -1,8 +1,10 @@
 package com.gemalto.chaos.platform.impl;
 
+import com.gemalto.chaos.constants.KubernetesConstants;
 import com.gemalto.chaos.container.ContainerManager;
 import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.container.impl.KubernetesPodContainer;
+import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.ControllerKind;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
@@ -16,6 +18,7 @@ import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.*;
 import junit.framework.TestCase;
 import org.apache.http.HttpStatus;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +33,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -583,6 +587,63 @@ public class KubernetesPlatformTest {
         assertEquals("Null container statuses", ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
         assertEquals("No ready containers", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth(kubernetesPodContainer));
         assertEquals("Containers ready", ContainerHealth.NORMAL, platform.checkHealth(kubernetesPodContainer));
+    }
+
+    @Test
+    public void testIsContainerRecycled () throws ApiException {
+        String subcontainerName = randomUUID().toString();
+        List<String> subContainers = new ArrayList<>();
+        subContainers.add(randomUUID().toString());
+        V1ContainerState containerState = mock(V1ContainerState.class);
+        V1ContainerStateRunning containerStateRunning = mock(V1ContainerStateRunning.class);
+        List<V1ContainerStatus> containerStatuses = new ArrayList<>();
+        V1ContainerStatus containerStatus = mock(V1ContainerStatus.class);
+        containerStatuses.add(containerStatus);
+        V1Pod pod = mock(V1Pod.class);
+        V1ObjectMeta metadata = mock(V1ObjectMeta.class);
+        V1PodStatus podStatus = mock(V1PodStatus.class);
+        when(metadata.getUid()).thenReturn(randomUUID().toString());
+        when(pod.getMetadata()).thenReturn(metadata);
+        when(pod.getStatus()).thenReturn(podStatus);
+        when(containerStatus.getState()).thenReturn(containerState);
+        when(containerStatus.getName()).thenReturn(subcontainerName);
+        when(containerState.getRunning()).thenReturn(containerStateRunning);
+        when(containerStateRunning.getStartedAt()).thenReturn(new DateTime(Long.MAX_VALUE), new DateTime(Long.MIN_VALUE));
+        when(podStatus.getContainerStatuses()).thenReturn(containerStatuses);
+        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        when(kubernetesPodContainer.getExperimentStartTime()).thenReturn(Instant.now());
+        when(kubernetesPodContainer.getTargetedSubcontainer()).thenReturn(subcontainerName);
+        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
+        assertEquals("Restarted", true, platform.isContainerRecycled(kubernetesPodContainer));
+        assertEquals("Not restarted", false, platform.isContainerRecycled(kubernetesPodContainer));
+    }
+
+    @Test
+    public void testIsContainerRecycledNotFound () throws ApiException {
+        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
+                                                                                                      .withReadyReplicas(1)
+                                                                                                      .build()).build();
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(new V1PodList());
+        when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.ReplicaSet);
+        when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
+        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException(KubernetesConstants.KUBERNETES_POD_NOT_FOUND_ERROR_MESSAGE));
+        assertEquals("Restarted", true, platform.isContainerRecycled(kubernetesPodContainer));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void testIsContainerRecycledAPIError () throws ApiException {
+        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
+                                                                                                      .withReadyReplicas(1)
+                                                                                                      .build()).build();
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(new V1PodList());
+        when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.ReplicaSet);
+        when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
+        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException("ERROR"));
+        platform.isContainerRecycled(kubernetesPodContainer);
     }
 
     @Configuration
