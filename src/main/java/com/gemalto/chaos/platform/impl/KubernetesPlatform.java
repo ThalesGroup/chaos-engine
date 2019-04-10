@@ -67,6 +67,61 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         this.namespace = namespace;
     }
 
+    public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
+        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
+    /**
+     * @param instance The Kubernetes Pod Container to retrieve Owner information from
+     * @return ContainerHealth
+     * <p>
+     * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
+     * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
+     * REPLICATION_CONTROLLER, REPLICA_SET, STATEFUL_SET, DAEMON_SET, DEPLOYMENT, JOB and CRON_JOB
+     * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
+     */
+    public boolean isDesiredReplicas (KubernetesPodContainer instance) {
+        //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
+        if (instance.getOwnerKind() == null) {
+            return false;
+        }
+        try {
+            switch (instance.getOwnerKind()) {
+                case REPLICATION_CONTROLLER:
+                    V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (rc.getStatus().getReplicas().equals(rc.getStatus().getReadyReplicas()));
+                case REPLICA_SET:
+                    V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (replicaSet.getStatus().getReplicas().equals(replicaSet.getStatus().getReadyReplicas()));
+                case STATEFUL_SET:
+                    V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
+                case DAEMON_SET:
+                    V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
+                    return (daemonSet.getStatus()
+                                     .getCurrentNumberScheduled()
+                                     .equals(daemonSet.getStatus().getDesiredNumberScheduled()));
+                case DEPLOYMENT:
+                    V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
+                            .getNamespace(), "true");
+                    return (deployment.getStatus().getReplicas().equals(deployment.getStatus().getReadyReplicas()));
+                case JOB:
+                case CRON_JOB:
+                    log.warn("Job containers are not supported");
+                    return false;
+                default:
+                    log.error("Found unsupported owner reference {}", instance.getOwnerKind());
+                    return false;
+            }
+        } catch (ApiException e) {
+            log.error("ApiException was thrown while checking desired replica count.", e);
+            return false;
+        }
+    }
+
     public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
         try {
             if (Boolean.FALSE.equals(podExists(kubernetesPodContainer))) {
@@ -175,61 +230,6 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                     .anyMatch(v1ContainerStateRunning -> v1ContainerStateRunning.getStartedAt()
                                                                                 .isAfter(container.getExperimentStartTime()
                                                                                                   .toEpochMilli()));
-    }
-
-    public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
-        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    /**
-     * @param instance The Kubernetes Pod Container to retrieve Owner information from
-     * @return ContainerHealth
-     * <p>
-     * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
-     * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
-     * ReplicationController, ReplicaSet, StatefulSet, DaemonSet, Deployment, Job and CronJob
-     * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
-     */
-    public boolean isDesiredReplicas (KubernetesPodContainer instance) {
-        //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
-        if (instance.getOwnerKind() == null) {
-            return false;
-        }
-        try {
-            switch (instance.getOwnerKind()) {
-                case ReplicationController:
-                    V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (rc.getStatus().getReplicas().equals(rc.getStatus().getReadyReplicas()));
-                case ReplicaSet:
-                    V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (replicaSet.getStatus().getReplicas().equals(replicaSet.getStatus().getReadyReplicas()));
-                case StatefulSet:
-                    V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
-                case DaemonSet:
-                    V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
-                    return (daemonSet.getStatus()
-                                     .getCurrentNumberScheduled()
-                                     .equals(daemonSet.getStatus().getDesiredNumberScheduled()));
-                case Deployment:
-                    V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (deployment.getStatus().getReplicas().equals(deployment.getStatus().getReadyReplicas()));
-                case Job:
-                case CronJob:
-                    log.warn("Job containers are not supported");
-                    return false;
-                default:
-                    log.error("Found unsupported owner reference {}", instance.getOwnerKind());
-                    return false;
-            }
-        } catch (ApiException e) {
-            log.error("ApiException was thrown while checking desired replica count.", e);
-            return false;
-        }
     }
 
     KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
