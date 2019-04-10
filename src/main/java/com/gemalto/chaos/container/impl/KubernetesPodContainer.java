@@ -19,6 +19,7 @@ import static com.gemalto.chaos.exception.enums.KubernetesChaosErrorCode.POD_HAS
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class KubernetesPodContainer extends Container {
+    private String UUID;
     private String podName;
     private String namespace;
     private Map<String, String> labels = new HashMap<>();
@@ -36,6 +37,10 @@ public class KubernetesPodContainer extends Container {
 
     public static KubernetesPodContainerBuilder builder () {
         return KubernetesPodContainerBuilder.aKubernetesPodContainer();
+    }
+
+    public String getUUID () {
+        return UUID;
     }
 
     public String getPodName () {
@@ -110,6 +115,7 @@ public class KubernetesPodContainer extends Container {
     }
 
     public static final class KubernetesPodContainerBuilder {
+        private String UUID;
         private final Map<String, String> labels = new HashMap<>();
         private final Map<String, String> dataDogTags = new HashMap<>();
         private String podName;
@@ -172,8 +178,14 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
+        public KubernetesPodContainerBuilder withUUID (String UUID) {
+            this.UUID = UUID;
+            return this;
+        }
+
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
+            kubernetesPodContainer.UUID = this.UUID;
             kubernetesPodContainer.podName = this.podName;
             kubernetesPodContainer.namespace = this.namespace;
             kubernetesPodContainer.isBackedByController = this.isBackedByController;
