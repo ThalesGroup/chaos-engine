@@ -24,7 +24,7 @@
         <java.version>11</java.version>
         <aws.sdk.version>1.11.357</aws.sdk.version>
         <pcf.sdk.version>3.13.0.RELEASE</pcf.sdk.version>
-        <spring-cloud.version>2.0.1.RELEASE</spring-cloud.version>
+        <spring-cloud.version>2.1.1.RELEASE</spring-cloud.version>
     </properties>
 
     <dependencies>
