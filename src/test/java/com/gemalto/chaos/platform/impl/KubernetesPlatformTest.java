@@ -653,6 +653,15 @@ public class KubernetesPlatformTest {
         platform.isContainerRecycled(kubernetesPodContainer);
     }
 
+    @Test
+    public void testRecycleContainer () throws ApiException {
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(getV1PodList(true));
+        KubernetesPodContainer container = mock(KubernetesPodContainer.class);
+        platform.recycleContainer(container);
+        verify(platform, times(1)).deletePod(container);
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired
