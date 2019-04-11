@@ -19,7 +19,7 @@ public class ControllerKindTest {
         this.enumName = enumName;
     }
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{0}")
     public static List<Object[]> parameters () {
         return Arrays.asList(new Object[]{ "ReplicationController", ControllerKind.REPLICATION_CONTROLLER }, new Object[]{ "ReplicaSet", ControllerKind.REPLICA_SET }, new Object[]{ "Deployment", ControllerKind.DEPLOYMENT }, new Object[]{ "StatefulSet", ControllerKind.STATEFUL_SET }, new Object[]{ "DaemonSet", ControllerKind.DAEMON_SET }, new Object[]{ "Job", ControllerKind.JOB }, new Object[]{ "CronJob", ControllerKind.CRON_JOB }, new Object[]{ "Bogus", null });
     }
