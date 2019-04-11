@@ -37,6 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -680,9 +681,9 @@ public class AwsRDSPlatformTest {
     @Test
     public void getDBSnapshotIdentifier () {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
-        Instant before = Instant.now();
+        Instant before = Instant.now().minus(Duration.ofSeconds(1));
         String actual = awsRDSPlatform.getDBSnapshotIdentifier(dbInstanceIdentifier);
-        Instant after = Instant.now();
+        Instant after = Instant.now().plus(Duration.ofSeconds(1));
         Matcher m = CalendarUtils.datePattern.matcher(actual);
         assertTrue("Could not extract date-time from snapshot identifier", m.find());
 
@@ -760,7 +761,7 @@ public class AwsRDSPlatformTest {
     @Test
     public void snapshotIsOlderThan () {
         int minutes = new Random().nextInt(23 * 60) + 30;
-        Instant baseTime = Instant.now().minus(Duration.ofMinutes(minutes));
+        Instant baseTime = Instant.now().minus(Duration.ofMinutes(minutes)).truncatedTo(ChronoUnit.MILLIS);
         Instant olderTime = baseTime.minus(Duration.ofMinutes(20));
         Instant newerTime = baseTime.plus(Duration.ofMinutes(20));
         String olderSnapshotName = String.format("ChaosSnapshot-%s-%s", randomUUID(), olderTime)

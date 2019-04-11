@@ -29,7 +29,7 @@ public class AwsRDSUtils {
     }
 
     public static String generateSnapshotName (@NotNull String identifier) {
-        String timestamp = Instant.now().toString();
+        String timestamp = new DateTimeFormatterBuilder().appendInstant(3).toFormatter().format(Instant.now());
         String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp)
                               .replaceAll(":", "-")
                               .replaceAll(",", "-")
