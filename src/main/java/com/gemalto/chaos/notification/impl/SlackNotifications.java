@@ -45,7 +45,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = Collections.unmodifiableList(Arrays.asList("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer"));
+    private final Collection<String> knownChaosEventFields = List.of("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {

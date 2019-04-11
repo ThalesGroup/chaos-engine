@@ -690,8 +690,8 @@ public class AwsRDSPlatformTest {
         String dateSection = m.group(1);
         Instant i = AwsRDSUtils.getInstantFromNameSegment(dateSection);
         assertEquals(actual, String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, dateSection));
-        assertTrue("Snapshot given timestamp in the past", !before.isAfter(i));
-        assertTrue("Snapshot given time in the future", !after.isBefore(i));
+        assertFalse(before.isAfter(i));
+        assertFalse(after.isBefore(i));
     }
 
     @Test

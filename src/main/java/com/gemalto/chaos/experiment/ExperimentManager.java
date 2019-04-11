@@ -163,7 +163,7 @@ public class ExperimentManager {
                                                                  .filter(platform1 -> !platform1.getRoster().isEmpty())
                                                                  .min(Comparator.comparingLong(platform -> platform.getNextChaosTime()
                                                                                                                    .toEpochMilli()));
-            if (!eligiblePlatform.isPresent()) {
+            if (eligiblePlatform.isEmpty()) {
                 log.debug("No platforms eligible for experiments");
                 return Collections.emptySet();
             }

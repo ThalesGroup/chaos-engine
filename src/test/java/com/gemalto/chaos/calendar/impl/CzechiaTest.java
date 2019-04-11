@@ -51,11 +51,11 @@ public class CzechiaTest {
         //June 21, 2018 4:59:59 PM GMT(True)
         Assert.assertTrue(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529593199)));
         //  June 21, 2018 5:00:00 PM GMT (False) (One second difference from above)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529593200)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529593200)));
         //  June 21, 2018 6:00:00 AM GMT (False)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529553600)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529553600)));
         //  June 21, 2018 6:00:00 PM GMT (False)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529596800)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1529596800)));
     }
 
     @Test
