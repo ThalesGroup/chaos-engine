@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
@@ -160,7 +161,8 @@ public class ExperimentManager {
                                                                  .stream()
                                                                  .peek(platform -> platform.usingHolidayManager(holidayManager))
                                                                  .filter(platform1 -> force || platform1.canExperiment())
-                                                                 .filter(platform1 -> !platform1.getRoster().isEmpty())
+                                                                 .filter(not(platform1 -> platform1.getRoster()
+                                                                                                   .isEmpty()))
                                                                  .min(Comparator.comparingLong(platform -> platform.getNextChaosTime()
                                                                                                                    .toEpochMilli()));
             if (eligiblePlatform.isEmpty()) {
