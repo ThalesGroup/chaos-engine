@@ -12,7 +12,6 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -75,11 +74,7 @@ public class ShellScript implements Script {
     }
 
     private void buildCommentBlock () {
-        commentBlock = new ArrayList<>();
-        for (String s : scriptContents.split("\n")) {
-            if (!s.startsWith("#")) break;
-            commentBlock.add(s);
-        }
+        commentBlock = scriptContents.lines().takeWhile(s -> s.startsWith("#")).collect(Collectors.toList());
         log.debug("Comment block evaluated to be {}", v("scriptCommentBlock", commentBlock));
     }
 
