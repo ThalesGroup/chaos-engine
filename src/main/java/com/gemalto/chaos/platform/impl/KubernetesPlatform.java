@@ -161,7 +161,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     private V1PodList listAllPodsInNamespace () throws ApiException {
-        return coreV1Api.listNamespacedPod(namespace, "", "", "", true, "", 0, "", 0, false);
+        return coreV1Api.listNamespacedPod(namespace, true, "", "", "", "", 0, "", 0, false);
     }
 
     @Override
@@ -274,7 +274,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
-            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);
+            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null, "Foreground");
         } catch (JsonSyntaxException e1) {
             log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
         } catch (ApiException e) {

@@ -69,7 +69,7 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testPodWithoutOwnerCannotBeTested () throws Exception {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(false));
         assertEquals(1, platform.getRoster().size());
         assertFalse(platform.getRoster().get(0).canExperiment());
@@ -83,7 +83,7 @@ public class KubernetesPlatformTest {
                                                      .build();
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException(HttpStatus.SC_NOT_FOUND, "Not Found"))
                                                                     .thenThrow(new ApiException(HttpStatus.SC_FORBIDDEN, "Forbidden"));
@@ -93,7 +93,7 @@ public class KubernetesPlatformTest {
         assertEquals("Undefined exception", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenThrow(new ApiException());
         assertEquals("Error while checking container presence", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform
                 .getRoster()
@@ -118,14 +118,14 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testPlatformHealth () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         assertEquals(PlatformHealth.OK, platform.getPlatformHealth());
     }
 
     @Test
     public void testPodWithOwnerCanBeTested () throws Exception {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(platform.getDestructionProbability()).thenReturn(1D);
         assertEquals(1, platform.getRoster().size());
@@ -140,7 +140,7 @@ public class KubernetesPlatformTest {
                                                      .build();
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
         assertEquals(ContainerHealth.NORMAL, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
@@ -149,43 +149,43 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testDeletePod () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         boolean result = platform.deletePod((KubernetesPodContainer) platform.getRoster().get(0));
         assertTrue(result);
-        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
+        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     public void testDeletePodAPIException () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
-        when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
+        when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(new ApiException());
         boolean result = platform.deletePod((KubernetesPodContainer) platform.getRoster().get(0));
         assertFalse(result);
-        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
+        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     public void testDeletePodJSONSyntaxException () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
-        when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any())).thenThrow(new JsonSyntaxException(""));
+        when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(new JsonSyntaxException(""));
         boolean result = platform.deletePod((KubernetesPodContainer) platform.getRoster().get(0));
         assertTrue(result);
-        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any());
+        verify(coreV1Api, times(1)).deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     public void testRoasterWithAPIException () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenThrow(new ApiException());
         assertEquals(0, platform.getRoster().size());
     }
 
     @Test
     public void testPlatformHealthNoNamespacesToTest () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true, 0));
         assertEquals(PlatformHealth.DEGRADED, platform.getPlatformHealth());
     }
@@ -193,7 +193,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasReplicationController () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         //Test ReplicationController
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicationController");
@@ -216,7 +216,7 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testPlatformHealthNotAvailable () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenThrow(new ApiException());
         assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
     }
@@ -235,7 +235,7 @@ public class KubernetesPlatformTest {
                                                                               .withUUID(randomUUID().toString())
                                                                               .withOwnerKind("")
                                                                               .build();
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(list);
         assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
     }
@@ -259,7 +259,7 @@ public class KubernetesPlatformTest {
                                                      .build();
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
@@ -286,7 +286,7 @@ public class KubernetesPlatformTest {
         assertEquals(3, status.getContainerStatuses().size());
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
         assertEquals(ContainerHealth.NORMAL, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
@@ -308,7 +308,7 @@ public class KubernetesPlatformTest {
         assertEquals(3, status.getContainerStatuses().size());
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform.getRoster()
@@ -346,7 +346,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasReplicaSet () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicaSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -369,7 +369,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasStatefulSet () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("StatefulSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -392,7 +392,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasDeployment () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Deployment");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -415,7 +415,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasDaemonSet () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("DaemonSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -440,7 +440,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasJob () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ControllerKind");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -450,7 +450,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasException () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("DaemonSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
@@ -464,7 +464,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasCronJob () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("CronJob");
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
@@ -473,7 +473,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testCheckDesiredReplicasUnsupportedKind () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("CronJob");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Unsupported");
@@ -484,7 +484,7 @@ public class KubernetesPlatformTest {
     @Test
     public void replicaSetRecovered () throws ApiException {
         V1PodList pods = getV1PodList(randomUUID().toString());
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         pods.getItems()
             .get(0)
@@ -520,7 +520,7 @@ public class KubernetesPlatformTest {
     @Test
     public void replicaSetRecoveredContainerExists () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems()
             .get(0)
@@ -539,7 +539,7 @@ public class KubernetesPlatformTest {
     @Test
     public void replicaSetRecoveredNotInDesiredState () throws ApiException {
         V1PodList pods = getV1PodList(true);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
         pods.getItems()
             .get(0)
@@ -573,7 +573,7 @@ public class KubernetesPlatformTest {
         final V1Pod v1Pod = mock(V1Pod.class);
         final V1PodStatus v1PodStatus = mock(V1PodStatus.class);
         final V1ContainerStatus v1ContainerStatus = mock(V1ContainerStatus.class);
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(UUID));
         doReturn(null, v1Pod).when(coreV1Api).readNamespacedPodStatus(podName, namespace, "true");
         doReturn(null, v1PodStatus).when(v1Pod).getStatus();
@@ -621,7 +621,7 @@ public class KubernetesPlatformTest {
         V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
                                                                                                       .withReadyReplicas(1)
                                                                                                       .build()).build();
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(new V1PodList());
         when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.REPLICA_SET);
         when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
@@ -635,7 +635,7 @@ public class KubernetesPlatformTest {
         V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
                                                                                                       .withReadyReplicas(1)
                                                                                                       .build()).build();
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(new V1PodList());
         when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.REPLICA_SET);
         when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
@@ -645,7 +645,7 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testRecycleContainer () throws ApiException {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(getV1PodList(true));
         KubernetesPodContainer container = mock(KubernetesPodContainer.class);
         platform.recycleContainer(container);
