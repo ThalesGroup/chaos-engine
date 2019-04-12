@@ -3,6 +3,7 @@ package com.gemalto.chaos.scripts.impl;
 import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.scripts.Script;
+import com.gemalto.chaos.util.ShellUtils;
 import com.gemalto.chaos.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.SHELL_SCRIPT_READ_FAILURE;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class ShellScript implements Script {
@@ -74,7 +76,7 @@ public class ShellScript implements Script {
     }
 
     private void buildCommentBlock () {
-        commentBlock = scriptContents.lines().takeWhile(s -> s.startsWith("#")).collect(Collectors.toList());
+        commentBlock = scriptContents.lines().takeWhile(ShellUtils::isCommentedLine).collect(Collectors.toList());
         log.debug("Comment block evaluated to be {}", v("scriptCommentBlock", commentBlock));
     }
 
@@ -89,11 +91,11 @@ public class ShellScript implements Script {
                                                          .findFirst();
         dependencies = dependencyComment.map(s -> Arrays.stream(s.substring("# Dependencies".length()).split(","))
                                                         .map(ShellScript::stripNonAlphasFromEnd)
-                                                        .filter(s1 -> !s1.isEmpty())
+                                                        .filter(not(String::isEmpty))
                                                         .collect(Collectors.toSet()))
                                         .orElseGet(() -> Arrays.stream(scriptContents.split("\n"))
-                                                               .filter(s -> !s.startsWith("#"))
-                                                               .filter(s -> !s.isEmpty())
+                                                               .filter(not(ShellUtils::isCommentedLine))
+                                                               .filter(not(String::isEmpty))
                                                                .map(ShellScript::stripNonAlphasFromEnd)
                                                                .map(s -> s.split(" ")[0])
                                                                .map(ShellScript::stripNonAlphasFromEnd)
