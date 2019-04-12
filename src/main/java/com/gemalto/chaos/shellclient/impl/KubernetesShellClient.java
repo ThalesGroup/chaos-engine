@@ -54,10 +54,16 @@ public class KubernetesShellClient implements ShellClient {
             proc = exec.exec(namespace, podName, command, containerName, false, false);
             int exitCode = proc.waitFor();
             if (getOutput) {
-                return ShellOutput.builder()
-                                  .withExitCode(exitCode)
-                                  .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset()))
-                                  .build();
+                ShellOutput shellOutput = ShellOutput.builder()
+                                                     .withExitCode(exitCode)
+                                                     .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset
+                                                             .defaultCharset()))
+                                                     .build();
+                if (exitCode > 0) {
+                    log.debug("Command execution failed", v("exitCode", shellOutput.getExitCode()), v("stdout", shellOutput
+                            .getStdOut()), v("stderr", shellOutput.getStdErr()));
+                }
+                return shellOutput;
             } else {
                 return ShellOutput.EMPTY_SHELL_OUTPUT;
             }
