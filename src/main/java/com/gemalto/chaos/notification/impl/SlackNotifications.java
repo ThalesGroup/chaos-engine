@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_SEND_ERROR;
+import static java.util.function.Predicate.not;
 
 @Component
 @ConditionalOnProperty({ "slack_webhookuri" })
@@ -45,7 +46,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = Collections.unmodifiableList(Arrays.asList("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer"));
+    private final Collection<String> knownChaosEventFields = List.of("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -108,10 +109,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withCodeField(RAW_EVENT, chaosEvent.toString())
                                  .withMarkupIn(SlackAttachment.MarkupOpts.fields)
                                  .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
-        chaosEvent.asMap()
-                  .entrySet()
-                  .stream()
-                  .filter(e -> !knownChaosEventFields.contains(e.getKey().toString()))
+        chaosEvent.asMap().entrySet().stream().filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
                   .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
                                                                                           .toString()), e.getValue()
                                                                                                          .toString()));

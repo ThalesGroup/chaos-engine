@@ -70,12 +70,12 @@ public class ExpiringTest {
     @Test
     public void testConstructor () {
         final Expiring<Object> t = new Expiring<>(object, Instant.now());
-        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t.isExpired());
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(t::isExpired);
         assertNull(t.computeIfAbsent(() -> {
             throw new Exception();
         }, -1000L));
         final Expiring<Object> t2 = new Expiring<>(object, -1000L);
-        await().atLeast(100, TimeUnit.MILLISECONDS).until(() -> t2.isExpired());
+        await().atLeast(100, TimeUnit.MILLISECONDS).until(t2::isExpired);
         assertNull(t2.computeIfAbsent(() -> {
             throw new Exception();
         }, -1000L));

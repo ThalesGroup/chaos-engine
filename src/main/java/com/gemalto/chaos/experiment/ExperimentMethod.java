@@ -35,9 +35,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         experimentMethod.actualBiconsumer = (container, experiment) -> {
             try {
                 method.invoke(container, experiment);
-            } catch (IllegalAccessException e) {
-                throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
-            } catch (InvocationTargetException e) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
             }
         };

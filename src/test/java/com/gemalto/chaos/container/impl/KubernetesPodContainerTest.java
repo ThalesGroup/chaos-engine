@@ -72,7 +72,7 @@ public class KubernetesPodContainerTest {
 
     @Test
     public void testCanExperiment () {
-        assertTrue(kubernetesPodContainer.canExperiment() == true || kubernetesPodContainer.canExperiment() == false);
+        assertTrue(kubernetesPodContainer.canExperiment() || !kubernetesPodContainer.canExperiment());
     }
 
     @Test
