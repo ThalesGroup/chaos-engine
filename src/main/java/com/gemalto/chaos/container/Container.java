@@ -33,6 +33,7 @@ import java.util.zip.CRC32;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.*;
 import static com.gemalto.chaos.util.MethodUtils.getMethodsWithAnnotation;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
@@ -118,8 +119,8 @@ public abstract class Container implements ExperimentalObject {
         output.append("Container type: ");
         output.append(this.getClass().getSimpleName());
         Arrays.stream(this.getClass().getDeclaredFields())
-              .filter(field -> !Modifier.isTransient(field.getModifiers()))
-              .filter(field -> !field.isSynthetic())
+              .filter(not(field -> Modifier.isTransient(field.getModifiers())))
+              .filter(not(Field::isSynthetic))
               .forEachOrdered(field -> {
                   field.setAccessible(true);
                   try {

@@ -97,7 +97,7 @@ public class ErrorCodeTest {
             this.locale = locale;
         }
 
-        @Parameterized.Parameters
+        @Parameterized.Parameters(name = "{0}")
         public static Collection<Object[]> getLocales () {
             final List<Object[]> locales = new ArrayList<>();
             locales.add(new Locale[]{ Locale.US });

@@ -1,11 +1,11 @@
-FROM maven:3.6-jdk-8-alpine AS build-env
+FROM maven:3.6-jdk-11-slim AS build-env
 WORKDIR /chaosengine
 ADD pom.xml /chaosengine
 RUN mvn dependency:go-offline -Dsilent=true
 ADD src /chaosengine/src
 RUN cd /chaosengine && mvn clean test package
 
-FROM openjdk:8-jre-alpine AS develop
+FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
 COPY --from=build-env /chaosengine/target/chaosengine.jar /
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT

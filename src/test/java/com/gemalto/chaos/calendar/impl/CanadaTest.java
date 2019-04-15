@@ -71,11 +71,11 @@ public class CanadaTest {
         // 2018-06-13 20:59:59 GMT (True)
         Assert.assertTrue(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528923599)));
         // 2018-06-13 21:00:00 GMT (False) (One second difference from above)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528923600)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528923600)));
         // 2018-06-13 12:14:43 GMT (False)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528892083)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528892083)));
         // 2018-06-10 12:00:00 Eastern (False)
-        Assert.assertTrue(!holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528646400)));
+        Assert.assertFalse(holidayCalendar.isWorkingHours(Instant.ofEpochSecond(1528646400)));
     }
 
     @Test

@@ -37,6 +37,7 @@ import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.AWS_EC2_GENERIC_API_ERROR;
 import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NO_INSTANCES_RETURNED;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -129,7 +130,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                                         .stream()
                                                         .map(Reservation::getInstances)
                                                         .flatMap(Collection::parallelStream)
-                                                        .filter(instance -> !awsEC2SelfAwareness.isMe(instance.getInstanceId()))
+                                                        .filter(not(instance -> awsEC2SelfAwareness.isMe(instance.getInstanceId())))
                                                         .map(this::createContainerFromInstance)
                                                         .filter(Objects::nonNull)
                                                         .collect(Collectors.toSet()));
@@ -179,7 +180,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         if (!(container instanceof AwsEC2Container)) return false;
         awsEC2Container = (AwsEC2Container) container;
         String instanceId = awsEC2Container.getInstanceId();
-        return getInstanceStream().filter(instance -> !instance.getState().getCode().equals(AWS_TERMINATED_CODE))
+        return getInstanceStream().filter(not(instance -> instance.getState().getCode().equals(AWS_TERMINATED_CODE)))
                                   .noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
     }
 

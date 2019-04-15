@@ -48,6 +48,7 @@ import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
 import static com.gemalto.chaos.container.enums.ContainerHealth.*;
 import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.*;
 import static java.util.Arrays.asList;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.*;
@@ -132,9 +133,7 @@ public class AwsRDSPlatform extends Platform {
         Map<String, List<AwsContainer>> availabilityZoneMap = getRoster().stream()
                                                                          .map(AwsContainer.class::cast)
                                                                          .collect(groupingBy(AwsContainer::getAvailabilityZone));
-        final String[] availabilityZones = availabilityZoneMap.keySet()
-                                                              .stream()
-                                                              .filter(s -> !s.equals(NO_AZ_INFORMATION))
+        final String[] availabilityZones = availabilityZoneMap.keySet().stream().filter(not(NO_AZ_INFORMATION::equals))
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
