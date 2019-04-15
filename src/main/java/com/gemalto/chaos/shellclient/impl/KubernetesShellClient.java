@@ -80,7 +80,7 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     ShellOutput runCommand (String command, boolean getOutput) {
-        return runCommand(command.split(" "), getOutput);
+        return runCommand(new String[]{ "sh", "-c", command }, getOutput);
     }
 
     String copyResourceToPath (Resource resource) throws IOException {
