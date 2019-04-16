@@ -7,6 +7,7 @@ import com.gemalto.chaos.exception.ChaosException;
 import com.gemalto.chaos.experiment.Experiment;
 import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.platform.impl.AwsEC2Platform;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +53,28 @@ public class AwsEC2ContainerTest {
                                                      .name(NAME)
                                                      .groupIdentifier(GROUP_IDENTIFIER)
                                                      .build());
+    }
+
+    @Test
+    public void getAggegationIdentifier () {
+        Assert.assertEquals(GROUP_IDENTIFIER, AwsEC2Container.builder()
+                                                             .instanceId(INSTANCE_ID)
+                                                             .name(NAME)
+                                                             .groupIdentifier(GROUP_IDENTIFIER)
+                                                             .build()
+                                                             .getAggregationIdentifier());
+        Assert.assertEquals(NAME, AwsEC2Container.builder()
+                                                 .instanceId(INSTANCE_ID)
+                                                 .name(NAME)
+                                                 .groupIdentifier(AwsEC2Constants.NO_GROUPING_IDENTIFIER)
+                                                 .build()
+                                                 .getAggregationIdentifier());
+        Assert.assertEquals(INSTANCE_ID, AwsEC2Container.builder()
+                                                        .instanceId(INSTANCE_ID)
+                                                        .name("")
+                                                        .groupIdentifier(AwsEC2Constants.NO_GROUPING_IDENTIFIER)
+                                                        .build()
+                                                        .getAggregationIdentifier());
     }
 
     @Test

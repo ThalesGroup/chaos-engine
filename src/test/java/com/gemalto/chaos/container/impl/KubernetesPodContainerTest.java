@@ -56,6 +56,11 @@ public class KubernetesPodContainerTest {
     }
 
     @Test
+    public void getAggegationIdentifier () {
+        assertEquals(OWNER_NAME, kubernetesPodContainer.getAggregationIdentifier());
+    }
+
+    @Test
     public void getPlatform () {
         assertEquals(kubernetesPlatform, kubernetesPodContainer.getPlatform());
     }
