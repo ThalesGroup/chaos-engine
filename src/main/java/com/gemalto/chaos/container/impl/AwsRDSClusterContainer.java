@@ -54,6 +54,11 @@ public class AwsRDSClusterContainer extends AwsContainer {
     }
 
     @Override
+    public String getAggregationIdentifier () {
+        return dbClusterIdentifier;
+    }
+
+    @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return DataDogIdentifier.dataDogIdentifier()
                                 .withKey(AWS_RDS_CLUSTER_DATADOG_IDENTIFIER)

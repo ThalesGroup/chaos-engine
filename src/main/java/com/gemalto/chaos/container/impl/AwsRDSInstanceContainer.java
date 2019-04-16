@@ -48,6 +48,11 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return getDbInstanceIdentifier();
     }
 
+    @Override
+    public String getAggregationIdentifier () {
+        return dbInstanceIdentifier;
+    }
+
     @StateExperiment
     public void restartInstance (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
