@@ -573,6 +573,11 @@ public class ExperimentTest {
         }
 
         @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
         public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }
@@ -610,6 +615,11 @@ public class ExperimentTest {
         }
 
         @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
         public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }
@@ -633,6 +643,11 @@ public class ExperimentTest {
 
         @Override
         public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
             return null;
         }
 
