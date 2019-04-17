@@ -56,14 +56,14 @@ public class ChaosExceptionTest {
     @Test(expected = ChaosException.class)
     public void nestedChaosException () {
         final ChaosErrorCode errorCode = GENERIC_FAILURE;
-        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
-        final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
-        final ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
-        logger.addAppender(appender);
-        logger.setLevel(Level.ERROR);
         final ChaosException cause = new ChaosException(errorCode);
         final String expected = String.format("Rewrapped %s: %s", cause.getClass()
                                                                        .getSimpleName(), errorCode.getFormattedMessage());
+        final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
+        final ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
+        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
+        logger.addAppender(appender);
+        logger.setLevel(Level.ERROR);
         final RuntimeException e = new ChaosException(API_EXCEPTION, cause);
         Mockito.verify(appender, times(1)).doAppend(iLoggingEventCaptor.capture());
         final ILoggingEvent loggingEvent = iLoggingEventCaptor.getValue();
