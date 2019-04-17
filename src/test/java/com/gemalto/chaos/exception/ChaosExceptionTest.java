@@ -4,16 +4,21 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AppenderBase;
+import com.gemalto.chaos.exception.enums.ChaosErrorCode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import static com.gemalto.chaos.exception.enums.ChaosErrorCode.API_EXCEPTION;
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.GENERIC_FAILURE;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChaosExceptionTest {
@@ -51,21 +56,22 @@ public class ChaosExceptionTest {
 
     @Test(expected = ChaosException.class)
     public void nestedChaosException () {
-        final AtomicBoolean loggerCalled = new AtomicBoolean(false);
-        Appender<ILoggingEvent> appender = new AppenderBase<>() {
-            @Override
-            protected void append (ILoggingEvent loggingEvent) {
-                assertEquals(Level.ERROR, loggingEvent.getLevel());
-                assertEquals("Rewrapped ChaosException: 10000: A generic error has occurred", loggingEvent.getMessage());
-                loggerCalled.set(true);
-            }
-        };
-        appender.start();
-        Logger logger = (Logger) LoggerFactory.getLogger(getClass());
+        final ChaosErrorCode errorCode = GENERIC_FAILURE;
+        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
+        final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
+        final ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
         logger.addAppender(appender);
         logger.setLevel(Level.ERROR);
-        RuntimeException e = new ChaosException(GENERIC_FAILURE, new ChaosException(GENERIC_FAILURE));
-        assertTrue("Logger should have been called", loggerCalled.get());
+        doReturn("MOCK").when(appender).getName();
+        final ChaosException cause = new ChaosException(errorCode);
+        final String expected = String.format("Rewrapped %s: %d: %s", cause.getClass()
+                                                                           .getSimpleName(), errorCode.getErrorCode(), errorCode
+                .getLocalizedMessage());
+        final RuntimeException e = new ChaosException(API_EXCEPTION, cause);
+        Mockito.verify(appender, times(1)).doAppend(iLoggingEventCaptor.capture());
+        final ILoggingEvent loggingEvent = iLoggingEventCaptor.getValue();
+        assertEquals(Level.ERROR, loggingEvent.getLevel());
+        assertEquals(expected, loggingEvent.getMessage());
         throw e;
     }
 }
