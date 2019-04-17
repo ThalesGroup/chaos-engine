@@ -20,12 +20,12 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NOT_PART_OF_ASG;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
@@ -90,8 +90,8 @@ public class AwsEC2Container extends AwsContainer {
     public String getAggregationIdentifier () {
         return Stream.of(groupIdentifier, name)
                      .filter(Objects::nonNull)
-                     .filter(Predicate.not(String::isBlank))
-                     .filter(identifier -> !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(identifier))
+                     .filter(not(String::isBlank))
+                     .filter(not(AwsEC2Constants.NO_GROUPING_IDENTIFIER::equals))
                      .findFirst()
                      .orElse(instanceId);
     }
