@@ -64,9 +64,8 @@ public class ChaosExceptionTest {
         logger.setLevel(Level.ERROR);
         doReturn("MOCK").when(appender).getName();
         final ChaosException cause = new ChaosException(errorCode);
-        final String expected = String.format("Rewrapped %s: %d: %s", cause.getClass()
-                                                                           .getSimpleName(), errorCode.getErrorCode(), errorCode
-                .getLocalizedMessage());
+        final String expected = String.format("Rewrapped %s: %s", cause.getClass()
+                                                                       .getSimpleName(), errorCode.getFormattedMessage());
         final RuntimeException e = new ChaosException(API_EXCEPTION, cause);
         Mockito.verify(appender, times(1)).doAppend(iLoggingEventCaptor.capture());
         final ILoggingEvent loggingEvent = iLoggingEventCaptor.getValue();
