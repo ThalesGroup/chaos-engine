@@ -16,7 +16,6 @@ import static com.gemalto.chaos.exception.enums.ChaosErrorCode.API_EXCEPTION;
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.GENERIC_FAILURE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -62,7 +61,6 @@ public class ChaosExceptionTest {
         final ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
         logger.addAppender(appender);
         logger.setLevel(Level.ERROR);
-        doReturn("MOCK").when(appender).getName();
         final ChaosException cause = new ChaosException(errorCode);
         final String expected = String.format("Rewrapped %s: %s", cause.getClass()
                                                                        .getSimpleName(), errorCode.getFormattedMessage());
