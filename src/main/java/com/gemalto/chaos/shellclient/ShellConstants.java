@@ -5,7 +5,7 @@ public class ShellConstants {
     public static final int EOT_CHARACTER = 0x04;
     public static final int CHMOD_744 = 484; // 0744 in Octal
     public static final int CHMOD_644 = 420; // 0644 in Octal
-
+    public static final String PARAMETER_DELIMITER = " ";
     private ShellConstants () {
     }
 }
