@@ -24,7 +24,6 @@ public class ShellClientTest {
 
     public ShellClientTest (SortedMap<String, Integer> commandAndExitCode) {
         this.commandAndExitCode = commandAndExitCode;
-        System.out.println(this.commandAndExitCode);
     }
 
     @Parameterized.Parameters(name = "{0}")
