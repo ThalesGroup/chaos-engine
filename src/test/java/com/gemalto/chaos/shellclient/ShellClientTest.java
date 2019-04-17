@@ -1,63 +1,81 @@
 package com.gemalto.chaos.shellclient;
 
-import com.google.common.primitives.Ints;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class ShellClientTest {
+    private static final String capability = UUID.randomUUID().toString();
+    private static final List<String> commandsInOrder = List.of("command -v", "which", "type");
+    private static final List<Integer> exitCodes = List.of(0, 1, 127);
+    private final SortedMap<String, Integer> commandAndExitCode;
     private ShellClient shellClient;
-    private final String capability = randomUUID().toString();
-    private boolean expected;
-    private Map<String, Integer> commandAndExitCode;
+    private AtomicInteger expected;
+    private Map<String, Integer> expectedCalls = new HashMap<>();
 
-    public ShellClientTest (boolean expected, Map<String, Integer> commandAndExitCode) {
-        this.expected = expected;
+    public ShellClientTest (SortedMap<String, Integer> commandAndExitCode) {
         this.commandAndExitCode = commandAndExitCode;
+        System.out.println(this.commandAndExitCode);
     }
 
-    @Parameterized.Parameters(name = "Expected {0}, Input combination {1}")
+    @Parameterized.Parameters(name = "{0}")
     public static List<Object[]> params () {
-        int[][] exitCombinations = new int[][]{ { 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 1, 1 }, { -1, -1, -1 }, { 127, 127, 127 }, { 127, 0, 127 } };
-        List<Object[]> parameters = new LinkedList<>();
-        for (int i = 0; i < exitCombinations.length; i++) {
-            boolean expected = false;
-            if (Ints.contains(exitCombinations[i], 0)) {
-                expected = true;
+        List<Object[]> params = new ArrayList<>();
+        /*
+        I would love to somehow do this in a recursive way, but I can't think of how
+        to right now. Enjoy the nested For loops!
+         */
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                for (int k = 0; k < 3; k++) {
+                    params.add(new Object[]{ buildCommandAndExitCode(List.of(exitCodes.get(i), exitCodes.get(j), exitCodes
+                            .get(k))) });
+                }
             }
-            Map<String, Integer> combination = new LinkedHashMap<>();
-            combination.put("command -v ", exitCombinations[i][0]);
-            combination.put("which ", exitCombinations[i][1]);
-            combination.put("type ", exitCombinations[i][2]);
-            parameters.add(new Object[]{ expected, combination });
         }
-        return parameters;
+        return params;
+    }
+
+    private static SortedMap<String, Integer> buildCommandAndExitCode (List<Integer> exitCodes) {
+        assertEquals(commandsInOrder.size(), exitCodes.size());
+        final SortedMap<String, Integer> map = new TreeMap<>(Comparator.comparingInt(commandsInOrder::indexOf));
+        for (int i = 0; i < commandsInOrder.size(); i++) {
+            map.put(commandsInOrder.get(i), exitCodes.get(i));
+        }
+        return map;
     }
 
     @Before
-    public void setUp () throws Exception {
+    public void setUp () {
         shellClient = mock(ShellClient.class);
+        expected = new AtomicInteger(1);
+        commandAndExitCode.entrySet()
+                          .stream()
+                          .peek(stringIntegerEntry -> doReturn(ShellOutput.builder()
+                                                                          .withExitCode(stringIntegerEntry.getValue())
+                                                                          .build()).when(shellClient)
+                                                                                   .runCommand(stringIntegerEntry.getKey() + " " + capability))
+                          .forEach(stringIntegerEntry -> {
+                              expectedCalls.put(stringIntegerEntry.getKey(), expected.get());
+                              if (expected.get() == 1 && stringIntegerEntry.getValue() == 0) {
+                                  expected.set(0);
+                              }
+                          });
     }
 
     @Test
     public void checkDependency () {
         doCallRealMethod().when(shellClient).checkDependency(any());
-        for (Map.Entry<String, Integer> entry : commandAndExitCode.entrySet()) {
-            doReturn(ShellOutput.builder().withExitCode(entry.getValue()).build()).when(shellClient)
-                                                                                  .runCommand(entry.getKey() + capability);
-        }
-        assertEquals(expected, shellClient.checkDependency(capability));
+        assertEquals(expected.get() == 0, shellClient.checkDependency(capability));
+        expectedCalls.forEach((s, i) -> verify(shellClient, times(i)).runCommand(s + " " + capability));
     }
 }
