@@ -56,6 +56,7 @@ public class ShellClientTest {
     @Before
     public void setUp () {
         shellClient = mock(ShellClient.class);
+        doCallRealMethod().when(shellClient).checkDependency(any());
         expected = new AtomicInteger(1);
         commandAndExitCode.entrySet()
                           .stream()
@@ -73,7 +74,6 @@ public class ShellClientTest {
 
     @Test
     public void checkDependency () {
-        doCallRealMethod().when(shellClient).checkDependency(any());
         assertEquals(expected.get() == 0, shellClient.checkDependency(capability));
         expectedCalls.forEach((s, i) -> verify(shellClient, times(i)).runCommand(s + " " + capability));
     }
