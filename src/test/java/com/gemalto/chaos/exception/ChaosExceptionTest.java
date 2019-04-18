@@ -16,7 +16,9 @@ import static com.gemalto.chaos.exception.enums.ChaosErrorCode.API_EXCEPTION;
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.GENERIC_FAILURE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -71,4 +73,17 @@ public class ChaosExceptionTest {
         assertEquals(expected, loggingEvent.getMessage());
         throw e;
     }
+
+    @Test(expected = ChaosException.class)
+    public void nestedRuntimeException () {
+        final Exception cause = new RuntimeException();
+        final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
+        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
+        logger.addAppender(appender);
+        logger.setLevel(Level.ERROR);
+        final RuntimeException e = new ChaosException(API_EXCEPTION, cause);
+        Mockito.verify(appender, never()).doAppend(any());
+        throw e;
+    }
+
 }
