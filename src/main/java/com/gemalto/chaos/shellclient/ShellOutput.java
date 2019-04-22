@@ -53,7 +53,7 @@ public class ShellOutput {
         if (exitCode == 0) {
             stringBuilder.append(stdOut);
         } else {
-            stringBuilder.append(exitCode).append(": ").append(Strings.isNotEmpty(stdErr) ? stdErr : stdOut);
+            stringBuilder.append(exitCode).append(": ").append(Strings.isNotBlank(stdErr) ? stdErr : stdOut);
         }
         String output = stringBuilder.toString();
         if (output.length() > MAXIMUM_OUTPUT_LENGTH) {

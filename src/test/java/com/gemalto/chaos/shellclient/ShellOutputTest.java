@@ -23,9 +23,11 @@ public class ShellOutputTest {
         return List.of(new Object[]{ 0, "output", "error", "output" },
                        new Object[]{ 1, "output", "error", "1: error" },
                        new Object[]{ 1, "output", "", "1: output" },
+                       new Object[]{ 1, "output", " ", "1: output" },
                        new Object[]{ 1, "output", null, "1: output" },
                        new Object[]{ 0, "x".repeat(200), "", "x".repeat(125) + "..." },
                        new Object[]{ 1, "x".repeat(200), "", "1: " + "x".repeat(122) + "..." },
+                       new Object[]{ 1, "x".repeat(200), " ", "1: " + "x".repeat(122) + "..." },
                        new Object[]{ 1, "x".repeat(200), null, "1: " + "x".repeat(122) + "..." },
                        new Object[]{ 1, "", "e".repeat(200), "1: " + "e".repeat(122) + "..." });
     }
