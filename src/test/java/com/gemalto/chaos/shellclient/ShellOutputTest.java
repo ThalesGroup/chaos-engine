@@ -15,7 +15,7 @@ public class ShellOutputTest {
 
     public ShellOutputTest (int exitCode, String stdOut, String stdErr, String expected) {
         this.expected = expected;
-        this.shellOutput = new ShellOutput(exitCode, stdOut, stdErr);
+        this.shellOutput = ShellOutput.builder().withExitCode(exitCode).withStdOut(stdOut).withStdErr(stdErr).build();
     }
 
     @Parameterized.Parameters
