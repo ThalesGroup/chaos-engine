@@ -4,6 +4,7 @@ import org.apache.logging.log4j.util.Strings;
 
 public class ShellOutput {
     public static final ShellOutput EMPTY_SHELL_OUTPUT = new ShellOutput(-1, Strings.EMPTY, Strings.EMPTY);
+    private static final int MAXIMUM_OUTPUT_LENGTH = 128;
     private int exitCode;
     private String stdOut;
     private String stdErr;
@@ -44,6 +45,21 @@ public class ShellOutput {
 
     public void setStdErr (String stdErr) {
         this.stdErr = stdErr;
+    }
+
+    @Override
+    public String toString () {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (exitCode == 0) {
+            stringBuilder.append(stdOut);
+        } else {
+            stringBuilder.append(exitCode).append(": ").append(Strings.isNotEmpty(stdErr) ? stdErr : stdOut);
+        }
+        String output = stringBuilder.toString();
+        if (output.length() > MAXIMUM_OUTPUT_LENGTH) {
+            output = output.substring(0, MAXIMUM_OUTPUT_LENGTH - 3) + "...";
+        }
+        return output;
     }
 
     public static final class ShellOutputBuilder {
