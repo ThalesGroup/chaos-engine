@@ -60,6 +60,11 @@ public class CloudFoundryContainer extends Container {
     }
 
     @Override
+    public String getAggregationIdentifier () {
+        return name;
+    }
+
+    @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return DataDogIdentifier.dataDogIdentifier().withValue(name + "-" + instance);
     }

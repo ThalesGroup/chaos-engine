@@ -99,6 +99,11 @@ public class KubernetesPodContainer extends Container {
     }
 
     @Override
+    public String getAggregationIdentifier () {
+        return Optional.ofNullable(ownerName).orElse(podName);
+    }
+
+    @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return dataDogIdentifier().withValue(podName);
     }

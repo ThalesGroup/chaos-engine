@@ -44,6 +44,11 @@ public class AwsRDSInstanceContainerTest {
     }
 
     @Test
+    public void getAggegationIdentifier () {
+        assertEquals(dbInstanceIdentifier, awsRDSInstanceContainer.getAggregationIdentifier());
+    }
+
+    @Test
     public void getDbInstanceIdentifier () {
         assertEquals(dbInstanceIdentifier, awsRDSInstanceContainer.getDbInstanceIdentifier());
     }

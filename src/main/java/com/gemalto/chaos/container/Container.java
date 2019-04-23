@@ -179,6 +179,8 @@ public abstract class Container implements ExperimentalObject {
 
     public abstract String getSimpleName ();
 
+    public abstract String getAggregationIdentifier ();
+
     public String getContainerType () {
         return this.getClass().getSimpleName();
     }

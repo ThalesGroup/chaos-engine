@@ -70,6 +70,11 @@ public class CloudFoundryApplicationTest {
     }
 
     @Test
+    public void getAggegationIdentifier () {
+        assertEquals(name, cloudFoundryApplication.getAggregationIdentifier());
+    }
+
+    @Test
     public void supportsShellBasedExperiments () {
         assertFalse(cloudFoundryApplication.supportsShellBasedExperiments());
     }

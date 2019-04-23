@@ -74,6 +74,11 @@ public class ExperimentControllerTest {
         }
 
         @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
         public DataDogIdentifier getDataDogIdentifier () {
             return null;
         }

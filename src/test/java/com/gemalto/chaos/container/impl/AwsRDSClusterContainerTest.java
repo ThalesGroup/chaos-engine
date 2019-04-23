@@ -44,6 +44,11 @@ public class AwsRDSClusterContainerTest {
     }
 
     @Test
+    public void getAggegationIdentifier () {
+        assertEquals(dbClusterIdentifier, awsRDSClusterContainer.getAggregationIdentifier());
+    }
+
+    @Test
     public void getDbClusterIdentifier () {
         assertEquals(dbClusterIdentifier, awsRDSClusterContainer.getDbClusterIdentifier());
     }

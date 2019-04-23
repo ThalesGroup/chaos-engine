@@ -17,16 +17,15 @@ import com.gemalto.chaos.platform.impl.AwsEC2Platform;
 import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.AWS_EC2_HARD_REBOOT_TIMER_MINUTES;
 import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NOT_PART_OF_ASG;
 import static com.gemalto.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
@@ -85,6 +84,16 @@ public class AwsEC2Container extends AwsContainer {
     @Override
     public String getSimpleName () {
         return String.format("%s (%s) [%s]", name, keyName, instanceId);
+    }
+
+    @Override
+    public String getAggregationIdentifier () {
+        return Stream.of(groupIdentifier, name)
+                     .filter(Objects::nonNull)
+                     .filter(not(String::isBlank))
+                     .filter(not(AwsEC2Constants.NO_GROUPING_IDENTIFIER::equals))
+                     .findFirst()
+                     .orElse(instanceId);
     }
 
     @Override

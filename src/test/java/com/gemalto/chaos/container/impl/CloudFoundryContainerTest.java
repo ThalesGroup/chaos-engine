@@ -47,8 +47,13 @@ public class CloudFoundryContainerTest {
     }
 
     @Test
+    public void getAggegationIdentifier () {
+        assertEquals(name, cloudFoundryContainer.getAggregationIdentifier());
+    }
+
+    @Test
     public void supportsShellBasedExperiments () {
-//        assertTrue(cloudFoundryContainer.supportsShellBasedExperiments());
+        assertTrue(cloudFoundryContainer.supportsShellBasedExperiments());
     }
 
     @Test

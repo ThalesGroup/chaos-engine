@@ -100,6 +100,11 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
+    @Override
+    public String getAggregationIdentifier () {
+        return name;
+    }
+
     @ResourceExperiment
     public void scaleApplication (Experiment experiment) {
         experiment.setSelfHealingMethod(rescaleApplicationToDefault);
