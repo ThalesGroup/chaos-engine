@@ -54,10 +54,15 @@ public class KubernetesShellClient implements ShellClient {
             proc = exec.exec(namespace, podName, command, containerName, false, false);
             int exitCode = proc.waitFor();
             if (getOutput) {
-                return ShellOutput.builder()
-                                  .withExitCode(exitCode)
-                                  .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset.defaultCharset()))
-                                  .build();
+                ShellOutput shellOutput = ShellOutput.builder()
+                                                     .withExitCode(exitCode)
+                                                     .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset
+                                                             .defaultCharset()))
+                                                     .build();
+                if (exitCode > 0) {
+                    log.debug("Command execution failed {}", v("failure", shellOutput));
+                }
+                return shellOutput;
             } else {
                 return ShellOutput.EMPTY_SHELL_OUTPUT;
             }
@@ -74,7 +79,7 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     ShellOutput runCommand (String command, boolean getOutput) {
-        return runCommand(command.split(" "), getOutput);
+        return runCommand(new String[]{ "sh", "-c", command }, getOutput);
     }
 
     String copyResourceToPath (Resource resource) throws IOException {

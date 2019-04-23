@@ -149,11 +149,13 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     private Boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
             V1PodList pods = listAllPodsInNamespace();
-            return pods.getItems()
-                       .stream()
-                       .map(V1Pod::getMetadata)
-                       .map(V1ObjectMeta::getUid)
-                       .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
+            Boolean podExists = pods.getItems()
+                                    .stream()
+                                    .map(V1Pod::getMetadata)
+                                    .map(V1ObjectMeta::getUid)
+                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
+            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
+            return podExists;
         } catch (ApiException e) {
             log.debug("Exception when checking container existence", e);
             return null;
@@ -161,7 +163,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     private V1PodList listAllPodsInNamespace () throws ApiException {
-        return coreV1Api.listNamespacedPod(namespace, "", "", "", true, "", 0, "", 0, false);
+        return coreV1Api.listNamespacedPod(namespace, true, "", "", "", "", 0, "", 0, false);
     }
 
     @Override
@@ -274,7 +276,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
-            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null);
+            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null, "Foreground");
         } catch (JsonSyntaxException e1) {
             log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
         } catch (ApiException e) {

@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 
 import static com.gemalto.chaos.exception.enums.ChaosErrorCode.*;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class ChaosSSHClient implements SSHClientWrapper {
     private static final Logger log = LoggerFactory.getLogger(ChaosSSHClient.class);
@@ -151,7 +152,11 @@ public class ChaosSSHClient implements SSHClientWrapper {
                 exec.join();
                 int exitCode = exec.getExitStatus();
                 String output = IOUtils.readFully(exec.getInputStream()).toString();
-                return ShellOutput.builder().withExitCode(exitCode).withStdOut(output).build();
+                ShellOutput shellOutput = ShellOutput.builder().withExitCode(exitCode).withStdOut(output).build();
+                if (exitCode > 0) {
+                    log.debug("Command execution failed {}", v("failure", shellOutput));
+                }
+                return shellOutput;
             }
         } catch (IOException e) {
             log.error("Error running SSH Command", e);
