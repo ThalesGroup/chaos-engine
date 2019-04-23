@@ -1,6 +1,7 @@
 package com.gemalto.chaos.exception;
 
 import com.gemalto.chaos.exception.enums.ChaosErrorCode;
+import com.gemalto.chaos.util.ErrorUtils;
 
 public class ChaosException extends RuntimeException {
     /**
@@ -61,6 +62,10 @@ public class ChaosException extends RuntimeException {
 
     public ChaosException (ErrorCode errorCode, Throwable cause) {
         super(errorCode.getFormattedMessage(), cause);
+        if (getClass().isInstance(cause)) {
+            ErrorUtils.logStacktraceUsingLastValidLogger(cause, "Rewrapped " + cause.getClass()
+                                                                                    .getSimpleName() + ": " + cause.getMessage());
+        }
     }
 
     /**
