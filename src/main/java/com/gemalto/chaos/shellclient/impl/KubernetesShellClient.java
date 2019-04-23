@@ -60,8 +60,7 @@ public class KubernetesShellClient implements ShellClient {
                                                              .defaultCharset()))
                                                      .build();
                 if (exitCode > 0) {
-                    log.debug("Command execution failed", v("exitCode", shellOutput.getExitCode()), v("stdout", shellOutput
-                            .getStdOut()), v("stderr", shellOutput.getStdErr()));
+                    log.debug("Command execution failed {}", v("failure", shellOutput));
                 }
                 return shellOutput;
             } else {
