@@ -149,11 +149,13 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     private Boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
             V1PodList pods = listAllPodsInNamespace();
-            return pods.getItems()
-                       .stream()
-                       .map(V1Pod::getMetadata)
-                       .map(V1ObjectMeta::getUid)
-                       .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
+            Boolean podExists = pods.getItems()
+                                    .stream()
+                                    .map(V1Pod::getMetadata)
+                                    .map(V1ObjectMeta::getUid)
+                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
+            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
+            return podExists;
         } catch (ApiException e) {
             log.debug("Exception when checking container existence", e);
             return null;
