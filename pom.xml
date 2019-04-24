@@ -6,7 +6,10 @@
     <groupId>com.gemalto.chaos</groupId>
     <artifactId>chaosengine</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <modules>
+        <module>chaosengine-core</module>
+    </modules>
+    <packaging>pom</packaging>
 
     <name>chaos-engine</name>
     <description>Implement Chaos in various environments</description>
@@ -166,15 +169,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
-        <finalName>chaosengine</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
 
 </project>
