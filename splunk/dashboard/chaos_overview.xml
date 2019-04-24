@@ -39,7 +39,7 @@
             </single>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+                    <query>sourcetype="container:log" "message=Starting new experiment"
                         | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
@@ -109,7 +109,7 @@
             </single>
             <chart>
                 <search>
-                    <query>sourcetype="container:log" "message=Failed to start experiment"| eval startTime=_time
+                    <query>sourcetype="container:log" "message=Failed to start experiment"
                         | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
                     <earliest>$field1.earliest$</earliest>
