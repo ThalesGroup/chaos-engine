@@ -518,9 +518,6 @@
                         | spath input=log| eval finishTime=_time]
                         |eval experimentDuration=finishTime-startTime
                         | eval experimentDuration=experimentDuration-30
-                        | rename ChaosEvent.targetContainer.simpleName as "simpleName"
-                        | eval normalizedContainerName=split(simpleName," - ")
-                        | eval normalizedContainerName=mvindex(normalizedContainerName,0)
                         |stats count(ChaosEvent.experimentId) as "Experiment Count"
                         ,avg(experimentDuration) as "AVG Recovery Duration"
                         ,median(experimentDuration) as "Median Duration"
@@ -528,10 +525,14 @@
                         ,max(experimentDuration) as "Max Recovery Duration"
                         ,min(experimentDuration) as " Min Recovery Duration"
                         by
-                        ChaosEvent.targetContainer.containerType,ChaosEvent.experimentType,ChaosEvent.experimentMethod,
-                        normalizedContainerName
-                        | sort - "Median Duration"
-                    </query>
+            ChaosEvent.targetContainer.containerType,ChaosEvent.experimentType,ChaosEvent.experimentMethod,
+            ChaosEvent.targetContainer.aggregationIdentifier
+            | rename ChaosEvent.targetContainer.containerType as "Container Type"
+            | rename ChaosEvent.experimentType as "Experiment Type"
+            | rename ChaosEvent.experimentMethod as "Experiment Method"
+            | rename ChaosEvent.targetContainer.aggregationIdentifier as "Container Name (Aggregation Identifier)"
+            | sort - "Median Duration"
+          </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -540,13 +541,14 @@
         <option name="dataOverlayMode">heatmap</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
-        <format type="color" field="ChaosEvent.targetContainer.containerType">
+        <format type="color" field="Container Type">
           <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}</colorPalette>
         </format>
-        <format type="color" field="normalizedContainerName">
+        <format type="color" field="Container Name (Aggregation Identifier)">
           <colorPalette type="sharedList"></colorPalette>
           <scale type="sharedCategory"></scale>
         </format>
