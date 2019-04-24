@@ -1,458 +1,485 @@
 <form>
-    <label>Chaos Engine Experiments</label>
-    <fieldset submitButton="false" autoRun="true">
-        <input type="time" token="field1">
-            <label></label>
-            <default>
-                <earliest>-24h@h</earliest>
-                <latest>now</latest>
-            </default>
-        </input>
-    </fieldset>
-    <row>
-        <panel>
-            <title>Scheduled experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+  <label>Chaos Engine Experiments</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="field1">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Scheduled experiments</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log" "message=Starting new experiment" | stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" "message=Starting new experiment"
                         | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-        <panel>
-            <title>Failed to start experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "message=Failed to start experiment" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" "message=Failed to start experiment"| eval startTime=_time
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Running experiments</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log" "Active experiments" | rex "Active experiments\: (?&lt;count&gt;\d+)" | head 1 | table count</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Failed to start experiments</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log" "message=Failed to start experiment" | stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" "message=Failed to start experiment"
                         | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-        <panel>
-            <title>Finished experiments</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "message=Experiment finished.*" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">block</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log"
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Finished experiments</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log" "message=Experiment finished.*" | stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <chart>
+        <search>
+          <query>sourcetype="container:log"
                         "message=Experiment finished. Container recovered from the experiment"
                         | eval startTime=_time | spath input=log
                         | chart count by ChaosEvent.experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-        <panel>
-            <title>Self-healing required</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log"
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Self-healing required</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log"
                         "message=The experiment has gone on too long, invoking self-healing"
                         | eval startTime=_time | spath input=log | stats count
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
-                <option name="rangeValues">[0,30,70,100]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">0</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log"
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <chart>
+        <search>
+          <query>sourcetype="container:log"
                         "message=The experiment has gone on too long, invoking self-healing"
                         | eval startTime=_time | spath input=log | chart count by
                         ChaosEvent.experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-        <panel>
-            <title>Failed to heal</title>
-            <single>
-                <search>
-                    <query>sourcetype="container:log" "Maximum self healing retries reached" | stats count</query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="colorBy">value</option>
-                <option name="colorMode">block</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
-                <option name="rangeValues">[0]</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="showSparkline">1</option>
-                <option name="showTrendIndicator">1</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trendColorInterpretation">standard</option>
-                <option name="trendDisplayMode">absolute</option>
-                <option name="unitPosition">after</option>
-                <option name="useColors">1</option>
-                <option name="useThousandSeparators">1</option>
-            </single>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" "message=Maximum self healing retries reached"
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Failed to heal</title>
+      <single>
+        <search>
+          <query>sourcetype="container:log" "Maximum self healing retries reached" | stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" "message=Maximum self healing retries reached"
                         | eval startTime=_time | spath input=log | chart count by ChaosEvent.experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Chaos Events Timeline</title>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" Chaos Event| spath input=log
-                        | timechart count by ChaosEvent.notificationLevel
-                    </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">column</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Last Chaos Events</title>
-            <table>
-                <search>
-                    <query>sourcetype="container:log" Chaos Event | head | spath input=log | table _time
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Chaos Events Timeline</title>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" Chaos Event| spath input=log
+            | rex field=ChaosEvent.message mode=sed "s/Experiment finished.*/Experiment finished/g"
+            | rex field=ChaosEvent.message mode=sed "s/The experiment has gone on to.*/The experiment has gone on to long, invoking self healing/g"
+            | timechart count by ChaosEvent.message
+          </query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Last Chaos Events</title>
+      <table>
+        <search>
+          <query>sourcetype="container:log" Chaos Event | head | spath input=log | table _time
                         ChaosEvent.experimentId ChaosEvent.targetContainer.containerType ChaosEvent.experimentType
                         ChaosEvent.experimentMethod
                         ChaosEvent.notificationLevel ChaosEvent.targetContainer.simpleName ChaosEvent.message
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">20</option>
-                <option name="dataOverlayMode">none</option>
-                <option name="drilldown">none</option>
-                <option name="percentagesRow">false</option>
-                <option name="rowNumbers">false</option>
-                <option name="totalsRow">false</option>
-                <option name="wrap">true</option>
-                <format type="color" field="ChaosEvent.targetContainer.containerType">
-                    <colorPalette type="map">
-                        {"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}
-                    </colorPalette>
-                </format>
-                <format type="color" field="ChaosEvent.notificationLevel">
-                    <colorPalette type="map">{"ERROR":#DC4E41,"WARN":#F8BE34,"GOOD":#53A051}</colorPalette>
-                </format>
-            </table>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Overall Recovery Duration</title>
-            <table>
-                <search>
-                    <query>sourcetype="container:log" finalExperimentDuration | spath input=log |table platform
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="ChaosEvent.targetContainer.containerType">
+          <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}</colorPalette>
+        </format>
+        <format type="color" field="ChaosEvent.notificationLevel">
+          <colorPalette type="map">{"ERROR":#DC4E41,"WARN":#F8BE34,"GOOD":#53A051}</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Overall Recovery Duration</title>
+      <table>
+        <search>
+          <query>sourcetype="container:log" finalExperimentDuration | spath input=log |table platform
                         experimentMethod finalExperimentDuration.seconds experimentid
                         |stats count(experimentid) as "Experiment Count"
                         ,avg(finalExperimentDuration.seconds) as "AVG Recovery Duration"
@@ -462,40 +489,35 @@
                         ,min(finalExperimentDuration.seconds) as " Min Recovery Duration"
                         by platform,experimentMethod
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">25</option>
-                <option name="dataOverlayMode">heatmap</option>
-                <option name="drilldown">none</option>
-                <option name="percentagesRow">false</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="rowNumbers">false</option>
-                <option name="totalsRow">false</option>
-                <option name="wrap">true</option>
-                <format type="color" field="platform">
-                    <colorPalette type="map">
-                        {"CloudFoundryApplicationPlatform":#708794,"CloudFoundryContainerPlatform":#4FA484,"AwsEC2Platform":#3FE4ED,"AwsRDSPlatform":#ED3FCA,"KubernetesPlatform":#3E89ED}
-                    </colorPalette>
-                </format>
-            </table>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Experiment Recovery Duration Per Container And Method</title>
-            <table>
-                <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">25</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="platform">
+          <colorPalette type="map">{"CloudFoundryApplicationPlatform":#708794,"CloudFoundryContainerPlatform":#4FA484,"AwsEC2Platform":#3FE4ED,"AwsRDSPlatform":#ED3FCA,"KubernetesPlatform":#3E89ED}</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Experiment Recovery Duration Per Container And Method</title>
+      <table>
+        <search>
+          <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
                         | spath input=log
                         |join ChaosEvent.experimentId [search sourcetype="container:log" "message=Experiment finished.*"
                         | spath input=log| eval finishTime=_time]
                         |eval experimentDuration=finishTime-startTime
                         | eval experimentDuration=experimentDuration-30
-                        | rename ChaosEvent.targetContainer.simpleName as "simpleName"
-                        | eval normalizedContainerName=split(simpleName," - ")
-                        | eval normalizedContainerName=mvindex(normalizedContainerName,0)
                         |stats count(ChaosEvent.experimentId) as "Experiment Count"
                         ,avg(experimentDuration) as "AVG Recovery Duration"
                         ,median(experimentDuration) as "Median Duration"
@@ -503,197 +525,200 @@
                         ,max(experimentDuration) as "Max Recovery Duration"
                         ,min(experimentDuration) as " Min Recovery Duration"
                         by
-                        ChaosEvent.targetContainer.containerType,ChaosEvent.experimentType,ChaosEvent.experimentMethod,
-                        normalizedContainerName
-                        | sort - "Median Duration"
-                    </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">100</option>
-                <option name="dataOverlayMode">heatmap</option>
-                <option name="drilldown">none</option>
-                <option name="percentagesRow">false</option>
-                <option name="rowNumbers">false</option>
-                <option name="totalsRow">false</option>
-                <option name="wrap">true</option>
-                <format type="color" field="ChaosEvent.targetContainer.containerType">
-                    <colorPalette type="map">
-                        {"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}
-                    </colorPalette>
-                </format>
-                <format type="color" field="normalizedContainerName">
-                    <colorPalette type="sharedList"></colorPalette>
-                    <scale type="sharedCategory"></scale>
-                </format>
-            </table>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Experiment Distribution Per Platform Layer</title>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log
+            ChaosEvent.targetContainer.containerType,ChaosEvent.experimentType,ChaosEvent.experimentMethod,
+            ChaosEvent.targetContainer.aggregationIdentifier
+            | rename ChaosEvent.targetContainer.containerType as "Container Type"
+            | rename ChaosEvent.experimentType as "Experiment Type"
+            | rename ChaosEvent.experimentMethod as "Experiment Method"
+            | rename ChaosEvent.targetContainer.aggregationIdentifier as "Container Name (Aggregation Identifier)"
+            | sort - "Median Duration"
+          </query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Container Type">
+          <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}</colorPalette>
+        </format>
+        <format type="color" field="Container Name (Aggregation Identifier)">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Experiment Distribution Per Platform Layer</title>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log
                         | chart count by ChaosEvent.experimentMethod ChaosEvent.targetContainer.containerType
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">collapsed</option>
-                <option name="charting.axisTitleY.visibility">collapsed</option>
-                <option name="charting.axisTitleY2.visibility">collapsed</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">none</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">1</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-                <option name="trellis.splitBy">ChaosEvent.targetContainer.containerType</option>
-            </chart>
-        </panel>
-        <panel>
-            <title>Chaos Events By Status</title>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" Chaos Event| spath input=log
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trellis.splitBy">ChaosEvent.targetContainer.containerType</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Chaos Events By Status</title>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" Chaos Event| spath input=log
                         | chart count by ChaosEvent.notificationLevel
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">visible</option>
-                <option name="charting.axisTitleY.visibility">visible</option>
-                <option name="charting.axisTitleY2.visibility">visible</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">right</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">0</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">medium</option>
-            </chart>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Events By Experiment And Status</title>
-            <chart>
-                <search>
-                    <query>sourcetype="container:log" timestamp event | spath input=log | stats count by
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Events By Experiment And Status</title>
+      <chart>
+        <search>
+          <query>sourcetype="container:log" timestamp event | spath input=log | stats count by
                         ChaosEvent.experimentMethod, ChaosEvent.notificationLevel
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-                <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-                <option name="charting.axisTitleX.visibility">collapsed</option>
-                <option name="charting.axisTitleY.visibility">collapsed</option>
-                <option name="charting.axisTitleY2.visibility">collapsed</option>
-                <option name="charting.axisX.abbreviation">none</option>
-                <option name="charting.axisX.scale">linear</option>
-                <option name="charting.axisY.abbreviation">none</option>
-                <option name="charting.axisY.scale">linear</option>
-                <option name="charting.axisY2.abbreviation">none</option>
-                <option name="charting.axisY2.enabled">0</option>
-                <option name="charting.axisY2.scale">inherit</option>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.bubbleMaximumSize">50</option>
-                <option name="charting.chart.bubbleMinimumSize">10</option>
-                <option name="charting.chart.bubbleSizeBy">area</option>
-                <option name="charting.chart.nullValueMode">gaps</option>
-                <option name="charting.chart.showDataLabels">none</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.chart.stackMode">default</option>
-                <option name="charting.chart.style">shiny</option>
-                <option name="charting.drilldown">none</option>
-                <option name="charting.layout.splitSeries">0</option>
-                <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-                <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-                <option name="charting.legend.mode">standard</option>
-                <option name="charting.legend.placement">none</option>
-                <option name="charting.lineWidth">2</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="trellis.enabled">1</option>
-                <option name="trellis.scales.shared">1</option>
-                <option name="trellis.size">small</option>
-            </chart>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>Chaos Engine Errors</title>
-            <event>
-                <search>
-                    <query>sourcetype="container:log" timestamp "error" OR "failed" OR "exception" OR "fatal" and NOT
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">small</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Chaos Engine Errors</title>
+      <event>
+        <search>
+          <query>sourcetype="container:log" timestamp "error" OR "failed" OR "exception" OR "fatal" and NOT
                         "Chaos Event"
                     </query>
-                    <earliest>$field1.earliest$</earliest>
-                    <latest>$field1.latest$</latest>
-                    <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">5</option>
-                <option name="list.drilldown">none</option>
-                <option name="list.wrap">1</option>
-                <option name="maxLines">5</option>
-                <option name="raw.drilldown">full</option>
-                <option name="refresh.display">progressbar</option>
-                <option name="rowNumbers">0</option>
-                <option name="table.drilldown">all</option>
-                <option name="table.sortDirection">asc</option>
-                <option name="table.wrap">1</option>
-                <option name="type">list</option>
-            </event>
-        </panel>
-    </row>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="list.drilldown">none</option>
+        <option name="list.wrap">1</option>
+        <option name="maxLines">5</option>
+        <option name="raw.drilldown">full</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">0</option>
+        <option name="table.drilldown">all</option>
+        <option name="table.sortDirection">asc</option>
+        <option name="table.wrap">1</option>
+        <option name="type">list</option>
+      </event>
+    </panel>
+  </row>
 </form>
