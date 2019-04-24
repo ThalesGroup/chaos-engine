@@ -401,8 +401,10 @@
       <chart>
         <search>
           <query>sourcetype="container:log" Chaos Event| spath input=log
-                        | timechart count by ChaosEvent.notificationLevel
-                    </query>
+            | rex field=ChaosEvent.message mode=sed "s/Experiment finished.*/Experiment finished/g"
+            | rex field=ChaosEvent.message mode=sed "s/The experiment has gone on to.*/The experiment has gone on to long, invoking self healing/g"
+            | timechart count by ChaosEvent.message
+          </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -426,7 +428,7 @@
         <option name="charting.chart.nullValueMode">gaps</option>
         <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.stackMode">stacked</option>
         <option name="charting.chart.style">shiny</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.layout.splitSeries">0</option>
