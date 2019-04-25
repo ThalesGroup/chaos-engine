@@ -13,11 +13,11 @@ RUN mvn package
 FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
 WORKDIR /chaosengine
-COPY --from=build-env /chaosengine/*/target/*.jar ./
-RUN  mv ./*-exec.jar ./chaosengine.jar
+COPY --from=build-env /chaosengine/*/target/*.jar ./lib/
+RUN  mv ./lib/*-exec.jar ./chaosengine.jar
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 LABEL com.datadoghq.ad.logs="[ { \"source\":\"java\", \"service\": \"chaosengine\" } ]"
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dloader.path=\".\"", "-jar", "chaosengine.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib", "-jar", "chaosengine.jar"]
 
 FROM develop AS debug
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", "-jar", "/chaosengine.jar"]

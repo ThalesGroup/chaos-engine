@@ -20,6 +20,7 @@
                     <fork>true</fork>
                     <skip>false</skip>
                     <classifier>exec</classifier>
+                    <layout>ZIP</layout>
                 </configuration>
             </plugin>
         </plugins>
