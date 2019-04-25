@@ -588,31 +588,38 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testIsContainerRecycled () throws ApiException {
-        String subcontainerName = randomUUID().toString();
-        List<String> subContainers = new ArrayList<>();
-        subContainers.add(randomUUID().toString());
-        V1ContainerState containerState = mock(V1ContainerState.class);
-        V1ContainerStateRunning containerStateRunning = mock(V1ContainerStateRunning.class);
-        List<V1ContainerStatus> containerStatuses = new ArrayList<>();
-        V1ContainerStatus containerStatus = mock(V1ContainerStatus.class);
-        containerStatuses.add(containerStatus);
-        V1Pod pod = mock(V1Pod.class);
-        V1ObjectMeta metadata = mock(V1ObjectMeta.class);
-        V1PodStatus podStatus = mock(V1PodStatus.class);
-        when(metadata.getUid()).thenReturn(randomUUID().toString());
-        when(pod.getMetadata()).thenReturn(metadata);
-        when(pod.getStatus()).thenReturn(podStatus);
-        when(containerStatus.getState()).thenReturn(containerState);
-        when(containerStatus.getName()).thenReturn(subcontainerName);
-        when(containerState.getRunning()).thenReturn(containerStateRunning);
-        when(containerStateRunning.getStartedAt()).thenReturn(new DateTime(Long.MAX_VALUE), new DateTime(Long.MIN_VALUE));
-        when(podStatus.getContainerStatuses()).thenReturn(containerStatuses);
-        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
-        when(kubernetesPodContainer.getExperimentStartTime()).thenReturn(Instant.now());
-        when(kubernetesPodContainer.getTargetedSubcontainer()).thenReturn(subcontainerName);
-        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenReturn(pod);
-        assertEquals("Restarted", true, platform.isContainerRecycled(kubernetesPodContainer));
-        assertEquals("Not restarted", false, platform.isContainerRecycled(kubernetesPodContainer));
+        String uid = randomUUID().toString();
+        String containerName = randomUUID().toString();
+        KubernetesPodContainer kubernetesPodContainer = spy(KubernetesPodContainer.builder()
+                                                                                  .withSubcontainers(List.of(containerName))
+                                                                                  .build());
+        V1ObjectMeta podMetadata = new V1ObjectMeta().uid(uid);
+        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now()
+                                                                                                                .minusMinutes(1)));
+        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName)
+                                                                                                   .state(state)));
+        V1Pod pod = new V1Pod().metadata(podMetadata).status(podStatus);
+        doReturn(pod).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
+        doReturn(Instant.now().minusSeconds(100)).when(kubernetesPodContainer).getExperimentStartTime();
+        assertTrue("Restarted", platform.isContainerRecycled(kubernetesPodContainer));
+    }
+
+    @Test
+    public void testContainerIsNotRecycledYet () throws ApiException {
+        String uid = randomUUID().toString();
+        String containerName = randomUUID().toString();
+        KubernetesPodContainer kubernetesPodContainer = spy(KubernetesPodContainer.builder()
+                                                                                  .withSubcontainers(List.of(containerName))
+                                                                                  .build());
+        V1ObjectMeta podMetadata = new V1ObjectMeta().uid(uid);
+        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now()
+                                                                                                                .minusMinutes(10)));
+        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName)
+                                                                                                   .state(state)));
+        V1Pod pod = new V1Pod().metadata(podMetadata).status(podStatus);
+        doReturn(pod).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
+        doReturn(Instant.now().minusSeconds(60)).when(kubernetesPodContainer).getExperimentStartTime();
+        assertFalse("Not restarted", platform.isContainerRecycled(kubernetesPodContainer));
     }
 
     @Test
