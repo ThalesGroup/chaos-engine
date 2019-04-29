@@ -11,6 +11,7 @@
         <module>chaosengine-launcher</module>
         <module>chaosengine-aws-ec2</module>
         <module>chaosengine-aws-rds</module>
+        <module>chaosengine-pcf</module>
     </modules>
     <packaging>pom</packaging>
 
