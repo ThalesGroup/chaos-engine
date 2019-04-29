@@ -6,7 +6,6 @@ import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.Tag;
 import com.amazonaws.services.rds.model.*;
-import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.container.Container;
 import com.gemalto.chaos.container.ContainerManager;
@@ -927,8 +926,8 @@ public class AwsRDSPlatformTest {
         verify(amazonEC2, times(1)).createSecurityGroup(any());
         ArgumentCaptor<RevokeSecurityGroupEgressRequest> revokeEgressCaptor = ArgumentCaptor.forClass(RevokeSecurityGroupEgressRequest.class);
         verify(amazonEC2, times(1)).revokeSecurityGroupEgress(revokeEgressCaptor.capture());
-        assertEquals(Collections.singletonList(AwsEC2Constants.DEFAULT_IP_PERMISSIONS), revokeEgressCaptor.getValue()
-                                                                                                          .getIpPermissions());
+        assertEquals(Collections.singletonList(AwsRDSConstants.DEFAULT_IP_PERMISSION), revokeEgressCaptor.getValue()
+                                                                                                         .getIpPermissions());
         assertEquals(securityGroupId, revokeEgressCaptor.getValue().getGroupId());
         assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
                                                               .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
