@@ -11,8 +11,6 @@ import com.gemalto.chaos.platform.PlatformManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.platform.impl.AwsEC2Platform;
-import com.gemalto.chaos.platform.impl.AwsRDSPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
 import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.scripts.ScriptManager;
@@ -73,10 +71,6 @@ public class ExperimentManagerTest {
     private Platform platform;
     @MockBean
     private AdminManager adminManager;
-    @MockBean
-    private AwsRDSPlatform awsRDSPlatform;
-    @MockBean
-    private AwsEC2Platform awsEC2Platform;
     @MockBean
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     @MockBean
