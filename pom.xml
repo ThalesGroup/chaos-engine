@@ -10,6 +10,7 @@
         <module>chaosengine-core</module>
         <module>chaosengine-launcher</module>
         <module>chaosengine-aws-ec2</module>
+        <module>chaosengine-aws-rds</module>
     </modules>
     <packaging>pom</packaging>
 
