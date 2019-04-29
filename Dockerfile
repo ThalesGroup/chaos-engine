@@ -2,6 +2,9 @@ FROM maven:3.6-jdk-11-slim AS build-env
 WORKDIR /chaosengine
 COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
+RUN cd chaosengine-launcher && \
+    mvn dependency:go-offline install -Dsilent=true && \
+    cd ..
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-kubernetes/pom.xml ./chaosengine-kubernetes/
 COPY chaosengine-aws-ec2/pom.xml ./chaosengine-aws-ec2/
