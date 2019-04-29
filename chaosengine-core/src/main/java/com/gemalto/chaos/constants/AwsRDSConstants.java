@@ -1,5 +1,8 @@
 package com.gemalto.chaos.constants;
 
+import com.amazonaws.services.ec2.model.IpPermission;
+import com.amazonaws.services.ec2.model.IpRange;
+
 public abstract class AwsRDSConstants {
     public static final String AWS_RDS_AVAILABLE = "available";
     public static final String AWS_RDS_BACKING_UP = "backing-up";
@@ -11,6 +14,8 @@ public abstract class AwsRDSConstants {
     public static final String AWS_RDS_INSTANCE_DATADOG_IDENTIFIER = "dbinstanceidentifier";
     public static final String AWS_RDS_VPC_SECURITY_GROUP_ID = "vpcSecurityGroupId";
     public static final String INVALID_PARAMETER_VALUE = "InvalidParameterValue";
+    public static final IpPermission DEFAULT_IP_PERMISSION = new IpPermission().withIpProtocol("-1")
+                                                                               .withIpv4Ranges(new IpRange().withCidrIp("0.0.0.0/0"));
 
     private AwsRDSConstants () {
     }

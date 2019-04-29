@@ -7,7 +7,6 @@ import com.amazonaws.services.ec2.model.RevokeSecurityGroupEgressRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
-import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.AwsRDSConstants;
 import com.gemalto.chaos.constants.DataDogConstants;
 import com.gemalto.chaos.container.AwsContainer;
@@ -421,7 +420,7 @@ public class AwsRDSPlatform extends Platform {
                                                                                        .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
                                                                                        .withVpcId(vpcId)).getGroupId();
         amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withGroupId(groupId)
-                                                                                  .withIpPermissions(AwsEC2Constants.DEFAULT_IP_PERMISSIONS));
+                                                                                  .withIpPermissions(DEFAULT_IP_PERMISSION));
         log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
     }
