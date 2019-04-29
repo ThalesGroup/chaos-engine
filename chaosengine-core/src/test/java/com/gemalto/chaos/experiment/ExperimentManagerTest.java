@@ -11,8 +11,6 @@ import com.gemalto.chaos.platform.PlatformManager;
 import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
-import com.gemalto.chaos.platform.impl.CloudFoundryApplicationPlatform;
-import com.gemalto.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.gemalto.chaos.scripts.ScriptManager;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
@@ -71,11 +69,10 @@ public class ExperimentManagerTest {
     private Platform platform;
     @MockBean
     private AdminManager adminManager;
-    @MockBean
-    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
-    @MockBean
-    private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-
+    @MockBean(name = "firstPlatform")
+    private Platform firstPlatform;
+    @MockBean(name = "secondPlatform")
+    private Platform secondPlatform;
 
     @Test
     public void startExperiments () {
@@ -98,23 +95,23 @@ public class ExperimentManagerTest {
 
     //SCT-6233
     public void noExperimentsOnHolidays () {
-        CloudFoundryApplicationPlatform pcfApplicationPlatform = mock(CloudFoundryApplicationPlatform.class);
+        Platform mockPlatform = mock(Platform.class);
         List<Container> containerListApps = new ArrayList<>();
         containerListApps.add(container1);
         containerListApps.add(container2);
         List<Platform> platforms = new ArrayList<>();
-        platforms.add(pcfApplicationPlatform);
+        platforms.add(mockPlatform);
         when(platformManager.getPlatforms()).thenReturn(platforms);
-        when(pcfApplicationPlatform.scheduleExperiment()).thenReturn(pcfApplicationPlatform);
-        when(pcfApplicationPlatform.getRoster()).thenReturn(containerListApps);
-        when(pcfApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(pcfApplicationPlatform.canExperiment()).thenReturn(true);
+        when(mockPlatform.scheduleExperiment()).thenReturn(mockPlatform);
+        when(mockPlatform.getRoster()).thenReturn(containerListApps);
+        when(mockPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(mockPlatform.canExperiment()).thenReturn(true);
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container1.getPlatform()).thenReturn(mockPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(pcfApplicationPlatform);
+        when(container2.getPlatform()).thenReturn(mockPlatform);
         when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
@@ -140,26 +137,26 @@ public class ExperimentManagerTest {
         doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
         doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
         doReturn(dataDogIdentifier()).when(container3).getDataDogIdentifier();
-        when(platformManager.getPlatforms()).thenReturn(Arrays.asList(cloudFoundryApplicationPlatform, cloudFoundryContainerPlatform));
-        when(cloudFoundryApplicationPlatform.scheduleExperiment()).thenReturn(cloudFoundryApplicationPlatform);
-        when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(containerListApps);
-        when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
-        when(cloudFoundryApplicationPlatform.getNextChaosTime()).thenReturn(Instant.now());
-        when(cloudFoundryContainerPlatform.scheduleExperiment()).thenReturn(cloudFoundryContainerPlatform);
-        when(cloudFoundryContainerPlatform.getRoster()).thenReturn(containerListContainers);
-        when(cloudFoundryContainerPlatform.canExperiment()).thenReturn(true);
-        when(cloudFoundryContainerPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(cloudFoundryContainerPlatform.getNextChaosTime()).thenReturn(Instant.now());
+        when(platformManager.getPlatforms()).thenReturn(Arrays.asList(firstPlatform, secondPlatform));
+        when(firstPlatform.scheduleExperiment()).thenReturn(firstPlatform);
+        when(firstPlatform.getRoster()).thenReturn(containerListApps);
+        when(firstPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(firstPlatform.canExperiment()).thenReturn(true);
+        when(firstPlatform.getNextChaosTime()).thenReturn(Instant.now());
+        when(secondPlatform.scheduleExperiment()).thenReturn(secondPlatform);
+        when(secondPlatform.getRoster()).thenReturn(containerListContainers);
+        when(secondPlatform.canExperiment()).thenReturn(true);
+        when(secondPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(secondPlatform.getNextChaosTime()).thenReturn(Instant.now());
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
+        when(container1.getPlatform()).thenReturn(firstPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
+        when(container2.getPlatform()).thenReturn(firstPlatform);
         when(container3.canExperiment()).thenReturn(true);
         when(container3.createExperiment()).thenReturn(experiment3);
-        when(container3.getPlatform()).thenReturn(cloudFoundryContainerPlatform);
+        when(container3.getPlatform()).thenReturn(secondPlatform);
         when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment3.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
@@ -192,17 +189,17 @@ public class ExperimentManagerTest {
     public void removeFinishedExperiments () {
         doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
         doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
-        when(platformManager.getPlatforms()).thenReturn(Collections.singletonList(cloudFoundryApplicationPlatform));
-        when(cloudFoundryApplicationPlatform.scheduleExperiment()).thenReturn(cloudFoundryApplicationPlatform);
-        when(cloudFoundryApplicationPlatform.getRoster()).thenReturn(Arrays.asList(container1, container2));
-        when(cloudFoundryApplicationPlatform.canExperiment()).thenReturn(true);
-        when(cloudFoundryApplicationPlatform.generateExperimentRoster()).thenCallRealMethod();
+        when(platformManager.getPlatforms()).thenReturn(Collections.singletonList(firstPlatform));
+        when(firstPlatform.scheduleExperiment()).thenReturn(firstPlatform);
+        when(firstPlatform.getRoster()).thenReturn(Arrays.asList(container1, container2));
+        when(firstPlatform.canExperiment()).thenReturn(true);
+        when(firstPlatform.generateExperimentRoster()).thenCallRealMethod();
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
+        when(container1.getPlatform()).thenReturn(firstPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(cloudFoundryApplicationPlatform);
+        when(container2.getPlatform()).thenReturn(firstPlatform);
         when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
@@ -595,6 +592,20 @@ public class ExperimentManagerTest {
         private PlatformManager platformManager;
         @Autowired
         private HolidayManager holidayManager;
+        @Autowired
+        private Platform firstPlatform;
+        @Autowired
+        private Platform secondPlatform;
+
+        @Bean
+        Platform firstPlatform () {
+            return mock(Platform.class);
+        }
+
+        @Bean
+        Platform secondPlatform () {
+            return mock(Platform.class);
+        }
 
         @Bean
         ExperimentManager experimentManager () {
