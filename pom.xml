@@ -9,6 +9,7 @@
         <module>chaosengine-kubernetes</module>
         <module>chaosengine-core</module>
         <module>chaosengine-launcher</module>
+        <module>chaosengine-aws-ec2</module>
     </modules>
     <packaging>pom</packaging>
 
