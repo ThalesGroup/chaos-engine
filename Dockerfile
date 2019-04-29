@@ -4,10 +4,12 @@ COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-kubernetes/pom.xml ./chaosengine-kubernetes/
+COPY chaosengine-aws-ec2/pom.xml ./chaosengine-aws-ec2/
 #RUN mvn dependency:go-offline -Dsilent=true
 COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
 COPY chaosengine-core/src/ ./chaosengine-core/src/
 COPY chaosengine-kubernetes/src/ ./chaosengine-kubernetes/src/
+COPY chaosengine-aws-ec2/src/ ./chaosengine-aws-ec2/src/
 RUN mvn package
 
 FROM openjdk:11-jre-slim AS develop
