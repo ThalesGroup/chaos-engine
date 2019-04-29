@@ -16,7 +16,8 @@ FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
 WORKDIR /chaosengine
 COPY --from=build-env /chaosengine/*/target/*.jar ./lib/
-RUN  mv ./lib/*-exec.jar ./chaosengine.jar
+RUN  mv ./lib/*-exec.jar ./chaosengine.jar && \
+     rm -f ./lib/chaosengine-launcher*.jar
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 LABEL com.datadoghq.ad.logs="[ { \"source\":\"java\", \"service\": \"chaosengine\" } ]"
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib", "-jar", "chaosengine.jar"]
