@@ -2,7 +2,6 @@ package com.gemalto.chaos.health;
 
 import com.gemalto.chaos.health.enums.SystemHealthState;
 import com.gemalto.chaos.health.impl.AdminHealth;
-import com.gemalto.chaos.health.impl.AwsEC2Health;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -22,7 +21,7 @@ import static org.mockito.Mockito.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class HealthManagerTest {
     @MockBean
-    private AwsEC2Health awsEC2Health;
+    private SystemHealth systemHealth;
     @MockBean
     private AdminHealth adminHealth;
     @Autowired
@@ -30,19 +29,19 @@ public class HealthManagerTest {
 
     @Test
     public void getHealth () {
-        when(awsEC2Health.getHealth()).thenReturn(SystemHealthState.OK);
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK);
         when(adminHealth.getHealth()).thenReturn(SystemHealthState.OK);
         assertEquals(SystemHealthState.OK, healthManager.getHealth());
-        Mockito.reset(awsEC2Health, adminHealth);
+        Mockito.reset(systemHealth, adminHealth);
         // Two health classes, second returns ERROR
-        when(awsEC2Health.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.ERROR);
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.OK).thenReturn(SystemHealthState.ERROR);
         assertEquals(SystemHealthState.ERROR, healthManager.getHealth());
-        Mockito.reset(awsEC2Health, adminHealth);
+        Mockito.reset(systemHealth, adminHealth);
         // Two health classes, first returns ERROR
-        when(awsEC2Health.getHealth()).thenReturn(SystemHealthState.ERROR).thenReturn(SystemHealthState.OK);
+        when(systemHealth.getHealth()).thenReturn(SystemHealthState.ERROR).thenReturn(SystemHealthState.OK);
         assertEquals(SystemHealthState.ERROR, healthManager.getHealth());
-        verify(awsEC2Health, times(1)).getHealth();
-        Mockito.reset(awsEC2Health, adminHealth);
+        verify(systemHealth, times(1)).getHealth();
+        Mockito.reset(systemHealth, adminHealth);
         // No health classes
         when(healthManager.getSystemHealth()).thenReturn(null);
         assertEquals(SystemHealthState.UNKNOWN, healthManager.getHealth());
@@ -53,10 +52,15 @@ public class HealthManagerTest {
         @Autowired
         private AdminHealth adminHealth;
         @Autowired
-        private AwsEC2Health awsEC2Health;
+        private SystemHealth systemHealth;
 
         @Bean
-        HealthManager healthMangaer () {
+        SystemHealth systemHealth () {
+            return Mockito.mock(SystemHealth.class);
+        }
+
+        @Bean
+        HealthManager healthManager () {
             return Mockito.spy(new HealthManager());
         }
     }
