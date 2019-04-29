@@ -2,11 +2,12 @@ package com.gemalto.chaos.notification.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.impl.AwsEC2Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
 import com.gemalto.chaos.experiment.enums.ExperimentType;
 import com.gemalto.chaos.notification.ChaosEvent;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
-import com.gemalto.chaos.platform.impl.AwsEC2Platform;
+import com.gemalto.chaos.platform.Platform;
 import com.gemalto.chaos.util.HttpUtils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -34,14 +36,43 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SlackNotificationsTest {
+    private static final String OK_RESPONSE = "ok";
     private ChaosEvent chaosEvent;
     private SlackNotifications slackNotifications;
     private SlackMessage expectedSlackMessage;
-    private static final String OK_RESPONSE = "ok";
     @Mock
-    private AwsEC2Platform platform;
-    @Mock
-    private Container container;
+    private Platform platform;
+    private Container container = new Container() {
+        @Override
+        public Platform getPlatform () {
+            return platform;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
+    };
     private String experimentId = UUID.randomUUID().toString();
     private String experimentMethod = UUID.randomUUID().toString();
     private String message = UUID.randomUUID().toString();
@@ -61,11 +92,6 @@ public class SlackNotificationsTest {
     @Before
     public void setUp () throws Exception {
         setupMockServer();
-        container = AwsEC2Container.builder()
-                                   .name(UUID.randomUUID().toString())
-                                   .awsEC2Platform(platform)
-                                   .instanceId(UUID.randomUUID().toString())
-                                   .build();
         slackNotifications = Mockito.spy(new SlackNotifications(slack_webhookuri));
         chaosEvent = ChaosEvent.builder()
                                .withMessage(message)
