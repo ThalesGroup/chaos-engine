@@ -2,8 +2,11 @@ package com.gemalto.chaos.notification;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemalto.chaos.container.Container;
-import com.gemalto.chaos.container.impl.AwsEC2Container;
+import com.gemalto.chaos.container.enums.ContainerHealth;
+import com.gemalto.chaos.experiment.enums.ExperimentType;
+import com.gemalto.chaos.notification.datadog.DataDogIdentifier;
 import com.gemalto.chaos.notification.enums.NotificationLevel;
+import com.gemalto.chaos.platform.Platform;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,14 +14,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
-import static org.hamcrest.collection.IsMapContaining.hasKey;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -44,16 +46,39 @@ public class ChaosEventTest {
 
     @Test
     public void asMap () {
-        String instanceId = randomUUID().toString();
-        String name = randomUUID().toString();
-        String keyName = randomUUID().toString();
         String experimentId = randomUUID().toString();
         NotificationLevel notificationLevel = NotificationLevel.values()[new Random().nextInt(NotificationLevel.values().length)];
-        Container exampleContainer = AwsEC2Container.builder()
-                                                    .instanceId(instanceId)
-                                                    .name(name)
-                                                    .keyName(keyName)
-                                                    .build();
+        Container exampleContainer = new Container() {
+            @Override
+            public Platform getPlatform () {
+                return null;
+            }
+
+            @Override
+            protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+                return null;
+            }
+
+            @Override
+            public String getSimpleName () {
+                return null;
+            }
+
+            @Override
+            public String getAggregationIdentifier () {
+                return null;
+            }
+
+            @Override
+            public DataDogIdentifier getDataDogIdentifier () {
+                return null;
+            }
+
+            @Override
+            protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+                return false;
+            }
+        };
         ChaosEvent chaosEvent = ChaosEvent.builder()
                                           .withChaosTime(date)
                                           .withMessage(chaosMessage)
@@ -67,9 +92,5 @@ public class ChaosEventTest {
         assertThat(resultingMap, hasEntry("chaosTime", 0L));
         assertThat(resultingMap, hasEntry("notificationLevel", notificationLevel.toString()));
         assertThat(resultingMap, hasEntry("experimentId", experimentId));
-        assertThat(resultingMap, not(hasEntry("instanceId", instanceId)));
-        assertThat(resultingMap, not(hasEntry("name", name)));
-        assertThat(resultingMap, not(hasEntry("keyName", keyName)));
-        assertThat(resultingMap, not(hasKey("randomKey")));
     }
 }
