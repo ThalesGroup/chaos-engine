@@ -18,7 +18,7 @@ COPY chaosengine-kubernetes/src/ ./chaosengine-kubernetes/src/
 COPY chaosengine-aws-ec2/src/ ./chaosengine-aws-ec2/src/
 COPY chaosengine-aws-rds/src/ ./chaosengine-aws-rds/src/
 COPY chaosengine-pcf/src/ ./chaosengine-pcf/src/
-RUN mvn package
+RUN mvn install
 
 FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080

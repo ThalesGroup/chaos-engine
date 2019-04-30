@@ -14,7 +14,8 @@
         <dependency>
             <groupId>com.gemalto.chaos</groupId>
             <artifactId>chaosengine-launcher</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
