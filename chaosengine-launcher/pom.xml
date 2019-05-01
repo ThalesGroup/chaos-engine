@@ -19,6 +19,7 @@
                     <skip>false</skip>
                     <classifier>exec</classifier>
                     <layout>ZIP</layout>
+                    <outputDirectory>${project.build.directory}/entrypoint/</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
