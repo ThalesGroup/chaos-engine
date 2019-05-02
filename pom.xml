@@ -12,6 +12,7 @@
         <module>chaosengine-aws-ec2</module>
         <module>chaosengine-aws-rds</module>
         <module>chaosengine-pcf</module>
+        <module>chaosengine-notif-slack</module>
     </modules>
     <packaging>pom</packaging>
 
