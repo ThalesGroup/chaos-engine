@@ -14,6 +14,9 @@
         <module>chaosengine-pcf</module>
         <module>chaosengine-notif-slack</module>
         <module>chaosengine-notif-datadog</module>
+        <module>chaosengine-schedule/canada</module>
+        <module>chaosengine-schedule/czech-republic</module>
+        <module>chaosengine-schedule/france</module>
     </modules>
     <packaging>pom</packaging>
 

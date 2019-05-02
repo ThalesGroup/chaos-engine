@@ -12,6 +12,7 @@ COPY chaosengine-aws-rds/pom.xml ./chaosengine-aws-rds/
 COPY chaosengine-pcf/pom.xml ./chaosengine-pcf/
 COPY chaosengine-notif-slack/pom.xml ./chaosengine-notif-slack/
 COPY chaosengine-notif-datadog/pom.xml ./chaosengine-notif-datadog/
+COPY chaosengine-schedule ./chaosengine-schedule/
 
 #RUN mvn dependency:go-offline -Dsilent=true
 COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
@@ -28,7 +29,7 @@ RUN mvn install
 FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
 WORKDIR /chaosengine
-COPY --from=build-env /chaosengine/*/target/*.jar ./lib/
+COPY --from=build-env /chaosengine/*/target/*.jar /chaosengine/*/*/target/*.jar ./lib/
 COPY --from=build-env /chaosengine/*/target/*-assembler/*.jar ./lib/
 COPY --from=build-env /chaosengine/*/target/entrypoint/*.jar ./chaosengine.jar
 RUN rm ./lib/chaosengine-launcher*.jar
