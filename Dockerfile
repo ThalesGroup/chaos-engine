@@ -11,6 +11,7 @@ COPY chaosengine-aws-ec2/pom.xml ./chaosengine-aws-ec2/
 COPY chaosengine-aws-rds/pom.xml ./chaosengine-aws-rds/
 COPY chaosengine-pcf/pom.xml ./chaosengine-pcf/
 COPY chaosengine-notif-slack/pom.xml ./chaosengine-notif-slack/
+COPY chaosengine-notif-datadog/pom.xml ./chaosengine-notif-datadog/
 
 #RUN mvn dependency:go-offline -Dsilent=true
 COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
@@ -20,6 +21,7 @@ COPY chaosengine-aws-ec2/src/ ./chaosengine-aws-ec2/src/
 COPY chaosengine-aws-rds/src/ ./chaosengine-aws-rds/src/
 COPY chaosengine-pcf/src/ ./chaosengine-pcf/src/
 COPY chaosengine-notif-slack/src/ ./chaosengine-notif-slack/src/
+COPY chaosengine-notif-datadog/src/ ./chaosengine-notif-datadog/src/
 
 RUN mvn install
 
