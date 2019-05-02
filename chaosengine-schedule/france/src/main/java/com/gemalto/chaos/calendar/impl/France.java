@@ -1,12 +1,12 @@
 package com.gemalto.chaos.calendar.impl;
 
 import com.gemalto.chaos.calendar.HolidayCalendar;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
 import java.util.*;
 
-@Repository("FRA")
+@Component("FRA")
 public class France implements HolidayCalendar {
     private static final String TZ = "Europe/Paris";
     private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);

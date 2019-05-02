@@ -1,7 +1,7 @@
 package com.gemalto.chaos.calendar.impl;
 
 import com.gemalto.chaos.calendar.HolidayCalendar;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 
-@Repository("CZE")
+@Component("CZE")
 public class Czechia implements HolidayCalendar {
     private static final String TZ = "Europe/Prague";
     private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
