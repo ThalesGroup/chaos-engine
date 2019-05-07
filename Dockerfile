@@ -2,9 +2,9 @@ FROM maven:3.6-jdk-11-slim AS build-env
 WORKDIR /chaosengine
 COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
-RUN cd chaosengine-launcher && \
-    mvn dependency:go-offline install -Dsilent=true && \
-    cd ..
+COPY chaosengine-test-utilities ./chaosengine-test-utilities/
+RUN cd chaosengine-test-utilities  && mvn dependency:go-offline -Dsilent install
+RUN cd chaosengine-launcher && mvn dependency:go-offline -Dsilent install
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-schedule ./chaosengine-schedule/
 COPY chaosengine-notifications ./chaosengine-notifications/
@@ -14,7 +14,7 @@ COPY chaosengine-experiments ./chaosengine-experiments/
 COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
 COPY chaosengine-core/src/ ./chaosengine-core/src/
 
-RUN mvn install
+RUN mvn install && rm -rf chaosengine-test*
 
 FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
