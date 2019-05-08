@@ -121,6 +121,16 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         }
     }
 
+    public boolean isAddressRoutable (String privateIPAddress) {
+        return getRoutableCidrBlocks().stream().anyMatch(subnetInfo -> {
+            try {
+                return subnetInfo.isInRange(privateIPAddress);
+            } catch (RuntimeException e) {
+                return false;
+            }
+        });
+    }
+
     @Override
     public PlatformLevel getPlatformLevel () {
         return PlatformLevel.IAAS;
