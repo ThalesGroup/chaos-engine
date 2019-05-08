@@ -17,6 +17,7 @@ public enum AwsChaosErrorCode implements ErrorCode {
     INVALID_SNAPSHOT_NAME(21203),
     NOT_PART_OF_ASG(22101),
     SINGLE_INSTANCE_CLUSTER(22201),
+    INVALID_CIDR_BLOCK(21103),
     ;
     private final int errorCode;
     private final String shortName;

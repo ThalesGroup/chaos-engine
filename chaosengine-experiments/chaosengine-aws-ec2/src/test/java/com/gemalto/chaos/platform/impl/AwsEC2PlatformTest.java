@@ -548,6 +548,23 @@ public class AwsEC2PlatformTest {
         assertNotSame("The VPC To Security Group Map should return a clone, not the same object", firstMap, secondMap);
     }
 
+    @Test
+    public void routableCidrBlockNoException () {
+        Collection<String> cidrBlocks = Set.of("192.168.1.0/24", "172.16.0.0/16", "10.0.0.0/8");
+        awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
+    }
+
+    @Test
+    public void routableCidrBlockWithException () {
+        Collection<String> cidrBlocks = Set.of("testFailure");
+        try {
+            awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
+            fail();
+        } catch (ChaosException e) {
+            assertTrue(e.getMessage().startsWith("21103"));
+        }
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired

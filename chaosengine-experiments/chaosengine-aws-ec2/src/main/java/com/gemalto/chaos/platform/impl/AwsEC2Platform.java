@@ -6,6 +6,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.SetInstanceHealthRequest;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gemalto.chaos.constants.AwsConstants;
 import com.gemalto.chaos.constants.AwsEC2Constants;
 import com.gemalto.chaos.constants.DataDogConstants;
@@ -22,6 +23,7 @@ import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
 import com.gemalto.chaos.shellclient.ssh.SSHCredentials;
 import com.gemalto.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
+import org.apache.commons.net.util.SubnetUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -35,8 +37,7 @@ import java.util.stream.Stream;
 
 import static com.gemalto.chaos.constants.AwsEC2Constants.*;
 import static com.gemalto.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.AWS_EC2_GENERIC_API_ERROR;
-import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.NO_INSTANCES_RETURNED;
+import static com.gemalto.chaos.exception.enums.AwsChaosErrorCode.*;
 import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -51,6 +52,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private List<String> groupingTags = Collections.singletonList(AWS_ASG_NAME_TAG_KEY);
     private Map<String, String> sshPrivateKeys = Collections.emptyMap();
+    private Collection<SubnetUtils.SubnetInfo> routableCidrBlocks = Collections.emptySet();
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
 
@@ -98,6 +100,24 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         } catch (RuntimeException e) {
             log.error("API for AWS EC2 failed to resolve.", e);
             return ApiStatus.ERROR;
+        }
+    }
+
+    @JsonIgnore
+    public Collection<SubnetUtils.SubnetInfo> getRoutableCidrBlocks () {
+        return routableCidrBlocks;
+    }
+
+    public void setRoutableCidrBlocks (Collection<String> routableCidrBlocks) {
+        try {
+            this.routableCidrBlocks = routableCidrBlocks.stream()
+                                                        .map(SubnetUtils::new)
+                                                        .map(SubnetUtils::getInfo)
+                                                        .collect(Collectors.toSet());
+        } catch (RuntimeException e) {
+            ChaosException exception = new ChaosException(INVALID_CIDR_BLOCK, e);
+            log.error("Invalid CIDR Blocks provided", exception);
+            throw exception;
         }
     }
 
