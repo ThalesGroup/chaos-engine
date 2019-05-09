@@ -114,8 +114,9 @@ public class AwsEC2Container extends AwsContainer {
 
     @Override
     public boolean supportsShellBasedExperiments () {
-        return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
-                .hasKey(keyName); // TODO Support for internal private address
+        String routableAddress = getRoutableAddress();
+        return super.supportsShellBasedExperiments() && routableAddress != null && !routableAddress.isBlank() && awsEC2Platform
+                .hasKey(keyName);
     }
 
     boolean isMemberOfScaledGroup () {
