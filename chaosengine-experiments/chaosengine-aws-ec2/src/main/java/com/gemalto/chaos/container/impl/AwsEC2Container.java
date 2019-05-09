@@ -197,7 +197,7 @@ public class AwsEC2Container extends AwsContainer {
         }));
     }
 
-    String getRoutableAddress () {
+    public String getRoutableAddress () {
         return (getPrivateAddress() != null && awsEC2Platform.isAddressRoutable(getPrivateAddress())) ? getPrivateAddress() : getPublicAddress();
     }
 

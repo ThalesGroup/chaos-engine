@@ -453,7 +453,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
 
     @Override
     public String getEndpoint (AwsEC2Container container) {
-        return container.getPublicAddress();
+        return container.getRoutableAddress();
     }
 
     @Override
