@@ -267,6 +267,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                               .availabilityZone(Optional.ofNullable(availabilityZone)
                                                         .orElse(AwsConstants.NO_AZ_INFORMATION))
                               .publicAddress(instance.getPublicIpAddress())
+                              .privateAddress(instance.getPrivateIpAddress())
                               .build();
     }
 
