@@ -68,8 +68,8 @@ public class AwsEC2Container extends AwsContainer {
         return name;
     }
 
-    public String getPublicAddress () {
-        return publicAddress;
+    public boolean isSSHCapable () {
+        return supportsShellBasedExperiments();
     }
 
     @Override
@@ -116,10 +116,6 @@ public class AwsEC2Container extends AwsContainer {
     public boolean supportsShellBasedExperiments () {
         return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
                 .hasKey(keyName); // TODO Support for internal private address
-    }
-
-    public boolean isSSHCapable () {
-        return supportsShellBasedExperiments();
     }
 
     boolean isMemberOfScaledGroup () {
@@ -198,6 +194,18 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
             return null;
         }));
+    }
+
+    String getRoutableAddress () {
+        return (getPrivateAddress() != null && awsEC2Platform.isAddressRoutable(getPrivateAddress())) ? getPrivateAddress() : getPublicAddress();
+    }
+
+    String getPrivateAddress () {
+        return privateAddress;
+    }
+
+    public String getPublicAddress () {
+        return publicAddress;
     }
 
     public static final class AwsEC2ContainerBuilder {
