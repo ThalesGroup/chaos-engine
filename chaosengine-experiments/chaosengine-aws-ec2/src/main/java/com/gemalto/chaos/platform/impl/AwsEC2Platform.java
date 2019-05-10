@@ -470,4 +470,8 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         return new ChaosSSHCredentials().withUsername(DEFAULT_EC2_CLI_USER)
                                         .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
     }
+
+    public String getUsernameForImageId (String imageId) {
+        return Optional.ofNullable(getImageIdToUsernameMap().get(imageId)).orElse(DEFAULT_EC2_CLI_USER);
+    }
 }

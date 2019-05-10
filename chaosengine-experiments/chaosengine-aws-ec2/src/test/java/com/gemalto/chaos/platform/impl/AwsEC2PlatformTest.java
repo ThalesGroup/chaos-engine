@@ -550,6 +550,14 @@ public class AwsEC2PlatformTest {
     }
 
     @Test
+    public void getUsernameForImageId () {
+        awsEC2Platform.setImageIdToUsernameMap(Map.of("rhel", "root", "amazon-linux", "ec2-user"));
+        assertEquals("root", awsEC2Platform.getUsernameForImageId("rhel"));
+        assertEquals("ec2-user", awsEC2Platform.getUsernameForImageId("amazon-linux"));
+        assertEquals("ec2-user", awsEC2Platform.getUsernameForImageId("centos"));
+    }
+
+    @Test
     public void routableCidrBlockNoException () {
         Collection<String> cidrBlocks = Set.of("192.168.1.0/24", "172.16.0.0/16", "10.0.0.0/8");
         awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
