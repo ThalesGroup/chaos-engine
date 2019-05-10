@@ -52,6 +52,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     private AwsEC2SelfAwareness awsEC2SelfAwareness;
     private List<String> groupingTags = Collections.singletonList(AWS_ASG_NAME_TAG_KEY);
     private Map<String, String> sshPrivateKeys = Collections.emptyMap();
+    private Map<String, String> imageIdToUsernameMap = new ConcurrentHashMap<>();
     private Collection<SubnetUtils.SubnetInfo> routableCidrBlocks = Collections.emptySet();
     @Autowired
     private AmazonAutoScaling amazonAutoScaling;
@@ -85,6 +86,14 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     public void setSSHPrivateKeys (@NotNull Map<String, String> sshPrivateKeys) {
         log.info("Loading private keys for keynames: {}", v("key-name", sshPrivateKeys.keySet()));
         this.sshPrivateKeys = sshPrivateKeys;
+    }
+
+    public Map<String, String> getImageIdToUsernameMap () {
+        return imageIdToUsernameMap;
+    }
+
+    public void setImageIdToUsernameMap (Map<String, String> imageIdToUsernameMap) {
+        this.imageIdToUsernameMap = new ConcurrentHashMap<>(imageIdToUsernameMap);
     }
 
     /**
