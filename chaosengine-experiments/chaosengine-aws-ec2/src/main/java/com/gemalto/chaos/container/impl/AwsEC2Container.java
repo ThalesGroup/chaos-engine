@@ -73,6 +73,10 @@ public class AwsEC2Container extends AwsContainer {
         return supportsShellBasedExperiments();
     }
 
+    public String getImageId () {
+        return imageId;
+    }
+
     @Override
     public Platform getPlatform () {
         return awsEC2Platform;
