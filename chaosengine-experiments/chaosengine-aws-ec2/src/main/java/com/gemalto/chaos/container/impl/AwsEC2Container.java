@@ -34,6 +34,7 @@ public class AwsEC2Container extends AwsContainer {
     private String name;
     private String publicAddress;
     private String privateAddress;
+    private String imageId;
 
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
@@ -220,6 +221,7 @@ public class AwsEC2Container extends AwsContainer {
         private boolean nativeAwsAutoscaling = false;
         private String publicAddress;
         private String privateAddress;
+        private String imageId;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -278,6 +280,11 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
+        public AwsEC2ContainerBuilder imageId (String imageId) {
+            this.imageId = imageId;
+            return this;
+        }
+
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -289,6 +296,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             awsEC2Container.publicAddress = this.publicAddress;
             awsEC2Container.privateAddress = this.privateAddress;
+            awsEC2Container.imageId = this.imageId;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
             try {
                 awsEC2Container.setMappedDiagnosticContext();
