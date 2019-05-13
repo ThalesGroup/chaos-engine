@@ -467,11 +467,15 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
 
     @Override
     public SSHCredentials getSshCredentials (AwsEC2Container container) {
-        return new ChaosSSHCredentials().withUsername(DEFAULT_EC2_CLI_USER)
+        return new ChaosSSHCredentials().withUsername(getUsernameForContainer(container))
                                         .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
     }
 
-    public String getUsernameForImageId (String imageId) {
+    String getUsernameForContainer (AwsEC2Container container) {
+        return getUsernameForImageId(container.getImageId());
+    }
+
+    String getUsernameForImageId (String imageId) {
         return Optional.ofNullable(getImageIdToUsernameMap().get(imageId)).orElse(DEFAULT_EC2_CLI_USER);
     }
 }
