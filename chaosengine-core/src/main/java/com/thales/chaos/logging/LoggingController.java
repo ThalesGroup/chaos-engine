@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/logging")
 public class LoggingController {
-    private static final String GEMALTO_CLASS = "com.thales";
+    private static final String THALES_PACKAGE = "com.thales";
     private static final Marker ALWAYS = MarkerFactory.getMarker("ALWAYS");
 
     @ApiOperation(value = "Set Base Logging Level", notes = "Sets the logging level for the com.thales class.")
     @PostMapping
     public String setLogLevel (@ApiParam(value = "The new logging level to use", required = true) @RequestParam LoggingLevel loggingLevel) {
-        setLogLevel(loggingLevel, GEMALTO_CLASS);
+        setLogLevel(loggingLevel, THALES_PACKAGE);
         return "ok";
     }
 
@@ -35,7 +35,7 @@ public class LoggingController {
     @ApiOperation(value = "Get Base Logging Level", notes = "Gets the logging level for the com.thales class.")
     @GetMapping
     public String getLogLevel () {
-        return getLogLevel(GEMALTO_CLASS);
+        return getLogLevel(THALES_PACKAGE);
     }
 
     @ApiOperation(value = "Get Class Logging Level", notes = "Gets the logging level for a specific Java Class Path.")

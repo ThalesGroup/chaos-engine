@@ -22,8 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(LoggingController.class)
 public class LoggingControllerTest {
     private static final String OTHER_CLASS = "org.nosuchclass";
-    private static final String GEMALTO_CLASS = "com.thales";
-    private static final Logger GEMALTO_LOGGER = (Logger) LoggerFactory.getLogger(GEMALTO_CLASS);
+    private static final String THALES_PACKAGE = "com.thales";
+    private static final Logger THALES_LOGGER = (Logger) LoggerFactory.getLogger(THALES_PACKAGE);
     private static final Logger OTHER_LOGGER = (Logger) LoggerFactory.getLogger(OTHER_CLASS);
     @Autowired
     private MockMvc mvc;
@@ -37,7 +37,7 @@ public class LoggingControllerTest {
            .andExpect(jsonPath("$", is("DEBUG")));
         mvc.perform(post("/logging/").contentType(APPLICATION_JSON).param("loggingLevel", "INFO"))
            .andExpect(status().isOk());
-        mvc.perform(get("/logging/" + GEMALTO_CLASS).contentType(APPLICATION_JSON))
+        mvc.perform(get("/logging/" + THALES_PACKAGE).contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$", is("INFO")));
         mvc.perform(get("/logging").contentType(APPLICATION_JSON))
@@ -45,7 +45,7 @@ public class LoggingControllerTest {
            .andExpect(jsonPath("$", is("INFO")));
         mvc.perform(post("/logging/").contentType(APPLICATION_JSON).param("loggingLevel", "WARN"))
            .andExpect(status().isOk());
-        mvc.perform(get("/logging/" + GEMALTO_CLASS).contentType(APPLICATION_JSON))
+        mvc.perform(get("/logging/" + THALES_PACKAGE).contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$", is("WARN")));
         mvc.perform(get("/logging").contentType(APPLICATION_JSON))
@@ -55,7 +55,7 @@ public class LoggingControllerTest {
 
     @After
     public void tearDown () {
-        GEMALTO_LOGGER.setLevel(Level.OFF);
+        THALES_LOGGER.setLevel(Level.OFF);
         OTHER_LOGGER.setLevel(Level.OFF);
     }
 }
