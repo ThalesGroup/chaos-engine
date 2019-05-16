@@ -476,6 +476,8 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     String getUsernameForImageId (String imageId) {
-        return Optional.ofNullable(getImageIdToUsernameMap().get(imageId)).orElse(DEFAULT_EC2_CLI_USER);
+        final Optional<String> usernameLookup = Optional.ofNullable(getImageIdToUsernameMap().get(imageId));
+        usernameLookup.ifPresent(username -> log.info("Using username {} for SSH", username));
+        return usernameLookup.orElse(DEFAULT_EC2_CLI_USER);
     }
 }
