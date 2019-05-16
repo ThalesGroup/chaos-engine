@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/logging")
 public class LoggingController {
-    private static final String GEMALTO_CLASS = "com.gemalto";
+    private static final String GEMALTO_CLASS = "com.thales";
     private static final Marker ALWAYS = MarkerFactory.getMarker("ALWAYS");
 
-    @ApiOperation(value = "Set Base Logging Level", notes = "Sets the logging level for the com.gemalto class.")
+    @ApiOperation(value = "Set Base Logging Level", notes = "Sets the logging level for the com.thales class.")
     @PostMapping
     public String setLogLevel (@ApiParam(value = "The new logging level to use", required = true) @RequestParam LoggingLevel loggingLevel) {
         setLogLevel(loggingLevel, GEMALTO_CLASS);
@@ -25,14 +25,14 @@ public class LoggingController {
 
     @ApiOperation(value = "Set Class Logging Level", notes = "Sets the logging level for a specific Java Class Path.")
     @PostMapping("/{loggingClass}")
-    public String setLogLevel (@ApiParam(value = "The new logging level to use") @RequestParam LoggingLevel loggingLevel, @ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.gemalto, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
+    public String setLogLevel (@ApiParam(value = "The new logging level to use") @RequestParam LoggingLevel loggingLevel, @ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.thales, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
         Logger logger = (Logger) LoggerFactory.getLogger(loggingClass);
         logger.setLevel(Level.valueOf(loggingLevel.toString()));
         logger.info(ALWAYS, "Logging level changed to {}", loggingLevel);
         return "ok";
     }
 
-    @ApiOperation(value = "Get Base Logging Level", notes = "Gets the logging level for the com.gemalto class.")
+    @ApiOperation(value = "Get Base Logging Level", notes = "Gets the logging level for the com.thales class.")
     @GetMapping
     public String getLogLevel () {
         return getLogLevel(GEMALTO_CLASS);
@@ -40,7 +40,7 @@ public class LoggingController {
 
     @ApiOperation(value = "Get Class Logging Level", notes = "Gets the logging level for a specific Java Class Path.")
     @GetMapping("/{loggingClass}")
-    public String getLogLevel (@ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.gemalto, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
+    public String getLogLevel (@ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.thales, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
         return ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggingClass)).getLevel().toString();
     }
 }

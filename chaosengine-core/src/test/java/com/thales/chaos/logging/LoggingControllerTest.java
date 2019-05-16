@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(LoggingController.class)
 public class LoggingControllerTest {
     private static final String OTHER_CLASS = "org.nosuchclass";
-    private static final String GEMALTO_CLASS = "com.gemalto";
+    private static final String GEMALTO_CLASS = "com.thales";
     private static final Logger GEMALTO_LOGGER = (Logger) LoggerFactory.getLogger(GEMALTO_CLASS);
     private static final Logger OTHER_LOGGER = (Logger) LoggerFactory.getLogger(OTHER_CLASS);
     @Autowired
