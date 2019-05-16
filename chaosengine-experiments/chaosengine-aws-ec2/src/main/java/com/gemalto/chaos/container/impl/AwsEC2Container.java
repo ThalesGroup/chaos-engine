@@ -33,6 +33,7 @@ public class AwsEC2Container extends AwsContainer {
     private String keyName;
     private String name;
     private String publicAddress;
+    private String privateAddress;
 
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
@@ -67,8 +68,8 @@ public class AwsEC2Container extends AwsContainer {
         return name;
     }
 
-    public String getPublicAddress () {
-        return publicAddress;
+    public boolean isSSHCapable () {
+        return supportsShellBasedExperiments();
     }
 
     @Override
@@ -113,12 +114,9 @@ public class AwsEC2Container extends AwsContainer {
 
     @Override
     public boolean supportsShellBasedExperiments () {
-        return super.supportsShellBasedExperiments() && publicAddress != null && !publicAddress.isEmpty() && ((AwsEC2Platform) getPlatform())
-                .hasKey(keyName); // TODO Support for internal private address
-    }
-
-    public boolean isSSHCapable () {
-        return supportsShellBasedExperiments();
+        String routableAddress = getRoutableAddress();
+        return super.supportsShellBasedExperiments() && routableAddress != null && !routableAddress.isBlank() && awsEC2Platform
+                .hasKey(keyName);
     }
 
     boolean isMemberOfScaledGroup () {
@@ -199,6 +197,18 @@ public class AwsEC2Container extends AwsContainer {
         }));
     }
 
+    public String getRoutableAddress () {
+        return (getPrivateAddress() != null && awsEC2Platform.isAddressRoutable(getPrivateAddress())) ? getPrivateAddress() : getPublicAddress();
+    }
+
+    String getPrivateAddress () {
+        return privateAddress;
+    }
+
+    public String getPublicAddress () {
+        return publicAddress;
+    }
+
     public static final class AwsEC2ContainerBuilder {
         private final Map<String, String> dataDogTags = new HashMap<>();
         private String instanceId;
@@ -209,6 +219,7 @@ public class AwsEC2Container extends AwsContainer {
         private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
         private boolean nativeAwsAutoscaling = false;
         private String publicAddress;
+        private String privateAddress;
 
         private AwsEC2ContainerBuilder () {
         }
@@ -262,6 +273,11 @@ public class AwsEC2Container extends AwsContainer {
             return this;
         }
 
+        public AwsEC2ContainerBuilder privateAddress (String privateAddress) {
+            this.privateAddress = privateAddress;
+            return this;
+        }
+
         public AwsEC2Container build () {
             AwsEC2Container awsEC2Container = new AwsEC2Container();
             awsEC2Container.awsEC2Platform = this.awsEC2Platform;
@@ -272,6 +288,7 @@ public class AwsEC2Container extends AwsContainer {
             awsEC2Container.groupIdentifier = this.groupIdentifier;
             awsEC2Container.nativeAwsAutoscaling = this.nativeAwsAutoscaling;
             awsEC2Container.publicAddress = this.publicAddress;
+            awsEC2Container.privateAddress = this.privateAddress;
             awsEC2Container.dataDogTags.putAll(this.dataDogTags);
             try {
                 awsEC2Container.setMappedDiagnosticContext();

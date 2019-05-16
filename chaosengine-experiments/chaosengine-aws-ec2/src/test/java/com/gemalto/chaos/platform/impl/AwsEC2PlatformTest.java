@@ -17,6 +17,7 @@ import com.gemalto.chaos.platform.enums.ApiStatus;
 import com.gemalto.chaos.platform.enums.PlatformHealth;
 import com.gemalto.chaos.platform.enums.PlatformLevel;
 import com.gemalto.chaos.selfawareness.AwsEC2SelfAwareness;
+import org.apache.commons.net.util.SubnetUtils;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.Test;
@@ -546,6 +547,37 @@ public class AwsEC2PlatformTest {
         Map<String, String> firstMap = awsEC2Platform.getVpcToSecurityGroupMap();
         Map<String, String> secondMap = awsEC2Platform.getVpcToSecurityGroupMap();
         assertNotSame("The VPC To Security Group Map should return a clone, not the same object", firstMap, secondMap);
+    }
+
+    @Test
+    public void routableCidrBlockNoException () {
+        Collection<String> cidrBlocks = Set.of("192.168.1.0/24", "172.16.0.0/16", "10.0.0.0/8");
+        awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
+    }
+
+    @Test
+    public void routableCidrBlockWithException () {
+        Collection<String> cidrBlocks = Set.of("testFailure");
+        try {
+            awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
+            fail();
+        } catch (ChaosException e) {
+            assertTrue(e.getMessage().startsWith("21103"));
+        }
+    }
+
+    @Test
+    public void isAddressRoutable () {
+        final SubnetUtils.SubnetInfo privateBlock1 = new SubnetUtils("10.0.0.0/8").getInfo();
+        final SubnetUtils.SubnetInfo privateBlock2 = new SubnetUtils("172.16.0.0/16").getInfo();
+        final SubnetUtils.SubnetInfo privateBlock3 = new SubnetUtils("192.168.1.0/24").getInfo();
+        doReturn(Set.of(privateBlock1, privateBlock2), Set.of(privateBlock2, privateBlock3), Set.of(privateBlock3, privateBlock1))
+                .when(awsEC2Platform)
+                .getRoutableCidrBlocks();
+        assertTrue(awsEC2Platform.isAddressRoutable("172.16.1.192"));
+        assertFalse(awsEC2Platform.isAddressRoutable("10.1.2.3"));
+        assertTrue(awsEC2Platform.isAddressRoutable("10.1.2.3"));
+        assertFalse(awsEC2Platform.isAddressRoutable("fake"));
     }
 
     @Configuration

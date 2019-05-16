@@ -354,4 +354,15 @@ public class AwsEC2ContainerTest {
         assertEquals(baseContextMap, finalContextMap);
         assertEquals(expectedTags, modifiedContextMap);
     }
+
+    @Test
+    public void getRoutableAddress () {
+        doReturn(null, "private").when(awsEC2Container).getPrivateAddress();
+        doReturn("public").when(awsEC2Container).getPublicAddress();
+        doReturn(true, false).when(awsEC2Platform).isAddressRoutable("private");
+        assertEquals("Null private address, should revert to public", "public", awsEC2Container.getRoutableAddress());
+        verify(awsEC2Platform, never()).isAddressRoutable(any());
+        assertEquals("Routable private address, should be private", "private", awsEC2Container.getRoutableAddress());
+        assertEquals("Unroutable private address, should be private", "public", awsEC2Container.getRoutableAddress());
+    }
 }
