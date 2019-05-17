@@ -74,7 +74,7 @@ https://confluence.gemalto.com/display/CLS/Chaos+Engine+REST+API
 ### Logging
 The Chaos Engine log level can be dynamically changed during runtime using a REST endpoint `logging-controler`. A POST request with the new log level (of `ERROR`, `WARN`, `INFO`, `DEBUG`, or `TRACE`) will set the log level.
 
-A path variable of the class to specify can also be used. (i.e., `/logging/org.springframework`, or `/logging/com.gemalto.notification`) to control specific elements. If no classpath is specified, `com.gemalto` is defaulted.
+A path variable of the class to specify can also be used. (i.e., `/logging/org.springframework`, or `/logging/com.thales.notification`) to control specific elements. If no classpath is specified, `com.thales` is defaulted.
 
 https://confluence.gemalto.com/pages/viewpage.action?spaceKey=CLS&title=Chaos+Engine+REST+API
 
