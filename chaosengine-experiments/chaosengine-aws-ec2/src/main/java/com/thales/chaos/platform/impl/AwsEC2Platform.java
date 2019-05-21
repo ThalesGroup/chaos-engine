@@ -480,4 +480,22 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         usernameLookup.ifPresentOrElse(username -> log.info("Using username {} for SSH", username), () -> log.debug("Using username ec2-user for SSH"));
         return usernameLookup.orElse(DEFAULT_EC2_CLI_USER);
     }
+
+    public boolean isStarted (AwsEC2Container awsEC2Container) {
+        return isStarted(awsEC2Container.getInstanceId());
+    }
+
+    private boolean isStarted (String instanceId) {
+        return amazonEC2.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
+                        .getReservations()
+                        .stream()
+                        .map(Reservation::getInstances)
+                        .flatMap(List::stream)
+                        .filter(instance -> instance.getInstanceId().equals(instanceId))
+                        .findFirst()
+                        .map(Instance::getState)
+                        .map(InstanceState::getCode)
+                        .map(i -> AWS_RUNNING_CODE == i)
+                        .orElse(false);
+    }
 }

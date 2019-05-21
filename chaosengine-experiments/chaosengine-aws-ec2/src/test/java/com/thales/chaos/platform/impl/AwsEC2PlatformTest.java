@@ -586,6 +586,43 @@ public class AwsEC2PlatformTest {
         assertFalse(awsEC2Platform.isAddressRoutable("fake"));
     }
 
+    @Test
+    public void isContainerStarted () {
+        AwsEC2Container awsEC2Container = mock(AwsEC2Container.class);
+        String instanceId = randomUUID().toString();
+        doReturn(instanceId).when(awsEC2Container).getInstanceId();
+        Instance instance = new Instance().withInstanceId(instanceId).withState(new InstanceState().withCode(16));
+        Reservation reservation = new Reservation().withInstances(instance);
+        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(reservation);
+        doReturn(describeInstancesResult).when(amazonEC2)
+                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        assertTrue("Container is running, should be true", awsEC2Platform.isStarted(awsEC2Container));
+    }
+
+    @Test
+    public void isContainerStarted2 () {
+        AwsEC2Container awsEC2Container = mock(AwsEC2Container.class);
+        String instanceId = randomUUID().toString();
+        doReturn(instanceId).when(awsEC2Container).getInstanceId();
+        Instance instance = new Instance().withInstanceId(instanceId).withState(new InstanceState().withCode(48));
+        Reservation reservation = new Reservation().withInstances(instance);
+        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(reservation);
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        assertFalse("Container isn't started, should be false", awsEC2Platform.isStarted(awsEC2Container));
+    }
+
+    @Test
+    public void isContainerStarted3 () {
+        AwsEC2Container awsEC2Container = mock(AwsEC2Container.class);
+        String instanceId = randomUUID().toString();
+        doReturn(instanceId).when(awsEC2Container).getInstanceId();
+        Reservation reservation = new Reservation();
+        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(reservation);
+        doReturn(describeInstancesResult).when(amazonEC2)
+                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        assertFalse("No container returned, should be false", awsEC2Platform.isStarted(awsEC2Container));
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired
