@@ -88,16 +88,16 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @Override
-    public boolean canExperiment () {
-        return super.canExperiment() && isStarted();
-    }
-
-    boolean isStarted () {
-        if (awsEC2Platform.isStarted(this)) {
+    public boolean eligibleForExperiments () {
+        if (isStarted()) {
             return true;
         }
         log.warn("Ignoring {} because it is not in a running state", v(DataDogConstants.DATADOG_CONTAINER_KEY, this));
         return false;
+    }
+
+    boolean isStarted () {
+        return awsEC2Platform.isStarted(this);
     }
 
     @Override

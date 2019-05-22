@@ -8,13 +8,10 @@ import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.PlatformManager;
-import com.thales.chaos.platform.enums.ApiStatus;
-import com.thales.chaos.platform.enums.PlatformHealth;
-import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.scripts.ScriptManager;
-import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -26,13 +23,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -74,6 +72,17 @@ public class ExperimentManagerTest {
     @MockBean(name = "secondPlatform")
     private Platform secondPlatform;
 
+    @Before
+    public void setUp () throws Exception {
+        doCallRealMethod().when(platformManager).getNextPlatformForExperiment(anyBoolean());
+        doReturn(true).when(platform).hasEligibleContainersForExperiments();
+        doReturn(dataDogIdentifier()).when(container1).getDataDogIdentifier();
+        doReturn(dataDogIdentifier()).when(container2).getDataDogIdentifier();
+        doReturn(dataDogIdentifier()).when(container3).getDataDogIdentifier();
+        doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();
+        doReturn(secondPlatform).when(secondPlatform).scheduleExperiment();
+    }
+
     @Test
     public void startExperiments () {
         List<Container> containerList = new ArrayList<>();
@@ -112,8 +121,8 @@ public class ExperimentManagerTest {
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(mockPlatform);
-        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
-        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment1.startExperiment()).thenReturn(completedFuture(true));
+        when(experiment2.startExperiment()).thenReturn(completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -129,42 +138,26 @@ public class ExperimentManagerTest {
     //SCT-5854
     @Test
     public void avoidOverlappingExperiments () {
-        List<Container> containerListApps = new ArrayList<>();
-        containerListApps.add(container1);
-        containerListApps.add(container2);
-        List<Container> containerListContainers = new ArrayList<>();
-        containerListContainers.add(container3);
-        Mockito.doReturn(DataDogIdentifier.dataDogIdentifier()).when(container1).getDataDogIdentifier();
-        Mockito.doReturn(DataDogIdentifier.dataDogIdentifier()).when(container2).getDataDogIdentifier();
-        Mockito.doReturn(DataDogIdentifier.dataDogIdentifier()).when(container3).getDataDogIdentifier();
-        when(platformManager.getPlatforms()).thenReturn(Arrays.asList(firstPlatform, secondPlatform));
-        when(firstPlatform.scheduleExperiment()).thenReturn(firstPlatform);
-        when(firstPlatform.getRoster()).thenReturn(containerListApps);
-        when(firstPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(firstPlatform.canExperiment()).thenReturn(true);
-        when(firstPlatform.getNextChaosTime()).thenReturn(Instant.now());
-        when(secondPlatform.scheduleExperiment()).thenReturn(secondPlatform);
-        when(secondPlatform.getRoster()).thenReturn(containerListContainers);
-        when(secondPlatform.canExperiment()).thenReturn(true);
-        when(secondPlatform.generateExperimentRoster()).thenCallRealMethod();
-        when(secondPlatform.getNextChaosTime()).thenReturn(Instant.now());
-        when(container1.canExperiment()).thenReturn(true);
-        when(container1.createExperiment()).thenReturn(experiment1);
-        when(container1.getPlatform()).thenReturn(firstPlatform);
-        when(container2.canExperiment()).thenReturn(true);
-        when(container2.createExperiment()).thenReturn(experiment2);
-        when(container2.getPlatform()).thenReturn(firstPlatform);
-        when(container3.canExperiment()).thenReturn(true);
-        when(container3.createExperiment()).thenReturn(experiment3);
-        when(container3.getPlatform()).thenReturn(secondPlatform);
-        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
-        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
-        when(experiment3.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
-        when(experiment1.getContainer()).thenReturn(container1);
-        when(experiment2.getContainer()).thenReturn(container2);
-        when(experiment3.getContainer()).thenReturn(container3);
-        when(holidayManager.isHoliday()).thenReturn(false);
-        when(holidayManager.isOutsideWorkingHours()).thenReturn(false);
+        doReturn(Optional.of(firstPlatform), Optional.of(secondPlatform), Optional.empty()).when(platformManager)
+                                                                                           .getNextPlatformForExperiment(anyBoolean());
+        doReturn(List.of(container1, container2)).when(firstPlatform).generateExperimentRoster();
+        doReturn(List.of(container3)).when(secondPlatform).generateExperimentRoster();
+        doReturn(List.of(firstPlatform, secondPlatform)).when(platformManager).getPlatforms();
+        doReturn(true).when(container1).canExperiment();
+        doReturn(experiment1).when(container1).createExperiment();
+        doReturn(firstPlatform).when(container1).getPlatform();
+        doReturn(true).when(container2).canExperiment();
+        doReturn(experiment2).when(container2).createExperiment();
+        doReturn(firstPlatform).when(container2).getPlatform();
+        doReturn(true).when(container3).canExperiment();
+        doReturn(experiment3).when(container3).createExperiment();
+        doReturn(secondPlatform).when(container3).getPlatform();
+        doReturn(completedFuture(true)).when(experiment1).startExperiment();
+        doReturn(container1).when(experiment1).getContainer();
+        doReturn(completedFuture(true)).when(experiment2).startExperiment();
+        doReturn(container2).when(experiment2).getContainer();
+        doReturn(completedFuture(true)).when(experiment3).startExperiment();
+        doReturn(container3).when(experiment3).getContainer();
         experimentManager.scheduleExperiments();
         Collection<Experiment> experiments = experimentManager.getNewExperimentQueue();
         int scheduledExperimentsCount = experiments.size();
@@ -178,7 +171,6 @@ public class ExperimentManagerTest {
         //number active experiments should be equal to number of previously scheduled experiments
         assertEquals(scheduledExperimentsCount, activeExperimentsCount);
         //all active experiments should belong to same platform layer
-        Platform experimentPlatform = activeExperiments.iterator().next().getContainer().getPlatform();
         assertEquals(1, activeExperiments.stream()
                                          .collect(Collectors.groupingBy(experiment -> experiment.getContainer()
                                                                                                 .getPlatform()))
@@ -187,21 +179,18 @@ public class ExperimentManagerTest {
 
     @Test
     public void removeFinishedExperiments () {
-        Mockito.doReturn(DataDogIdentifier.dataDogIdentifier()).when(container1).getDataDogIdentifier();
-        Mockito.doReturn(DataDogIdentifier.dataDogIdentifier()).when(container2).getDataDogIdentifier();
         when(platformManager.getPlatforms()).thenReturn(Collections.singletonList(firstPlatform));
-        when(firstPlatform.scheduleExperiment()).thenReturn(firstPlatform);
-        when(firstPlatform.getRoster()).thenReturn(Arrays.asList(container1, container2));
-        when(firstPlatform.canExperiment()).thenReturn(true);
-        when(firstPlatform.generateExperimentRoster()).thenCallRealMethod();
+        doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(anyBoolean());
+        doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();
+        doReturn(List.of(container1, container2)).when(firstPlatform).generateExperimentRoster();
         when(container1.canExperiment()).thenReturn(true);
         when(container1.createExperiment()).thenReturn(experiment1);
         when(container1.getPlatform()).thenReturn(firstPlatform);
         when(container2.canExperiment()).thenReturn(true);
         when(container2.createExperiment()).thenReturn(experiment2);
         when(container2.getPlatform()).thenReturn(firstPlatform);
-        when(experiment1.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
-        when(experiment2.startExperiment()).thenReturn(CompletableFuture.completedFuture(true));
+        when(experiment1.startExperiment()).thenReturn(completedFuture(true));
+        when(experiment2.startExperiment()).thenReturn(completedFuture(true));
         when(experiment1.getContainer()).thenReturn(container1);
         when(experiment2.getContainer()).thenReturn(container2);
         when(holidayManager.isHoliday()).thenReturn(false);
@@ -238,260 +227,6 @@ public class ExperimentManagerTest {
         assertThat(experimentManager.experimentContainerId(containerId), containsInAnyOrder(experiment1));
         verify(container1, times(1)).createExperiment();
         verify(container2, times(0)).createExperiment();
-    }
-
-    @Test
-    public void testPlatformsByOrder () {
-        Platform platform1 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform2 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform3 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform4 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();
-        doReturn(true).when(platform1).canExperiment();
-        doReturn(true).when(platform2).canExperiment();
-        doReturn(true).when(platform3).canExperiment();
-        doReturn(false).when(platform4).canExperiment();
-        doReturn(Collections.singletonList(container1)).when(platform1).getRoster();
-        doReturn(Collections.singletonList(container2)).when(platform2).getRoster();
-        doReturn(Collections.emptyList()).when(platform3).getRoster();
-        doReturn(Instant.now()).when(platform1).getNextChaosTime();
-        doReturn(Instant.now().plusSeconds(1)).when(platform2).getNextChaosTime();
-        experimentManager.scheduleExperiments(false);
-        verify(platform4, never()).getRoster();
-        verify(platform1, times(1)).getNextChaosTime();
-        verify(platform2, times(1)).getNextChaosTime();
-        verify(platform3, times(0)).getNextChaosTime();
-        verify(platform4, times(0)).getNextChaosTime();
-        verify(platform1, times(1)).scheduleExperiment();
-        verify(platform2, never()).scheduleExperiment();
-        verify(platform3, never()).scheduleExperiment();
-        verify(platform4, never()).scheduleExperiment();
-    }
-
-    @Test
-    public void testPlatformsByOrderWithNoEligible () {
-        Platform platform1 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform2 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform3 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        Platform platform4 = Mockito.spy(new Platform() {
-            @Override
-            public ApiStatus getApiStatus () {
-                return null;
-            }
-
-            @Override
-            public PlatformLevel getPlatformLevel () {
-                return null;
-            }
-
-            @Override
-            public PlatformHealth getPlatformHealth () {
-                return null;
-            }
-
-            @Override
-            protected List<Container> generateRoster () {
-                return null;
-            }
-
-            @Override
-            public boolean isContainerRecycled (Container container) {
-                return false;
-            }
-        });
-        doReturn(Arrays.asList(platform1, platform2, platform3, platform4)).when(platformManager).getPlatforms();
-        doReturn(true).when(platform1).canExperiment();
-        doReturn(true).when(platform2).canExperiment();
-        doReturn(false).when(platform3).canExperiment();
-        doReturn(false).when(platform4).canExperiment();
-        doReturn(Collections.emptyList()).when(platform1).getRoster();
-        doReturn(Collections.emptyList()).when(platform2).getRoster();
-        assertThat(experimentManager.scheduleExperiments(false), IsEmptyCollection.empty());
-        verify(platform3, never()).getRoster();
-        verify(platform4, never()).getRoster();
-        verify(platform1, never()).getNextChaosTime();
-        verify(platform2, never()).getNextChaosTime();
-        verify(platform3, never()).getNextChaosTime();
-        verify(platform4, never()).getNextChaosTime();
-        verify(platform1, never()).scheduleExperiment();
-        verify(platform2, never()).scheduleExperiment();
-        verify(platform3, never()).scheduleExperiment();
-        verify(platform4, never()).scheduleExperiment();
     }
 
     @Test

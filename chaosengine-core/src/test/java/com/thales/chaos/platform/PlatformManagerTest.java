@@ -1,44 +1,56 @@
 package com.thales.chaos.platform;
 
-import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.platform.enums.PlatformHealth;
+import com.thales.chaos.platform.enums.PlatformLevel;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Arrays;
+import java.time.Instant;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
 public class PlatformManagerTest {
-    @Mock
+    @MockBean(name = "firstPlatform")
     private Platform platform1;
-    @Mock
+    @MockBean(name = "secondPlatform")
     private Platform platform2;
     private Collection<Platform> platformCollection;
+    @Autowired
     private PlatformManager platformManager;
 
     @Before
     public void setUp () {
-        platformCollection = new HashSet<>(Arrays.asList(platform1, platform2));
-        platformManager = new PlatformManager(platformCollection);
+        platformCollection = Set.of(platform1, platform2);
+        doReturn(true).when(platform1).canExperiment();
+        doReturn(true).when(platform2).canExperiment();
+        doReturn(true).when(platform1).hasEligibleContainersForExperiments();
+        doReturn(true).when(platform2).hasEligibleContainersForExperiments();
+        Instant now = Instant.now();
+        doReturn(now).when(platform1).getNextChaosTime();
+        doReturn(now.plusSeconds(1)).when(platform2).getNextChaosTime();
     }
 
     @Test
     public void getPlatforms () {
-        assertThat(platformManager.getPlatforms(), IsIterableContainingInAnyOrder.containsInAnyOrder(platformCollection.toArray()));
+        assertThat(platformManager.getPlatforms(), IsIterableContainingInAnyOrder.containsInAnyOrder(platform1, platform2));
     }
 
     @Test
@@ -105,6 +117,53 @@ public class PlatformManagerTest {
         platformManager.expirePlatformCachedRosters();
         for (Platform platform : platformCollection) {
             verify(platform, times(1)).expireCachedRoster();
+        }
+    }
+
+    @Test
+    public void getNextPlatformForExperiments () {
+        final Optional<Platform> nextPlatformForExperiment = platformManager.getNextPlatformForExperiment(false);
+        assertTrue(nextPlatformForExperiment.isPresent());
+        assertSame(nextPlatformForExperiment.get(), platform1);
+    }
+
+    @Test
+    public void getNextPlatformForExperiments2 () {
+        doReturn(false).when(platform1).hasEligibleContainersForExperiments();
+        final Optional<Platform> nextPlatformForExperiment = platformManager.getNextPlatformForExperiment(false);
+        assertTrue(nextPlatformForExperiment.isPresent());
+        assertSame(nextPlatformForExperiment.get(), platform2);
+    }
+
+    @Test
+    public void getNextPlatformForExperiments3 () {
+        doReturn(false).when(platform2).canExperiment();
+        doReturn(false).when(platform1).hasEligibleContainersForExperiments();
+        final Optional<Platform> nextPlatformForExperiment = platformManager.getNextPlatformForExperiment(false);
+        assertTrue(nextPlatformForExperiment.isEmpty());
+    }
+
+    @Test
+    public void forceGetNextPlatformForExperiments () {
+        doReturn(false).when(platform1).canExperiment();
+        final Optional<Platform> nextPlatformForExperiment = platformManager.getNextPlatformForExperiment(true);
+        assertTrue(nextPlatformForExperiment.isPresent());
+        assertSame(nextPlatformForExperiment.get(), platform1);
+    }
+
+    @Test
+    public void forceGetNextPlatformForExperiments2 () {
+        doReturn(false).when(platform1).hasEligibleContainersForExperiments();
+        final Optional<Platform> nextPlatformForExperiment = platformManager.getNextPlatformForExperiment(true);
+        assertTrue(nextPlatformForExperiment.isPresent());
+        assertSame(nextPlatformForExperiment.get(), platform2);
+    }
+
+    @Configuration
+    static class ContextConfiguration {
+        @Bean
+        public PlatformManager platformManager () {
+            return spy(new PlatformManager());
         }
     }
 }

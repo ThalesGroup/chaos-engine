@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
-import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
@@ -157,14 +156,7 @@ public class ExperimentManager {
                 log.warn("There are no platforms enabled");
                 return Collections.emptySet();
             }
-            Optional<Platform> eligiblePlatform = platformManager.getPlatforms()
-                                                                 .stream()
-                                                                 .peek(platform -> platform.usingHolidayManager(holidayManager))
-                                                                 .filter(platform1 -> force || platform1.canExperiment())
-                                                                 .filter(not(platform1 -> platform1.getRoster()
-                                                                                                   .isEmpty()))
-                                                                 .min(Comparator.comparingLong(platform -> platform.getNextChaosTime()
-                                                                                                                   .toEpochMilli()));
+            Optional<Platform> eligiblePlatform = platformManager.getNextPlatformForExperiment(force);
             if (eligiblePlatform.isEmpty()) {
                 log.debug("No platforms eligible for experiments");
                 return Collections.emptySet();

@@ -2,6 +2,7 @@ package com.thales.chaos.platform;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.calendar.HolidayManager;
+import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.ExperimentalObject;
 import com.thales.chaos.experiment.enums.ExperimentType;
@@ -11,7 +12,6 @@ import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.scheduler.Scheduler;
 import com.thales.chaos.scheduler.impl.ChaosScheduler;
 import com.thales.chaos.util.Expiring;
-import com.thales.chaos.constants.DataDogConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -124,10 +124,6 @@ public abstract class Platform implements ExperimentalObject {
         return experimentTimes.stream().map(Date::from).collect(toSet());
     }
 
-    public void usingHolidayManager (HolidayManager holidayManager) {
-        this.holidayManager = holidayManager;
-    }
-
     @JsonIgnore
     public Duration getMinimumSelfHealingInterval () {
         return Duration.ofMinutes(DEFAULT_SELF_HEALING_INTERVAL_MINUTES);
@@ -138,4 +134,8 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public abstract boolean isContainerRecycled (Container container);
+
+    public boolean hasEligibleContainersForExperiments () {
+        return getRoster().stream().anyMatch(Container::eligibleForExperiments);
+    }
 }
