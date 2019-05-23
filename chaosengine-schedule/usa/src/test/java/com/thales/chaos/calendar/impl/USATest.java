@@ -134,6 +134,7 @@ public class USATest {
         private static final String DAY_AFTER = "Day after ";
         private static final String DAY_BEFORE = "Day before ";
         private static final String LAST_FULL_WORKING_DAY_BEFORE_CHRISTMAS = "Last full working Day before Christmas";
+        private static final String GOOD_FRIDAY = "Good Friday";
         private final HolidayCalendar usa = spy(new USA());
         private Calendar workingDay;
         private String description;
@@ -194,6 +195,18 @@ public class USATest {
             workingDays.add(new Object[]{ 2021, NOVEMBER, 10, DAY_BEFORE + VETERANS_DAY });
             workingDays.add(new Object[]{ 2021, NOVEMBER, 23, DAY_BEFORE + THANKSGIVING });
             workingDays.add(new Object[]{ 2021, DECEMBER, 23, LAST_FULL_WORKING_DAY_BEFORE_CHRISTMAS });
+            // Good Friday is a state holiday in 11 States
+            workingDays.add(new Object[]{ 2015, APRIL, 3, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2016, MARCH, 25, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2017, APRIL, 14, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2018, MARCH, 30, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2019, APRIL, 19, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2020, APRIL, 10, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2021, APRIL, 2, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2022, APRIL, 15, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2023, APRIL, 7, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2024, MARCH, 29, GOOD_FRIDAY });
+            workingDays.add(new Object[]{ 2025, APRIL, 18, GOOD_FRIDAY });
             return workingDays;
         }
 
