@@ -18,6 +18,7 @@
         <module>canada</module>
         <module>czech-republic</module>
         <module>france</module>
+        <module>usa</module>
     </modules>
 
 </project>
