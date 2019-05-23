@@ -211,7 +211,7 @@ public class USATest {
         }
 
         @Test
-        public void isHoliday () {
+        public void isWorkingDay () {
             assertFalse(errorMessage(), usa.isHoliday(workingDay));
         }
 
