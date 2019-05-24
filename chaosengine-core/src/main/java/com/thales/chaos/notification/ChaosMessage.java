@@ -1,0 +1,64 @@
+package com.thales.chaos.notification;
+
+import com.thales.chaos.notification.enums.NotificationLevel;
+
+public class ChaosMessage extends ChaosNotification {
+    private String title;
+    private String message;
+    private NotificationLevel notificationLevel;
+
+    public static ChaosMessageBuilder builder () {
+        return ChaosMessageBuilder.builder();
+    }
+
+    @Override
+    public String getTitle () {
+        return title;
+    }
+
+    @Override
+    public String getMessage () {
+        return message;
+    }
+
+    @Override
+    public NotificationLevel getNotificationLevel () {
+        return notificationLevel;
+    }
+
+    public static final class ChaosMessageBuilder {
+        private String title;
+        private String message;
+        private NotificationLevel notificationLevel;
+
+        private ChaosMessageBuilder () {
+        }
+
+        private static ChaosMessageBuilder builder () {
+            return new ChaosMessageBuilder();
+        }
+
+        public ChaosMessageBuilder withTitle (String title) {
+            this.title = title;
+            return this;
+        }
+
+        public ChaosMessageBuilder withMessage (String message) {
+            this.message = message;
+            return this;
+        }
+
+        public ChaosMessageBuilder withNotificationLevel (NotificationLevel notificationLevel) {
+            this.notificationLevel = notificationLevel;
+            return this;
+        }
+
+        public ChaosMessage build () {
+            ChaosMessage chaosMessage = new ChaosMessage();
+            chaosMessage.title = this.title;
+            chaosMessage.message = this.message;
+            chaosMessage.notificationLevel = this.notificationLevel;
+            return chaosMessage;
+        }
+    }
+}
