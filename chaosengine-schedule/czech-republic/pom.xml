@@ -11,13 +11,4 @@
 
     <artifactId>chaosengine-schedule-czech-republic</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.thales.chaos</groupId>
-            <artifactId>chaosengine-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
 </project>
