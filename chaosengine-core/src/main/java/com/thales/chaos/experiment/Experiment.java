@@ -9,7 +9,7 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.ChaosExperimentEvent;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.platform.Platform;
@@ -180,19 +180,19 @@ public abstract class Experiment {
                     log.info("Chosen {} for experiment {}", kv("experimentMethod", chosenMethod.getExperimentName()), v(DataDogConstants.DATADOG_EXPERIMENTID_KEY, id));
                     setExperimentMethod(chosenMethod);
                     setExperimentLayer(container.getPlatform());
-                    notificationManager.sendNotification(ChaosEvent.builder()
-                                                                   .fromExperiment(this)
-                                                                   .withNotificationLevel(NotificationLevel.WARN)
-                                                                   .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
-                                                                   .build());
+                    notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                             .fromExperiment(this)
+                                                                             .withNotificationLevel(NotificationLevel.WARN)
+                                                                             .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                             .build());
                     try {
                         container.startExperiment(this);
                     } catch (ChaosException ex) {
-                        notificationManager.sendNotification(ChaosEvent.builder()
-                                                                       .fromExperiment(this)
-                                                                       .withNotificationLevel(NotificationLevel.ERROR)
-                                                                       .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
-                                                                       .build());
+                        notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                                 .fromExperiment(this)
+                                                                                 .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                 .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
+                                                                                 .build());
                         return Boolean.FALSE;
                     }
                     startTime = Instant.now();
@@ -284,20 +284,22 @@ public abstract class Experiment {
             case NORMAL:
                 if (isFinalizable()) {
                     log.info("Experiment {} complete", id);
-                    notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                                   .withNotificationLevel(NotificationLevel.GOOD)
-                                                                   .withMessage(String.format("Experiment finished. Container recovered from the experiment. Duration: %d s, Self-healing attempts: %d", getDuration()
+                    notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                             .fromExperiment(this)
+                                                                             .withNotificationLevel(NotificationLevel.GOOD)
+                                                                             .withMessage(String.format("Experiment finished. Container recovered from the experiment. Duration: %d s, Self-healing attempts: %d", getDuration()
                                                                            .getSeconds(), selfHealingCounter.get()))
-                                                                   .build());
+                                                                             .build());
                     return finalizeExperiment();
                 }
                 return ExperimentState.STARTED;
             case DOES_NOT_EXIST:
                 log.info("Experiment {} no longer maps to existing container", id);
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Container no longer exists.")
-                                                               .build());
+                notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                         .fromExperiment(this)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage("Container no longer exists.")
+                                                                         .build());
                 return ExperimentState.FAILED;
             case RUNNING_EXPERIMENT:
             default:
@@ -347,21 +349,24 @@ public abstract class Experiment {
         if (finalizeMethod != null) {
             try {
                 log.info("Finalizing experiment {} on container {}", id, container.getSimpleName());
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.WARN)
-                                                               .withMessage("Running experiment finalization method")
-                                                               .build());
+                notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                         .fromExperiment(this)
+                                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                                         .withMessage("Running experiment finalization method")
+                                                                         .build());
                 finalizeMethod.call();
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.GOOD)
-                                                               .withMessage("Experiment finalization done")
-                                                               .build());
+                notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                         .fromExperiment(this)
+                                                                         .withNotificationLevel(NotificationLevel.GOOD)
+                                                                         .withMessage("Experiment finalization done")
+                                                                         .build());
             } catch (Exception e) {
                 log.error("Error while finalizing experiment {} on container {}", id, container.getSimpleName());
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage("Error while finalizing experiment")
-                                                               .build());
+                notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                         .fromExperiment(this)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage("Error while finalizing experiment")
+                                                                         .build());
                 return ExperimentState.FAILED;
             }
         }
@@ -372,7 +377,7 @@ public abstract class Experiment {
         if (isOverDuration()) {
             try {
                 log.warn("The experiment {} has gone on too long, invoking self-healing. \n{}", id, this);
-                ChaosEvent chaosEvent;
+                ChaosExperimentEvent chaosExperimentEvent;
                 if (canRunSelfHealing()) {
                     if (selfHealingCounter.get() <= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES) {
                         StringBuilder message = new StringBuilder();
@@ -384,47 +389,51 @@ public abstract class Experiment {
                                    .append(".");
                             notificationLevel = NotificationLevel.WARN;
                         }
-                        chaosEvent = ChaosEvent.builder()
-                                               .fromExperiment(this)
-                                               .withNotificationLevel(notificationLevel)
-                                               .withMessage(message.toString())
-                                               .build();
-                        notificationManager.sendNotification(chaosEvent);
+                        chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                                   .fromExperiment(this)
+                                                                   .withNotificationLevel(notificationLevel)
+                                                                   .withMessage(message.toString())
+                                                                   .build();
+                        notificationManager.sendNotification(chaosExperimentEvent);
                         callSelfHealing();
                     } else {
-                        chaosEvent = ChaosEvent.builder()
-                                               .fromExperiment(this)
-                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                               .withMessage(MAXIMUM_SELF_HEALING_RETRIES_REACHED)
-                                               .build();
-                        notificationManager.sendNotification(chaosEvent);
+                        chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                                   .fromExperiment(this)
+                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                   .withMessage(MAXIMUM_SELF_HEALING_RETRIES_REACHED)
+                                                                   .build();
+                        notificationManager.sendNotification(chaosExperimentEvent);
                         return ExperimentState.FAILED;
                     }
                 } else if (adminManager.canRunSelfHealing()) {
-                    chaosEvent = ChaosEvent.builder().fromExperiment(this)
-                                           .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
-                                           .build();
-                    notificationManager.sendNotification(chaosEvent);
+                    chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                               .fromExperiment(this)
+                                                               .withNotificationLevel(NotificationLevel.WARN)
+                                                               .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
+                                                               .build();
+                    notificationManager.sendNotification(chaosExperimentEvent);
                 } else {
-                    chaosEvent = ChaosEvent.builder().fromExperiment(this)
-                                           .withNotificationLevel(NotificationLevel.WARN)
-                                           .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
-                                           .build();
-                    notificationManager.sendNotification(chaosEvent);
+                    chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                               .fromExperiment(this)
+                                                               .withNotificationLevel(NotificationLevel.WARN)
+                                                               .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
+                                                               .build();
+                    notificationManager.sendNotification(chaosExperimentEvent);
                 }
             } catch (ChaosException e) {
                 log.error("Experiment {}: An exception occurred while running self-healing.", id, e);
-                notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                               .withNotificationLevel(NotificationLevel.ERROR)
-                                                               .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
-                                                               .build());
+                notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                         .fromExperiment(this)
+                                                                         .withNotificationLevel(NotificationLevel.ERROR)
+                                                                         .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                         .build());
             }
         } else {
-            notificationManager.sendNotification(ChaosEvent.builder().fromExperiment(this)
-                                                           .withNotificationLevel(NotificationLevel.WARN)
-                                                           .withMessage("Experiment not yet finished.")
-                                                           .build());
+            notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                     .fromExperiment(this)
+                                                                     .withNotificationLevel(NotificationLevel.WARN)
+                                                                     .withMessage("Experiment not yet finished.")
+                                                                     .build());
         }
         return ExperimentState.STARTED;
     }
