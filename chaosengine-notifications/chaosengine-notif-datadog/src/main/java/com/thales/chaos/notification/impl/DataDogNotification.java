@@ -1,6 +1,7 @@
 package com.thales.chaos.notification.impl;
 
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.ChaosExperimentEvent;
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.timgroup.statsd.Event;
@@ -12,31 +13,39 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-
-import static com.thales.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private StatsDClient statsDClient;
 
     @Override
-    public void logEvent (ChaosEvent event) {
-        DataDogEvent dataDogEvent = new DataDogEvent(event);
-        try {
-            log.debug("Sending DataDog notification", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-            dataDogEvent.send();
-            log.debug("DataDog notification send", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-        } catch (StatsDClientException ex) {
-            log.warn("Cannot send DataDog event: {}", ex,keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-        }
+    public void logEvent (ChaosExperimentEvent event) {
+        DataDogEvent dataDogEvent = new DataDogEvent();
+        send(dataDogEvent.buildFromEvent(event), dataDogEvent.generateTags(event));
     }
 
+    @Override
+    public void logMessage (ChaosNotification msg) {
+        DataDogEvent dataDogEvent = new DataDogEvent();
+        send(dataDogEvent.buildFromNotification(msg), dataDogEvent.generateTags(msg));
+    }
+
+    void send (Event evt, String[] tags) {
+        try {
+            log.debug("Sending DataDog notification");
+            statsDClient.recordEvent(evt, tags);
+            log.debug("DataDog notification send");
+        } catch (StatsDClientException ex) {
+            log.warn("Cannot send DataDog notification", ex);
+        }
+    }
     public DataDogNotification () {
         log.info("DataDog notification channel created");
     }
@@ -46,26 +55,25 @@ public class DataDogNotification implements NotificationMethods {
     }
 
     class DataDogEvent {
-        private ChaosEvent chaosEvent;
         protected static final String EVENT_PREFIX = "Chaos Event ";
-        protected static final String SOURCE_TYPE = "java";
+        protected static final String SOURCE_TYPE = "JAVA";
 
-        protected static final String EXPERIMENT_ID = "ExperimentId:";
-        protected static final String METHOD = "Method:";
-        protected static final String TYPE = "Type:";
-        protected static final String TARGET = "Target:";
-        protected static final String PLATFORM = "Platform:";
-
-        DataDogEvent (ChaosEvent event) {
-            this.chaosEvent = event;
+        Event buildFromEvent (ChaosExperimentEvent chaosExperimentEvent) {
+            return Event.builder()
+                        .withAggregationKey(chaosExperimentEvent.getExperimentId())
+                        .withAlertType(mapLevel(chaosExperimentEvent.getNotificationLevel()))
+                        //TODO : replace this line with getTitle call
+                        .withTitle(EVENT_PREFIX + chaosExperimentEvent.getExperimentMethod())
+                        .withText(chaosExperimentEvent.getMessage())
+                        .withSourceTypeName(SOURCE_TYPE)
+                        .build();
         }
 
-        Event buildEvent () {
+        Event buildFromNotification (ChaosNotification chaosNotification) {
             return Event.builder()
-                        .withAggregationKey(chaosEvent.getExperimentId())
-                        .withAlertType(mapLevel(chaosEvent.getNotificationLevel()))
-                        .withTitle(EVENT_PREFIX + chaosEvent.getExperimentMethod())
-                        .withText(chaosEvent.getMessage())
+                        .withAlertType(mapLevel(chaosNotification.getNotificationLevel()))
+                        .withTitle(chaosNotification.getTitle())
+                        .withText(chaosNotification.getMessage())
                         .withSourceTypeName(SOURCE_TYPE)
                         .build();
         }
@@ -81,17 +89,25 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        void send () {
-            statsDClient.recordEvent(buildEvent(),generateTags());
-        }
-
-        String[] generateTags () {
+        String[] generateTags (ChaosNotification chaosNotification) {
             ArrayList<String> tags = new ArrayList<>();
-            tags.add(EXPERIMENT_ID + chaosEvent.getExperimentId());
-            tags.add(METHOD + chaosEvent.getExperimentMethod());
-            tags.add(TYPE + chaosEvent.getExperimentType().name());
-            tags.add(TARGET + chaosEvent.getTargetContainer().getSimpleName());
-            tags.add(PLATFORM + chaosEvent.getTargetContainer().getPlatform().getPlatformType());
+            for (Field field : chaosNotification.getClass().getDeclaredFields()) {
+                boolean usedField = true;
+                field.setAccessible(true);
+                try {
+                    if (field.isSynthetic() || Modifier.isTransient(field.getModifiers()) || field.get(chaosNotification) == null) {
+                        usedField = false;
+                    }
+                } catch (IllegalAccessException e) {
+                    usedField = false;
+                }
+                if (!usedField) continue;
+                try {
+                    tags.add(field.getName() + ":" + field.get(chaosNotification));
+                } catch (IllegalAccessException e) {
+                    tags.add(field.getName() + ":IllegalAccessException");
+                }
+            }
             return tags.toArray(new String[0]);
         }
     }
