@@ -4,10 +4,7 @@ import com.thales.chaos.calendar.HolidayCalendar;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeSet;
+import java.util.*;
 
 import static java.util.Calendar.*;
 
@@ -17,23 +14,20 @@ public class USA implements HolidayCalendar {
     private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
     private static final int START_OF_DAY = 9;
     private static final int END_OF_DAY = 17;
-    private final Set<Integer> holidays = new TreeSet<>();
+    private final Map<Integer, Collection<Integer>> holidayMap = new HashMap<>();
 
     @Override
     public boolean isHoliday (Calendar day) {
         int year = day.get(YEAR);
-        if (!holidays.contains(year)) {
-            renderHolidays(year);
-        }
-        return holidays.contains(day.get(DAY_OF_YEAR));
+        return holidayMap.computeIfAbsent(year, this::computeHolidays).contains(day.get(DAY_OF_YEAR));
     }
 
-    private void renderHolidays (int year) {
-        holidays.clear();
+    private Collection<Integer> computeHolidays (int year) {
+        Set<Integer> holidays = new TreeSet<>();
         holidays.addAll(getStaticHolidays(year));
         holidays.addAll(getMovingHolidays(year));
         holidays.addAll(getLinkedDays(holidays, year));
-        holidays.add(year);
+        return holidays;
     }
 
     private Set<Integer> getStaticHolidays (int year) {
