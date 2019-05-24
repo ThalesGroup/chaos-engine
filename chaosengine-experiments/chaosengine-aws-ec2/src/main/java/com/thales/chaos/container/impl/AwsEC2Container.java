@@ -88,6 +88,19 @@ public class AwsEC2Container extends AwsContainer {
     }
 
     @Override
+    public boolean eligibleForExperiments () {
+        if (isStarted()) {
+            return true;
+        }
+        log.warn("Ignoring {} because it is not in a running state", v(DataDogConstants.DATADOG_CONTAINER_KEY, this));
+        return false;
+    }
+
+    boolean isStarted () {
+        return awsEC2Platform.isStarted(this);
+    }
+
+    @Override
     public String getSimpleName () {
         return String.format("%s (%s) [%s]", name, keyName, instanceId);
     }

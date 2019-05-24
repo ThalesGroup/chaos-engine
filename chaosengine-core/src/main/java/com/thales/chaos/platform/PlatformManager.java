@@ -10,11 +10,13 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparingLong;
+
 @Component
 public class PlatformManager {
     private static final Logger log = LoggerFactory.getLogger(PlatformManager.class);
     @Autowired(required = false)
-    Collection<Platform> platforms;
+    private Collection<Platform> platforms;
 
     @Autowired
     PlatformManager () {
@@ -56,5 +58,13 @@ public class PlatformManager {
     void expirePlatformCachedRosters () {
         log.info("Cached containers have been manually expired");
         getPlatforms().forEach(Platform::expireCachedRoster);
+    }
+
+    public Optional<Platform> getNextPlatformForExperiment (boolean force) {
+        return getPlatforms().stream()
+                             .sorted(comparingLong(platform -> platform.getNextChaosTime().toEpochMilli()))
+                             .filter(platform1 -> force || platform1.canExperiment())
+                             .filter(Platform::hasEligibleContainersForExperiments)
+                             .findFirst();
     }
 }

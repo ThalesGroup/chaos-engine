@@ -366,4 +366,22 @@ public class AwsEC2ContainerTest {
         assertEquals("Routable private address, should be private", "private", awsEC2Container.getRoutableAddress());
         assertEquals("Unroutable private address, should be private", "public", awsEC2Container.getRoutableAddress());
     }
+
+    @Test
+    public void isStarted () {
+        for (boolean result : List.of(true, false, true, false, true, false)) {
+            doReturn(result).when(awsEC2Platform).isStarted(awsEC2Container);
+            assertEquals(result, awsEC2Container.isStarted());
+        }
+    }
+
+    @Test
+    public void canExperiment () {
+        doReturn(0D, 0D, 0D, 0.2D).when(awsEC2Platform).getDestructionProbability();
+        doReturn(true).when(awsEC2Platform).isStarted(awsEC2Container);
+        do {
+            verify(awsEC2Platform, never()).isStarted(awsEC2Container);
+        } while (!awsEC2Container.canExperiment());
+        verify(awsEC2Platform, times(1)).isStarted(awsEC2Container);
+    }
 }

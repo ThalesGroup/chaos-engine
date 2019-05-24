@@ -1,6 +1,7 @@
 package com.thales.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
@@ -13,7 +14,6 @@ import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.ShellBasedExperiment;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.shellclient.ShellOutput;
-import com.thales.chaos.constants.DataDogConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -59,7 +59,7 @@ public abstract class Container implements ExperimentalObject {
     @Override
     public boolean canExperiment () {
         if (!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()) {
-            return true;
+            return eligibleForExperiments();
         }
         log.debug("Cannot experiment on the container right now", v(DataDogConstants.DATADOG_CONTAINER_KEY, this));
         return false;
@@ -279,5 +279,9 @@ public abstract class Container implements ExperimentalObject {
                                 .filter(stringBooleanEntry -> !Boolean.TRUE.equals(stringBooleanEntry.getValue()))
                                 .map(Map.Entry::getKey)
                                 .collect(Collectors.toSet());
+    }
+
+    public boolean eligibleForExperiments () {
+        return true;
     }
 }
