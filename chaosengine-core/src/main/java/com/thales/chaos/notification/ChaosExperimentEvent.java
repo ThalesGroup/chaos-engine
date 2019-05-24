@@ -7,16 +7,15 @@ import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.Map;
 
 @SuppressWarnings("unused")
-public class ChaosEvent {
+public class ChaosExperimentEvent extends ChaosNotification {
     private Container targetContainer;
     private Date chaosTime;
     private String experimentId;
+    private String title;
     private String message;
     private ExperimentType experimentType;
     private String experimentMethod;
@@ -50,6 +49,11 @@ public class ChaosEvent {
         return chaosTime;
     }
 
+    @Override
+    public String getTitle () {
+        return title;
+    }
+
     public String getMessage () {
         return message;
     }
@@ -60,32 +64,6 @@ public class ChaosEvent {
         return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
     }
 
-    @Override
-    public String toString () {
-        StringBuilder sb = new StringBuilder("Chaos Event: ");
-        for (Field field : ChaosEvent.class.getDeclaredFields()) {
-            boolean usedField = true;
-            field.setAccessible(true);
-            try {
-                if (field.isSynthetic() || Modifier.isTransient(field.getModifiers()) || field.get(this) == null) {
-                    usedField = false;
-                }
-            } catch (IllegalAccessException e) {
-                usedField = false;
-            }
-            if (!usedField) continue;
-            sb.append("[");
-            sb.append(field.getName());
-            sb.append("=");
-            try {
-                sb.append(field.get(this));
-            } catch (IllegalAccessException e) {
-                sb.append("IllegalAccessException");
-            }
-            sb.append("]");
-        }
-        return sb.toString();
-    }
 
     @Override
     public int hashCode () {
@@ -103,7 +81,7 @@ public class ChaosEvent {
     public boolean equals (Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ChaosEvent that = (ChaosEvent) o;
+        ChaosExperimentEvent that = (ChaosExperimentEvent) o;
         if (targetContainer != null ? !targetContainer.equals(that.targetContainer) : that.targetContainer != null)
             return false;
         if (chaosTime != null ? !chaosTime.equals(that.chaosTime) : that.chaosTime != null) return false;
@@ -119,6 +97,7 @@ public class ChaosEvent {
         private Container targetContainer;
         private Date chaosTime;
         private String experimentId;
+        private String title;
         private String message;
         private ExperimentType experimentType;
         private String experimentMethod;
@@ -151,6 +130,11 @@ public class ChaosEvent {
             return this;
         }
 
+        public ChaosEventBuilder withTitle (String title) {
+            this.title = title;
+            return this;
+        }
+
         public ChaosEventBuilder withMessage (String message) {
             this.message = message;
             return this;
@@ -176,9 +160,10 @@ public class ChaosEvent {
             return this;
         }
 
-        public ChaosEvent build () {
-            ChaosEvent chaosEvent = new ChaosEvent();
+        public ChaosExperimentEvent build () {
+            ChaosExperimentEvent chaosEvent = new ChaosExperimentEvent();
             chaosEvent.targetContainer = this.targetContainer;
+            chaosEvent.title = this.title;
             chaosEvent.message = this.message;
             chaosEvent.chaosTime = this.chaosTime;
             chaosEvent.experimentId = this.experimentId;

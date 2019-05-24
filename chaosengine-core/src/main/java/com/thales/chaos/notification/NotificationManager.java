@@ -21,10 +21,14 @@ public class NotificationManager {
         this.notificationMethods = notificationMethods;
     }
 
-    public void sendNotification (ChaosEvent chaosEvent) {
+    public void sendNotification (ChaosNotification chaosNotification) {
         if (notificationMethods != null) {
             for (NotificationMethods notif : notificationMethods) {
-                notif.logEvent(chaosEvent);
+                if (chaosNotification instanceof ChaosExperimentEvent) {
+                    notif.logEvent((ChaosExperimentEvent) chaosNotification);
+                } else {
+                    notif.logMessage(chaosNotification);
+                }
             }
         }
     }

@@ -17,7 +17,7 @@ import static com.thales.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_BUFFE
 public abstract class BufferedNotificationMethod implements NotificationMethods {
     private static final Integer FORCED_FLUSH_SIZE = 50;
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private ConcurrentLinkedQueue<ChaosEvent> notificationBuffer = new ConcurrentLinkedQueue<>();
+    private ConcurrentLinkedQueue<ChaosExperimentEvent> notificationBuffer = new ConcurrentLinkedQueue<>();
     private ExponentialBackOff exponentialBackOff = new ExponentialBackOff();
     private BackOffExecution backOffExecution;
 
@@ -28,36 +28,36 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
     }
 
     @Override
-    public void logEvent (ChaosEvent event) {
+    public void logEvent (ChaosExperimentEvent event) {
         getQueue().add(event);
         if (getQueue().size() > FORCED_FLUSH_SIZE) {
             flushBuffer();
         }
     }
 
-    private Queue<ChaosEvent> getQueue () {
+    private Queue<ChaosExperimentEvent> getQueue () {
         return notificationBuffer;
     }
 
     protected void flushBuffer () {
         while (!getQueue().isEmpty()) {
             backOffExecution = exponentialBackOff.start();
-            ChaosEvent chaosEvent = getQueue().poll();
-            // Make sure to Null Check chaosEvent, in case two instances of Flush Buffer are running simultaneously
-            if (chaosEvent == null) continue;
+            ChaosExperimentEvent chaosExperimentEvent = getQueue().poll();
+            // Make sure to Null Check chaosExperimentEvent, in case two instances of Flush Buffer are running simultaneously
+            if (chaosExperimentEvent == null) continue;
             try {
-                flushBufferInternal(chaosEvent);
+                flushBufferInternal(chaosExperimentEvent);
             } catch (Exception e) {
                 throw new ChaosException(NOTIFICATION_BUFFER_ERROR, e);
             }
         }
     }
 
-    private synchronized void flushBufferInternal (ChaosEvent chaosEvent) throws InterruptedException {
+    private synchronized void flushBufferInternal (ChaosExperimentEvent chaosExperimentEvent) throws InterruptedException {
         long waitTime;
         while (true) {
             try {
-                sendNotification(chaosEvent);
+                sendNotification(chaosExperimentEvent);
                 break;
             } catch (IOException e) {
                 log.error("Caught IO Exception when sending notification.");
@@ -75,5 +75,5 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
         }
     }
 
-    protected abstract void sendNotification (ChaosEvent chaosEvent) throws IOException;
+    protected abstract void sendNotification (ChaosExperimentEvent chaosExperimentEvent) throws IOException;
 }

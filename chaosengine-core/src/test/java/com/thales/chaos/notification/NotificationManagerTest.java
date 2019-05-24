@@ -19,15 +19,19 @@ public class NotificationManagerTest {
     @Mock
     private NotificationMethods notificationMethod;
     @Mock
-    private ChaosEvent chaosEvent;
+    private ChaosExperimentEvent chaosExperimentEvent;
+    @Mock
+    private ChaosMessage chaosMessage;
 
     @Test
     public void sendNotification () {
         NotificationManager notificationManager = new NotificationManager(notificationMethodList);
-        when(notificationMethodList.iterator()).thenReturn(notificationMethodsIterator);
-        when(notificationMethodsIterator.hasNext()).thenReturn(true, false);
+        when(notificationMethodList.iterator()).thenReturn(notificationMethodsIterator, notificationMethodsIterator);
+        when(notificationMethodsIterator.hasNext()).thenReturn(true, false, true, false);
         when(notificationMethodsIterator.next()).thenReturn(notificationMethod, notificationMethod);
-        notificationManager.sendNotification(chaosEvent);
-        verify(notificationMethod, times(1)).logEvent(chaosEvent);
+        notificationManager.sendNotification(chaosExperimentEvent);
+        verify(notificationMethod, times(1)).logEvent(chaosExperimentEvent);
+        notificationManager.sendNotification(chaosMessage);
+        verify(notificationMethod, times(1)).logMessage(chaosMessage);
     }
 }

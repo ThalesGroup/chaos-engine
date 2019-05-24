@@ -3,7 +3,8 @@ package com.thales.chaos.notification.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.notification.BufferedNotificationMethod;
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.ChaosExperimentEvent;
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.util.HttpUtils;
 import com.thales.chaos.util.StringUtils;
@@ -59,11 +60,19 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     @Override
-    public void logEvent (ChaosEvent event) {
+    public void logEvent (ChaosExperimentEvent event) {
         attachmentQueue.offer(createAttachmentFromChaosEvent(event));
         if (attachmentQueue.size() >= MAXIMUM_ATTACHMENTS) {
             flushBuffer();
         }
+    }
+
+    @Override
+    protected void sendNotification (ChaosExperimentEvent chaosExperimentEvent) throws IOException {
+        SlackMessage slackMessage = SlackMessage.builder()
+                                                .withAttachment(createAttachmentFromChaosEvent(chaosExperimentEvent))
+                                                .build();
+        sendSlackMessage(slackMessage);
     }
 
     @Override
@@ -82,38 +91,39 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
     }
 
-    @Override
-    protected void sendNotification (ChaosEvent chaosEvent) throws IOException {
-        SlackMessage slackMessage = SlackMessage.builder()
-                                                .withAttachment(createAttachmentFromChaosEvent(chaosEvent))
-                                                .build();
-        sendSlackMessage(slackMessage);
-    }
-
-    private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
+    private SlackAttachment createAttachmentFromChaosEvent (ChaosExperimentEvent chaosExperimentEvent) {
         SlackAttachment.SlackAttachmentBuilder builder;
         builder = SlackAttachment.builder()
-                                 .withFallback(chaosEvent.toString())
+                                 .withFallback(chaosExperimentEvent.toString())
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
-                                 .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
-                                 .withText(chaosEvent.getMessage())
-                                 .withTs(chaosEvent.getChaosTime().toInstant())
+                                 .withColor(getSlackNotificationColor(chaosExperimentEvent.getNotificationLevel()))
+                                 .withText(chaosExperimentEvent.getMessage())
+                                 .withTs(chaosExperimentEvent.getChaosTime().toInstant())
                                  .withAuthor_name(AUTHOR_NAME)
-                                 .withPretext(chaosEvent.getNotificationLevel().toString())
-                                 .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
-                                 .withField(TARGET, chaosEvent.getTargetContainer().getSimpleName())
-                                 .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
-                                 .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
-                                 .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
-                                 .withCodeField(RAW_EVENT, chaosEvent.toString())
+                                 .withPretext(chaosExperimentEvent.getNotificationLevel().toString())
+                                 .withField(EXPERIMENT_ID, chaosExperimentEvent.getExperimentId())
+                                 .withField(TARGET, chaosExperimentEvent.getTargetContainer().getSimpleName())
+                                 .withField(EXPERIMENT_METHOD, chaosExperimentEvent.getExperimentMethod())
+                                 .withField(EXPERIMENT_TYPE, chaosExperimentEvent.getExperimentType().toString())
+                                 .withField(PLATFORM_LAYER, chaosExperimentEvent.getTargetContainer()
+                                                                                .getPlatform()
+                                                                                .getPlatformType())
+                                 .withCodeField(RAW_EVENT, chaosExperimentEvent.toString())
                                  .withMarkupIn(SlackAttachment.MarkupOpts.fields)
                                  .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
-        chaosEvent.asMap().entrySet().stream().filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
-                  .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+        chaosExperimentEvent.asMap()
+                            .entrySet()
+                            .stream()
+                            .filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
+                            .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
                                                                                           .toString()), e.getValue()
                                                                                                          .toString()));
         return builder.build();
+    }
+
+    @Override
+    public void logMessage (ChaosNotification msg) {
     }
 
     String getSlackNotificationColor (NotificationLevel notificationLevel) {
