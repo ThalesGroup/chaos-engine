@@ -6,6 +6,7 @@ public class ChaosMessage extends ChaosNotification {
     private String title;
     private String message;
     private NotificationLevel notificationLevel;
+    public static final String CHAOS_MESSAGE_PREFIX = "Chaos Message";
 
     public static ChaosMessageBuilder builder () {
         return ChaosMessageBuilder.builder();
@@ -27,7 +28,7 @@ public class ChaosMessage extends ChaosNotification {
     }
 
     public static final class ChaosMessageBuilder {
-        private String title;
+        private String title = CHAOS_MESSAGE_PREFIX;
         private String message;
         private NotificationLevel notificationLevel;
 
@@ -39,7 +40,7 @@ public class ChaosMessage extends ChaosNotification {
         }
 
         public ChaosMessageBuilder withTitle (String title) {
-            this.title = title;
+            this.title = CHAOS_MESSAGE_PREFIX + " - " + title;
             return this;
         }
 
