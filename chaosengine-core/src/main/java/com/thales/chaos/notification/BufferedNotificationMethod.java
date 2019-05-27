@@ -53,11 +53,11 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
         }
     }
 
-    private synchronized void flushBufferInternal (ChaosExperimentEvent chaosExperimentEvent) throws InterruptedException {
+    private synchronized void flushBufferInternal (ChaosNotification chaosNotification) throws InterruptedException {
         long waitTime;
         while (true) {
             try {
-                sendNotification(chaosExperimentEvent);
+                sendNotification(chaosNotification);
                 break;
             } catch (IOException e) {
                 log.error("Caught IO Exception when sending notification.");
@@ -75,5 +75,5 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
         }
     }
 
-    protected abstract void sendNotification (ChaosExperimentEvent chaosExperimentEvent) throws IOException;
+    protected abstract void sendNotification (ChaosNotification chaosNotification) throws IOException;
 }
