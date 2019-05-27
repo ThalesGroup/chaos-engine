@@ -12,6 +12,7 @@ import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.util.HttpUtils;
+import com.thales.chaos.util.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,7 +112,7 @@ public class SlackNotificationsTest {
                                                                  .getNotificationLevel()))
                                                          .withText(chaosExperimentEvent.getMessage())
                                                          .withTs(chaosExperimentEvent.getChaosTime().toInstant())
-                                                         .withAuthor_name(SlackNotifications.AUTHOR_NAME)
+                                                         .withAuthor_name(chaosExperimentEvent.getTitle())
                                                          .withPretext(chaosExperimentEvent.getNotificationLevel()
                                                                                           .toString())
                                                          .withField(SlackNotifications.EXPERIMENT_ID, chaosExperimentEvent
@@ -220,6 +221,11 @@ public class SlackNotificationsTest {
             @Override
             public Date getChaosTime () {
                 return Date.from(Instant.now());
+            }
+
+            @Override
+            public String getTitle () {
+                return StringUtils.generateRandomString(60);
             }
         };
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);

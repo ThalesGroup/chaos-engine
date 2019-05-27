@@ -35,7 +35,6 @@ import static java.util.function.Predicate.not;
 public class SlackNotifications extends BufferedNotificationMethod {
     static final Integer MAXIMUM_ATTACHMENTS = 20;
     static final String TITLE = "Message";
-    static final String AUTHOR_NAME = "Chaos Event Trace";
     static final String EXPERIMENT_ID = "Experiment ID";
     static final String TARGET = "Target";
     static final String EXPERIMENT_METHOD = "Method";
@@ -47,7 +46,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = List.of("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -100,7 +99,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withColor(getSlackNotificationColor(chaosExperimentEvent.getNotificationLevel()))
                                  .withText(chaosExperimentEvent.getMessage())
                                  .withTs(chaosExperimentEvent.getChaosTime().toInstant())
-                                 .withAuthor_name(AUTHOR_NAME)
+                                 .withAuthor_name(chaosExperimentEvent.getTitle())
                                  .withPretext(chaosExperimentEvent.getNotificationLevel().toString())
                                  .withField(EXPERIMENT_ID, chaosExperimentEvent.getExperimentId())
                                  .withField(TARGET, chaosExperimentEvent.getTargetContainer().getSimpleName())
