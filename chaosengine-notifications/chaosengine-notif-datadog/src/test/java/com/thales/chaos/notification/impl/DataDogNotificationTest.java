@@ -60,7 +60,7 @@ public class DataDogNotificationTest {
         when(platform.getPlatformType()).thenReturn("TYPE");
         dataDogEvent = new DataDogNotification().new DataDogEvent();
         expectedTagsEvent.add("experimentId:" + chaosExperimentEvent.getExperimentId());
-        expectedTagsEvent.add("title:" + "Chaos Event");
+        expectedTagsEvent.add("title:" + ChaosExperimentEvent.CHAOS_EXPERIMENT_EVENT_PREFIX);
         expectedTagsEvent.add("message:" + chaosExperimentEvent.getMessage());
         expectedTagsEvent.add("experimentType:" + chaosExperimentEvent.getExperimentType().name());
         expectedTagsEvent.add("experimentMethod:" + chaosExperimentEvent.getExperimentMethod());
@@ -112,8 +112,7 @@ public class DataDogNotificationTest {
     @Test
     public void buildMessage () {
         Event expectedEvent = Event.builder()
-                                   .withText(message)
-                                   .withTitle(title)
+                                   .withText(message).withTitle(ChaosMessage.CHAOS_MESSAGE_PREFIX + " - " + title)
                                    .withAlertType(Event.AlertType.WARNING)
                                    .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
                                    .build();

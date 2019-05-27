@@ -38,9 +38,8 @@ public class ChaosExperimentEventTest {
                                                                         .withMessage(chaosMessage)
                                                                         .withTargetContainer(container)
                                                                         .build();
-        Mockito.when(container.toString()).thenReturn("ChaosEventTestContainer");
         Mockito.when(date.toString()).thenReturn("Chaos-O'Clock");
-        String expectedString = "ChaosExperimentEvent: [targetContainer=ChaosEventTestContainer]" + "[chaosTime=Chaos-O'Clock]" + "[message=It's chaos time!]";
+        String expectedString = "ChaosExperimentEvent: " + "[targetContainer=container][chaosTime=Chaos-O'Clock][title=" + ChaosExperimentEvent.CHAOS_EXPERIMENT_EVENT_PREFIX + "]" + "[message=It's chaos time!]";
         Assert.assertEquals(expectedString, chaosExperimentEvent.toString());
     }
 

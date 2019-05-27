@@ -20,7 +20,7 @@ public class ChaosExperimentEvent extends ChaosNotification {
     private ExperimentType experimentType;
     private String experimentMethod;
     private NotificationLevel notificationLevel;
-
+    public static final transient String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
     public static ChaosEventBuilder builder () {
         return ChaosEventBuilder.builder();
     }
@@ -97,12 +97,11 @@ public class ChaosExperimentEvent extends ChaosNotification {
         private Container targetContainer;
         private Date chaosTime;
         private String experimentId;
-        private String title;
+        private String title = CHAOS_EXPERIMENT_EVENT_PREFIX;
         private String message;
         private ExperimentType experimentType;
         private String experimentMethod;
         private NotificationLevel notificationLevel;
-
         private ChaosEventBuilder () {
         }
 
@@ -131,7 +130,7 @@ public class ChaosExperimentEvent extends ChaosNotification {
         }
 
         public ChaosEventBuilder withTitle (String title) {
-            this.title = title;
+            this.title = CHAOS_EXPERIMENT_EVENT_PREFIX + " - " + title;
             return this;
         }
 

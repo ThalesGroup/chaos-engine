@@ -62,6 +62,7 @@ public class DataDogNotification implements NotificationMethods {
 
     class DataDogEvent {
         protected static final String EVENT_PREFIX = "Chaos Event ";
+        protected static final String MESSAGE_PREFIX = "Chaos Event ";
         protected static final String SOURCE_TYPE = "JAVA";
 
         Event buildFromEvent (ChaosExperimentEvent chaosExperimentEvent) {
