@@ -3,6 +3,7 @@ package com.thales.chaos.admin;
 import com.thales.chaos.admin.enums.AdminState;
 import com.thales.chaos.notification.ChaosMessage;
 import com.thales.chaos.notification.NotificationManager;
+import com.thales.chaos.notification.enums.NotificationLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class AdminManager {
     }
     void setAdminState (AdminState newAdminState) {
         setAdminStateInner(newAdminState);
-        notificationManager.sendNotification(ChaosMessage.builder()
+        notificationManager.sendNotification(ChaosMessage.builder().withNotificationLevel(NotificationLevel.WARN)
                                                          .withTitle("State changed")
                                                          .withMessage("Chaos Engine admin state has changed: " + newAdminState
                                                                  .name())
