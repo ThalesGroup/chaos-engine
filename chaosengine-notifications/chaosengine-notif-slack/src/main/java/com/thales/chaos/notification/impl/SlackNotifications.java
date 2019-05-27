@@ -60,18 +60,48 @@ public class SlackNotifications extends BufferedNotificationMethod {
 
     @Override
     public void logEvent (ChaosExperimentEvent event) {
-        attachmentQueue.offer(createAttachmentFromChaosEvent(event));
+        logMessage(event);
+    }
+
+    @Override
+    public void logMessage (ChaosNotification msg) {
+        attachmentQueue.offer(createAttachmentFromChaosNotification(msg));
         if (attachmentQueue.size() >= MAXIMUM_ATTACHMENTS) {
             flushBuffer();
         }
     }
 
-    @Override
-    protected void sendNotification (ChaosExperimentEvent chaosExperimentEvent) throws IOException {
-        SlackMessage slackMessage = SlackMessage.builder()
-                                                .withAttachment(createAttachmentFromChaosEvent(chaosExperimentEvent))
-                                                .build();
-        sendSlackMessage(slackMessage);
+    private SlackAttachment createAttachmentFromChaosNotification (ChaosNotification chaosNotification) {
+        SlackAttachment.SlackAttachmentBuilder builder;
+        builder = SlackAttachment.builder()
+                                 .withFallback(chaosNotification.toString())
+                                 .withFooter(FOOTER_PREFIX + hostname)
+                                 .withTitle(TITLE)
+                                 .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
+                                 .withText(chaosNotification.getMessage())
+                                 .withAuthor_name(chaosNotification.getTitle())
+                                 .withPretext(chaosNotification.getNotificationLevel().toString())
+                                 .withTs(Instant.now());
+        if (chaosNotification instanceof ChaosExperimentEvent) {
+            ChaosExperimentEvent evt = (ChaosExperimentEvent) chaosNotification;
+            builder.withTs(evt.getChaosTime().toInstant())
+                   .withField(EXPERIMENT_ID, evt.getExperimentId())
+                   .withField(TARGET, evt.getTargetContainer().getSimpleName())
+                   .withField(EXPERIMENT_METHOD, evt.getExperimentMethod())
+                   .withField(EXPERIMENT_TYPE, evt.getExperimentType().toString())
+                   .withField(PLATFORM_LAYER, evt.getTargetContainer().getPlatform().getPlatformType());
+        }
+        builder.withCodeField(RAW_EVENT, chaosNotification.toString())
+                                 .withMarkupIn(SlackAttachment.MarkupOpts.fields)
+                                 .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
+        chaosNotification.asMap()
+                         .entrySet()
+                         .stream()
+                         .filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
+                         .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                          .toString()), e.getValue()
+                                                                                                         .toString()));
+        return builder.build();
     }
 
     @Override
@@ -90,40 +120,14 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
     }
 
-    private SlackAttachment createAttachmentFromChaosEvent (ChaosExperimentEvent chaosExperimentEvent) {
-        SlackAttachment.SlackAttachmentBuilder builder;
-        builder = SlackAttachment.builder()
-                                 .withFallback(chaosExperimentEvent.toString())
-                                 .withFooter(FOOTER_PREFIX + hostname)
-                                 .withTitle(TITLE)
-                                 .withColor(getSlackNotificationColor(chaosExperimentEvent.getNotificationLevel()))
-                                 .withText(chaosExperimentEvent.getMessage())
-                                 .withTs(chaosExperimentEvent.getChaosTime().toInstant())
-                                 .withAuthor_name(chaosExperimentEvent.getTitle())
-                                 .withPretext(chaosExperimentEvent.getNotificationLevel().toString())
-                                 .withField(EXPERIMENT_ID, chaosExperimentEvent.getExperimentId())
-                                 .withField(TARGET, chaosExperimentEvent.getTargetContainer().getSimpleName())
-                                 .withField(EXPERIMENT_METHOD, chaosExperimentEvent.getExperimentMethod())
-                                 .withField(EXPERIMENT_TYPE, chaosExperimentEvent.getExperimentType().toString())
-                                 .withField(PLATFORM_LAYER, chaosExperimentEvent.getTargetContainer()
-                                                                                .getPlatform()
-                                                                                .getPlatformType())
-                                 .withCodeField(RAW_EVENT, chaosExperimentEvent.toString())
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.fields)
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
-        chaosExperimentEvent.asMap()
-                            .entrySet()
-                            .stream()
-                            .filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
-                            .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
-                                                                                          .toString()), e.getValue()
-                                                                                                         .toString()));
-        return builder.build();
+    @Override
+    protected void sendNotification (ChaosNotification chaosNotification) throws IOException {
+        SlackMessage slackMessage = SlackMessage.builder()
+                                                .withAttachment(createAttachmentFromChaosNotification(chaosNotification))
+                                                .build();
+        sendSlackMessage(slackMessage);
     }
 
-    @Override
-    public void logMessage (ChaosNotification msg) {
-    }
 
     String getSlackNotificationColor (NotificationLevel notificationLevel) {
         return Optional.ofNullable(slackNotificationColorMap.get(notificationLevel)).orElse("danger");
