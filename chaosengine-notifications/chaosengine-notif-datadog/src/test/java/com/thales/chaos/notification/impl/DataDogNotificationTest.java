@@ -18,7 +18,7 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
@@ -59,8 +59,8 @@ public class DataDogNotificationTest {
         when(container.getPlatform()).thenReturn(platform);
         when(platform.getPlatformType()).thenReturn("TYPE");
         dataDogEvent = new DataDogNotification().new DataDogEvent();
-        expectedTagsEvent.add("targetContainer:" + chaosExperimentEvent.getTargetContainer());
         expectedTagsEvent.add("experimentId:" + chaosExperimentEvent.getExperimentId());
+        expectedTagsEvent.add("title:" + "Chaos Event");
         expectedTagsEvent.add("message:" + chaosExperimentEvent.getMessage());
         expectedTagsEvent.add("experimentType:" + chaosExperimentEvent.getExperimentType().name());
         expectedTagsEvent.add("experimentMethod:" + chaosExperimentEvent.getExperimentMethod());
@@ -126,8 +126,7 @@ public class DataDogNotificationTest {
 
     @Test
     public void getTags(){
-        ArrayList<String> actualTags = new ArrayList<>(Arrays.asList(dataDogEvent.generateTags(chaosExperimentEvent)));
+        List<String> actualTags = dataDogEvent.generateTags(chaosExperimentEvent);
         assertThat(actualTags, is(expectedTagsEvent));
-        System.out.println(chaosExperimentEvent);
     }
 }

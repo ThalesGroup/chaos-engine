@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
@@ -28,7 +29,12 @@ public class DataDogNotification implements NotificationMethods {
     @Override
     public void logEvent (ChaosExperimentEvent event) {
         DataDogEvent dataDogEvent = new DataDogEvent();
-        send(dataDogEvent.buildFromEvent(event), dataDogEvent.generateTags(event));
+        List<String> tags = dataDogEvent.generateTags(event);
+        tags.add("target:" + event.getTargetContainer().getSimpleName());
+        tags.add("aggregationidentifier:" + event.getTargetContainer().getAggregationIdentifier());
+        tags.add("platform:" + event.getTargetContainer().getPlatform().getPlatformType());
+        tags.add("container:" + event.getTargetContainer().getContainerType());
+        send(dataDogEvent.buildFromEvent(event), tags);
     }
 
     @Override
@@ -37,10 +43,10 @@ public class DataDogNotification implements NotificationMethods {
         send(dataDogEvent.buildFromNotification(msg), dataDogEvent.generateTags(msg));
     }
 
-    void send (Event evt, String[] tags) {
+    void send (Event evt, List<String> tags) {
         try {
             log.debug("Sending DataDog notification");
-            statsDClient.recordEvent(evt, tags);
+            statsDClient.recordEvent(evt, tags.toArray(new String[0]));
             log.debug("DataDog notification send");
         } catch (StatsDClientException ex) {
             log.warn("Cannot send DataDog notification", ex);
@@ -89,7 +95,7 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        String[] generateTags (ChaosNotification chaosNotification) {
+        List<String> generateTags (ChaosNotification chaosNotification) {
             ArrayList<String> tags = new ArrayList<>();
             for (Field field : chaosNotification.getClass().getDeclaredFields()) {
                 boolean usedField = true;
@@ -108,7 +114,7 @@ public class DataDogNotification implements NotificationMethods {
                     tags.add(field.getName() + ":IllegalAccessException");
                 }
             }
-            return tags.toArray(new String[0]);
+            return tags;
         }
     }
 }
