@@ -1,9 +1,12 @@
 package com.thales.chaos.notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 
 public abstract class ChaosNotification {
     public abstract String getTitle ();
@@ -11,6 +14,12 @@ public abstract class ChaosNotification {
     public abstract String getMessage ();
 
     public abstract NotificationLevel getNotificationLevel ();
+
+    @JsonIgnore
+    @SuppressWarnings("unchecked")
+    public Map<Object, Object> asMap () {
+        return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
+    }
 
     @Override
     public String toString () {

@@ -1,14 +1,11 @@
 package com.thales.chaos.notification;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
 import java.util.Date;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public class ChaosExperimentEvent extends ChaosNotification {
@@ -56,12 +53,6 @@ public class ChaosExperimentEvent extends ChaosNotification {
 
     public String getMessage () {
         return message;
-    }
-
-    @JsonIgnore
-    @SuppressWarnings("unchecked")
-    public Map<Object, Object> asMap () {
-        return (Map<Object, Object>) new ObjectMapper().convertValue(this, Map.class);
     }
 
 
