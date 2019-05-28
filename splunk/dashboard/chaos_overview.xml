@@ -40,7 +40,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" "message=Starting new experiment"
-                        | spath input=log | chart count by ChaosEvent.experimentMethod
+              | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -137,7 +137,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" "message=Failed to start experiment"
-                        | spath input=log | chart count by ChaosEvent.experimentMethod
+              | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -209,7 +209,7 @@
           <query>sourcetype="container:log"
                         "message=Experiment finished. Container recovered from the experiment"
                         | eval startTime=_time | spath input=log
-                        | chart count by ChaosEvent.experimentMethod
+              | chart count by ChaosExperimentEvent.experimentMethod
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -284,7 +284,7 @@
           <query>sourcetype="container:log"
                         "message=The experiment has gone on too long, invoking self-healing"
                         | eval startTime=_time | spath input=log | chart count by
-                        ChaosEvent.experimentMethod
+              ChaosExperimentEvent.experimentMethod
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -354,7 +354,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" "message=Maximum self healing retries reached"
-                        | eval startTime=_time | spath input=log | chart count by ChaosEvent.experimentMethod
+              | eval startTime=_time | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -400,11 +400,11 @@
       <title>Chaos Events Timeline</title>
       <chart>
         <search>
-          <query>sourcetype="container:log" Chaos Event| spath input=log
-            | rex field=ChaosEvent.message mode=sed "s/Experiment finished.*/Experiment finished/g"
-            | rex field=ChaosEvent.message mode=sed "s/The experiment has gone on to.*/The experiment has gone on to long, invoking self healing/g"
-            | timechart count by ChaosEvent.message
-          </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent| spath input=log
+                | rex field=ChaosExperimentEvent.message mode=sed "s/Experiment finished.*/Experiment finished/g"
+                | rex field=ChaosExperimentEvent.message mode=sed "s/The experiment has gone on to.*/The experiment has gone on to long, invoking self healing/g"
+                | timechart count by ChaosExperimentEvent.message
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -450,9 +450,9 @@
       <table>
         <search>
           <query>sourcetype="container:log" Chaos Event | head | spath input=log | table _time
-                        ChaosEvent.experimentId ChaosEvent.targetContainer.containerType ChaosEvent.experimentType
-                        ChaosEvent.experimentMethod
-                        ChaosEvent.notificationLevel ChaosEvent.targetContainer.simpleName ChaosEvent.message
+              ChaosExperimentEvent.experimentId ChaosExperimentEvent.targetContainer.containerType ChaosExperimentEvent.experimentType
+              ChaosExperimentEvent.experimentMethod
+              ChaosExperimentEvent.notificationLevel ChaosExperimentEvent.targetContainer.simpleName ChaosExperimentEvent.message
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -465,10 +465,10 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
-        <format type="color" field="ChaosEvent.targetContainer.containerType">
+          <format type="color" field="ChaosExperimentEvent.targetContainer.containerType">
           <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}</colorPalette>
         </format>
-        <format type="color" field="ChaosEvent.notificationLevel">
+          <format type="color" field="ChaosExperimentEvent.notificationLevel">
           <colorPalette type="map">{"ERROR":#DC4E41,"WARN":#F8BE34,"GOOD":#53A051}</colorPalette>
         </format>
       </table>
@@ -514,23 +514,23 @@
         <search>
           <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
                         | spath input=log
-                        |join ChaosEvent.experimentId [search sourcetype="container:log" "message=Experiment finished.*"
+              |join ChaosExperimentEvent.experimentId [search sourcetype="container:log" "message=Experiment finished.*"
                         | spath input=log| eval finishTime=_time]
                         |eval experimentDuration=finishTime-startTime
                         | eval experimentDuration=experimentDuration-30
-                        |stats count(ChaosEvent.experimentId) as "Experiment Count"
+              |stats count(ChaosExperimentEvent.experimentId) as "Experiment Count"
                         ,avg(experimentDuration) as "AVG Recovery Duration"
                         ,median(experimentDuration) as "Median Duration"
                         ,stdev(experimentDuration) as "StdDev Duration"
                         ,max(experimentDuration) as "Max Recovery Duration"
                         ,min(experimentDuration) as " Min Recovery Duration"
                         by
-            ChaosEvent.targetContainer.containerType,ChaosEvent.experimentType,ChaosEvent.experimentMethod,
-            ChaosEvent.targetContainer.aggregationIdentifier
-            | rename ChaosEvent.targetContainer.containerType as "Container Type"
-            | rename ChaosEvent.experimentType as "Experiment Type"
-            | rename ChaosEvent.experimentMethod as "Experiment Method"
-            | rename ChaosEvent.targetContainer.aggregationIdentifier as "Container Name (Aggregation Identifier)"
+              ChaosExperimentEvent.targetContainer.containerType,ChaosExperimentEvent.experimentType,ChaosExperimentEvent.experimentMethod,
+              ChaosExperimentEvent.targetContainer.aggregationIdentifier
+              | rename ChaosExperimentEvent.targetContainer.containerType as "Container Type"
+              | rename ChaosExperimentEvent.experimentType as "Experiment Type"
+              | rename ChaosExperimentEvent.experimentMethod as "Experiment Method"
+              | rename ChaosExperimentEvent.targetContainer.aggregationIdentifier as "Container Name (Aggregation Identifier)"
             | sort - "Median Duration"
           </query>
           <earliest>$field1.earliest$</earliest>
@@ -561,7 +561,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log
-                        | chart count by ChaosEvent.experimentMethod ChaosEvent.targetContainer.containerType
+              | chart count by ChaosExperimentEvent.experimentMethod ChaosExperimentEvent.targetContainer.containerType
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -599,7 +599,7 @@
         <option name="trellis.enabled">1</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
-        <option name="trellis.splitBy">ChaosEvent.targetContainer.containerType</option>
+          <option name="trellis.splitBy">ChaosExperimentEvent.targetContainer.containerType</option>
       </chart>
     </panel>
     <panel>
@@ -607,7 +607,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" Chaos Event| spath input=log
-                        | chart count by ChaosEvent.notificationLevel
+              | chart count by ChaosExperimentEvent.notificationLevel
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -654,7 +654,7 @@
       <chart>
         <search>
           <query>sourcetype="container:log" timestamp event | spath input=log | stats count by
-                        ChaosEvent.experimentMethod, ChaosEvent.notificationLevel
+              ChaosExperimentEvent.experimentMethod, ChaosExperimentEvent.notificationLevel
                     </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
