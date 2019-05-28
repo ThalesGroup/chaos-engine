@@ -16,12 +16,17 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+
+import static java.util.function.Predicate.not;
 
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");
 
     @Autowired
     private StatsDClient statsDClient;
@@ -33,7 +38,7 @@ public class DataDogNotification implements NotificationMethods {
         tags.add("target:" + event.getTargetContainer().getSimpleName());
         tags.add("aggregationidentifier:" + event.getTargetContainer().getAggregationIdentifier());
         tags.add("platform:" + event.getTargetContainer().getPlatform().getPlatformType());
-        tags.add("container:" + event.getTargetContainer().getContainerType());
+        tags.add("containertype:" + event.getTargetContainer().getContainerType());
         send(dataDogEvent.buildFromEvent(event), tags);
     }
 
@@ -95,23 +100,20 @@ public class DataDogNotification implements NotificationMethods {
 
         List<String> generateTags (ChaosNotification chaosNotification) {
             ArrayList<String> tags = new ArrayList<>();
-            for (Field field : chaosNotification.getClass().getDeclaredFields()) {
-                boolean usedField = true;
-                field.setAccessible(true);
-                try {
-                    if (field.isSynthetic() || Modifier.isTransient(field.getModifiers()) || field.get(chaosNotification) == null) {
-                        usedField = false;
-                    }
-                } catch (IllegalAccessException e) {
-                    usedField = false;
-                }
-                if (!usedField) continue;
-                try {
-                    tags.add(field.getName() + ":" + field.get(chaosNotification));
-                } catch (IllegalAccessException e) {
-                    tags.add(field.getName() + ":IllegalAccessException");
-                }
-            }
+            Arrays.stream(chaosNotification.getClass().getDeclaredFields())
+                  .filter(not(field -> Modifier.isTransient(field.getModifiers())))
+                  .filter(not(Field::isSynthetic))
+                  .filter(not(f -> knownChaosEventFields.contains(f.getName())))
+                  .forEachOrdered(field -> {
+                      field.setAccessible(true);
+                      try {
+                          if (field.get(chaosNotification) != null) {
+                              tags.add(field.getName() + ":" + field.get(chaosNotification));
+                          }
+                      } catch (IllegalAccessException e) {
+                          log.error("Could not read from field {}", field.getName(), e);
+                      }
+                  });
             return tags;
         }
     }
