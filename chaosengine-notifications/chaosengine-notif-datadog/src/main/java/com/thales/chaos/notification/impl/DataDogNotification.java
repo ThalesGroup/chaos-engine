@@ -1,9 +1,11 @@
 package com.thales.chaos.notification.impl;
 
+import com.thales.chaos.container.Container;
 import com.thales.chaos.notification.ChaosExperimentEvent;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.platform.Platform;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
@@ -15,10 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static java.util.function.Predicate.not;
 
@@ -35,10 +34,14 @@ public class DataDogNotification implements NotificationMethods {
     public void logEvent (ChaosExperimentEvent event) {
         DataDogEvent dataDogEvent = new DataDogEvent();
         List<String> tags = dataDogEvent.generateTags(event);
-        tags.add("target:" + event.getTargetContainer().getSimpleName());
-        tags.add("aggregationidentifier:" + event.getTargetContainer().getAggregationIdentifier());
-        tags.add("platform:" + event.getTargetContainer().getPlatform().getPlatformType());
-        tags.add("containertype:" + event.getTargetContainer().getContainerType());
+        Optional<Container> container = Optional.ofNullable(event.getTargetContainer());
+        container.map(Container::getSimpleName).map(s -> "target:" + s).ifPresent(tags::add);
+        container.map(Container::getAggregationIdentifier).map(s -> "aggregationidentifier:" + s).ifPresent(tags::add);
+        container.map(Container::getPlatform)
+                 .map(Platform::getPlatformType)
+                 .map(s -> "platform:" + s)
+                 .ifPresent(tags::add);
+        container.map(Container::getContainerType).map(s -> "containertype:" + s).ifPresent(tags::add);
         send(dataDogEvent.buildFromEvent(event), tags);
     }
 
