@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static java.util.function.Predicate.not;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
@@ -53,11 +54,11 @@ public class DataDogNotification implements NotificationMethods {
 
     void send (Event evt, Collection<String> tags) {
         try {
-            log.debug("Sending DataDog notification");
+            log.debug("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
             statsDClient.recordEvent(evt, tags.toArray(String[]::new));
-            log.debug("DataDog notification send");
+            log.debug("DataDog notification send: {}, {}", v("message", evt.getText()), v("tags", tags));
         } catch (StatsDClientException ex) {
-            log.error("Cannot send DataDog notification", ex);
+            log.error("Cannot send DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
         }
     }
     public DataDogNotification () {
