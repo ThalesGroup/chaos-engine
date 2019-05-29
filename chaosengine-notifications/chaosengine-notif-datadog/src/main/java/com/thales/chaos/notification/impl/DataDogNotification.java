@@ -106,8 +106,7 @@ public class DataDogNotification implements NotificationMethods {
             Arrays.stream(chaosNotification.getClass().getDeclaredFields())
                   .filter(not(field -> Modifier.isTransient(field.getModifiers())))
                   .filter(not(Field::isSynthetic))
-                  .filter(not(f -> knownChaosEventFields.contains(f.getName())))
-                  .forEachOrdered(field -> {
+                  .filter(not(f -> knownChaosEventFields.contains(f.getName()))).forEach(field -> {
                       field.setAccessible(true);
                       try {
                           if (field.get(chaosNotification) != null) {
