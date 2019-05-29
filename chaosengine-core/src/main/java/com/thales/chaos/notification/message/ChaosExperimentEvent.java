@@ -1,5 +1,6 @@
 package com.thales.chaos.notification.message;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
@@ -11,11 +12,15 @@ import java.util.Date;
 @SuppressWarnings("unused")
 public class ChaosExperimentEvent implements ChaosNotification {
     private Container targetContainer;
+    @JsonProperty
     private Date chaosTime;
+    @JsonProperty
     private String experimentId;
     private String title;
     private String message;
+    @JsonProperty
     private ExperimentType experimentType;
+    @JsonProperty
     private String experimentMethod;
     private NotificationLevel notificationLevel;
     public static final transient String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
@@ -23,37 +28,22 @@ public class ChaosExperimentEvent implements ChaosNotification {
         return ChaosEventBuilder.builder();
     }
 
-    public String getExperimentId () {
-        return experimentId;
-    }
-
-    public String getExperimentMethod () {
-        return experimentMethod;
-    }
-
-    public ExperimentType getExperimentType () {
-        return experimentType;
-    }
-
-    public NotificationLevel getNotificationLevel () {
-        return notificationLevel;
+    @Override
+    public String getMessage () {
+        return message;
     }
 
     public Container getTargetContainer () {
         return targetContainer;
     }
-
-    public Date getChaosTime () {
-        return chaosTime;
-    }
-
     @Override
     public String getTitle () {
         return title;
     }
 
-    public String getMessage () {
-        return message;
+    @Override
+    public NotificationLevel getNotificationLevel () {
+        return notificationLevel;
     }
 
 
