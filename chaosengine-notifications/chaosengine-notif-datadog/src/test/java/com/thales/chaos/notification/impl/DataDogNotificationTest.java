@@ -87,7 +87,23 @@ public class DataDogNotificationTest {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logEvent(chaosExperimentEvent);
-        verify(client,times(1)).recordEvent(ArgumentMatchers.any(),ArgumentMatchers.any());
+        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        Event expectedEvent = Event.builder()
+                                   .withAggregationKey(chaosExperimentEvent.getExperimentId())
+                                   .withAlertType(Event.AlertType.WARNING)
+                                   .withTitle(chaosExperimentEvent.getTitle())
+                                   .withText(chaosExperimentEvent.getMessage())
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
+                                   .build();
+        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
+        assertThat(tagsCaptor.getAllValues(), is(expectedTagsEvent));
+        Event actualEvent = eventCaptor.getValue();
+        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
+        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
+        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
+        assertEquals(actualEvent.getText(), expectedEvent.getText());
+        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
     }
 
     @Test
@@ -95,7 +111,23 @@ public class DataDogNotificationTest {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logMessage(chaosMessage);
-        verify(client, times(1)).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
+        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        Event expectedEvent = Event.builder()
+                                   .withAlertType(Event.AlertType.WARNING)
+                                   .withTitle(chaosMessage.getTitle())
+                                   .withText(chaosMessage.getMessage())
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
+                                   .build();
+        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
+        assertThat(tagsCaptor.getAllValues(), is(expectedTagsMessage));
+        Event actualEvent = eventCaptor.getValue();
+        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
+        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
+        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
+        assertEquals(actualEvent.getText(), expectedEvent.getText());
+        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
+
     }
 
     @Test
