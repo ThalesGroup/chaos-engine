@@ -54,7 +54,7 @@ public class DataDogNotification implements NotificationMethods {
     void send (Event evt, List<String> tags) {
         try {
             log.debug("Sending DataDog notification");
-            statsDClient.recordEvent(evt, tags.toArray(new String[0]));
+            statsDClient.recordEvent(evt, tags.toArray(String[]::new));
             log.debug("DataDog notification send");
         } catch (StatsDClientException ex) {
             log.warn("Cannot send DataDog notification", ex);
