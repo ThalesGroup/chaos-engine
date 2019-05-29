@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
@@ -48,8 +49,8 @@ public class DataDogNotificationTest {
 
 
     private NotificationLevel level = NotificationLevel.WARN;
-    private ArrayList<String> expectedTagsEvent = new ArrayList<>();
-    private ArrayList<String> expectedTagsMessage = new ArrayList<>();
+    private Collection<String> expectedTagsEvent = new ArrayList<>();
+    private Collection<String> expectedTagsMessage = new ArrayList<>();
     @Before
     public void setUp () {
         chaosExperimentEvent = ChaosExperimentEvent.builder()

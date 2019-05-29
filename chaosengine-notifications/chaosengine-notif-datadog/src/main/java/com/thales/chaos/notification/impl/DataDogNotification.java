@@ -33,7 +33,7 @@ public class DataDogNotification implements NotificationMethods {
     @Override
     public void logEvent (ChaosExperimentEvent event) {
         DataDogEvent dataDogEvent = new DataDogEvent();
-        List<String> tags = dataDogEvent.generateTags(event);
+        Collection<String> tags = dataDogEvent.generateTags(event);
         Optional<Container> container = Optional.ofNullable(event.getTargetContainer());
         container.map(Container::getSimpleName).map(s -> "target:" + s).ifPresent(tags::add);
         container.map(Container::getAggregationIdentifier).map(s -> "aggregationidentifier:" + s).ifPresent(tags::add);
@@ -51,7 +51,7 @@ public class DataDogNotification implements NotificationMethods {
         send(dataDogEvent.buildFromNotification(msg), dataDogEvent.generateTags(msg));
     }
 
-    void send (Event evt, List<String> tags) {
+    void send (Event evt, Collection<String> tags) {
         try {
             log.debug("Sending DataDog notification");
             statsDClient.recordEvent(evt, tags.toArray(String[]::new));
@@ -101,7 +101,7 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        List<String> generateTags (ChaosNotification chaosNotification) {
+        Collection<String> generateTags (ChaosNotification chaosNotification) {
             ArrayList<String> tags = new ArrayList<>();
             Arrays.stream(chaosNotification.getClass().getDeclaredFields())
                   .filter(not(field -> Modifier.isTransient(field.getModifiers())))
