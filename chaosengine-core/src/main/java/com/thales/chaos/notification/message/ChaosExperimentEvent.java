@@ -9,7 +9,7 @@ import com.thales.chaos.notification.enums.NotificationLevel;
 import java.util.Date;
 
 @SuppressWarnings("unused")
-public class ChaosExperimentEvent extends ChaosNotification {
+public class ChaosExperimentEvent implements ChaosNotification {
     private Container targetContainer;
     private Date chaosTime;
     private String experimentId;

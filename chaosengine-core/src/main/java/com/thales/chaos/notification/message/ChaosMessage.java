@@ -3,7 +3,7 @@ package com.thales.chaos.notification.message;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
-public class ChaosMessage extends ChaosNotification {
+public class ChaosMessage implements ChaosNotification {
     private String title;
     private String message;
     private NotificationLevel notificationLevel;
