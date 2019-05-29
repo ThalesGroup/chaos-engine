@@ -1,8 +1,9 @@
-package com.thales.chaos.notification;
+package com.thales.chaos.notification.message;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
 import java.util.Date;

@@ -1,9 +1,9 @@
 package com.thales.chaos.admin;
 
 import com.thales.chaos.admin.enums.AdminState;
-import com.thales.chaos.notification.ChaosMessage;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

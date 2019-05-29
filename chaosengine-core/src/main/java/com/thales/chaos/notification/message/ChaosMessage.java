@@ -1,5 +1,6 @@
-package com.thales.chaos.notification;
+package com.thales.chaos.notification.message;
 
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
 
 public class ChaosMessage extends ChaosNotification {

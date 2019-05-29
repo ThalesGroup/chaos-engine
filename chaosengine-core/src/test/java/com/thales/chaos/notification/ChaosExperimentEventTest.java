@@ -6,6 +6,7 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.platform.Platform;
 import org.junit.Assert;
 import org.junit.Test;

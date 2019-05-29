@@ -1,6 +1,7 @@
 package com.thales.chaos.notification;
 
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.backoff.BackOffExecution;

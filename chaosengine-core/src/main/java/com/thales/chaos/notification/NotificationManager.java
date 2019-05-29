@@ -1,5 +1,6 @@
 package com.thales.chaos.notification;
 
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

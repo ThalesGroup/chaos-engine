@@ -1,10 +1,10 @@
 package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.container.Container;
-import com.thales.chaos.notification.ChaosExperimentEvent;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.platform.Platform;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;

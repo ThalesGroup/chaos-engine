@@ -2,9 +2,9 @@ package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.notification.ChaosExperimentEvent;
-import com.thales.chaos.notification.ChaosMessage;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
+import com.thales.chaos.notification.message.ChaosMessage;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.util.StringUtils;
 import com.timgroup.statsd.Event;

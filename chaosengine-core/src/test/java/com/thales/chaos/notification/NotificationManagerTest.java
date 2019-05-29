@@ -1,5 +1,7 @@
 package com.thales.chaos.notification;
 
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
+import com.thales.chaos.notification.message.ChaosMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;

@@ -1,8 +1,8 @@
 package com.thales.chaos.notification.impl;
 
-import com.thales.chaos.notification.ChaosExperimentEvent;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
