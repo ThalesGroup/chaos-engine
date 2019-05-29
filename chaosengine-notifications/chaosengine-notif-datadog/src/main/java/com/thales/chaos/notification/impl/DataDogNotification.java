@@ -43,7 +43,7 @@ public class DataDogNotification implements NotificationMethods {
                  .map(s -> "platform:" + s)
                  .ifPresent(tags::add);
         container.map(Container::getContainerType).map(s -> "containertype:" + s).ifPresent(tags::add);
-        send(dataDogEvent.buildFromEvent(event), tags);
+        send(dataDogEvent.buildFromNotification(event), tags);
     }
 
     @Override
@@ -72,23 +72,28 @@ public class DataDogNotification implements NotificationMethods {
     class DataDogEvent {
         protected static final String SOURCE_TYPE = "JAVA";
 
-        Event buildFromEvent (ChaosExperimentEvent chaosExperimentEvent) {
-            return Event.builder()
-                        .withAggregationKey(chaosExperimentEvent.getExperimentId())
-                        .withAlertType(mapLevel(chaosExperimentEvent.getNotificationLevel()))
-                        .withTitle(chaosExperimentEvent.getTitle())
-                        .withText(chaosExperimentEvent.getMessage())
-                        .withSourceTypeName(SOURCE_TYPE)
-                        .build();
-        }
-
         Event buildFromNotification (ChaosNotification chaosNotification) {
-            return Event.builder()
-                        .withAlertType(mapLevel(chaosNotification.getNotificationLevel()))
-                        .withTitle(chaosNotification.getTitle())
-                        .withText(chaosNotification.getMessage())
-                        .withSourceTypeName(SOURCE_TYPE)
-                        .build();
+            Event.Builder evtBuilder = Event.builder();
+            Optional.ofNullable(chaosNotification.asMap().get("experimentId"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withAggregationKey);
+            Optional.ofNullable(chaosNotification.asMap().get("notificationLevel"))
+                    .filter(NotificationLevel::isNotificationLevel)
+                    .map(Object::toString)
+                    .map(NotificationLevel::valueOf)
+                    .map(this::mapLevel)
+                    .ifPresent(evtBuilder::withAlertType);
+            Optional.ofNullable(chaosNotification.asMap().get("title"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withTitle);
+            Optional.ofNullable(chaosNotification.asMap().get("message"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withText);
+            evtBuilder.withSourceTypeName(SOURCE_TYPE);
+            return evtBuilder.build();
         }
 
         Event.AlertType mapLevel (NotificationLevel level) {

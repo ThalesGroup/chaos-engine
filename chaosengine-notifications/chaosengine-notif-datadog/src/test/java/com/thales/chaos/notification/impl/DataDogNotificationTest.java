@@ -56,7 +56,6 @@ public class DataDogNotificationTest {
         chaosExperimentEvent = ChaosExperimentEvent.builder()
                                                    .withMessage(message)
                                                    .withExperimentId(experimentId)
-                                                   .withMessage(message)
                                                    .withNotificationLevel(level)
                                                    .withTargetContainer(container)
                                                    .withExperimentMethod(experimentMethod)
@@ -68,9 +67,9 @@ public class DataDogNotificationTest {
         when(container.getContainerType()).thenReturn(conatainerType);
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
-        expectedTagsEvent.add("experimentId:" + chaosExperimentEvent.getExperimentId());
-        expectedTagsEvent.add("experimentType:" + chaosExperimentEvent.getExperimentType().name());
-        expectedTagsEvent.add("experimentMethod:" + chaosExperimentEvent.getExperimentMethod());
+        expectedTagsEvent.add("experimentId:" + experimentId);
+        expectedTagsEvent.add("experimentType:" + ExperimentType.STATE.name());
+        expectedTagsEvent.add("experimentMethod:" + experimentMethod);
         expectedTagsEvent.add("notificationLevel:" + chaosExperimentEvent.getNotificationLevel());
         expectedTagsEvent.add("target:" + target);
         expectedTagsEvent.add("aggregationidentifier:" + aggregationIdentifier);
@@ -90,8 +89,7 @@ public class DataDogNotificationTest {
         notif.logEvent(chaosExperimentEvent);
         ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        Event expectedEvent = Event.builder()
-                                   .withAggregationKey(chaosExperimentEvent.getExperimentId())
+        Event expectedEvent = Event.builder().withAggregationKey(experimentId)
                                    .withAlertType(Event.AlertType.WARNING)
                                    .withTitle(chaosExperimentEvent.getTitle())
                                    .withText(chaosExperimentEvent.getMessage())
@@ -144,19 +142,6 @@ public class DataDogNotificationTest {
         assertEquals(Event.AlertType.WARNING,dataDogEvent.mapLevel(NotificationLevel.WARN));
         assertEquals(Event.AlertType.ERROR,dataDogEvent.mapLevel(NotificationLevel.ERROR));
         assertEquals(Event.AlertType.SUCCESS,dataDogEvent.mapLevel(NotificationLevel.GOOD));
-    }
-    @Test
-    public void buildEvent(){
-        Event expectedEvent = Event.builder()
-                                   .withText(message).withTitle(ChaosExperimentEvent.CHAOS_EXPERIMENT_EVENT_PREFIX)
-                                   .withAlertType(Event.AlertType.WARNING)
-                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
-                                   .build();
-        Event actualEvent = dataDogEvent.buildFromEvent(chaosExperimentEvent);
-        assertEquals(expectedEvent.getTitle(), actualEvent.getTitle());
-        assertEquals(expectedEvent.getText(), actualEvent.getText());
-        assertEquals(expectedEvent.getAlertType(), actualEvent.getAlertType());
-        assertEquals(expectedEvent.getSourceTypeName(), actualEvent.getSourceTypeName());
     }
 
     @Test
