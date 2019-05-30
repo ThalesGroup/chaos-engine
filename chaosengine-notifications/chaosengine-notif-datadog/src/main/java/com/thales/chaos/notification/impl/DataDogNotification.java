@@ -3,7 +3,6 @@ package com.thales.chaos.notification.impl;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
-import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
@@ -28,8 +27,8 @@ public class DataDogNotification implements NotificationMethods {
     private StatsDClient statsDClient;
 
     @Override
-    public void logEvent (ChaosExperimentEvent event) {
-        logMessage(event);
+    public void logNotification (ChaosNotification notification) {
+        logMessage(notification);
     }
 
     @Override

@@ -59,13 +59,8 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     @Override
-    public void logEvent (ChaosExperimentEvent event) {
-        logMessage(event);
-    }
-
-    @Override
-    public void logMessage (ChaosNotification msg) {
-        attachmentQueue.offer(createAttachmentFromChaosNotification(msg));
+    public void logNotification (ChaosNotification notification) {
+        attachmentQueue.offer(createAttachmentFromChaosNotification(notification));
         if (attachmentQueue.size() >= MAXIMUM_ATTACHMENTS) {
             flushBuffer();
         }

@@ -1,7 +1,6 @@
 package com.thales.chaos.notification;
 
 import com.thales.chaos.exception.ChaosException;
-import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.backoff.BackOffExecution;
@@ -18,7 +17,7 @@ import static com.thales.chaos.exception.enums.ChaosErrorCode.NOTIFICATION_BUFFE
 public abstract class BufferedNotificationMethod implements NotificationMethods {
     private static final Integer FORCED_FLUSH_SIZE = 50;
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private ConcurrentLinkedQueue<ChaosExperimentEvent> notificationBuffer = new ConcurrentLinkedQueue<>();
+    private ConcurrentLinkedQueue<ChaosNotification> notificationBuffer = new ConcurrentLinkedQueue<>();
     private ExponentialBackOff exponentialBackOff = new ExponentialBackOff();
     private BackOffExecution backOffExecution;
 
@@ -29,25 +28,25 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
     }
 
     @Override
-    public void logEvent (ChaosExperimentEvent event) {
-        getQueue().add(event);
+    public void logNotification (ChaosNotification notification) {
+        getQueue().add(notification);
         if (getQueue().size() > FORCED_FLUSH_SIZE) {
             flushBuffer();
         }
     }
 
-    private Queue<ChaosExperimentEvent> getQueue () {
+    private Queue<ChaosNotification> getQueue () {
         return notificationBuffer;
     }
 
     protected void flushBuffer () {
         while (!getQueue().isEmpty()) {
             backOffExecution = exponentialBackOff.start();
-            ChaosExperimentEvent chaosExperimentEvent = getQueue().poll();
+            ChaosNotification chaosNotification = getQueue().poll();
             // Make sure to Null Check chaosExperimentEvent, in case two instances of Flush Buffer are running simultaneously
-            if (chaosExperimentEvent == null) continue;
+            if (chaosNotification == null) continue;
             try {
-                flushBufferInternal(chaosExperimentEvent);
+                flushBufferInternal(chaosNotification);
             } catch (Exception e) {
                 throw new ChaosException(NOTIFICATION_BUFFER_ERROR, e);
             }

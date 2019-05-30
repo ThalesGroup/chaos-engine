@@ -1,6 +1,5 @@
 package com.thales.chaos.notification;
 
-import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -25,11 +24,7 @@ public class NotificationManager {
     public void sendNotification (ChaosNotification chaosNotification) {
         if (notificationMethods != null) {
             for (NotificationMethods notif : notificationMethods) {
-                if (chaosNotification instanceof ChaosExperimentEvent) {
-                    notif.logEvent((ChaosExperimentEvent) chaosNotification);
-                } else {
-                    notif.logMessage(chaosNotification);
-                }
+                notif.logNotification(chaosNotification);
             }
         }
     }

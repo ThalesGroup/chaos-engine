@@ -2,7 +2,6 @@ package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
-import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +16,8 @@ public class ConsoleNotification implements NotificationMethods {
     }
 
     @Override
-    public void logEvent (ChaosExperimentEvent event) {
-        log.debug("{}", StructuredArguments.value(event.getClass().getSimpleName(), event));
-    }
-
-    @Override
-    public void logMessage (ChaosNotification msg) {
-        log.debug("{}", StructuredArguments.value(msg.getClass().getSimpleName(), msg));
+    public void logNotification (ChaosNotification notification) {
+        log.debug("{}", StructuredArguments.value(notification.getClass().getSimpleName(), notification));
     }
 }
 

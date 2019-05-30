@@ -187,23 +187,11 @@ public class SlackNotificationsTest {
     public void logEvent () throws IOException {
 
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        slackNotifications.logEvent(chaosExperimentEvent);
+        slackNotifications.logNotification(chaosExperimentEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
         String expectedPayload = mapper.writeValueAsString(expectedSlackEvent);
-        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
-        assertEquals(expectedPayload, actualPayload);
-    }
-
-    @Test
-    public void logMessage () throws IOException {
-        ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        slackNotifications.logMessage(chaosMessage);
-        slackNotifications.flushBuffer();
-        verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
-        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
-        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
         String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
@@ -229,7 +217,7 @@ public class SlackNotificationsTest {
     @Test
     public void bufferFlush () {
         for (int i = 0; i < SlackNotifications.MAXIMUM_ATTACHMENTS; i++) {
-            slackNotifications.logEvent(chaosExperimentEvent);
+            slackNotifications.logNotification(chaosExperimentEvent);
         }
         verify(slackNotifications, times(1)).flushBuffer();
     }
@@ -267,7 +255,7 @@ public class SlackNotificationsTest {
             }
         };
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        slackNotifications.logEvent(x);
+        slackNotifications.logNotification(x);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();

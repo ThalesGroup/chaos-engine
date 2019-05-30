@@ -126,7 +126,7 @@ public class DataDogNotificationTest {
     public void logEvent(){
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
-        notif.logEvent(chaosExperimentEvent);
+        notif.logNotification(chaosExperimentEvent);
         ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         Event expectedEvent = Event.builder().withAggregationKey(experimentId)
@@ -174,7 +174,7 @@ public class DataDogNotificationTest {
             StatsDClient client = Mockito.mock(StatsDClient.class);
             doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
             DataDogNotification notif = new DataDogNotification(client);
-        notif.logEvent(chaosExperimentEvent);
+        notif.logNotification(chaosExperimentEvent);
     }
 
     @Test
@@ -202,7 +202,7 @@ public class DataDogNotificationTest {
     public void getTagsEvent () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
-        notif.logEvent(chaosExperimentEvent);
+        notif.logNotification(chaosExperimentEvent);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(client, times(1)).recordEvent(ArgumentMatchers.any(), captor.capture());
         assertThat(captor.getAllValues(), is(expectedTagsEvent));

@@ -32,8 +32,8 @@ public class NotificationManagerTest {
         when(notificationMethodsIterator.hasNext()).thenReturn(true, false, true, false);
         when(notificationMethodsIterator.next()).thenReturn(notificationMethod, notificationMethod);
         notificationManager.sendNotification(chaosExperimentEvent);
-        verify(notificationMethod, times(1)).logEvent(chaosExperimentEvent);
+        verify(notificationMethod, times(1)).logNotification(chaosExperimentEvent);
         notificationManager.sendNotification(chaosMessage);
-        verify(notificationMethod, times(1)).logMessage(chaosMessage);
+        verify(notificationMethod, times(1)).logNotification(chaosMessage);
     }
 }
