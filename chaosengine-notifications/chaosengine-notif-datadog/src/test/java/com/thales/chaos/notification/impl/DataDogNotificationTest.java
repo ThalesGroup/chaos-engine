@@ -1,7 +1,9 @@
 package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.enums.ExperimentType;
+import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.notification.message.ChaosMessage;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -34,8 +37,6 @@ public class DataDogNotificationTest {
     private ChaosMessage chaosMessage;
     @Mock
     private Platform platform;
-    @Mock
-    private Container container;
     private DataDogNotification.DataDogEvent dataDogEvent ;
 
     private String experimentId=UUID.randomUUID().toString();
@@ -51,6 +52,37 @@ public class DataDogNotificationTest {
     private NotificationLevel level = NotificationLevel.WARN;
     private Collection<String> expectedTagsEvent = new ArrayList<>();
     private Collection<String> expectedTagsMessage = new ArrayList<>();
+    private Container container = new Container() {
+        @Override
+        public Platform getPlatform () {
+            return platform;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return target;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
+            return aggregationIdentifier;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
+    };
     @Before
     public void setUp () {
         chaosExperimentEvent = ChaosExperimentEvent.builder()
@@ -61,10 +93,6 @@ public class DataDogNotificationTest {
                                                    .withExperimentMethod(experimentMethod)
                                                    .withExperimentType(ExperimentType.STATE)
                                                    .build();
-        when(container.getSimpleName()).thenReturn(target);
-        when(container.getPlatform()).thenReturn(platform);
-        when(container.getAggregationIdentifier()).thenReturn(aggregationIdentifier);
-        when(container.getContainerType()).thenReturn(conatainerType);
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
         expectedTagsEvent.add("experimentId:" + experimentId);
