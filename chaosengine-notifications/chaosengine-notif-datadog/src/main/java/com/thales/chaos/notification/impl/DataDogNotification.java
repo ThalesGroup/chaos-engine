@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static java.util.function.Predicate.not;
@@ -56,7 +54,7 @@ public class DataDogNotification implements NotificationMethods {
         try {
             log.debug("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
             statsDClient.recordEvent(evt, tags.toArray(String[]::new));
-            log.debug("DataDog notification send: {}, {}", v("message", evt.getText()), v("tags", tags));
+            log.debug("DataDog notification send: {}, {}", v("notice", evt.getText()), v("tags", tags));
         } catch (StatsDClientException ex) {
             log.error("Cannot send DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
         }
@@ -109,19 +107,12 @@ public class DataDogNotification implements NotificationMethods {
 
         Collection<String> generateTags (ChaosNotification chaosNotification) {
             ArrayList<String> tags = new ArrayList<>();
-            Arrays.stream(chaosNotification.getClass().getDeclaredFields())
-                  .filter(not(field -> Modifier.isTransient(field.getModifiers())))
-                  .filter(not(Field::isSynthetic))
-                  .filter(not(f -> knownChaosEventFields.contains(f.getName()))).forEach(field -> {
-                      field.setAccessible(true);
-                      try {
-                          if (field.get(chaosNotification) != null) {
-                              tags.add(field.getName() + ":" + field.get(chaosNotification));
-                          }
-                      } catch (IllegalAccessException e) {
-                          log.error("Could not read from field {}", field.getName(), e);
-                      }
-                  });
+            Map<Object, Object> fieldMap = chaosNotification.asMap();
+            fieldMap.keySet()
+                    .stream()
+                    .map(Object::toString)
+                    .filter(not(knownChaosEventFields::contains))
+                    .forEach(k -> tags.add(k + ":" + fieldMap.get(k)));
             return tags;
         }
     }
