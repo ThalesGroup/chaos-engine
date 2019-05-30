@@ -28,13 +28,8 @@ public class DataDogNotification implements NotificationMethods {
 
     @Override
     public void logNotification (ChaosNotification notification) {
-        logMessage(notification);
-    }
-
-    @Override
-    public void logMessage (ChaosNotification msg) {
         DataDogEvent dataDogEvent = new DataDogEvent();
-        send(dataDogEvent.buildFromNotification(msg), dataDogEvent.generateTags(msg));
+        send(dataDogEvent.buildFromNotification(notification), dataDogEvent.generateTags(notification));
     }
 
     void send (Event evt, Collection<String> tags) {

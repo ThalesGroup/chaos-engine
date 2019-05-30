@@ -123,7 +123,7 @@ public class DataDogNotificationTest {
         expectedTagsMessage.add("notificationLevel:" + level);
     }
     @Test
-    public void logEvent(){
+    public void logNotication () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logNotification(chaosExperimentEvent);
@@ -143,30 +143,6 @@ public class DataDogNotificationTest {
         assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
         assertEquals(actualEvent.getText(), expectedEvent.getText());
         assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
-    }
-
-    @Test
-    public void logMessage () {
-        StatsDClient client = Mockito.mock(StatsDClient.class);
-        DataDogNotification notif = new DataDogNotification(client);
-        notif.logMessage(chaosMessage);
-        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        Event expectedEvent = Event.builder()
-                                   .withAlertType(Event.AlertType.WARNING)
-                                   .withTitle(chaosMessage.getTitle())
-                                   .withText(chaosMessage.getMessage())
-                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
-                                   .build();
-        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
-        assertThat(tagsCaptor.getAllValues(), is(expectedTagsMessage));
-        Event actualEvent = eventCaptor.getValue();
-        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
-        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
-        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
-        assertEquals(actualEvent.getText(), expectedEvent.getText());
-        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
-
     }
 
     @Test
@@ -199,22 +175,12 @@ public class DataDogNotificationTest {
     }
 
     @Test
-    public void getTagsEvent () {
+    public void getTags () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logNotification(chaosExperimentEvent);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(client, times(1)).recordEvent(ArgumentMatchers.any(), captor.capture());
         assertThat(captor.getAllValues(), is(expectedTagsEvent));
-    }
-
-    @Test
-    public void getTagsMessage () {
-        StatsDClient client = Mockito.mock(StatsDClient.class);
-        DataDogNotification notif = new DataDogNotification(client);
-        notif.logMessage(chaosMessage);
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(client, times(1)).recordEvent(ArgumentMatchers.any(), captor.capture());
-        assertThat(captor.getAllValues(), is(expectedTagsMessage));
     }
 }
