@@ -11,6 +11,7 @@ import java.util.Date;
 
 @SuppressWarnings("unused")
 public class ChaosExperimentEvent implements ChaosNotification {
+    @JsonProperty
     private Container targetContainer;
     @JsonProperty
     private Date chaosTime;
