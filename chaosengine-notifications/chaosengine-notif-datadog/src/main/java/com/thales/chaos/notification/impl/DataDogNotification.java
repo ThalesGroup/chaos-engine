@@ -31,17 +31,7 @@ public class DataDogNotification implements NotificationMethods {
 
     @Override
     public void logEvent (ChaosExperimentEvent event) {
-        DataDogEvent dataDogEvent = new DataDogEvent();
-        Collection<String> tags = dataDogEvent.generateTags(event);
-        Optional<Container> container = Optional.ofNullable(event.getTargetContainer());
-        container.map(Container::getSimpleName).map(s -> "target:" + s).ifPresent(tags::add);
-        container.map(Container::getAggregationIdentifier).map(s -> "aggregationidentifier:" + s).ifPresent(tags::add);
-        container.map(Container::getPlatform)
-                 .map(Platform::getPlatformType)
-                 .map(s -> "platform:" + s)
-                 .ifPresent(tags::add);
-        container.map(Container::getContainerType).map(s -> "containertype:" + s).ifPresent(tags::add);
-        send(dataDogEvent.buildFromNotification(event), tags);
+        logMessage(event);
     }
 
     @Override
@@ -106,13 +96,43 @@ public class DataDogNotification implements NotificationMethods {
         }
 
         Collection<String> generateTags (ChaosNotification chaosNotification) {
-            ArrayList<String> tags = new ArrayList<>();
             Map<Object, Object> fieldMap = chaosNotification.asMap();
+            ArrayList<String> tags = new ArrayList<>(collectContainerTags(fieldMap));
             fieldMap.keySet()
                     .stream()
                     .map(Object::toString)
                     .filter(not(knownChaosEventFields::contains))
                     .forEach(k -> tags.add(k + ":" + fieldMap.get(k)));
+            return tags;
+        }
+
+        Collection<String> collectContainerTags (Map<Object, Object> fieldMap) {
+            ArrayList<String> tags = new ArrayList<>();
+            Optional.ofNullable(fieldMap.get("targetContainer"))
+                    .filter(Container.class::isInstance)
+                    .map(Container.class::cast)
+                    .map(Container::getSimpleName)
+                    .map(s -> "target:" + s)
+                    .ifPresent(tags::add);
+            Optional.ofNullable(fieldMap.get("aggregationidentifier"))
+                    .filter(Container.class::isInstance)
+                    .map(Container.class::cast)
+                    .map(Container::getAggregationIdentifier)
+                    .map(s -> "aggregationidentifier:" + s)
+                    .ifPresent(tags::add);
+            Optional.ofNullable(fieldMap.get("platform"))
+                    .filter(Container.class::isInstance)
+                    .map(Container.class::cast)
+                    .map(Container::getPlatform)
+                    .map(Platform::getPlatformType)
+                    .map(s -> "platform:" + s)
+                    .ifPresent(tags::add);
+            Optional.ofNullable(fieldMap.get("containertype"))
+                    .filter(Container.class::isInstance)
+                    .map(Container.class::cast)
+                    .map(Container::getContainerType)
+                    .map(s -> "containertype:" + s)
+                    .ifPresent(tags::add);
             return tags;
         }
     }
