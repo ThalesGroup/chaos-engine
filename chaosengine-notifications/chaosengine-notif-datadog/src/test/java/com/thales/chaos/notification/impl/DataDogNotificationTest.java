@@ -22,8 +22,10 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
@@ -47,12 +49,17 @@ public class DataDogNotificationTest {
     private String platformType = "Platform";
     private String conatainerType = "Container";
     private String aggregationIdentifier = conatainerType;
+    private Date chaosTime = Date.from(Instant.now());
 
 
     private NotificationLevel level = NotificationLevel.WARN;
     private Collection<String> expectedTagsEvent = new ArrayList<>();
     private Collection<String> expectedTagsMessage = new ArrayList<>();
     private Container container = new Container() {
+        @Override
+        public String getContainerType () {
+            return conatainerType;
+        }
         @Override
         public Platform getPlatform () {
             return platform;
@@ -91,18 +98,23 @@ public class DataDogNotificationTest {
                                                    .withNotificationLevel(level)
                                                    .withTargetContainer(container)
                                                    .withExperimentMethod(experimentMethod)
-                                                   .withExperimentType(ExperimentType.STATE)
+                                                   .withExperimentType(ExperimentType.STATE).withChaosTime(chaosTime)
                                                    .build();
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
+        expectedTagsEvent.add("container.shellCapabilities:{}");
+        expectedTagsEvent.add("container.containerType:" + container.getContainerType());
+        expectedTagsEvent.add("container.aggregationIdentifier:" + aggregationIdentifier);
+        expectedTagsEvent.add("container.simpleName:" + target);
+        expectedTagsEvent.add("container.cattle:" + container.isCattle());
+        expectedTagsEvent.add("container.experimentStartTime:" + container.getExperimentStartTime());
+        expectedTagsEvent.add("container.knownMissingCapabilities:" + container.getKnownMissingCapabilities());
+        expectedTagsEvent.add("container.identity:" + container.getIdentity());
+        expectedTagsEvent.add("chaosTime:" + chaosTime.getTime());
         expectedTagsEvent.add("experimentId:" + experimentId);
-        expectedTagsEvent.add("experimentType:" + ExperimentType.STATE.name());
+        expectedTagsEvent.add("experimentType:" + ExperimentType.STATE);
         expectedTagsEvent.add("experimentMethod:" + experimentMethod);
-        expectedTagsEvent.add("notificationLevel:" + chaosExperimentEvent.getNotificationLevel());
-        expectedTagsEvent.add("target:" + target);
-        expectedTagsEvent.add("aggregationidentifier:" + aggregationIdentifier);
-        expectedTagsEvent.add("platform:" + platformType);
-        expectedTagsEvent.add("containertype:" + conatainerType);
+        expectedTagsEvent.add("notificationLevel:" + level.name());
         chaosMessage = ChaosMessage.builder()
                                    .withMessage(message)
                                    .withTitle(title)

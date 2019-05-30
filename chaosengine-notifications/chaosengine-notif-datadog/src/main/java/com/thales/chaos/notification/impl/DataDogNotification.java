@@ -1,11 +1,9 @@
 package com.thales.chaos.notification.impl;
 
-import com.thales.chaos.container.Container;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.notification.message.ChaosExperimentEvent;
-import com.thales.chaos.platform.Platform;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
@@ -98,6 +96,7 @@ public class DataDogNotification implements NotificationMethods {
         Collection<String> generateTags (ChaosNotification chaosNotification) {
             Map<Object, Object> fieldMap = chaosNotification.asMap();
             ArrayList<String> tags = new ArrayList<>(collectContainerTags(fieldMap));
+
             fieldMap.keySet()
                     .stream()
                     .map(Object::toString)
@@ -109,30 +108,13 @@ public class DataDogNotification implements NotificationMethods {
         Collection<String> collectContainerTags (Map<Object, Object> fieldMap) {
             ArrayList<String> tags = new ArrayList<>();
             Optional.ofNullable(fieldMap.get("targetContainer"))
-                    .filter(Container.class::isInstance)
-                    .map(Container.class::cast)
-                    .map(Container::getSimpleName)
-                    .map(s -> "target:" + s)
-                    .ifPresent(tags::add);
-            Optional.ofNullable(fieldMap.get("aggregationidentifier"))
-                    .filter(Container.class::isInstance)
-                    .map(Container.class::cast)
-                    .map(Container::getAggregationIdentifier)
-                    .map(s -> "aggregationidentifier:" + s)
-                    .ifPresent(tags::add);
-            Optional.ofNullable(fieldMap.get("platform"))
-                    .filter(Container.class::isInstance)
-                    .map(Container.class::cast)
-                    .map(Container::getPlatform)
-                    .map(Platform::getPlatformType)
-                    .map(s -> "platform:" + s)
-                    .ifPresent(tags::add);
-            Optional.ofNullable(fieldMap.get("containertype"))
-                    .filter(Container.class::isInstance)
-                    .map(Container.class::cast)
-                    .map(Container::getContainerType)
-                    .map(s -> "containertype:" + s)
-                    .ifPresent(tags::add);
+                    .filter(Map.class::isInstance)
+                    .map(o -> (Map<Object, Object>) o)
+                    .orElse(Collections.emptyMap())
+                    .entrySet()
+                    .stream()
+                    .map(e -> "container." + e.getKey() + ":" + e.getValue())
+                    .forEach(tags::add);
             return tags;
         }
     }
