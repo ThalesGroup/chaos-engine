@@ -5,7 +5,6 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.notification.BufferedNotificationMethod;
 import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
-import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.util.HttpUtils;
 import com.thales.chaos.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +45,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer", "aggregationIdentifier", "simpleName");
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -68,7 +67,8 @@ public class SlackNotifications extends BufferedNotificationMethod {
 
     private SlackAttachment createAttachmentFromChaosNotification (ChaosNotification chaosNotification) {
         SlackAttachment.SlackAttachmentBuilder builder;
-        builder = SlackAttachment.builder().withFallback(chaosNotification.asMap().toString())
+        Map<Object, Object> fieldMap = chaosNotification.asMap();
+        builder = SlackAttachment.builder().withFallback(fieldMap.toString())
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
                                  .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
@@ -76,16 +76,8 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withAuthor_name(chaosNotification.getTitle())
                                  .withPretext(chaosNotification.getNotificationLevel().toString())
                                  .withTs(Instant.now());
-        if (chaosNotification instanceof ChaosExperimentEvent) {
-            ChaosExperimentEvent evt = (ChaosExperimentEvent) chaosNotification;
-            builder.withTs(evt.getChaosTime().toInstant())
-                   .withField(EXPERIMENT_ID, evt.getExperimentId())
-                   .withField(TARGET, evt.getTargetContainer().getSimpleName())
-                   .withField(EXPERIMENT_METHOD, evt.getExperimentMethod())
-                   .withField(EXPERIMENT_TYPE, evt.getExperimentType().toString())
-                   .withField(PLATFORM_LAYER, evt.getTargetContainer().getPlatform().getPlatformType());
-        }
-        builder.withCodeField(RAW_EVENT, chaosNotification.toString())
+        collectExperimentEventFields(fieldMap, builder);
+        builder.withCodeField(RAW_EVENT, fieldMap.toString())
                                  .withMarkupIn(SlackAttachment.MarkupOpts.fields)
                                  .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
         chaosNotification.asMap()
@@ -96,6 +88,29 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                                                                           .toString()), e.getValue()
                                                                                                          .toString()));
         return builder.build();
+    }
+
+    private void collectExperimentEventFields (Map<Object, Object> fieldMap, SlackAttachment.SlackAttachmentBuilder builder) {
+        Optional.ofNullable(fieldMap.get("experimentId"))
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .ifPresent(e -> builder.withField("Experiment Id", e));
+        Optional.ofNullable(fieldMap.get("experimentMethod"))
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .ifPresent(e -> builder.withField("Experiment Method", e));
+        Optional.ofNullable(fieldMap.get("experimentType"))
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .ifPresent(e -> builder.withField("Experiment Type", e));
+        Optional.ofNullable(fieldMap.get("targetContainer"))
+                .filter(Map.class::isInstance)
+                .map(o -> (Map<String, String>) o)
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .filter(entry -> knownChaosEventFields.contains(entry.getKey()))
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()));
     }
 
     @Override
