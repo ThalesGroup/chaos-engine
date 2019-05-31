@@ -34,18 +34,14 @@ import static java.util.function.Predicate.not;
 public class SlackNotifications extends BufferedNotificationMethod {
     static final Integer MAXIMUM_ATTACHMENTS = 20;
     static final String TITLE = "Message";
-    static final String EXPERIMENT_ID = "Experiment ID";
-    static final String TARGET = "Target";
-    static final String EXPERIMENT_METHOD = "Method";
-    static final String EXPERIMENT_TYPE = "Type";
-    static final String PLATFORM_LAYER = "Platform Layer";
-    static final String RAW_EVENT = "Raw Event";
     static final String FOOTER_PREFIX = "Chaos Engine - ";
     private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<>(NotificationLevel.class);
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer", "aggregationIdentifier", "simpleName");
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
+    private final Collection<String> knownContainerFields = List.of("aggregationIdentifier", "simpleName", "containerType");
+
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -77,9 +73,6 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withPretext(chaosNotification.getNotificationLevel().toString())
                                  .withTs(Instant.now());
         collectExperimentEventFields(fieldMap, builder);
-        builder.withCodeField(RAW_EVENT, fieldMap.toString())
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.fields)
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
         chaosNotification.asMap()
                          .entrySet()
                          .stream()
@@ -91,25 +84,20 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     private void collectExperimentEventFields (Map<Object, Object> fieldMap, SlackAttachment.SlackAttachmentBuilder builder) {
-        Optional.ofNullable(fieldMap.get("experimentId"))
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .ifPresent(e -> builder.withField("Experiment Id", e));
-        Optional.ofNullable(fieldMap.get("experimentMethod"))
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .ifPresent(e -> builder.withField("Experiment Method", e));
-        Optional.ofNullable(fieldMap.get("experimentType"))
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .ifPresent(e -> builder.withField("Experiment Type", e));
+        fieldMap.entrySet()
+                .stream()
+                .filter(e -> knownChaosEventFields.contains(e.getKey().toString()))
+                .filter(e -> e.getKey().toString().startsWith("experiment") && e.getValue() != null)
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                        .toString()), e.getValue()
+                                                                                                       .toString()));
+
         Optional.ofNullable(fieldMap.get("targetContainer"))
                 .filter(Map.class::isInstance)
                 .map(o -> (Map<String, String>) o)
                 .orElse(Collections.emptyMap())
                 .entrySet()
-                .stream()
-                .filter(entry -> knownChaosEventFields.contains(entry.getKey()))
+                .stream().filter(entry -> knownContainerFields.contains(entry.getKey()))
                 .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()));
     }
 
