@@ -90,7 +90,7 @@ public class DataDogNotification implements NotificationMethods {
 
         Collection<String> generateTags (ChaosNotification chaosNotification) {
             Map<Object, Object> fieldMap = chaosNotification.asMap();
-            Collection<String> tags = new ArrayList<>(collectContainerTags(fieldMap));
+            Collection<String> tags = collectContainerTags(fieldMap);
 
             fieldMap.keySet()
                     .stream()
