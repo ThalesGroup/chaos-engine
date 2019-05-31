@@ -68,8 +68,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
 
     private SlackAttachment createAttachmentFromChaosNotification (ChaosNotification chaosNotification) {
         SlackAttachment.SlackAttachmentBuilder builder;
-        builder = SlackAttachment.builder()
-                                 .withFallback(chaosNotification.toString())
+        builder = SlackAttachment.builder().withFallback(chaosNotification.asMap().toString())
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
                                  .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
