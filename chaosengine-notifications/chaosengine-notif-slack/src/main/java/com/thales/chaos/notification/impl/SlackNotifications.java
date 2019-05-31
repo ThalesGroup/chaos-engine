@@ -91,6 +91,11 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
                                                                                         .toString()), e.getValue()
                                                                                                        .toString()));
+        Optional.ofNullable(fieldMap.get("chaosTime"))
+                .filter(Long.class::isInstance)
+                .map(Long.class::cast)
+                .map(Instant::ofEpochMilli)
+                .ifPresent(builder::withTs);
 
         Optional.ofNullable(fieldMap.get("targetContainer"))
                 .filter(Map.class::isInstance)
