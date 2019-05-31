@@ -90,7 +90,7 @@ public class DataDogNotification implements NotificationMethods {
 
         Collection<String> generateTags (ChaosNotification chaosNotification) {
             Map<Object, Object> fieldMap = chaosNotification.asMap();
-            ArrayList<String> tags = new ArrayList<>(collectContainerTags(fieldMap));
+            Collection<String> tags = new ArrayList<>(collectContainerTags(fieldMap));
 
             fieldMap.keySet()
                     .stream()
@@ -101,7 +101,7 @@ public class DataDogNotification implements NotificationMethods {
         }
 
         Collection<String> collectContainerTags (Map<Object, Object> fieldMap) {
-            ArrayList<String> tags = new ArrayList<>();
+            Collection<String> tags = new ArrayList<>();
             Optional.ofNullable(fieldMap.get("targetContainer"))
                     .filter(Map.class::isInstance)
                     .map(o -> (Map<Object, Object>) o)
