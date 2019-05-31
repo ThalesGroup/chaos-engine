@@ -1,6 +1,6 @@
 package com.thales.chaos.notification.impl;
 
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.NotificationMethods;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.timgroup.statsd.Event;
@@ -12,31 +12,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.*;
 
-import static com.thales.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static java.util.function.Predicate.not;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");
 
     @Autowired
     private StatsDClient statsDClient;
 
     @Override
-    public void logEvent (ChaosEvent event) {
-        DataDogEvent dataDogEvent = new DataDogEvent(event);
-        try {
-            log.debug("Sending DataDog notification", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-            dataDogEvent.send();
-            log.debug("DataDog notification send", keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-        } catch (StatsDClientException ex) {
-            log.warn("Cannot send DataDog event: {}", ex,keyValue(DATADOG_EXPERIMENTID_KEY, event.getExperimentId()));
-        }
+    public void logNotification (ChaosNotification notification) {
+        DataDogEvent dataDogEvent = new DataDogEvent();
+        send(dataDogEvent.buildFromNotification(notification), dataDogEvent.generateTags(notification));
     }
 
+    void send (Event evt, Collection<String> tags) {
+        try {
+            log.debug("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
+            statsDClient.recordEvent(evt, tags.toArray(String[]::new));
+            log.debug("DataDog notification send: {}, {}", v("notice", evt.getText()), v("tags", tags));
+        } catch (StatsDClientException ex) {
+            log.error("Cannot send DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
+        }
+    }
     public DataDogNotification () {
         log.info("DataDog notification channel created");
     }
@@ -46,28 +50,31 @@ public class DataDogNotification implements NotificationMethods {
     }
 
     class DataDogEvent {
-        private ChaosEvent chaosEvent;
-        protected static final String EVENT_PREFIX = "Chaos Event ";
-        protected static final String SOURCE_TYPE = "java";
+        protected static final String SOURCE_TYPE = "JAVA";
 
-        protected static final String EXPERIMENT_ID = "ExperimentId:";
-        protected static final String METHOD = "Method:";
-        protected static final String TYPE = "Type:";
-        protected static final String TARGET = "Target:";
-        protected static final String PLATFORM = "Platform:";
-
-        DataDogEvent (ChaosEvent event) {
-            this.chaosEvent = event;
-        }
-
-        Event buildEvent () {
-            return Event.builder()
-                        .withAggregationKey(chaosEvent.getExperimentId())
-                        .withAlertType(mapLevel(chaosEvent.getNotificationLevel()))
-                        .withTitle(EVENT_PREFIX + chaosEvent.getExperimentMethod())
-                        .withText(chaosEvent.getMessage())
-                        .withSourceTypeName(SOURCE_TYPE)
-                        .build();
+        Event buildFromNotification (ChaosNotification chaosNotification) {
+            Event.Builder evtBuilder = Event.builder();
+            Map<Object, Object> fieldMap = chaosNotification.asMap();
+            Optional.ofNullable(fieldMap.get("experimentId"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withAggregationKey);
+            Optional.ofNullable(fieldMap.get("notificationLevel"))
+                    .filter(NotificationLevel::isNotificationLevel)
+                    .map(Object::toString)
+                    .map(NotificationLevel::valueOf)
+                    .map(this::mapLevel)
+                    .ifPresent(evtBuilder::withAlertType);
+            Optional.ofNullable(fieldMap.get("title"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withTitle);
+            Optional.ofNullable(fieldMap.get("message"))
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .ifPresent(evtBuilder::withText);
+            evtBuilder.withSourceTypeName(SOURCE_TYPE);
+            return evtBuilder.build();
         }
 
         Event.AlertType mapLevel (NotificationLevel level) {
@@ -81,18 +88,29 @@ public class DataDogNotification implements NotificationMethods {
             }
         }
 
-        void send () {
-            statsDClient.recordEvent(buildEvent(),generateTags());
+        Collection<String> generateTags (ChaosNotification chaosNotification) {
+            Map<Object, Object> fieldMap = chaosNotification.asMap();
+            Collection<String> tags = collectContainerTags(fieldMap);
+
+            fieldMap.keySet()
+                    .stream()
+                    .map(Object::toString)
+                    .filter(not(knownChaosEventFields::contains))
+                    .forEach(k -> tags.add(k + ":" + fieldMap.get(k)));
+            return tags;
         }
 
-        String[] generateTags () {
-            ArrayList<String> tags = new ArrayList<>();
-            tags.add(EXPERIMENT_ID + chaosEvent.getExperimentId());
-            tags.add(METHOD + chaosEvent.getExperimentMethod());
-            tags.add(TYPE + chaosEvent.getExperimentType().name());
-            tags.add(TARGET + chaosEvent.getTargetContainer().getSimpleName());
-            tags.add(PLATFORM + chaosEvent.getTargetContainer().getPlatform().getPlatformType());
-            return tags.toArray(new String[0]);
+        Collection<String> collectContainerTags (Map<Object, Object> fieldMap) {
+            Collection<String> tags = new ArrayList<>();
+            Optional.ofNullable(fieldMap.get("targetContainer"))
+                    .filter(Map.class::isInstance)
+                    .map(o -> (Map<Object, Object>) o)
+                    .orElse(Collections.emptyMap())
+                    .entrySet()
+                    .stream()
+                    .map(e -> "container." + e.getKey() + ":" + e.getValue())
+                    .forEach(tags::add);
+            return tags;
         }
     }
 }

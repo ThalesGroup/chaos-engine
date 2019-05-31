@@ -1,17 +1,19 @@
 package com.thales.chaos.notification.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thales.chaos.container.Container;
-import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.notification.ChaosEvent;
-import com.thales.chaos.notification.datadog.DataDogIdentifier;
-import com.thales.chaos.notification.enums.NotificationLevel;
-import com.thales.chaos.platform.Platform;
-import com.thales.chaos.util.HttpUtils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.thales.chaos.container.Container;
+import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.experiment.enums.ExperimentType;
+import com.thales.chaos.notification.datadog.DataDogIdentifier;
+import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
+import com.thales.chaos.notification.message.ChaosMessage;
+import com.thales.chaos.platform.Platform;
+import com.thales.chaos.util.HttpUtils;
+import com.thales.chaos.util.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +38,32 @@ import static org.mockito.Mockito.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SlackNotificationsTest {
     private static final String OK_RESPONSE = "ok";
-    private ChaosEvent chaosEvent;
+    private ChaosExperimentEvent chaosExperimentEvent;
+    private ChaosMessage chaosMessage;
     private SlackNotifications slackNotifications;
+    private SlackMessage expectedSlackEvent;
     private SlackMessage expectedSlackMessage;
+    private static final String EXPERIMENT_ID = "Experiment Id";
+    private static final String EXPERIMENT_TYPE = "Experiment Type";
+    private static final String EXPERIMENT_METHOD = "Experiment Method";
     @Mock
     private Platform platform;
+    private static final String AGGREGATION_IDENTIFIER = "Aggregation Identifier";
+    private String experimentId = UUID.randomUUID().toString();
+    private String experimentMethod = UUID.randomUUID().toString();
+    private String message = StringUtils.generateRandomString(50);
+    private String title = StringUtils.generateRandomString(50);
+    private NotificationLevel level = NotificationLevel.WARN;
+    private static final String SIMPLE_NAME = "Simple Name";
+    private String slack_webhookuri;
+    private HttpServer slackServerMock;
+    private Integer slackServerPort;
+    private int responseCode = 200;
+    private ObjectMapper mapper = new ObjectMapper();
+    private static final String CONTAINER_TYPE = "Container Type";
+    private String aggregationIdentifier = UUID.randomUUID().toString();
+    private String simpleName = UUID.randomUUID().toString();
+    private String containerType = UUID.randomUUID().toString();
     private Container container = new Container() {
         @Override
         public Platform getPlatform () {
@@ -54,12 +77,12 @@ public class SlackNotificationsTest {
 
         @Override
         public String getSimpleName () {
-            return null;
+            return simpleName;
         }
 
         @Override
         public String getAggregationIdentifier () {
-            return null;
+            return aggregationIdentifier;
         }
 
         @Override
@@ -71,17 +94,14 @@ public class SlackNotificationsTest {
         protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
             return false;
         }
-    };
-    private String experimentId = UUID.randomUUID().toString();
-    private String experimentMethod = UUID.randomUUID().toString();
-    private String message = UUID.randomUUID().toString();
-    private NotificationLevel level = NotificationLevel.WARN;
-    private String slack_webhookuri;
-    private HttpServer slackServerMock;
-    private Integer slackServerPort;
-    private int responseCode = 200;
-    private ObjectMapper mapper = new ObjectMapper();
 
+        @Override
+        public String getContainerType () {
+            return containerType;
+        }
+    };
+    private Date chaosTime = Date.from(Instant.now());
+    private ExperimentType experimentType = ExperimentType.STATE;
 
     @After
     public void tearDown () {
@@ -92,40 +112,57 @@ public class SlackNotificationsTest {
     public void setUp () throws Exception {
         setupMockServer();
         slackNotifications = Mockito.spy(new SlackNotifications(slack_webhookuri));
-        chaosEvent = ChaosEvent.builder()
-                               .withMessage(message)
-                               .withExperimentId(experimentId)
-                               .withMessage(message)
-                               .withNotificationLevel(level)
-                               .withTargetContainer(container)
-                               .withExperimentMethod(experimentMethod)
-                               .withExperimentType(ExperimentType.STATE)
-                               .withChaosTime(Date.from(Instant.now()))
-                               .build();
+        chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                   .withMessage(message)
+                                                   .withExperimentId(experimentId)
+                                                   .withMessage(message)
+                                                   .withNotificationLevel(level)
+                                                   .withTargetContainer(container)
+                                                   .withExperimentMethod(experimentMethod)
+                                                   .withExperimentType(experimentType)
+                                                   .withChaosTime(chaosTime)
+                                                   .build();
         when(platform.getPlatformType()).thenReturn("TYPE");
-        SlackAttachment slackAttachment = SlackAttachment.builder()
-                                                         .withFallback(chaosEvent.toString())
-                                                         .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils.getMachineHostname())
-                                                         .withTitle(SlackNotifications.TITLE)
-                                                         .withColor(slackNotifications.getSlackNotificationColor(chaosEvent
+        SlackAttachment slackAttachmentEvent = SlackAttachment.builder()
+                                                              .withFallback(chaosExperimentEvent.asMap().toString())
+                                                              .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils.getMachineHostname())
+                                                              .withTitle(SlackNotifications.TITLE)
+                                                              .withColor(slackNotifications.getSlackNotificationColor(chaosExperimentEvent
                                                                  .getNotificationLevel()))
-                                                         .withText(chaosEvent.getMessage())
-                                                         .withTs(chaosEvent.getChaosTime().toInstant())
-                                                         .withAuthor_name(SlackNotifications.AUTHOR_NAME)
-                                                         .withPretext(chaosEvent.getNotificationLevel().toString())
-                                                         .withField(SlackNotifications.EXPERIMENT_ID, chaosEvent.getExperimentId())
-                                                         .withField(SlackNotifications.TARGET, chaosEvent.getTargetContainer()
-                                                                                                         .getSimpleName())
-                                                         .withField(SlackNotifications.EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
-                                                         .withField(SlackNotifications.EXPERIMENT_TYPE, chaosEvent.getExperimentType()
-                                                                                                                  .toString())
-                                                         .withField(SlackNotifications.PLATFORM_LAYER, chaosEvent.getTargetContainer()
-                                                                                                                 .getPlatform()
-                                                                                                                 .getPlatformType())
-                                                         .withCodeField(SlackNotifications.RAW_EVENT, chaosEvent.toString())
-                                                         .build();
+                                                              .withText(chaosExperimentEvent.getMessage())
+                                                              .withTs(chaosTime.toInstant())
+                                                              .withAuthor_name(chaosExperimentEvent.getTitle())
+                                                              .withPretext(chaosExperimentEvent.getNotificationLevel()
+                                                                                          .toString())
+                                                              .withField(EXPERIMENT_ID, experimentId)
+                                                              .withField(EXPERIMENT_TYPE, experimentType.name())
+                                                              .withField(EXPERIMENT_METHOD, experimentMethod)
+                                                              .withField(AGGREGATION_IDENTIFIER, aggregationIdentifier)
+                                                              .withField(CONTAINER_TYPE, containerType)
+                                                              .withField(SIMPLE_NAME, simpleName)
+                                                              .build();
         SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
-        expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachment).build();
+        expectedSlackEvent = slackMessageBuilder.withAttachment(slackAttachmentEvent).build();
+        slackMessageBuilder = SlackMessage.builder();
+        chaosMessage = ChaosMessage.builder()
+                                   .withMessage(message)
+                                   .withTitle(title)
+                                   .withNotificationLevel(level)
+                                   .build();
+        SlackAttachment slackAttachmentMessage = SlackAttachment.builder()
+                                                                .withFallback(chaosMessage.toString())
+                                                                .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils
+                                                                        .getMachineHostname())
+                                                                .withTitle(SlackNotifications.TITLE)
+                                                                .withColor(slackNotifications.getSlackNotificationColor(chaosMessage
+                                                                        .getNotificationLevel()))
+                                                                .withText(chaosMessage.getMessage())
+                                                                .withTs(Instant.now())
+                                                                .withAuthor_name(chaosMessage.getTitle())
+                                                                .withPretext(chaosMessage.getNotificationLevel()
+                                                                                         .toString())
+                                                                .build();
+        expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachmentMessage).build();
     }
 
     private void setupMockServer () throws IOException {
@@ -142,7 +179,7 @@ public class SlackNotificationsTest {
     public void slackIOExceptionTest () throws IOException {
         try {
             responseCode = 500;
-            slackNotifications.sendNotification(chaosEvent);
+            slackNotifications.sendNotification(chaosExperimentEvent);
         } finally {
             responseCode = 200;
         }
@@ -154,22 +191,22 @@ public class SlackNotificationsTest {
     public void logEvent () throws IOException {
 
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        slackNotifications.logEvent(chaosEvent);
+        slackNotifications.logNotification(chaosExperimentEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
-        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String expectedPayload = mapper.writeValueAsString(expectedSlackEvent);
         String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
 
     @Test
     public void sendNotification () throws IOException {
-        slackNotifications.sendNotification(chaosEvent);
+        slackNotifications.sendNotification(chaosExperimentEvent);
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
-        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
+        String expectedPayload = mapper.writeValueAsString(expectedSlackEvent);
         String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
@@ -184,21 +221,16 @@ public class SlackNotificationsTest {
     @Test
     public void bufferFlush () {
         for (int i = 0; i < SlackNotifications.MAXIMUM_ATTACHMENTS; i++) {
-            slackNotifications.logEvent(chaosEvent);
+            slackNotifications.logNotification(chaosExperimentEvent);
         }
         verify(slackNotifications, times(1)).flushBuffer();
     }
 
     @Test
     public void ExtendedChaosEventTest () throws IOException {
-        ChaosEvent x = new ChaosEvent() {
+        ChaosExperimentEvent x = new ChaosExperimentEvent() {
             public String getNewField () {
                 return "12345";
-            }
-
-            @Override
-            public ExperimentType getExperimentType () {
-                return ExperimentType.STATE;
             }
 
             @Override
@@ -212,12 +244,12 @@ public class SlackNotificationsTest {
             }
 
             @Override
-            public Date getChaosTime () {
-                return Date.from(Instant.now());
+            public String getTitle () {
+                return StringUtils.generateRandomString(60);
             }
         };
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
-        slackNotifications.logEvent(x);
+        slackNotifications.logNotification(x);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();

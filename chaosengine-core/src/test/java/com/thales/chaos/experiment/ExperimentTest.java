@@ -1,6 +1,7 @@
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.admin.AdminManager;
+import com.thales.chaos.admin.enums.AdminState;
 import com.thales.chaos.constants.ExperimentConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -11,13 +12,12 @@ import com.thales.chaos.experiment.annotations.StateExperiment;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
-import com.thales.chaos.notification.ChaosEvent;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.scripts.ScriptManager;
-import com.thales.chaos.admin.enums.AdminState;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -169,16 +169,16 @@ public class ExperimentTest {
         doReturn(true).when(stateContainer).supportsExperimentType(ExperimentType.STATE);
         Future<Boolean> booleanFuture = experiment.startExperiment();
         await().until(() -> !booleanFuture.get());
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(experiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
-                                                                         .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
-                                                                         .build());
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(experiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(experiment)
+                                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                                   .withMessage(ExperimentConstants.STARTING_NEW_EXPERIMENT)
+                                                                                   .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(experiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.FAILED_TO_START_EXPERIMENT)
+                                                                                   .build());
     }
 
     @Test
@@ -292,11 +292,11 @@ public class ExperimentTest {
         doReturn(true).when(adminManager).canRunSelfHealing();
         assertEquals(ExperimentState.STARTED, stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
-                                                                         .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                                   .withMessage(ExperimentConstants.CANNOT_RUN_SELF_HEALING_AGAIN_YET)
+                                                                                   .build());
         reset(stateExperiment);
         reset(notificationManager);
         // System is paused and cannot run self healing
@@ -305,11 +305,11 @@ public class ExperimentTest {
         doReturn(false).when(adminManager).canRunSelfHealing();
         assertEquals(ExperimentState.STARTED, stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
-                                                                         .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                                   .withMessage(ExperimentConstants.SYSTEM_IS_PAUSED_AND_UNABLE_TO_RUN_SELF_HEALING)
+                                                                                   .build());
         reset(stateExperiment);
         reset(notificationManager);
         // Exception thrown while running self healing
@@ -317,11 +317,11 @@ public class ExperimentTest {
         doThrow(new ChaosException()).when(stateExperiment).canRunSelfHealing();
         assertEquals(ExperimentState.STARTED, stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                                   .build());
         reset(stateExperiment);
         reset(notificationManager);
         stateExperiment.setSelfHealingCounter(new AtomicInteger(0));
@@ -331,16 +331,16 @@ public class ExperimentTest {
         doReturn(true).when(adminManager).canRunSelfHealing();
         doThrow(new ChaosException()).when(stateExperiment).callSelfHealing();
         assertEquals(ExperimentState.STARTED, stateExperiment.doSelfHealing());
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
-                                                                         .build());
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
+                                                                                   .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING)
+                                                                                   .build());
         reset(stateExperiment);
         reset(notificationManager);
         // Maximum self healing retries reached
@@ -349,11 +349,11 @@ public class ExperimentTest {
         stateExperiment.setSelfHealingCounter(new AtomicInteger(ExperimentConstants.DEFAULT_MAXIMUM_SELF_HEALING_RETRIES + 1));
         assertEquals(ExperimentState.FAILED, stateExperiment.doSelfHealing());
         verify(stateExperiment, times(0)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.MAXIMUM_SELF_HEALING_RETRIES_REACHED)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.MAXIMUM_SELF_HEALING_RETRIES_REACHED)
+                                                                                   .build());
     }
 
     @Test
@@ -365,18 +365,18 @@ public class ExperimentTest {
         doCallRealMethod().when(stateExperiment).doSelfHealing();
         stateExperiment.doSelfHealing();
         verify(stateExperiment, times(1)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.ERROR)
+                                                                                   .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING)
+                                                                                   .build());
         stateExperiment.doSelfHealing();
         verify(stateExperiment, times(2)).callSelfHealing();
-        verify(notificationManager, times(1)).sendNotification(ChaosEvent.builder()
-                                                                         .fromExperiment(stateExperiment)
-                                                                         .withNotificationLevel(NotificationLevel.WARN)
-                                                                         .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING + ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER + "2.")
-                                                                         .build());
+        verify(notificationManager, times(1)).sendNotification(ChaosExperimentEvent.builder()
+                                                                                   .fromExperiment(stateExperiment)
+                                                                                   .withNotificationLevel(NotificationLevel.WARN)
+                                                                                   .withMessage(ExperimentConstants.THE_EXPERIMENT_HAS_GONE_ON_TOO_LONG_INVOKING_SELF_HEALING + ExperimentConstants.THIS_IS_SELF_HEALING_ATTEMPT_NUMBER + "2.")
+                                                                                   .build());
     }
 
     @Test

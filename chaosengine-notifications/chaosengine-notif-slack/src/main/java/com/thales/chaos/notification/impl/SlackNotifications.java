@@ -3,7 +3,7 @@ package com.thales.chaos.notification.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.notification.BufferedNotificationMethod;
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.ChaosNotification;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.util.HttpUtils;
 import com.thales.chaos.util.StringUtils;
@@ -34,19 +34,14 @@ import static java.util.function.Predicate.not;
 public class SlackNotifications extends BufferedNotificationMethod {
     static final Integer MAXIMUM_ATTACHMENTS = 20;
     static final String TITLE = "Message";
-    static final String AUTHOR_NAME = "Chaos Event Trace";
-    static final String EXPERIMENT_ID = "Experiment ID";
-    static final String TARGET = "Target";
-    static final String EXPERIMENT_METHOD = "Method";
-    static final String EXPERIMENT_TYPE = "Type";
-    static final String PLATFORM_LAYER = "Platform Layer";
-    static final String RAW_EVENT = "Raw Event";
     static final String FOOTER_PREFIX = "Chaos Engine - ";
     private final EnumMap<NotificationLevel, String> slackNotificationColorMap = new EnumMap<>(NotificationLevel.class);
     private String webhookUri;
     private Queue<SlackAttachment> attachmentQueue = new ConcurrentLinkedQueue<>();
     private String hostname;
-    private final Collection<String> knownChaosEventFields = List.of("message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
+    private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
+    private final Collection<String> knownContainerFields = List.of("aggregationIdentifier", "simpleName", "containerType");
+
 
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
@@ -59,11 +54,56 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     @Override
-    public void logEvent (ChaosEvent event) {
-        attachmentQueue.offer(createAttachmentFromChaosEvent(event));
+    public void logNotification (ChaosNotification notification) {
+        attachmentQueue.offer(createAttachmentFromChaosNotification(notification));
         if (attachmentQueue.size() >= MAXIMUM_ATTACHMENTS) {
             flushBuffer();
         }
+    }
+
+    private SlackAttachment createAttachmentFromChaosNotification (ChaosNotification chaosNotification) {
+        SlackAttachment.SlackAttachmentBuilder builder;
+        Map<Object, Object> fieldMap = chaosNotification.asMap();
+        builder = SlackAttachment.builder().withFallback(fieldMap.toString())
+                                 .withFooter(FOOTER_PREFIX + hostname)
+                                 .withTitle(TITLE)
+                                 .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
+                                 .withText(chaosNotification.getMessage())
+                                 .withAuthor_name(chaosNotification.getTitle())
+                                 .withPretext(chaosNotification.getNotificationLevel().toString())
+                                 .withTs(Instant.now());
+        collectExperimentEventFields(fieldMap, builder);
+        chaosNotification.asMap()
+                         .entrySet()
+                         .stream()
+                         .filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
+                         .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                          .toString()), e.getValue()
+                                                                                                         .toString()));
+        return builder.build();
+    }
+
+    private void collectExperimentEventFields (Map<Object, Object> fieldMap, SlackAttachment.SlackAttachmentBuilder builder) {
+        fieldMap.entrySet()
+                .stream()
+                .filter(e -> knownChaosEventFields.contains(e.getKey().toString()))
+                .filter(e -> e.getKey().toString().startsWith("experiment") && e.getValue() != null)
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
+                                                                                        .toString()), e.getValue()
+                                                                                                       .toString()));
+        Optional.ofNullable(fieldMap.get("chaosTime"))
+                .filter(Long.class::isInstance)
+                .map(Long.class::cast)
+                .map(Instant::ofEpochMilli)
+                .ifPresent(builder::withTs);
+
+        Optional.ofNullable(fieldMap.get("targetContainer"))
+                .filter(Map.class::isInstance)
+                .map(o -> (Map<String, String>) o)
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream().filter(entry -> knownContainerFields.contains(entry.getKey()))
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()));
     }
 
     @Override
@@ -83,38 +123,13 @@ public class SlackNotifications extends BufferedNotificationMethod {
     }
 
     @Override
-    protected void sendNotification (ChaosEvent chaosEvent) throws IOException {
+    protected void sendNotification (ChaosNotification chaosNotification) throws IOException {
         SlackMessage slackMessage = SlackMessage.builder()
-                                                .withAttachment(createAttachmentFromChaosEvent(chaosEvent))
+                                                .withAttachment(createAttachmentFromChaosNotification(chaosNotification))
                                                 .build();
         sendSlackMessage(slackMessage);
     }
 
-    private SlackAttachment createAttachmentFromChaosEvent (ChaosEvent chaosEvent) {
-        SlackAttachment.SlackAttachmentBuilder builder;
-        builder = SlackAttachment.builder()
-                                 .withFallback(chaosEvent.toString())
-                                 .withFooter(FOOTER_PREFIX + hostname)
-                                 .withTitle(TITLE)
-                                 .withColor(getSlackNotificationColor(chaosEvent.getNotificationLevel()))
-                                 .withText(chaosEvent.getMessage())
-                                 .withTs(chaosEvent.getChaosTime().toInstant())
-                                 .withAuthor_name(AUTHOR_NAME)
-                                 .withPretext(chaosEvent.getNotificationLevel().toString())
-                                 .withField(EXPERIMENT_ID, chaosEvent.getExperimentId())
-                                 .withField(TARGET, chaosEvent.getTargetContainer().getSimpleName())
-                                 .withField(EXPERIMENT_METHOD, chaosEvent.getExperimentMethod())
-                                 .withField(EXPERIMENT_TYPE, chaosEvent.getExperimentType().toString())
-                                 .withField(PLATFORM_LAYER, chaosEvent.getTargetContainer().getPlatform().getPlatformType())
-                                 .withCodeField(RAW_EVENT, chaosEvent.toString())
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.fields)
-                                 .withMarkupIn(SlackAttachment.MarkupOpts.pretext);
-        chaosEvent.asMap().entrySet().stream().filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
-                  .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
-                                                                                          .toString()), e.getValue()
-                                                                                                         .toString()));
-        return builder.build();
-    }
 
     String getSlackNotificationColor (NotificationLevel notificationLevel) {
         return Optional.ofNullable(slackNotificationColorMap.get(notificationLevel)).orElse("danger");

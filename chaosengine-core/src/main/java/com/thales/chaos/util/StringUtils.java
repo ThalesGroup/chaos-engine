@@ -1,6 +1,5 @@
 package com.thales.chaos.util;
 
-import java.nio.charset.Charset;
 import java.util.Random;
 
 public class StringUtils {
@@ -17,9 +16,11 @@ public class StringUtils {
     }
 
     public static String generateRandomString (int length) {
-        byte[] array = new byte[length];
-        new Random().nextBytes(array);
-        return new String(array, Charset.forName("UTF-8"));
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++)
+            sb.append(Character.toString(random.nextInt(93) + 33));
+        return sb.toString();
     }
 
     public static String convertCamelCaseToSentence (String camelCase) {

@@ -6,12 +6,11 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.platform.Platform;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.validation.constraints.NotNull;
@@ -24,25 +23,11 @@ import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.junit.Assert.assertThat;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ChaosEventTest {
+public class ChaosExperimentEventTest {
     private static final String chaosMessage = "It's chaos time!";
-    @Mock
-    private Container container;
     @Mock
     private Date date;
 
-    @Test
-    public void testToString () {
-        ChaosEvent chaosEvent = ChaosEvent.builder()
-                                          .withChaosTime(date)
-                                          .withMessage(chaosMessage)
-                                          .withTargetContainer(container)
-                                          .build();
-        Mockito.when(container.toString()).thenReturn("ChaosEventTestContainer");
-        Mockito.when(date.toString()).thenReturn("Chaos-O'Clock");
-        String expectedString = "Chaos Event: [targetContainer=ChaosEventTestContainer]" + "[chaosTime=Chaos-O'Clock]" + "[message=It's chaos time!]";
-        Assert.assertEquals(expectedString, chaosEvent.toString());
-    }
 
     @Test
     public void asMap () {
@@ -79,14 +64,14 @@ public class ChaosEventTest {
                 return false;
             }
         };
-        ChaosEvent chaosEvent = ChaosEvent.builder()
-                                          .withChaosTime(date)
-                                          .withMessage(chaosMessage)
-                                          .withTargetContainer(exampleContainer)
-                                          .withNotificationLevel(notificationLevel)
-                                          .withExperimentId(experimentId)
-                                          .build();
-        Map<Object, Object> resultingMap = chaosEvent.asMap();
+        ChaosExperimentEvent chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                                        .withChaosTime(date)
+                                                                        .withMessage(chaosMessage)
+                                                                        .withTargetContainer(exampleContainer)
+                                                                        .withNotificationLevel(notificationLevel)
+                                                                        .withExperimentId(experimentId)
+                                                                        .build();
+        Map<Object, Object> resultingMap = chaosExperimentEvent.asMap();
         assertThat(resultingMap, hasEntry("targetContainer", new ObjectMapper().convertValue(exampleContainer, Map.class)));
         assertThat(resultingMap, hasEntry("message", chaosMessage));
         assertThat(resultingMap, hasEntry("chaosTime", 0L));

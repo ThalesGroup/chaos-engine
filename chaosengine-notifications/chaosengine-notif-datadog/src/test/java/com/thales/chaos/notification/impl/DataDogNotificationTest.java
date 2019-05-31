@@ -1,87 +1,156 @@
 package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.notification.ChaosEvent;
+import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosExperimentEvent;
+import com.thales.chaos.notification.message.ChaosMessage;
 import com.thales.chaos.platform.Platform;
+import com.thales.chaos.util.StringUtils;
 import com.timgroup.statsd.Event;
 import com.timgroup.statsd.StatsDClient;
 import com.timgroup.statsd.StatsDClientException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.UUID;
+import javax.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.*;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class DataDogNotificationTest {
-    private ChaosEvent chaosEvent;
+    private ChaosExperimentEvent chaosExperimentEvent;
+    private ChaosMessage chaosMessage;
     @Mock
     private Platform platform;
-    @Mock
-    private Container container;
     private DataDogNotification.DataDogEvent dataDogEvent ;
 
     private String experimentId=UUID.randomUUID().toString();
     private String experimentMethod=UUID.randomUUID().toString();
-    private String message = UUID.randomUUID().toString();
+    private String message = StringUtils.generateRandomString(50);
+    private String title = StringUtils.generateRandomString(50);
+    private String target = UUID.randomUUID().toString();
+    private String platformType = "Platform";
+    private String conatainerType = "Container";
+    private String aggregationIdentifier = conatainerType;
+    private Date chaosTime = Date.from(Instant.now());
 
 
     private NotificationLevel level = NotificationLevel.WARN;
-    private ArrayList<String> expectedTags = new ArrayList<>();
+    private List<String> expectedTagsEvent = new ArrayList<>();
+    private List<String> expectedTagsMessage = new ArrayList<>();
+    private Container container = new Container() {
+        @Override
+        public String getContainerType () {
+            return conatainerType;
+        }
+        @Override
+        public Platform getPlatform () {
+            return platform;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return target;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
+            return aggregationIdentifier;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
+    };
     @Before
     public void setUp () {
-        chaosEvent= ChaosEvent.builder()
-                              .withMessage(message)
-                              .withExperimentId(experimentId)
-                              .withMessage(message)
-                              .withNotificationLevel(level)
-                              .withTargetContainer(container)
-                              .withExperimentMethod(experimentMethod)
-                              .withExperimentType(ExperimentType.STATE)
-                              .build();
-        when(container.getSimpleName()).thenReturn(UUID.randomUUID().toString());
-        when(container.getPlatform()).thenReturn(platform);
-        when(platform.getPlatformType()).thenReturn("TYPE");
-        dataDogEvent= new DataDogNotification().new DataDogEvent(chaosEvent);
-
-
-        expectedTags.add(DataDogNotification.DataDogEvent.EXPERIMENT_ID + chaosEvent.getExperimentId());
-        expectedTags.add(DataDogNotification.DataDogEvent.METHOD + chaosEvent.getExperimentMethod());
-        expectedTags.add(DataDogNotification.DataDogEvent.TYPE + chaosEvent.getExperimentType().name());
-        expectedTags.add(DataDogNotification.DataDogEvent.TARGET + chaosEvent.getTargetContainer().getSimpleName());
-        expectedTags.add(DataDogNotification.DataDogEvent.PLATFORM + chaosEvent.getTargetContainer().getPlatform().getPlatformType());
-
+        chaosExperimentEvent = ChaosExperimentEvent.builder()
+                                                   .withMessage(message)
+                                                   .withExperimentId(experimentId)
+                                                   .withNotificationLevel(level)
+                                                   .withTargetContainer(container)
+                                                   .withExperimentMethod(experimentMethod)
+                                                   .withExperimentType(ExperimentType.STATE).withChaosTime(chaosTime)
+                                                   .build();
+        when(platform.getPlatformType()).thenReturn(platformType);
+        dataDogEvent = new DataDogNotification().new DataDogEvent();
+        expectedTagsEvent.add("container.shellCapabilities:{}");
+        expectedTagsEvent.add("container.containerType:" + container.getContainerType());
+        expectedTagsEvent.add("container.aggregationIdentifier:" + aggregationIdentifier);
+        expectedTagsEvent.add("container.simpleName:" + target);
+        expectedTagsEvent.add("container.cattle:" + container.isCattle());
+        expectedTagsEvent.add("container.experimentStartTime:" + container.getExperimentStartTime());
+        expectedTagsEvent.add("container.knownMissingCapabilities:" + container.getKnownMissingCapabilities());
+        expectedTagsEvent.add("container.identity:" + container.getIdentity());
+        expectedTagsEvent.add("chaosTime:" + chaosTime.getTime());
+        expectedTagsEvent.add("experimentId:" + experimentId);
+        expectedTagsEvent.add("experimentType:" + ExperimentType.STATE);
+        expectedTagsEvent.add("experimentMethod:" + experimentMethod);
+        expectedTagsEvent.add("notificationLevel:" + level.name());
+        expectedTagsEvent.sort(Comparator.naturalOrder());
+        chaosMessage = ChaosMessage.builder()
+                                   .withMessage(message)
+                                   .withTitle(title)
+                                   .withNotificationLevel(level)
+                                   .build();
+        expectedTagsMessage.add("notificationLevel:" + level);
     }
     @Test
-    public void logEvent(){
+    public void logNotication () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
-        notif.logEvent(chaosEvent);
-        verify(client,times(1)).recordEvent(ArgumentMatchers.any(),ArgumentMatchers.any());
+        notif.logNotification(chaosExperimentEvent);
+        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        Event expectedEvent = Event.builder().withAggregationKey(experimentId)
+                                   .withAlertType(Event.AlertType.WARNING)
+                                   .withTitle(chaosExperimentEvent.getTitle())
+                                   .withText(chaosExperimentEvent.getMessage())
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
+                                   .build();
+        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
+        List<String> actualTags = tagsCaptor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsEvent));
+        Event actualEvent = eventCaptor.getValue();
+        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
+        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
+        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
+        assertEquals(actualEvent.getText(), expectedEvent.getText());
+        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
     }
 
     @Test
     public void logEventFailure(){
-        try {
-            StatsDClient client = Mockito.mock(StatsDClient.class);
-            doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
-            DataDogNotification notif = new DataDogNotification(client);
-            notif.logEvent(chaosEvent);
-        }catch (Exception ex){
-            fail(ex.getMessage());
-        }
+        StatsDClient client = Mockito.mock(StatsDClient.class);
+        doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
+        DataDogNotification notif = new DataDogNotification(client);
+        notif.logNotification(chaosExperimentEvent);
     }
 
     @Test
@@ -90,24 +159,30 @@ public class DataDogNotificationTest {
         assertEquals(Event.AlertType.ERROR,dataDogEvent.mapLevel(NotificationLevel.ERROR));
         assertEquals(Event.AlertType.SUCCESS,dataDogEvent.mapLevel(NotificationLevel.GOOD));
     }
+
     @Test
-    public void buildEvent(){
+    public void buildMessage () {
         Event expectedEvent = Event.builder()
-                                   .withText(message)
-                                   .withTitle(DataDogNotification.DataDogEvent.EVENT_PREFIX+ experimentMethod)
+                                   .withText(message).withTitle(ChaosMessage.CHAOS_MESSAGE_PREFIX + " - " + title)
                                    .withAlertType(Event.AlertType.WARNING)
                                    .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
                                    .build();
-        Event actualEvent =dataDogEvent.buildEvent();
-        assertEquals(expectedEvent.getTitle(),actualEvent.getTitle());
-        assertEquals(expectedEvent.getText(),actualEvent.getText());
-        assertEquals(expectedEvent.getAlertType(),actualEvent.getAlertType());
-        assertEquals(expectedEvent.getSourceTypeName(),actualEvent.getSourceTypeName());
+        Event actualEvent = dataDogEvent.buildFromNotification(chaosMessage);
+        assertEquals(expectedEvent.getTitle(), actualEvent.getTitle());
+        assertEquals(expectedEvent.getText(), actualEvent.getText());
+        assertEquals(expectedEvent.getAlertType(), actualEvent.getAlertType());
+        assertEquals(expectedEvent.getSourceTypeName(), actualEvent.getSourceTypeName());
     }
 
     @Test
-    public void getTags(){
-        ArrayList<String> actualTags= new ArrayList<>(Arrays.asList(dataDogEvent.generateTags()));
-        assertThat(expectedTags,is(actualTags));
+    public void getTags () {
+        StatsDClient client = Mockito.mock(StatsDClient.class);
+        DataDogNotification notif = new DataDogNotification(client);
+        notif.logNotification(chaosExperimentEvent);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(client, times(1)).recordEvent(ArgumentMatchers.any(), captor.capture());
+        List<String> actualTags = captor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsEvent));
     }
 }
