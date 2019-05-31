@@ -147,9 +147,9 @@ public class DataDogNotificationTest {
 
     @Test
     public void logEventFailure(){
-            StatsDClient client = Mockito.mock(StatsDClient.class);
-            doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
-            DataDogNotification notif = new DataDogNotification(client);
+        StatsDClient client = Mockito.mock(StatsDClient.class);
+        doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
+        DataDogNotification notif = new DataDogNotification(client);
         notif.logNotification(chaosExperimentEvent);
     }
 
