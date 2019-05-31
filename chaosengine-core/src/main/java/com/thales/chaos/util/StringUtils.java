@@ -19,7 +19,7 @@ public class StringUtils {
         Random random = new Random();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++)
-            sb.append(Character.toString(random.nextInt(132) + 33));
+            sb.append(Character.toString(random.nextInt(93) + 33));
         return sb.toString();
     }
 
