@@ -8,11 +8,9 @@ import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.notification.enums.NotificationLevel;
 import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.platform.Platform;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.validation.constraints.NotNull;
@@ -28,21 +26,8 @@ import static org.junit.Assert.assertThat;
 public class ChaosExperimentEventTest {
     private static final String chaosMessage = "It's chaos time!";
     @Mock
-    private Container container;
-    @Mock
     private Date date;
 
-    @Test
-    public void testToString () {
-        ChaosExperimentEvent chaosExperimentEvent = ChaosExperimentEvent.builder()
-                                                                        .withChaosTime(date)
-                                                                        .withMessage(chaosMessage)
-                                                                        .withTargetContainer(container)
-                                                                        .build();
-        Mockito.when(date.toString()).thenReturn("Chaos-O'Clock");
-        String expectedString = "ChaosExperimentEvent: " + "[targetContainer=container][chaosTime=Chaos-O'Clock][title=" + ChaosExperimentEvent.CHAOS_EXPERIMENT_EVENT_PREFIX + "]" + "[message=It's chaos time!]";
-        Assert.assertEquals(expectedString, chaosExperimentEvent.toString());
-    }
 
     @Test
     public void asMap () {
