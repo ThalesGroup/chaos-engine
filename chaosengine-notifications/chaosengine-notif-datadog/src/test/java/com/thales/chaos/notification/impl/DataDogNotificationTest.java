@@ -23,10 +23,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -53,8 +50,8 @@ public class DataDogNotificationTest {
 
 
     private NotificationLevel level = NotificationLevel.WARN;
-    private Collection<String> expectedTagsEvent = new ArrayList<>();
-    private Collection<String> expectedTagsMessage = new ArrayList<>();
+    private List<String> expectedTagsEvent = new ArrayList<>();
+    private List<String> expectedTagsMessage = new ArrayList<>();
     private Container container = new Container() {
         @Override
         public String getContainerType () {
@@ -115,6 +112,7 @@ public class DataDogNotificationTest {
         expectedTagsEvent.add("experimentType:" + ExperimentType.STATE);
         expectedTagsEvent.add("experimentMethod:" + experimentMethod);
         expectedTagsEvent.add("notificationLevel:" + level.name());
+        expectedTagsEvent.sort(Comparator.naturalOrder());
         chaosMessage = ChaosMessage.builder()
                                    .withMessage(message)
                                    .withTitle(title)
@@ -136,7 +134,9 @@ public class DataDogNotificationTest {
                                    .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
                                    .build();
         verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
-        assertThat(tagsCaptor.getAllValues(), is(expectedTagsEvent));
+        List<String> actualTags = tagsCaptor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsEvent));
         Event actualEvent = eventCaptor.getValue();
         assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
         assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
@@ -181,6 +181,8 @@ public class DataDogNotificationTest {
         notif.logNotification(chaosExperimentEvent);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(client, times(1)).recordEvent(ArgumentMatchers.any(), captor.capture());
-        assertThat(captor.getAllValues(), is(expectedTagsEvent));
+        List<String> actualTags = captor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsEvent));
     }
 }
