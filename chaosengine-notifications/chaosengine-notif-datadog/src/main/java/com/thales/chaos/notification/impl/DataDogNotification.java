@@ -54,21 +54,22 @@ public class DataDogNotification implements NotificationMethods {
 
         Event buildFromNotification (ChaosNotification chaosNotification) {
             Event.Builder evtBuilder = Event.builder();
-            Optional.ofNullable(chaosNotification.asMap().get("experimentId"))
+            Map<Object, Object> fieldMap = chaosNotification.asMap();
+            Optional.ofNullable(fieldMap.get("experimentId"))
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
                     .ifPresent(evtBuilder::withAggregationKey);
-            Optional.ofNullable(chaosNotification.asMap().get("notificationLevel"))
+            Optional.ofNullable(fieldMap.get("notificationLevel"))
                     .filter(NotificationLevel::isNotificationLevel)
                     .map(Object::toString)
                     .map(NotificationLevel::valueOf)
                     .map(this::mapLevel)
                     .ifPresent(evtBuilder::withAlertType);
-            Optional.ofNullable(chaosNotification.asMap().get("title"))
+            Optional.ofNullable(fieldMap.get("title"))
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
                     .ifPresent(evtBuilder::withTitle);
-            Optional.ofNullable(chaosNotification.asMap().get("message"))
+            Optional.ofNullable(fieldMap.get("message"))
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
                     .ifPresent(evtBuilder::withText);
