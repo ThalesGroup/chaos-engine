@@ -2,22 +2,21 @@ package com.thales.chaos.notification;
 
 import com.thales.chaos.notification.message.ChaosExperimentEvent;
 import com.thales.chaos.notification.message.ChaosMessage;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationManagerTest {
-    @Mock
-    private List<NotificationMethods> notificationMethodList;
-    @Mock
-    private Iterator<NotificationMethods> notificationMethodsIterator;
+    private Collection<NotificationMethods> notificationMethodList = new ArrayList<>();
     @Mock
     private NotificationMethods notificationMethod;
     @Mock
@@ -25,15 +24,22 @@ public class NotificationManagerTest {
     @Mock
     private ChaosMessage chaosMessage;
 
+    @Before
+    public void setUp () {
+        notificationMethodList.add(notificationMethod);
+    }
+
     @Test
-    public void sendNotification () {
+    public void sendMessage () {
         NotificationManager notificationManager = new NotificationManager(notificationMethodList);
-        when(notificationMethodList.iterator()).thenReturn(notificationMethodsIterator, notificationMethodsIterator);
-        when(notificationMethodsIterator.hasNext()).thenReturn(true, false, true, false);
-        when(notificationMethodsIterator.next()).thenReturn(notificationMethod, notificationMethod);
-        notificationManager.sendNotification(chaosExperimentEvent);
-        verify(notificationMethod, times(1)).logNotification(chaosExperimentEvent);
         notificationManager.sendNotification(chaosMessage);
         verify(notificationMethod, times(1)).logNotification(chaosMessage);
+    }
+
+    @Test
+    public void sendEvent () {
+        NotificationManager notificationManager = new NotificationManager(notificationMethodList);
+        notificationManager.sendNotification(chaosExperimentEvent);
+        verify(notificationMethod, times(1)).logNotification(chaosExperimentEvent);
     }
 }
