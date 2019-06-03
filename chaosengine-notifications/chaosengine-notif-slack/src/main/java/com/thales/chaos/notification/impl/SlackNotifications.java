@@ -102,7 +102,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 .map(o -> (Map<String, String>) o)
                 .orElse(Collections.emptyMap())
                 .entrySet()
-                .stream().filter(entry -> knownContainerFields.contains(entry.getKey()))
+                .stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .filter(entry -> knownContainerFields.contains(entry.getKey()))
                 .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()));
     }
 
