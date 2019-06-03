@@ -7,6 +7,7 @@ import com.amazonaws.services.ec2.model.RevokeSecurityGroupEgressRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.*;
+import com.thales.chaos.constants.AwsConstants;
 import com.thales.chaos.constants.AwsRDSConstants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
@@ -16,14 +17,13 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.AwsRDSClusterContainer;
 import com.thales.chaos.container.impl.AwsRDSInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.AwsChaosErrorCode;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.util.AwsRDSUtils;
 import com.thales.chaos.util.CalendarUtils;
-import com.thales.chaos.constants.AwsConstants;
-import com.thales.chaos.exception.enums.AwsChaosErrorCode;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -156,7 +156,10 @@ public class AwsRDSPlatform extends Platform {
             dbInstances.addAll(describeDBInstancesResult.getDBInstances());
             describeDBInstancesRequest.setMarker(describeDBInstancesResult.getMarker());
         } while (describeDBInstancesRequest.getMarker() != null);
-        return dbInstances.parallelStream().filter(this::filterDBInstance).collect(Collectors.toSet());
+        return dbInstances.parallelStream()
+                          .filter(dbInstance -> dbInstance.getAvailabilityZone() != null)
+                          .filter(this::filterDBInstance)
+                          .collect(Collectors.toSet());
     }
 
     boolean filterDBInstance (DBInstance dbInstance) {

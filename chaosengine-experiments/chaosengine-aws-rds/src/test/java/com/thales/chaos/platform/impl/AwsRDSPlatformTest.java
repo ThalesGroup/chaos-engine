@@ -6,6 +6,7 @@ import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.Tag;
 import com.amazonaws.services.rds.model.*;
+import com.google.common.collect.ImmutableMap;
 import com.thales.chaos.constants.AwsRDSConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
@@ -18,7 +19,6 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.util.AwsRDSUtils;
 import com.thales.chaos.util.CalendarUtils;
-import com.google.common.collect.ImmutableMap;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Test;
@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
 import static com.thales.chaos.constants.AwsRDSConstants.*;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -85,8 +86,10 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getPlatformHealth () {
-        DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE);
-        DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER);
+        DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)
+                                                      .withAvailabilityZone("us-east-1b");
+        DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER)
+                                                      .withAvailabilityZone("us-east-1c");
         DescribeDBInstancesResult describeDBInstancesResult;
         doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
         doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
@@ -1054,6 +1057,25 @@ public class AwsRDSPlatformTest {
     public void getVpcToSecurityGroupMap () {
         assertNotSame("Should return clones, not the final map.", awsRDSPlatform.getVpcToSecurityGroupMap(), awsRDSPlatform
                 .getVpcToSecurityGroupMap());
+    }
+
+    @Test
+    public void getInstancesWithNoAvailabityZoneYet () {
+        String inProgressIdentifier = randomUUID().toString();
+        DBInstance inProgressInstance = new DBInstance().withAvailabilityZone(null)
+                                                        .withDBInstanceIdentifier(inProgressIdentifier);
+        String completedIdentifier = randomUUID().toString();
+        DBInstance completedInstance = new DBInstance().withAvailabilityZone("us-east-1b")
+                                                       .withDBInstanceIdentifier(completedIdentifier);
+        AwsRDSInstanceContainer completedInstanceContainer = new AwsRDSInstanceContainer();
+        doReturn(new DescribeDBInstancesResult().withDBInstances(inProgressInstance, completedInstance)).when(amazonRDS)
+                                                                                                        .describeDBInstances(any());
+        doReturn(new DescribeDBClustersResult()).when(amazonRDS).describeDBClusters(any());
+        doReturn(completedInstanceContainer).when(awsRDSPlatform).createContainerFromDBInstance(completedInstance);
+        List<Container> containers = awsRDSPlatform.generateRoster();
+        assertThat(containers, containsInAnyOrder(completedInstanceContainer));
+        verify(awsRDSPlatform, never().description("Should not have created container from an instance with no Availability Zone"))
+                .createContainerFromDBInstance(inProgressInstance);
     }
 
     @Configuration
