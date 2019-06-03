@@ -86,6 +86,17 @@ public class DataDogNotificationTest {
         protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
             return false;
         }
+
+        @Override
+        public Map<String, Boolean> getShellCapabilities () {
+            Map<String, Boolean> capabilities = Map.of("bash", true, "/path/to/some/binary", false);
+            return capabilities;
+        }
+
+        @Override
+        public Collection<String> getKnownMissingCapabilities () {
+            return List.of("/path/to/some/binary");
+        }
     };
     @Before
     public void setUp () {
@@ -99,13 +110,13 @@ public class DataDogNotificationTest {
                                                    .build();
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
-        expectedTagsEvent.add("container.shellCapabilities:{}");
+        container.getShellCapabilities()
+                 .forEach((key, value) -> expectedTagsEvent.add("container.shellCapabilities." + key + ":" + value));
         expectedTagsEvent.add("container.containerType:" + container.getContainerType());
         expectedTagsEvent.add("container.aggregationIdentifier:" + aggregationIdentifier);
         expectedTagsEvent.add("container.simpleName:" + target);
         expectedTagsEvent.add("container.cattle:" + container.isCattle());
         expectedTagsEvent.add("container.experimentStartTime:" + container.getExperimentStartTime());
-        expectedTagsEvent.add("container.knownMissingCapabilities:" + container.getKnownMissingCapabilities());
         expectedTagsEvent.add("container.identity:" + container.getIdentity());
         expectedTagsEvent.add("chaosTime:" + chaosTime.getTime());
         expectedTagsEvent.add("experimentId:" + experimentId);

@@ -22,6 +22,9 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class DataDogNotification implements NotificationMethods {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");
+    private final static String CONTAINER_TAG_PREFIX = "container.";
+    private final Collection<String> ignoredContainerFields = List.of("knownMissingCapabilities");
+    private final Collection<String> complexContainerFields = List.of("shellCapabilities");
 
     @Autowired
     private StatsDClient statsDClient;
@@ -102,14 +105,30 @@ public class DataDogNotification implements NotificationMethods {
 
         Collection<String> collectContainerTags (Map<Object, Object> fieldMap) {
             Collection<String> tags = new ArrayList<>();
-            Optional.ofNullable(fieldMap.get("targetContainer"))
+            Object container = fieldMap.get("targetContainer");
+            Optional.ofNullable(container)
                     .filter(Map.class::isInstance)
-                    .map(o -> (Map<Object, Object>) o)
+                    .map(o -> (Map<String, Object>) o)
                     .orElse(Collections.emptyMap())
                     .entrySet()
                     .stream()
-                    .map(e -> "container." + e.getKey() + ":" + e.getValue())
+                    .filter(e -> !ignoredContainerFields.contains(e.getKey()))
+                    .filter(e -> !complexContainerFields.contains(e.getKey()))
+                    .map(e -> CONTAINER_TAG_PREFIX + e.getKey() + ":" + e.getValue())
                     .forEach(tags::add);
+            Optional.ofNullable(container)
+                    .filter(Map.class::isInstance)
+                    .map(o -> (Map<String, Object>) o)
+                    .orElse(Collections.emptyMap())
+                    .entrySet()
+                    .stream()
+                    .filter(field -> !ignoredContainerFields.contains(field.getKey()))
+                    .filter(field -> complexContainerFields.contains(field.getKey()))
+                    .filter(field -> field.getValue() instanceof Map)
+                    .forEach(field -> {
+                        Map<String, Object> structuredValues = (Map<String, Object>) field.getValue();
+                        structuredValues.forEach((key, value) -> tags.add(CONTAINER_TAG_PREFIX + field.getKey() + "." + key + ":" + value));
+                    });
             return tags;
         }
     }
