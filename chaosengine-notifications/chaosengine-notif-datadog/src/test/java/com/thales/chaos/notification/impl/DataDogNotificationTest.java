@@ -132,7 +132,7 @@ public class DataDogNotificationTest {
         expectedTagsMessage.add("notificationLevel:" + level);
     }
     @Test
-    public void logNotication () {
+    public void logEvent () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logNotification(chaosExperimentEvent);
@@ -148,6 +148,31 @@ public class DataDogNotificationTest {
         List<String> actualTags = tagsCaptor.getAllValues();
         actualTags.sort(Comparator.naturalOrder());
         assertThat(actualTags, is(expectedTagsEvent));
+        Event actualEvent = eventCaptor.getValue();
+        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
+        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
+        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
+        assertEquals(actualEvent.getText(), expectedEvent.getText());
+        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
+    }
+
+    @Test
+    public void logMessage () {
+        StatsDClient client = Mockito.mock(StatsDClient.class);
+        DataDogNotification notif = new DataDogNotification(client);
+        notif.logNotification(chaosMessage);
+        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        Event expectedEvent = Event.builder()
+                                   .withAlertType(Event.AlertType.WARNING)
+                                   .withTitle(chaosMessage.getTitle())
+                                   .withText(chaosMessage.getMessage())
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
+                                   .build();
+        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
+        List<String> actualTags = tagsCaptor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsMessage));
         Event actualEvent = eventCaptor.getValue();
         assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
         assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());

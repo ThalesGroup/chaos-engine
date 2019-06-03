@@ -149,8 +149,7 @@ public class SlackNotificationsTest {
                                    .withTitle(title)
                                    .withNotificationLevel(level)
                                    .build();
-        SlackAttachment slackAttachmentMessage = SlackAttachment.builder()
-                                                                .withFallback(chaosMessage.toString())
+        SlackAttachment slackAttachmentMessage = SlackAttachment.builder().withFallback(chaosMessage.asMap().toString())
                                                                 .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils
                                                                         .getMachineHostname())
                                                                 .withTitle(SlackNotifications.TITLE)
@@ -189,13 +188,24 @@ public class SlackNotificationsTest {
 
     @Test
     public void logEvent () throws IOException {
-
         ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
         slackNotifications.logNotification(chaosExperimentEvent);
         slackNotifications.flushBuffer();
         verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
         SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
         String expectedPayload = mapper.writeValueAsString(expectedSlackEvent);
+        String actualPayload = mapper.writeValueAsString(actualSlackMessage);
+        assertEquals(expectedPayload, actualPayload);
+    }
+
+    @Test
+    public void logMessage () throws IOException {
+        ArgumentCaptor<SlackMessage> slackMessageArgumentCaptor = ArgumentCaptor.forClass(SlackMessage.class);
+        slackNotifications.logNotification(chaosMessage);
+        slackNotifications.flushBuffer();
+        verify(slackNotifications, times(1)).sendSlackMessage(slackMessageArgumentCaptor.capture());
+        SlackMessage actualSlackMessage = slackMessageArgumentCaptor.getValue();
+        String expectedPayload = mapper.writeValueAsString(expectedSlackMessage);
         String actualPayload = mapper.writeValueAsString(actualSlackMessage);
         assertEquals(expectedPayload, actualPayload);
     }
