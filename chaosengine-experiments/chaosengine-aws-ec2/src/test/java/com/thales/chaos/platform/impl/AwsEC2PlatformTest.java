@@ -89,6 +89,8 @@ public class AwsEC2PlatformTest {
                                                            .keyName(INSTANCE_KEYNAME_2)
                                                            .name("no-name")
                                                            .build();
+        doReturn(new Placement("us-east-1b")).when(instance).getPlacement();
+        doReturn(new Placement("us-east-1c")).when(instance2).getPlacement();
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
         when(describeInstancesResult.getReservations()).thenReturn(reservationList);
         when(reservation.getInstances()).thenReturn(instanceList);
@@ -621,6 +623,21 @@ public class AwsEC2PlatformTest {
         doReturn(describeInstancesResult).when(amazonEC2)
                                          .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
         assertFalse("No container returned, should be false", awsEC2Platform.isStarted(awsEC2Container));
+    }
+
+    @Test
+    public void generateRosterWithIncompleteInstances () {
+        Instance firstIncompleteInstance = new Instance().withPlacement(new Placement(null));
+        Instance secondIncompleteInstance = new Instance().withPlacement(null);
+        Instance completedInstance = new Instance().withPlacement(new Placement("us-east-1b"));
+        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(new Reservation()
+                .withInstances(firstIncompleteInstance, secondIncompleteInstance, completedInstance));
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(any());
+        AwsEC2Container completedInstanceContainer = AwsEC2Container.builder().build();
+        doReturn(completedInstanceContainer).when(awsEC2Platform).createContainerFromInstance(completedInstance);
+        assertThat(awsEC2Platform.generateRoster(), containsInAnyOrder(completedInstanceContainer));
+        verify(awsEC2Platform, never()).createContainerFromInstance(firstIncompleteInstance);
+        verify(awsEC2Platform, never()).createContainerFromInstance(secondIncompleteInstance);
     }
 
     @Configuration

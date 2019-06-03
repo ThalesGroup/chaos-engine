@@ -169,6 +169,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                                         .stream()
                                                         .map(Reservation::getInstances)
                                                         .flatMap(Collection::parallelStream)
+                                                        .filter(this::hasAvailabilityZone)
                                                         .filter(not(instance -> awsEC2SelfAwareness.isMe(instance.getInstanceId())))
                                                         .map(this::createContainerFromInstance)
                                                         .filter(Objects::nonNull)
@@ -183,6 +184,14 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
             log.warn("No matching EC2 instance found.");
         }
         return containerList;
+    }
+
+    private boolean hasAvailabilityZone (Instance instance) {
+        return !Optional.of(instance)
+                        .map(Instance::getPlacement)
+                        .map(Placement::getAvailabilityZone)
+                        .map(String::isBlank)
+                        .orElse(true);
     }
 
     @Override
