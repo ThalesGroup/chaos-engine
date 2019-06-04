@@ -63,7 +63,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
 
     private SlackAttachment createAttachmentFromChaosNotification (ChaosNotification chaosNotification) {
         SlackAttachment.SlackAttachmentBuilder builder;
-        Map<Object, Object> fieldMap = chaosNotification.asMap();
+        Map<String, Object> fieldMap = chaosNotification.asMap();
         builder = SlackAttachment.builder().withFallback(fieldMap.toString())
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
@@ -76,21 +76,19 @@ public class SlackNotifications extends BufferedNotificationMethod {
         chaosNotification.asMap()
                          .entrySet()
                          .stream()
-                         .filter(not(e -> knownChaosEventFields.contains(e.getKey().toString())))
-                         .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
-                                                                                          .toString()), e.getValue()
-                                                                                                         .toString()));
+                         .filter(not(e -> knownChaosEventFields.contains(e.getKey())))
+                         .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()
+                                                                                                              .toString()));
         return builder.build();
     }
 
-    private void collectExperimentEventFields (Map<Object, Object> fieldMap, SlackAttachment.SlackAttachmentBuilder builder) {
+    private void collectExperimentEventFields (Map<String, Object> fieldMap, SlackAttachment.SlackAttachmentBuilder builder) {
         fieldMap.entrySet()
                 .stream()
-                .filter(e -> knownChaosEventFields.contains(e.getKey().toString()))
-                .filter(e -> e.getKey().toString().startsWith("experiment") && e.getValue() != null)
-                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()
-                                                                                        .toString()), e.getValue()
-                                                                                                       .toString()));
+                .filter(e -> knownChaosEventFields.contains(e.getKey()))
+                .filter(e -> e.getKey().startsWith("experiment") && e.getValue() != null)
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()
+                                                                                                     .toString()));
         Optional.ofNullable(fieldMap.get("chaosTime"))
                 .filter(Long.class::isInstance)
                 .map(Long.class::cast)

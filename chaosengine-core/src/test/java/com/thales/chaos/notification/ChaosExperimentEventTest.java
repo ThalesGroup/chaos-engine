@@ -71,7 +71,7 @@ public class ChaosExperimentEventTest {
                                                                         .withNotificationLevel(notificationLevel)
                                                                         .withExperimentId(experimentId)
                                                                         .build();
-        Map<Object, Object> resultingMap = chaosExperimentEvent.asMap();
+        Map<String, Object> resultingMap = chaosExperimentEvent.asMap();
         assertThat(resultingMap, hasEntry("targetContainer", new ObjectMapper().convertValue(exampleContainer, Map.class)));
         assertThat(resultingMap, hasEntry("message", chaosMessage));
         assertThat(resultingMap, hasEntry("chaosTime", 0L));
