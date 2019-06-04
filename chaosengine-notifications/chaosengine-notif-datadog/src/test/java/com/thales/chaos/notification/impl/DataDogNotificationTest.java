@@ -86,6 +86,17 @@ public class DataDogNotificationTest {
         protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
             return false;
         }
+
+        @Override
+        public Map<String, Boolean> getShellCapabilities () {
+            Map<String, Boolean> capabilities = Map.of("bash", true, "/path/to/some/binary", false);
+            return capabilities;
+        }
+
+        @Override
+        public Collection<String> getKnownMissingCapabilities () {
+            return List.of("/path/to/some/binary");
+        }
     };
     @Before
     public void setUp () {
@@ -99,13 +110,13 @@ public class DataDogNotificationTest {
                                                    .build();
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
-        expectedTagsEvent.add("container.shellCapabilities:{}");
+        container.getShellCapabilities()
+                 .forEach((key, value) -> expectedTagsEvent.add("container.shellCapabilities." + key + ":" + value));
         expectedTagsEvent.add("container.containerType:" + container.getContainerType());
         expectedTagsEvent.add("container.aggregationIdentifier:" + aggregationIdentifier);
         expectedTagsEvent.add("container.simpleName:" + target);
         expectedTagsEvent.add("container.cattle:" + container.isCattle());
         expectedTagsEvent.add("container.experimentStartTime:" + container.getExperimentStartTime());
-        expectedTagsEvent.add("container.knownMissingCapabilities:" + container.getKnownMissingCapabilities());
         expectedTagsEvent.add("container.identity:" + container.getIdentity());
         expectedTagsEvent.add("chaosTime:" + chaosTime.getTime());
         expectedTagsEvent.add("experimentId:" + experimentId);
@@ -121,7 +132,7 @@ public class DataDogNotificationTest {
         expectedTagsMessage.add("notificationLevel:" + level);
     }
     @Test
-    public void logNotication () {
+    public void logEvent () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
         DataDogNotification notif = new DataDogNotification(client);
         notif.logNotification(chaosExperimentEvent);
@@ -137,6 +148,31 @@ public class DataDogNotificationTest {
         List<String> actualTags = tagsCaptor.getAllValues();
         actualTags.sort(Comparator.naturalOrder());
         assertThat(actualTags, is(expectedTagsEvent));
+        Event actualEvent = eventCaptor.getValue();
+        assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
+        assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
+        assertEquals(actualEvent.getTitle(), expectedEvent.getTitle());
+        assertEquals(actualEvent.getText(), expectedEvent.getText());
+        assertEquals(actualEvent.getSourceTypeName(), expectedEvent.getSourceTypeName());
+    }
+
+    @Test
+    public void logMessage () {
+        StatsDClient client = Mockito.mock(StatsDClient.class);
+        DataDogNotification notif = new DataDogNotification(client);
+        notif.logNotification(chaosMessage);
+        ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        Event expectedEvent = Event.builder()
+                                   .withAlertType(Event.AlertType.WARNING)
+                                   .withTitle(chaosMessage.getTitle())
+                                   .withText(chaosMessage.getMessage())
+                                   .withSourceTypeName(DataDogNotification.DataDogEvent.SOURCE_TYPE)
+                                   .build();
+        verify(client, times(1)).recordEvent(eventCaptor.capture(), tagsCaptor.capture());
+        List<String> actualTags = tagsCaptor.getAllValues();
+        actualTags.sort(Comparator.naturalOrder());
+        assertThat(actualTags, is(expectedTagsMessage));
         Event actualEvent = eventCaptor.getValue();
         assertEquals(actualEvent.getAggregationKey(), expectedEvent.getAggregationKey());
         assertEquals(actualEvent.getAlertType(), expectedEvent.getAlertType());
