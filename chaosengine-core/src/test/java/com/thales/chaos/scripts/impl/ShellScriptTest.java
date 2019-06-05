@@ -23,6 +23,8 @@ import java.util.List;
 
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -203,6 +205,12 @@ public class ShellScriptTest {
             } catch (Exception e) {
                 fail(e.getMessage());
             }
+        }
+
+        @Test
+        public void isNotFromTestPath () throws Exception {
+            assertThat("Path of main Shell Scripts was overridden in test", resource.getFile()
+                                                                                    .getPath(), not(containsString("test-classes")));
         }
     }
 }
