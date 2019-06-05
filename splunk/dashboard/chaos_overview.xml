@@ -14,7 +14,9 @@
       <title>Scheduled experiments</title>
       <single>
         <search>
-          <query>sourcetype="container:log" "message=Starting new experiment" | stats count</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+                | search ChaosExperimentEvent.message="Starting new experiment" | stats count
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -39,9 +41,9 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log" "message=Starting new experiment"
-              | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+                | search ChaosExperimentEvent.message="Starting new experiment" | stats count by ChaosExperimentEvent.experimentMethod
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -111,7 +113,10 @@
       <title>Failed to start experiments</title>
       <single>
         <search>
-          <query>sourcetype="container:log" "message=Failed to start experiment" | stats count</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+                | search ChaosExperimentEvent.message="Failed to start experiment"
+                | stats count
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -136,9 +141,10 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log" "message=Failed to start experiment"
-              | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+                | search ChaosExperimentEvent.message="Failed to start experiment"
+                | stats count by ChaosExperimentEvent.experimentMethod
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -181,7 +187,7 @@
       <title>Finished experiments</title>
       <single>
         <search>
-          <query>sourcetype="container:log" "message=Experiment finished.*" | stats count</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -206,11 +212,7 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log"
-                        "message=Experiment finished. Container recovered from the experiment"
-                        | eval startTime=_time | spath input=log
-              | chart count by ChaosExperimentEvent.experimentMethod
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -253,10 +255,7 @@
       <title>Self-healing required</title>
       <single>
         <search>
-          <query>sourcetype="container:log"
-                        "message=The experiment has gone on too long, invoking self-healing"
-                        | eval startTime=_time | spath input=log | stats count
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -281,11 +280,7 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log"
-                        "message=The experiment has gone on too long, invoking self-healing"
-                        | eval startTime=_time | spath input=log | chart count by
-              ChaosExperimentEvent.experimentMethod
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -354,8 +349,8 @@
       <chart>
         <search>
           <query>sourcetype="container:log" "message=Maximum self healing retries reached"
-              | eval startTime=_time | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
-                    </query>
+              | spath input=log | chart count by ChaosExperimentEvent.experimentMethod
+          </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -512,11 +507,15 @@
       <title>Experiment Recovery Duration Per Container And Method</title>
       <table>
         <search>
-          <query>sourcetype="container:log" "message=Starting new experiment"| eval startTime=_time
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | eval startTime=_time
+                | search ChaosExperimentEvent.message="Starting new experiment"
+
+
+                |join ChaosExperimentEvent.experimentId [search sourcetype="container:log" ChaosExperimentEvent
                         | spath input=log
-              |join ChaosExperimentEvent.experimentId [search sourcetype="container:log" "message=Experiment finished.*"
-                        | spath input=log| eval finishTime=_time]
-                        |eval experimentDuration=finishTime-startTime
+                | search ChaosExperimentEvent.message="Experiment finished.*"
+                | eval finishTime=_time]
+                | eval experimentDuration=finishTime-startTime
                         | eval experimentDuration=experimentDuration-30
               |stats count(ChaosExperimentEvent.experimentId) as "Experiment Count"
                         ,avg(experimentDuration) as "AVG Recovery Duration"
@@ -531,8 +530,8 @@
               | rename ChaosExperimentEvent.experimentType as "Experiment Type"
               | rename ChaosExperimentEvent.experimentMethod as "Experiment Method"
               | rename ChaosExperimentEvent.targetContainer.aggregationIdentifier as "Container Name (Aggregation Identifier)"
-            | sort - "Median Duration"
-          </query>
+                | sort - "Median Duration"
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -560,9 +559,9 @@
       <title>Experiment Distribution Per Platform Layer</title>
       <chart>
         <search>
-          <query>sourcetype="container:log" "message=Starting new experiment"| spath input=log
-              | chart count by ChaosExperimentEvent.experimentMethod ChaosExperimentEvent.targetContainer.containerType
-                    </query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+                | search ChaosExperimentEvent.message="Starting new experiment" | stats count by ChaosExperimentEvent.experimentMethod ChaosExperimentEvent.targetContainer.containerType
+            </query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
