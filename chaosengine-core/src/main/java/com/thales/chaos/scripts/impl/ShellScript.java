@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.thales.chaos.exception.enums.ChaosErrorCode.SHELL_SCRIPT_FORMATTING_ERROR;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.SHELL_SCRIPT_READ_FAILURE;
 import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -57,21 +58,11 @@ public class ShellScript implements Script {
             buildShebang();
             buildDependencies();
             buildDescription();
-            buildRequiresCattle();
             buildHealthCheckCommand();
             buildSelfHealingCommand();
+            buildRequiresCattle();
             buildFinalizeCommand();
             buildExperimentType();
-        }
-    }
-
-    private void buildExperimentType () {
-        String experimentType = getOptionalFieldFromCommentBlock("Experiment type").orElse("State");
-        try {
-            this.experimentType = ExperimentType.valueOf(experimentType.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.error("Illegal experiment type in script header. Defaulting to state", e);
-            this.experimentType = ExperimentType.STATE;
         }
     }
 
@@ -83,6 +74,35 @@ public class ShellScript implements Script {
     private void buildShebang () {
         String firstLine = scriptContents.split("\n")[0];
         shebang = firstLine.startsWith("#!") ? firstLine.substring(2) : null;
+    }
+
+    private void buildRequiresCattle () {
+        switch ((healthCheckCommand != null ? 1 : 0) + (selfHealingCommand != null ? 1 : 0)) {
+            case 0:
+                requiresCattle = true;
+                break;
+            case 1:
+                throw new ChaosException(SHELL_SCRIPT_FORMATTING_ERROR);
+            case 2:
+                requiresCattle = false;
+                break;
+            default:
+                throw new ChaosException(SHELL_SCRIPT_FORMATTING_ERROR);
+        }
+    }
+
+    public Collection<String> getCommentBlock () {
+        return commentBlock;
+    }
+
+    private void buildExperimentType () {
+        String experimentType = getOptionalFieldFromCommentBlock("Experiment type").orElse("State");
+        try {
+            this.experimentType = ExperimentType.valueOf(experimentType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.error("Illegal experiment type in script header. Defaulting to state", e);
+            this.experimentType = ExperimentType.STATE;
+        }
     }
 
     private void buildDependencies () {
@@ -111,17 +131,15 @@ public class ShellScript implements Script {
         log.debug("Description evaluated to be {}", description);
     }
 
-    private void buildRequiresCattle () {
-        requiresCattle = Boolean.valueOf(getOptionalFieldFromCommentBlock("Cattle").orElse(null));
+    public String getShebang () {
+        return shebang;
     }
 
     private void buildHealthCheckCommand () {
-        if (requiresCattle) return;
         healthCheckCommand = getOptionalFieldFromCommentBlock("Health check").orElse(null);
     }
 
     private void buildSelfHealingCommand () {
-        if (requiresCattle) return;
         selfHealingCommand = getOptionalFieldFromCommentBlock("Self healing").orElse(null);
     }
 
@@ -182,21 +200,16 @@ public class ShellScript implements Script {
         return Optional.ofNullable(experimentType).orElse(ExperimentType.STATE);
     }
 
-    public String getDescription () {
-        return description;
-    }
-
     @Override
     public Collection<String> getDependencies () {
         return dependencies;
     }
 
-    public Collection<String> getCommentBlock () {
-        return commentBlock;
+    public String getDescription () {
+        return description;
     }
 
     public String getScriptContents () {
         return scriptContents;
     }
-
 }
