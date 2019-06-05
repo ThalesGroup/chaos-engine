@@ -1,5 +1,4 @@
 #!/bin/sh
-# Cattle:  true
 # Dependencies: dd
 
 

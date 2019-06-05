@@ -1,7 +1,6 @@
 #!/bin/sh
 # Description: Tie up memory in other processes for some time, allowing
 # Dependencies: cat, dd, sleep, grep, awk
-# Cattle: true
 
 MEM_TOTAL=$(grep MemTotal /proc/meminfo  | awk ' { print $2 } ')
 MEM_TOTAL=$((${MEM_TOTAL}*1024))
