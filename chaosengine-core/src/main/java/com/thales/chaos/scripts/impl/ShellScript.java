@@ -81,11 +81,10 @@ public class ShellScript implements Script {
             case 0:
                 requiresCattle = true;
                 break;
-            case 1:
-                throw new ChaosException(SHELL_SCRIPT_FORMATTING_ERROR);
             case 2:
                 requiresCattle = false;
                 break;
+            case 1:
             default:
                 throw new ChaosException(SHELL_SCRIPT_FORMATTING_ERROR);
         }
