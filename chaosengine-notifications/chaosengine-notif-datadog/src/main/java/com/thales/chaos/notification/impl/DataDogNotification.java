@@ -118,17 +118,19 @@ public class DataDogNotification implements NotificationMethods {
                     .forEach(tags::add);
             Optional.ofNullable(container)
                     .filter(Map.class::isInstance)
-                    .map(o -> (Map<String, Object>) o)
+                    .map(o -> (Map<String, Map<String, Object>>) o)
                     .orElse(Collections.emptyMap())
                     .entrySet()
                     .stream()
                     .filter(field -> !ignoredContainerFields.contains(field.getKey()))
                     .filter(field -> complexContainerFields.contains(field.getKey()))
-                    .filter(field -> field.getValue() instanceof Map)
-                    .forEach(field -> {
-                        Map<String, Object> structuredValues = (Map<String, Object>) field.getValue();
-                        structuredValues.forEach((key, value) -> tags.add(CONTAINER_TAG_PREFIX + field.getKey() + "." + key + ":" + value));
-                    });
+                    .flatMap(stringObjectEntry -> stringObjectEntry.getValue()
+                                                                   .entrySet()
+                                                                   .stream()
+                                                                   .map(e -> (Map.Entry) e)
+                                                                   .map(s -> CONTAINER_TAG_PREFIX + stringObjectEntry.getKey() + "." + s
+                                                                           .getKey() + ":" + s.getValue()))
+                    .forEach(tags::add);
             return tags;
         }
     }
