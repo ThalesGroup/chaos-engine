@@ -1,6 +1,7 @@
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.admin.AdminManager;
+import com.thales.chaos.constants.ExperimentConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.annotations.NetworkExperiment;
@@ -11,7 +12,6 @@ import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.scripts.ScriptManager;
-import com.thales.chaos.constants.ExperimentConstants;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -51,7 +52,7 @@ public class ExperimentControllerTest {
     private ExperimentManager experimentManager;
     @MockBean
     private NotificationManager notificationManager;
-    @MockBean
+    @SpyBean
     private AdminManager adminManager;
     @MockBean
     private ScriptManager scriptManager;

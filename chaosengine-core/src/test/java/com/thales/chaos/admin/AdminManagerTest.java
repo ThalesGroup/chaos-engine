@@ -36,7 +36,7 @@ public class AdminManagerTest {
     }
 
     @Test
-    public void getAdminState () {
+    public void setAdminStateInner () {
         adminManager.setAdminState(NEW_STATE, false);
         verify(notificationManager, never()).sendNotification(any());
         ArgumentCaptor<ChaosNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(ChaosNotification.class);
