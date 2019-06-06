@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 
 import static com.thales.chaos.exception.enums.ChaosErrorCode.*;
+import static com.thales.chaos.shellclient.ShellConstants.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class ChaosSSHClient implements SSHClientWrapper {
@@ -166,12 +167,19 @@ public class ChaosSSHClient implements SSHClientWrapper {
 
     String runCommandInShell (Session session, String command) {
         try {
-            try (Session.Command shell = session.exec(String.format(SSHConstants.SCRIPT_NOHUP_WRAPPER, command))) {
+            try (Session.Command shell = session.exec(String.format(getScriptNohupWrapper(), command))) {
                 shell.join();
                 return IOUtils.readFully(shell.getInputStream()).toString();
             }
         } catch (IOException e) {
             throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
+    }
+
+    private String getScriptNohupWrapper () {
+        if (ROOT.equals(sshCredentials.getUsername())) {
+            return SSHConstants.SCRIPT_NOHUP_WRAPPER;
+        }
+        return String.join(PARAMETER_DELIMITER, SUDO, SSHConstants.SCRIPT_NOHUP_WRAPPER);
     }
 }
