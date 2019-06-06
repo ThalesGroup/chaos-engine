@@ -26,13 +26,21 @@ public class AdminManager {
         log.debug("Current admin state: {}", adminState);
         return adminState;
     }
+
     void setAdminState (AdminState newAdminState) {
+        setAdminState(newAdminState, true);
+    }
+
+    void setAdminState (AdminState newAdminState, boolean logNewState) {
         setAdminStateInner(newAdminState);
-        notificationManager.sendNotification(ChaosMessage.builder().withNotificationLevel(NotificationLevel.WARN)
-                                                         .withTitle("State changed")
-                                                         .withMessage("Chaos Engine admin state has changed: " + newAdminState
-                                                                 .name())
-                                                         .build());
+        if (logNewState) {
+            notificationManager.sendNotification(ChaosMessage.builder()
+                                                             .withNotificationLevel(NotificationLevel.WARN)
+                                                             .withTitle("State changed")
+                                                             .withMessage("Chaos Engine admin state has changed: " + newAdminState
+                                                                     .name())
+                                                             .build());
+        }
     }
 
     public Duration getTimeInState () {
@@ -53,7 +61,12 @@ public class AdminManager {
 
     @EventListener(ApplicationReadyEvent.class)
     private void startupComplete () {
-        setAdminState(AdminState.STARTED);
+        setAdminState(AdminState.STARTED, false);
+        notificationManager.sendNotification(ChaosMessage.builder()
+                                                         .withNotificationLevel(NotificationLevel.GOOD)
+                                                         .withTitle("Engine Started")
+                                                         .withMessage("Chaos Engine has been started")
+                                                         .build());
     }
 
     private void setAdminStateInner (AdminState newAdminState) {
