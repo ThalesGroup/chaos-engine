@@ -9,10 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -25,18 +21,6 @@ public class ScriptManagerTest {
     @Test
     public void assertLoaded () {
         verify(scriptManager, times(1)).populateScriptsFromResources();
-    }
-
-    @Test
-    public void allScriptsAreDistinct () {
-        int distinctScripts = (int) scriptManager.getScripts().stream().map(Script::getScriptName).distinct().count();
-        assertThat(scriptManager.getScripts(), hasSize(distinctScripts));
-    }
-
-    @Test
-    public void getScriptsWithPredicate () {
-        final AtomicInteger i = new AtomicInteger(0);
-        assertThat(scriptManager.getScripts(script -> i.getAndIncrement() < 1), hasSize(1));
     }
 
     @Configuration
