@@ -1,5 +1,4 @@
 #!/bin/sh
-# Cattle: true
 # Description: Creates 65GiB file in system root partition
 # Dependencies: dd
 

@@ -28,13 +28,9 @@ public class ScriptManagerTest {
     }
 
     @Test
-    public void getScripts () {
-
-        /*
-        The size is dependent on the number of files in the test/resources/ssh/experiments folder.
-        Adding more scripts for testing may require this size to be adjusted.
-         */
-        assertThat(scriptManager.getScripts(), hasSize(3));
+    public void allScriptsAreDistinct () {
+        int distinctScripts = (int) scriptManager.getScripts().stream().map(Script::getScriptName).distinct().count();
+        assertThat(scriptManager.getScripts(), hasSize(distinctScripts));
     }
 
     @Test
