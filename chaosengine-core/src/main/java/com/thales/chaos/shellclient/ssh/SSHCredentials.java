@@ -55,6 +55,8 @@ public interface SSHCredentials {
 
     Map<PublicKey, PrivateKey> getSSHKeys ();
 
+    boolean isSupportSudo ();
+
     SSHCredentials withUsername (String username);
 
     SSHCredentials withPasswordGenerator (Callable<String> passwordGenerator);
@@ -62,6 +64,8 @@ public interface SSHCredentials {
     SSHCredentials withKeyPair (String privateKey, String publicKey);
 
     SSHCredentials withKeyPair (PrivateKey privateKey, PublicKey publicKey);
+
+    SSHCredentials withSupportSudo (boolean supportSudo);
 
     List<AuthMethod> getAuthMethods ();
 }

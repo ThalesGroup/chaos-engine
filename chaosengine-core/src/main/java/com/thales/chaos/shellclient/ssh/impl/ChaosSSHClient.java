@@ -177,7 +177,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     }
 
     private String getScriptNohupWrapper () {
-        if (ROOT.equals(sshCredentials.getUsername())) {
+        if (ROOT.equals(sshCredentials.getUsername()) || !sshCredentials.isSupportSudo()) {
             return SSHConstants.SCRIPT_NOHUP_WRAPPER;
         }
         return String.join(PARAMETER_DELIMITER, SUDO, SSHConstants.SCRIPT_NOHUP_WRAPPER);

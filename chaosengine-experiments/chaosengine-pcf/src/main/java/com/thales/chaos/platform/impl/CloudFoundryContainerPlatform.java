@@ -180,7 +180,9 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         log.debug("Retrieving SSH Credentials for {}", v(DataDogConstants.DATADOG_CONTAINER_KEY, container));
         String username = "cf:" + container.getApplicationId() + '/' + container.getInstance();
         Callable<String> passwordGenerator = this::getSSHOneTimePassword;
-        return new ChaosSSHCredentials().withUsername(username).withPasswordGenerator(passwordGenerator);
+        return new ChaosSSHCredentials().withUsername(username)
+                                        .withPasswordGenerator(passwordGenerator)
+                                        .withSupportSudo(false);
     }
 
     String getSSHOneTimePassword () {
