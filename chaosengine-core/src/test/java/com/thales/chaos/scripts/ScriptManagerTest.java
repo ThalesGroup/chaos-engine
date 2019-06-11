@@ -9,8 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
@@ -28,22 +27,22 @@ public class ScriptManagerTest {
     }
 
     @Test
-    public void allScriptsAreDistinct () {
-        int distinctScripts = (int) scriptManager.getScripts().stream().map(Script::getScriptName).distinct().count();
-        assertThat(scriptManager.getScripts(), hasSize(distinctScripts));
+    public void assertNotEmpty () {
+        assertThat(scriptManager.getScripts(), not(hasSize(0)));
     }
 
     @Test
-    public void getScriptsWithPredicate () {
-        final AtomicInteger i = new AtomicInteger(0);
-        assertThat(scriptManager.getScripts(script -> i.getAndIncrement() < 1), hasSize(1));
+    public void assertEmptyWithoutFilesystem () {
+        // This works because during testing, the files are loaded via filesystem and not yet in a Jar
+        ScriptManager newScriptManager = new ScriptManager(false);
+        assertThat(newScriptManager.getScripts(), hasSize(0));
     }
 
     @Configuration
     static class ContextConfiguration {
         @Bean
         ScriptManager scriptManager () {
-            return Mockito.spy(new ScriptManager());
+            return Mockito.spy(new ScriptManager(true));
         }
     }
 }
