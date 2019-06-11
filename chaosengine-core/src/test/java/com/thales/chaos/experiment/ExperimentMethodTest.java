@@ -24,8 +24,9 @@ import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class ExperimentMethodTest {
-    public static final String HEALTH_CHECK_COMMAND = "health check";
-    public static final String SELF_HEALING_COMMAND = "self healing";
+    private static final String HEALTH_CHECK_COMMAND = "health check";
+    private static final String SELF_HEALING_COMMAND = "self healing";
+    private static final String FINALIZE_COMMAND = "finalize command";
     private final Container container = mock(Container.class);
     private ExperimentMethod<Container> experimentMethod;
     private Script script;
@@ -73,5 +74,12 @@ public class ExperimentMethodTest {
         assumeThat(script.getSelfHealingCommand(), is(SELF_HEALING_COMMAND));
         experiment.callSelfHealing();
         verify(container, times(1)).runCommand(SELF_HEALING_COMMAND);
+    }
+
+    @Test
+    public void callFinalizeCommand () throws Exception {
+        assumeThat(script.getFinalizeCommand(), is(FINALIZE_COMMAND));
+        experiment.getFinalizeMethod().call();
+        verify(container, times(1)).runCommand(FINALIZE_COMMAND);
     }
 }
