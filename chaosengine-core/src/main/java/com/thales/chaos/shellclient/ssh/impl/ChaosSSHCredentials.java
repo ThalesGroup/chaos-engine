@@ -33,6 +33,7 @@ public class ChaosSSHCredentials implements SSHCredentials {
     private final Map<PublicKey, PrivateKey> sshKeys = new HashMap<>();
     private String username;
     private Callable<String> passwordGenerator;
+    private boolean supportSudo = true;
 
     @Override
     public String getUsername () {
@@ -47,6 +48,11 @@ public class ChaosSSHCredentials implements SSHCredentials {
     @Override
     public Map<PublicKey, PrivateKey> getSSHKeys () {
         return sshKeys;
+    }
+
+    @Override
+    public boolean isSupportSudo () {
+        return supportSudo;
     }
 
     @Override
@@ -70,6 +76,12 @@ public class ChaosSSHCredentials implements SSHCredentials {
     @Override
     public SSHCredentials withKeyPair (PrivateKey privateKey, PublicKey publicKey) {
         sshKeys.put(publicKey, privateKey);
+        return this;
+    }
+
+    @Override
+    public SSHCredentials withSupportSudo (boolean supportSudo) {
+        this.supportSudo = supportSudo;
         return this;
     }
 
