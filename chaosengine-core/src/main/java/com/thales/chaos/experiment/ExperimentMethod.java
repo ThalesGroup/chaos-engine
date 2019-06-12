@@ -6,6 +6,7 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.annotations.CattleExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
+import com.thales.chaos.shellclient.ShellOutput;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -64,14 +65,14 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
                 return container.isContainerRecycled() ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
             }
             try {
-                container.runCommand(script.getHealthCheckCommand());
-                return ContainerHealth.NORMAL;
+                ShellOutput shellOutput = container.runCommand(script.getHealthCheckCommand());
+                return shellOutput.getExitCode() == 0 ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
             } catch (RuntimeException e) {
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         };
         Callable<Void> finalizeMethod = () -> {
-            script.getFinalizeCommand();
+            container.runCommand(script.getFinalizeCommand());
             return null;
         };
         final ExperimentMethod experimentMethod = new ExperimentMethod();
