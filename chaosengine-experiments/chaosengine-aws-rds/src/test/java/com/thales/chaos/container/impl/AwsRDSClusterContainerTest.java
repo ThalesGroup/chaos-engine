@@ -11,6 +11,7 @@ import com.thales.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.Repeat;
@@ -29,6 +30,8 @@ public class AwsRDSClusterContainerTest {
     private AwsRDSClusterContainer awsRDSClusterContainer;
     @MockBean
     private AwsRDSPlatform awsRDSPlatform;
+    @Mock
+    private Experiment experiment;
     private String dbClusterIdentifier = UUID.randomUUID().toString();
     private String engine = UUID.randomUUID().toString();
 
@@ -135,7 +138,6 @@ public class AwsRDSClusterContainerTest {
 
     @Test
     public void snapshotCluster () throws Exception {
-        Experiment experiment = spy(Experiment.class);
         DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
         doReturn(dbClusterSnapshot).when(awsRDSPlatform).snapshotDBCluster(dbClusterIdentifier);
         awsRDSClusterContainer.startSnapshot(experiment);

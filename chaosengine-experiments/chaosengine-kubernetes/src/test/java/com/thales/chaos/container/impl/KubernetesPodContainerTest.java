@@ -3,6 +3,7 @@ package com.thales.chaos.container.impl;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
+import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.impl.KubernetesPlatform;
@@ -12,7 +13,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -38,9 +38,7 @@ public class KubernetesPodContainerTest {
     private KubernetesPodContainer kubernetesPodContainer;
     @MockBean
     private KubernetesPlatform kubernetesPlatform;
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    private Experiment experiment;
 
     @Before
     public void setUp () {
@@ -53,6 +51,8 @@ public class KubernetesPodContainerTest {
                                                        .withLabels(LABELS)
                                                        .isBackedByController(true)
                                                        .build();
+        experiment = spy(new Experiment(kubernetesPodContainer, ExperimentType.STATE) {
+        });
         when(experiment.getContainer()).thenReturn(kubernetesPodContainer);
     }
 

@@ -13,8 +13,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,9 +41,8 @@ public class AwsEC2ContainerTest {
     private AwsEC2Container awsEC2Container;
     @MockBean
     private AwsEC2Platform awsEC2Platform;
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    @Mock
+    private Experiment experiment;
 
     @Before
     public void setUp () {

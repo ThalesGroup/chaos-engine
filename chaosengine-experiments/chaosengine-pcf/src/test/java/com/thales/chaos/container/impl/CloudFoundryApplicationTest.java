@@ -15,8 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -35,9 +35,8 @@ public class CloudFoundryApplicationTest {
     private static final String applicationId = UUID.randomUUID().toString();
     private static final int instance = new Random().nextInt(100);
     private static final String name = UUID.randomUUID().toString();
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    @Mock
+    private Experiment experiment;
     @MockBean
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private CloudFoundryApplication cloudFoundryApplication;
