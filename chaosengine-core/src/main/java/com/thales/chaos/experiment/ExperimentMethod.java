@@ -71,8 +71,10 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         };
-        Callable<Void> finalizeMethod = () -> {
-            container.runCommand(script.getFinalizeCommand());
+        Callable<Void> finalizeMethod;
+        String finalizeCommand = script.getFinalizeCommand();
+        finalizeMethod = (finalizeCommand == null || finalizeCommand.isBlank()) ? null : () -> {
+            container.runCommand(finalizeCommand);
             return null;
         };
         final ExperimentMethod experimentMethod = new ExperimentMethod();

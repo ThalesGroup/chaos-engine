@@ -108,6 +108,8 @@ public class ExperimentControllerTest {
                                                 .build();
         autowireCapableBeanFactory.autowireBean(experiment1);
         autowireCapableBeanFactory.autowireBean(experiment2);
+        experiment1.setScriptManager(scriptManager);
+        experiment2.setScriptManager(scriptManager);
     }
 
     @Test

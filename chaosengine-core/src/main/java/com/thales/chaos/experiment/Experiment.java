@@ -69,8 +69,13 @@ public abstract class Experiment {
     public Experiment (Container container, ExperimentType experimentType) {
         this.container = container;
         this.experimentType = experimentType;
-        this.experimentMethod = chooseExperimentMethodConsumer();
         setExperimentLayer(container.getPlatform());
+    }
+
+    void startExperiment () {
+        log.info("Starting experiment");
+        setExperimentStartup(executorService.submit(this::startExperimentInner));
+        setExperimentState(ExperimentState.STARTING);
     }
 
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
@@ -109,18 +114,8 @@ public abstract class Experiment {
                              .collect(Collectors.toSet());
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
-        if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
-        final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
-        return scriptManager.getScripts()
-                            .stream()
-                            .filter(script -> script.getDependencies()
-                                                    .stream()
-                                                    .noneMatch(knownMissingCapabilities::contains))
-                            .map(script -> ExperimentMethod.fromScript(getContainer(), script))
-                            .map(method -> (ExperimentMethod<T>) method)
-                            .collect(Collectors.toSet());
+    void setExperimentStartup (Future<Boolean> experimentStartup) {
+        this.experimentStartup = experimentStartup;
     }
 
     public Container getContainer () {
@@ -131,15 +126,6 @@ public abstract class Experiment {
         return Optional.ofNullable(experimentMethod)
                        .map(ExperimentMethod::getExperimentName)
                        .orElse(EXPERIMENT_METHOD_NOT_SET_YET);
-    }
-
-    void startExperiment () {
-        setExperimentStartup(executorService.submit(this::startExperimentInner));
-        setExperimentState(ExperimentState.STARTING);
-    }
-
-    void setExperimentStartup (Future<Boolean> experimentStartup) {
-        this.experimentStartup = experimentStartup;
     }
 
     boolean startExperimentInner () {
@@ -166,6 +152,7 @@ public abstract class Experiment {
             try {
                 container.startExperiment(this);
                 startTime = Instant.now();
+                log.info("Asynchronous experiment startup completed");
                 return Boolean.TRUE;
             } catch (ChaosException ex) {
                 notificationManager.sendNotification(ChaosExperimentEvent.builder()
@@ -178,6 +165,25 @@ public abstract class Experiment {
         } finally {
             existingMDC.keySet().forEach(MDC::remove);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
+        if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
+        final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
+        return scriptManager.getScripts()
+                            .stream()
+                            .filter(script -> script.getDependencies()
+                                                    .stream()
+                                                    .noneMatch(knownMissingCapabilities::contains))
+                            .map(script -> ExperimentMethod.fromScript(getContainer(), script))
+                            .map(method -> (ExperimentMethod<T>) method)
+                            .collect(Collectors.toSet());
+    }
+
+    public void setScriptManager (ScriptManager scriptManager) {
+        this.scriptManager = scriptManager;
+        instantiateExperimentMethod();
     }
 
     boolean cannotRunExperimentsNow () {
@@ -194,8 +200,9 @@ public abstract class Experiment {
         return false;
     }
 
-    public void setScriptManager (ScriptManager scriptManager) {
-        this.scriptManager = scriptManager;
+    @Autowired
+    void instantiateExperimentMethod () {
+        this.experimentMethod = chooseExperimentMethodConsumer();
     }
 
     public void setPreferredExperiment (String preferredExperiment) {
@@ -303,6 +310,7 @@ public abstract class Experiment {
         try {
             if (canRunSelfHealing()) {
                 selfHealingAttempts = getSelfHealingCounter().incrementAndGet();
+                log.info("Running self healing for the {} time", selfHealingAttempts);
                 lastSelfHealingTime = Instant.now();
                 selfHealingMethod.call();
             }
@@ -339,14 +347,22 @@ public abstract class Experiment {
     }
 
     void evaluateRunningExperiment () {
+        log.debug("Checking status of running experiment");
         switch (checkContainerHealth()) {
             case NORMAL:
+                log.info("Container restored to healthy state, going to finalizing");
                 setExperimentState(ExperimentState.FINALIZING);
                 break;
             case RUNNING_EXPERIMENT:
-                if (isOverDuration()) setExperimentState(ExperimentState.SELF_HEALING);
+                if (isOverDuration()) {
+                    log.warn("Container is not in a healthy state within experiment duration. Progressing to self-healing");
+                    setExperimentState(ExperimentState.SELF_HEALING);
+                } else {
+                    log.debug("Container is not in a healthy state, but experiment is still within time limits");
+                }
                 break;
             case DOES_NOT_EXIST:
+                log.warn("Container cannot be found, and this was not expected from the experiment. Experiment failed");
                 setExperimentState(ExperimentState.FAILED);
                 break;
         }
@@ -402,9 +418,12 @@ public abstract class Experiment {
     }
 
     void confirmStartupComplete () {
+        log.debug("Checking if experiment startup is done");
         if (experimentStartup.isDone()) {
             try {
-                setExperimentState(experimentStartup.get() ? ExperimentState.STARTED : ExperimentState.FAILED);
+                ExperimentState newExperimentState = experimentStartup.get() ? ExperimentState.STARTED : ExperimentState.FAILED;
+                log.info("Result of experiment startup: {}", v("newExperimentState", newExperimentState));
+                setExperimentState(newExperimentState);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("Exception occurred while starting experiment", e);
@@ -417,14 +436,19 @@ public abstract class Experiment {
     }
 
     void callFinalize () {
+        log.debug("Evaluating experiment finalization step");
         if (finalizeMethod == null) {
+            log.debug("No finalize method set, experiment is finished");
             setExperimentState(ExperimentState.FINISHED);
             return;
         }
         try {
             if (getTimeInState().compareTo(finalizationDuration) >= 0) {
+                log.info("Calling finalize method");
                 finalizeMethod.call();
                 setExperimentState(ExperimentState.FINISHED);
+            } else {
+                log.debug("Waiting to call finalize method until sufficient time has passed");
             }
         } catch (Exception e) {
             log.error("Error running finalization command", e);

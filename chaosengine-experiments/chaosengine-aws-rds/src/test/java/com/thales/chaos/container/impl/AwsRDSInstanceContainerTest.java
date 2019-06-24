@@ -32,6 +32,7 @@ public class AwsRDSInstanceContainerTest {
     private AwsRDSInstanceContainer awsRDSInstanceContainer;
     private String dbInstanceIdentifier = UUID.randomUUID().toString();
     private String engine = UUID.randomUUID().toString();
+    private Experiment experiment = mock(Experiment.class);
 
     @Before
     public void setUp () {
@@ -41,6 +42,21 @@ public class AwsRDSInstanceContainerTest {
                                                          .withAwsRDSPlatform(awsRDSPlatform)
                                                          .withDbiResourceId(DBI_RESOURCE_ID)
                                                          .build();
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
     }
 
     @Test
@@ -70,7 +86,6 @@ public class AwsRDSInstanceContainerTest {
 
     @Test
     public void restartInstance () {
-        Experiment experiment = mock(Experiment.class);
         awsRDSInstanceContainer.restartInstance(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(any());
         verify(awsRDSPlatform, times(1)).restartInstance(dbInstanceIdentifier);
@@ -85,7 +100,6 @@ public class AwsRDSInstanceContainerTest {
 
     @Test
     public void startSnapshot () throws Exception {
-        Experiment experiment = spy(Experiment.class);
         DBSnapshot dbSnapshot = mock(DBSnapshot.class);
         doReturn(dbSnapshot).when(awsRDSPlatform).snapshotDBInstance(dbInstanceIdentifier);
         awsRDSInstanceContainer.startSnapshot(experiment);
@@ -118,6 +132,4 @@ public class AwsRDSInstanceContainerTest {
         assertEquals(baseContextMap, finalContextMap);
         assertEquals(expectedTags, modifiedContextMap);
     }
-
-
 }

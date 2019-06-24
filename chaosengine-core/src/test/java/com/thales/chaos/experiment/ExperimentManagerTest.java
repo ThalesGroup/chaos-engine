@@ -116,6 +116,7 @@ public class ExperimentManagerTest {
     public void scheduleExperimentsUnforcedWithRoster () {
         Container container = mock(Container.class);
         Experiment experiment = mock(Experiment.class);
+        doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(false);
         doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();
@@ -129,6 +130,7 @@ public class ExperimentManagerTest {
     public void scheduleExperimentsForcedWithRoster () {
         Container container = mock(Container.class);
         Experiment experiment = mock(Experiment.class);
+        doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(true);
         doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();
@@ -189,8 +191,10 @@ public class ExperimentManagerTest {
 
     @Test
     public void scheduleExperimentsThreadSafe () throws Exception {
+
         Container container = mock(Container.class);
         Experiment experiment = mock(Experiment.class);
+        doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(false);
         doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();

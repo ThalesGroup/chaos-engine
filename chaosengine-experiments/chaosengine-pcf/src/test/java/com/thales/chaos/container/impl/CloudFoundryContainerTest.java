@@ -6,7 +6,6 @@ import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +43,23 @@ public class CloudFoundryContainerTest {
                                                      .name(name)
                                                      .platform(cloudFoundryContainerPlatform)
                                                      .build();
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
+
+
     }
 
     @Test
@@ -72,13 +88,6 @@ public class CloudFoundryContainerTest {
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .restartInstance(any(RestartApplicationInstanceRequest.class));
         experiment.getSelfHealingMethod().call();
-    }
-
-    @Test
-    public void createExperiment () {
-        Experiment experiment = cloudFoundryContainer.createExperiment(ExperimentType.STATE);
-        assertEquals(cloudFoundryContainer, experiment.getContainer());
-        Assert.assertEquals(ExperimentType.STATE, experiment.getExperimentType());
     }
 
     @Test

@@ -3,7 +3,6 @@ package com.thales.chaos.container.impl;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.impl.KubernetesPlatform;
@@ -12,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -38,6 +38,7 @@ public class KubernetesPodContainerTest {
     private KubernetesPodContainer kubernetesPodContainer;
     @MockBean
     private KubernetesPlatform kubernetesPlatform;
+    @Mock
     private Experiment experiment;
 
     @Before
@@ -51,9 +52,22 @@ public class KubernetesPodContainerTest {
                                                        .withLabels(LABELS)
                                                        .isBackedByController(true)
                                                        .build();
-        experiment = spy(new Experiment(kubernetesPodContainer, ExperimentType.STATE) {
-        });
         when(experiment.getContainer()).thenReturn(kubernetesPodContainer);
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
     }
 
     @Test

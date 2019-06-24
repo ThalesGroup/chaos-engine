@@ -14,6 +14,7 @@ import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
+import com.thales.chaos.scripts.ScriptManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,11 +50,13 @@ public class ExperimentTest {
     private AdminManager adminManager = mock(AdminManager.class);
     private HolidayManager holidayManager = mock(HolidayManager.class);
     private NotificationManager notificationManager = mock(NotificationManager.class);
+    private ScriptManager scriptManager = mock(ScriptManager.class);
 
     public ExperimentTest (Experiment experiment, Container container, ExperimentType experimentType) {
         experiment.setHolidayManager(holidayManager);
         experiment.setAdminManager(adminManager);
         experiment.setNotificationManager(notificationManager);
+        experiment.setScriptManager(scriptManager);
         this.experiment = spy(experiment);
         this.container = container;
         this.experimentType = experimentType;
