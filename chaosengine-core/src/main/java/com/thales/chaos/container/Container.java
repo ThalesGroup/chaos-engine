@@ -56,6 +56,11 @@ public abstract class Container implements ExperimentalObject {
         return shellCapabilities;
     }
 
+    @JsonIgnore
+    public Map<String, String> getDataDogTags () {
+        return dataDogTags;
+    }
+
     @Override
     public boolean canExperiment () {
         if (!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()) {

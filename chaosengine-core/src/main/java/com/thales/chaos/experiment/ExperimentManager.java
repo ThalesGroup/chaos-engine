@@ -1,7 +1,6 @@
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.calendar.HolidayManager;
-import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.platform.Platform;
@@ -15,134 +14,80 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.function.Function;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.thales.chaos.constants.DataDogConstants.DATADOG_EXPERIMENTID_KEY;
-import static com.thales.chaos.constants.DataDogConstants.DATADOG_PLATFORM_KEY;
-import static net.logstash.logback.argument.StructuredArguments.*;
+import static com.thales.chaos.constants.DataDogConstants.*;
+import static com.thales.chaos.experiment.enums.ExperimentState.*;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
-    private final Collection<Experiment> activeExperiments = new HashSet<>();
-    private final Collection<Experiment> newExperimentQueue = new HashSet<>();
-    private final Map<Experiment, Future<Boolean>> startedExperiments = new ConcurrentHashMap<>();
+    private final Collection<Experiment> allExperiments = new HashSet<>();
+    @Autowired
     private PlatformManager platformManager;
+    @Autowired
     private HolidayManager holidayManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
-    @Autowired
-    public ExperimentManager (PlatformManager platformManager, HolidayManager holidayManager) {
-        this.platformManager = platformManager;
-        this.holidayManager = holidayManager;
-    }
-
-    public Map<Experiment, Future<Boolean>> getStartedExperiments () {
-        return startedExperiments;
-    }
 
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
-        synchronized (activeExperiments) {
-            log.debug("Checking on existing experiments");
-            if (activeExperiments.isEmpty() && startedExperiments.isEmpty()) {
-                log.debug("No experiments are currently active.");
-                startNewExperiments();
-            } else {
-                transitionExperimentsThatHaveStarted();
-                updateExperimentStatusImpl();
+        synchronized (allExperiments) {
+            if (!allExperiments.isEmpty()) {
+                int experimentCount = Math.min(allExperiments.size(), 64);
+                ForkJoinPool threadPool = null;
+                try {
+                    threadPool = new ForkJoinPool(experimentCount);
+                    ForkJoinTask<?> threadPoolSubmit = threadPool.submit(this::evaluateExperiments);
+                    threadPoolSubmit.quietlyJoin();
+                } finally {
+                    if (threadPool != null) threadPool.shutdown();
+                }
+                if (allExperiments.stream().allMatch(Experiment::isComplete)) {
+                    allExperiments.clear();
+                }
             }
         }
     }
 
-    void startNewExperiments () {
-        if (newExperimentQueue.isEmpty()) return;
-        if (holidayManager.isHoliday() || holidayManager.isOutsideWorkingHours()) {
-            log.debug("Cannot start new experiments right now: {} ", holidayManager.isHoliday() ? "public holiday" : "out of business");
-            return;
-        }
-        synchronized (newExperimentQueue) {
-            startedExperiments.putAll(newExperimentQueue.parallelStream()
-                                                        .peek(autowireCapableBeanFactory::autowireBean)
-                                                        .collect(Collectors.toMap(Function.identity(), Experiment::startExperiment)));
-            transitionExperimentsThatHaveStarted();
-            newExperimentQueue.clear();
-        }
-
+    void evaluateExperiments () {
+        allExperiments.parallelStream()
+                      .peek(runOnLevel(CREATED, Experiment::startExperiment))
+                      .peek(runOnLevel(STARTING, Experiment::confirmStartupComplete))
+                      .peek(runOnLevel(STARTED, Experiment::evaluateRunningExperiment))
+                      .peek(runOnLevel(SELF_HEALING, Experiment::callSelfHealing))
+                      .peek(runOnLevel(FINALIZING, Experiment::callFinalize))
+                      .peek(runOnLevel(FINISHED, Experiment::closeFinishedExperiment))
+                      .peek(runOnLevel(FAILED, Experiment::closeFailedExperiment))
+                      /*
+                      It's important to add a terminal operation here. I could have put a forEach on the last runOnLevel,
+                      but then if we add more levels it needs to be updated. Logging is important anyways, and this also
+                      helps to log how quickly experiment analysis is getting through here.
+                       */
+                      .forEach(experiment -> log.info("Evaluated experiment: {}", v("experiment", experiment)));
     }
 
-    void transitionExperimentsThatHaveStarted () {
-        Collection<Experiment> finishedStarting = startedExperiments.entrySet()
-                                                                    .stream()
-                                                                    .filter(experimentFutureEntry -> experimentFutureEntry
-                                                                            .getValue()
-                                                                            .isDone())
-                                                                    .map(Map.Entry::getKey)
-                                                                    .collect(Collectors.toSet());
-        Collection<Experiment> failedExperiments = startedExperiments.entrySet()
-                                                                     .stream()
-                                                                     .filter(experimentFutureEntry -> finishedStarting.contains(experimentFutureEntry
-                                                                             .getKey()))
-                                                                     .filter(experimentFutureEntry -> {
-                                                                         try {
-                                                                             return !experimentFutureEntry.getValue()
-                                                                                                          .get();
-                                                                         } catch (InterruptedException e) {
-                                                                             Thread.currentThread().interrupt();
-                                                                             log.error("Interrupted during asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
-                                                                                     .getKey()
-                                                                                     .getId()), e);
-                                                                             return true;
-                                                                         } catch (ExecutionException e) {
-                                                                             log.error("Error in asynchronous start of experiment {}", v(DATADOG_EXPERIMENTID_KEY, experimentFutureEntry
-                                                                                     .getKey()
-                                                                                     .getId()), e);
-                                                                             return true;
-                                                                         }
-                                                                     })
-                                                                     .map(Map.Entry::getKey)
-                                                                     .collect(Collectors.toSet());
-        failedExperiments.addAll(startedExperiments.entrySet()
-                                                   .stream()
-                                                   .filter(experimentFutureEntry -> experimentFutureEntry.getValue()
-                                                                                                         .isCancelled())
-                                                   .map(Map.Entry::getKey)
-                                                   .collect(Collectors.toSet()));
-        finishedStarting.removeAll(failedExperiments);
-        activeExperiments.addAll(finishedStarting);
-        finishedStarting.forEach(startedExperiments::remove);
-        failedExperiments.forEach(startedExperiments::remove);
-    }
-
-    private void updateExperimentStatusImpl () {
-        log.info("Updating status on active experiments");
-        log.info("Active experiments: {}", activeExperiments.size());
-        Set<Experiment> finishedExperiments = new HashSet<>();
-        activeExperiments.parallelStream().forEach(experiment -> {
-            try (MDC.MDCCloseable ignored1 = MDC.putCloseable(DATADOG_PLATFORM_KEY, experiment.getContainer()
-                                                                                              .getPlatform()
-                                                                                              .getPlatformType())) {
-                    try (MDC.MDCCloseable ignored2 = MDC.putCloseable(DATADOG_EXPERIMENTID_KEY, experiment.getId())) {
-                        try (MDC.MDCCloseable ignored3 = MDC.putCloseable(DataDogConstants.DATADOG_EXPERIMENT_METHOD_KEY, experiment
-                                .getExperimentMethodName())) {
-                            experiment.getContainer().setMappedDiagnosticContext();
-                            ExperimentState experimentState = experiment.getExperimentState();
-                            if (experimentState == ExperimentState.FINISHED || experimentState == ExperimentState.FAILED) {
-                                log.info("Removing experiment from active experiment roster, {}, {}", kv("finalExperimentDuration", experiment
-                                        .getDuration()), kv("selfHealingRequired", experiment.isSelfHealingRequired()));
-                                finishedExperiments.add(experiment);
-                            }
-                        } finally {
-                            experiment.getContainer().clearMappedDiagnosticContext();
-                        }
-                    }
+    Consumer<? super Experiment> runOnLevel (ExperimentState experimentState, Consumer<? super Experiment> experimentStep) {
+        return (Consumer<Experiment>) experiment -> {
+            if (experimentState.equals(experiment.getExperimentState())) {
+                try (AutoCloseableMDCCollection ignored = getExperimentAutoCloseableMDCCollection(experiment)) {
+                    experimentStep.accept(experiment);
+                }
             }
-        });
-        activeExperiments.removeAll(finishedExperiments);
+        };
+    }
+
+    AutoCloseableMDCCollection getExperimentAutoCloseableMDCCollection (Experiment experiment) {
+        Map<String, String> map = new TreeMap<>(experiment.getContainer().getDataDogTags());
+        map.put(DATADOG_PLATFORM_KEY, experiment.getContainer().getPlatform().getPlatformType());
+        map.put(DATADOG_EXPERIMENTID_KEY, experiment.getId());
+        map.put(DATADOG_EXPERIMENT_METHOD_KEY, experiment.getExperimentMethodName());
+        return new AutoCloseableMDCCollection(map);
     }
 
     @Scheduled(fixedDelay = 1000 * 15)
@@ -151,7 +96,7 @@ public class ExperimentManager {
     }
 
     synchronized Set<Experiment> scheduleExperiments (final boolean force) {
-        if (activeExperiments.isEmpty() && newExperimentQueue.isEmpty()) {
+        if (allExperiments.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
                 return Collections.emptySet();
@@ -164,7 +109,8 @@ public class ExperimentManager {
             Platform chosenPlatform = eligiblePlatform.get();
             List<Container> roster = chosenPlatform.scheduleExperiment().generateExperimentRoster();
             if (roster.isEmpty()) {
-                log.debug("Platform {} has empty roster, no experiments scheduled", keyValue(DATADOG_PLATFORM_KEY, chosenPlatform.getPlatformType()));
+                log.debug("Platform {} has empty roster, no experiments scheduled", keyValue(DATADOG_PLATFORM_KEY, chosenPlatform
+                        .getPlatformType()));
                 return Collections.emptySet();
             }
             Set<Container> containersToExperiment;
@@ -173,26 +119,22 @@ public class ExperimentManager {
                                                .filter(Container::canExperiment)
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
-            synchronized (newExperimentQueue) {
+            synchronized (allExperiments) {
                 return containersToExperiment.stream()
                                              .map(Container::createExperiment)
+                                             .peek(autowireCapableBeanFactory::autowireBean)
                                              .map(this::addExperiment)
                                              .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
                                                      .getId(), experiment))
                                              .collect(Collectors.toSet());
             }
-
         }
         return Collections.emptySet();
     }
 
     Experiment addExperiment (Experiment experiment) {
-        newExperimentQueue.add(experiment);
+        allExperiments.add(experiment);
         return experiment;
-    }
-
-    Collection<Experiment> getActiveExperiments () {
-        return activeExperiments;
     }
 
     Set<Experiment> experimentContainerId (Long containerIdentity) {
@@ -206,14 +148,27 @@ public class ExperimentManager {
                               .collect(Collectors.toSet());
     }
 
-    Collection<Experiment> getNewExperimentQueue () {
-        return newExperimentQueue;
+    Experiment getExperimentByUUID (String uuid) {
+        return allExperiments.stream().filter(experiment -> experiment.getId().equals(uuid)).findFirst().orElse(null);
     }
 
-    Experiment getExperimentByUUID (String uuid) {
-        return activeExperiments.stream()
-                                .filter(experiment -> experiment.getId().equals(uuid))
-                                .findFirst()
-                                .orElse(null);
+    Collection<Experiment> getAllExperiments () {
+        return allExperiments;
+    }
+
+    static class AutoCloseableMDCCollection implements AutoCloseable {
+        private final Collection<MDC.MDCCloseable> messageDataContextCollection;
+
+        AutoCloseableMDCCollection (Map<String, String> dataContexts) {
+            messageDataContextCollection = dataContexts.entrySet()
+                                                       .stream()
+                                                       .map(entrySet -> MDC.putCloseable(entrySet.getKey(), entrySet.getValue()))
+                                                       .collect(Collectors.toUnmodifiableSet());
+        }
+
+        @Override
+        public void close () {
+            messageDataContextCollection.forEach(MDC.MDCCloseable::close);
+        }
     }
 }

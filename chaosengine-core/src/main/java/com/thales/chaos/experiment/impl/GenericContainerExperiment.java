@@ -9,6 +9,10 @@ import java.time.Duration;
 import static com.thales.chaos.constants.ExperimentConstants.*;
 
 public class GenericContainerExperiment extends Experiment {
+    public GenericContainerExperiment (Container container, ExperimentType experimentType) {
+        super(container, experimentType);
+    }
+
     public static GenericContainerExperimentBuilder builder () {
         return GenericContainerExperimentBuilder.builder();
     }
@@ -53,9 +57,7 @@ public class GenericContainerExperiment extends Experiment {
         }
 
         public GenericContainerExperiment build () {
-            GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment();
-            genericContainerExperiment.experimentType = this.experimentType;
-            genericContainerExperiment.container = this.container;
+            GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment(this.container, this.experimentType);
             genericContainerExperiment.maximumDuration = this.maximumDuration;
             genericContainerExperiment.minimumDuration = this.minimumDuration;
             genericContainerExperiment.finalizationDuration = this.finalizationDuration;

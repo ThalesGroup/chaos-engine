@@ -33,7 +33,8 @@ public class HolidayManager {
 
     @EventListener(ApplicationReadyEvent.class)
     private void logCreation () {
-        log.info("Holiday Manager is using holidays from {}", holidayCalendar.getClass().getSimpleName());
+        if (log.isInfoEnabled())
+            log.info("Holiday Manager is using holidays from {}", holidayCalendar.getClass().getSimpleName());
     }
 
     public Instant getPreviousWorkingDay () {
