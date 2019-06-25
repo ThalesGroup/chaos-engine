@@ -73,7 +73,7 @@ public abstract class Experiment {
 
     void startExperiment () {
         log.info("Starting experiment");
-        setExperimentStartup(executorService.submit(this::startExperimentInner));
+        setExperimentStartup(executorService.submit(() -> startExperimentInner(MDC.getCopyOfContextMap())));
         setExperimentState(ExperimentState.STARTING);
     }
 
@@ -127,8 +127,7 @@ public abstract class Experiment {
                        .orElse(EXPERIMENT_METHOD_NOT_SET_YET);
     }
 
-    boolean startExperimentInner () {
-        Map<String, String> existingMDC = MDC.getCopyOfContextMap();
+    boolean startExperimentInner (Map<String, String> existingMDC) {
         if (existingMDC == null) existingMDC = Collections.emptyMap();
         try {
             MDC.setContextMap(existingMDC);
@@ -453,6 +452,10 @@ public abstract class Experiment {
 
     void setAdminManager (AdminManager adminManager) {
         this.adminManager = adminManager;
+    }
+
+    public Boolean getWasSelfHealingRequired() {
+        return getExperimentState().isComplete() ? getSelfHealingCounter().get() > 0 : null;
     }
 
     @Override

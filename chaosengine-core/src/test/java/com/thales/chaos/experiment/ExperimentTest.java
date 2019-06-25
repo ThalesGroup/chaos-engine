@@ -288,7 +288,7 @@ public class ExperimentTest {
 
     @Test
     public void confirmStartupCompleteTrue () {
-        doReturn(true).when(experiment).startExperimentInner();
+        doReturn(true).when(experiment).startExperimentInner(any());
         experiment.startExperiment();
         await().atMost(1, TimeUnit.SECONDS)
                .until(() -> mockingDetails(experiment).getInvocations()
@@ -302,7 +302,7 @@ public class ExperimentTest {
 
     @Test
     public void confirmStartupCompleteFalse () {
-        doReturn(false).when(experiment).startExperimentInner();
+        doReturn(false).when(experiment).startExperimentInner(any());
         experiment.startExperiment();
         await().atMost(1, TimeUnit.SECONDS)
                .until(() -> mockingDetails(experiment).getInvocations()
@@ -316,7 +316,7 @@ public class ExperimentTest {
 
     @Test
     public void confirmStartupCompleteRuntimeException () {
-        doThrow(new RuntimeException()).when(experiment).startExperimentInner();
+        doThrow(new RuntimeException()).when(experiment).startExperimentInner(any());
         experiment.startExperiment();
         await().atMost(1, TimeUnit.SECONDS)
                .until(() -> mockingDetails(experiment).getInvocations()
@@ -413,7 +413,7 @@ public class ExperimentTest {
     @Test
     public void startExperimentInnerOutsideHours () {
         doReturn(true).when(experiment).cannotRunExperimentsNow();
-        assertFalse(experiment.startExperimentInner());
+        assertFalse(experiment.startExperimentInner(any()));
     }
 
     @Test
@@ -422,7 +422,7 @@ public class ExperimentTest {
         for (ContainerHealth containerHealth : ContainerHealth.values()) {
             if (!containerHealth.equals(NORMAL)) {
                 doReturn(containerHealth).when(container).getContainerHealth(experimentType);
-                assertFalse("Should not run experiment if container health is " + containerHealth, experiment.startExperimentInner());
+                assertFalse("Should not run experiment if container health is " + containerHealth, experiment.startExperimentInner(any()));
                 verify(container, atLeastOnce()).getContainerHealth(experimentType);
             }
         }
@@ -434,7 +434,7 @@ public class ExperimentTest {
         doReturn(NORMAL).when(container).getContainerHealth(experimentType);
         doNothing().when(container).startExperiment(experiment);
         Instant timeBeforeStart = Instant.now();
-        assertTrue(experiment.startExperimentInner());
+        assertTrue(experiment.startExperimentInner(any()));
         verify(container).startExperiment(experiment);
         assertTrue(timeBeforeStart.isBefore(experiment.getStartTime()));
     }
@@ -445,7 +445,7 @@ public class ExperimentTest {
         doReturn(NORMAL).when(container).getContainerHealth(experimentType);
         doThrow(new ChaosException(ChaosErrorCode.EXPERIMENT_START_FAILURE)).when(container)
                                                                             .startExperiment(experiment);
-        assertFalse(experiment.startExperimentInner());
+        assertFalse(experiment.startExperimentInner(any()));
         verify(container).startExperiment(experiment);
     }
 
