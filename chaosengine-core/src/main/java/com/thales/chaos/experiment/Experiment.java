@@ -58,7 +58,6 @@ public abstract class Experiment {
     private Callable<Void> finalizeMethod;
     private Instant startTime = Instant.now();
     private Instant transitionTime = Instant.now();
-    private Instant endTime;
     private Instant lastSelfHealingTime;
     private Duration totalExperimentDuration;
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
@@ -181,7 +180,7 @@ public abstract class Experiment {
                             .collect(Collectors.toSet());
     }
 
-    public void setScriptManager (ScriptManager scriptManager) {
+    void setScriptManager (ScriptManager scriptManager) {
         this.scriptManager = scriptManager;
         instantiateExperimentMethod();
     }
@@ -213,7 +212,7 @@ public abstract class Experiment {
         return notificationManager;
     }
 
-    public void setNotificationManager (NotificationManager notificationManager) {
+    void setNotificationManager (NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
     }
 
@@ -237,10 +236,6 @@ public abstract class Experiment {
     @JsonIgnore
     public ExperimentMethod getExperimentMethod () {
         return experimentMethod;
-    }
-
-    private void setExperimentMethod (ExperimentMethod experimentMethod) {
-        this.experimentMethod = experimentMethod;
     }
 
     public Callable<Void> getSelfHealingMethod () {
@@ -273,7 +268,7 @@ public abstract class Experiment {
         this.finalizationDuration = finalizationDuration;
     }
 
-    public void setHolidayManager (HolidayManager holidayManager) {
+    void setHolidayManager (HolidayManager holidayManager) {
         this.holidayManager = holidayManager;
     }
 
@@ -285,24 +280,8 @@ public abstract class Experiment {
         return experimentType;
     }
 
-    private void setEndTime () {
-        setEndTime(Instant.now());
-    }
-
-    protected Duration getDuration () {
-        return Duration.between(getStartTime(), getEndTime());
-    }
-
     public Instant getStartTime () {
         return startTime;
-    }
-
-    private Instant getEndTime () {
-        return Optional.ofNullable(endTime).orElseGet(Instant::now);
-    }
-
-    void setEndTime (Instant endTime) {
-        this.endTime = endTime;
     }
 
     void callSelfHealing () {
@@ -328,7 +307,7 @@ public abstract class Experiment {
         return selfHealingCounter;
     }
 
-    protected void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
+    void setSelfHealingCounter (AtomicInteger selfHealingCounter) {
         this.selfHealingCounter = selfHealingCounter;
     }
 
@@ -472,7 +451,12 @@ public abstract class Experiment {
         log.error("Experiment failed with duration of {}", v("finalExperimentDuration", totalExperimentDuration));
     }
 
-    public void setAdminManager (AdminManager adminManager) {
+    void setAdminManager (AdminManager adminManager) {
         this.adminManager = adminManager;
+    }
+
+    @Override
+    public String toString () {
+        return String.format("Experiment of %s against %s", experimentMethod.getExperimentName(), container.getSimpleName());
     }
 }
