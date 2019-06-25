@@ -48,9 +48,7 @@ public class ExperimentManager {
                 } finally {
                     if (threadPool != null) threadPool.shutdown();
                 }
-                if (allExperiments.stream().allMatch(Experiment::isComplete)) {
-                    allExperiments.clear();
-                }
+                allExperiments.removeIf(Experiment::isComplete);
             }
         }
     }
@@ -72,8 +70,8 @@ public class ExperimentManager {
                       .forEach(experiment -> log.info("Evaluated experiment: {}", v("experiment", experiment)));
     }
 
-    Consumer<? super Experiment> runOnLevel (ExperimentState experimentState, Consumer<? super Experiment> experimentStep) {
-        return (Consumer<Experiment>) experiment -> {
+    Consumer<Experiment> runOnLevel (ExperimentState experimentState, Consumer<? super Experiment> experimentStep) {
+        return experiment -> {
             if (experimentState.equals(experiment.getExperimentState())) {
                 try (AutoCloseableMDCCollection ignored = getExperimentAutoCloseableMDCCollection(experiment)) {
                     experimentStep.accept(experiment);
