@@ -72,9 +72,81 @@ public abstract class Experiment {
     }
 
     void startExperiment () {
-        log.info("Starting experiment");
+        log.info(STARTING_NEW_EXPERIMENT);
         setExperimentStartup(executorService.submit(() -> startExperimentInner(MDC.getCopyOfContextMap())));
         setExperimentState(ExperimentState.STARTING);
+    }
+
+    void setExperimentStartup (Future<Boolean> experimentStartup) {
+        this.experimentStartup = experimentStartup;
+    }
+
+    boolean startExperimentInner (Map<String, String> existingMDC) {
+        if (existingMDC == null) existingMDC = Collections.emptyMap();
+        try {
+            MDC.setContextMap(existingMDC);
+            if (cannotRunExperimentsNow()) {
+                return Boolean.FALSE;
+            }
+            if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
+                log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
+                return Boolean.FALSE;
+            }
+            if (experimentMethod == null) {
+                log.error("No method is available for experimentation");
+                return Boolean.FALSE;
+            }
+            try {
+                sendNotification(NotificationLevel.WARN, STARTING_NEW_EXPERIMENT);
+                container.startExperiment(this);
+                startTime = Instant.now();
+                log.info("Asynchronous experiment startup completed");
+                return Boolean.TRUE;
+            } catch (ChaosException ex) {
+                sendNotification(NotificationLevel.ERROR, FAILED_TO_START_EXPERIMENT);
+                return Boolean.FALSE;
+            }
+        } finally {
+            existingMDC.keySet().forEach(MDC::remove);
+        }
+    }
+
+    boolean cannotRunExperimentsNow () {
+        if (holidayManager.isHoliday()) {
+            log.info("Cannot start an experiment right now. Enjoy the holiday");
+            return true;
+        } else if (holidayManager.isOutsideWorkingHours()) {
+            log.info("Cannot start an experiment right now. Come back during working hours");
+            return true;
+        } else if (!adminManager.canRunExperiments()) {
+            log.info("Cannot start an experiment right now. Current admin state is {}", adminManager.getAdminState());
+            return true;
+        }
+        return false;
+    }
+
+    void sendNotification (NotificationLevel notificationLevel, String message) {
+        notificationManager.sendNotification(ChaosExperimentEvent.builder()
+                                                                 .fromExperiment(this)
+                                                                 .withMessage(message)
+                                                                 .withNotificationLevel(notificationLevel)
+                                                                 .build());
+    }
+
+    public String getExperimentMethodName () {
+        return Optional.ofNullable(experimentMethod)
+                       .map(ExperimentMethod::getExperimentName)
+                       .orElse(EXPERIMENT_METHOD_NOT_SET_YET);
+    }
+
+    void setScriptManager (ScriptManager scriptManager) {
+        this.scriptManager = scriptManager;
+        instantiateExperimentMethod();
+    }
+
+    @Autowired
+    void instantiateExperimentMethod () {
+        this.experimentMethod = chooseExperimentMethodConsumer();
     }
 
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
@@ -113,58 +185,6 @@ public abstract class Experiment {
                              .collect(Collectors.toSet());
     }
 
-    void setExperimentStartup (Future<Boolean> experimentStartup) {
-        this.experimentStartup = experimentStartup;
-    }
-
-    public Container getContainer () {
-        return container;
-    }
-
-    public String getExperimentMethodName () {
-        return Optional.ofNullable(experimentMethod)
-                       .map(ExperimentMethod::getExperimentName)
-                       .orElse(EXPERIMENT_METHOD_NOT_SET_YET);
-    }
-
-    boolean startExperimentInner (Map<String, String> existingMDC) {
-        if (existingMDC == null) existingMDC = Collections.emptyMap();
-        try {
-            MDC.setContextMap(existingMDC);
-            if (cannotRunExperimentsNow()) {
-                return Boolean.FALSE;
-            }
-            if (container.getContainerHealth(experimentType) != ContainerHealth.NORMAL) {
-                log.info("Failed to start an experiment as this container is already in an abnormal state\n{}", container);
-                return Boolean.FALSE;
-            }
-            if (experimentMethod == null) {
-                log.error("No method is available for experimentation");
-                return Boolean.FALSE;
-            }
-            notificationManager.sendNotification(ChaosExperimentEvent.builder()
-                                                                     .fromExperiment(this)
-                                                                     .withNotificationLevel(NotificationLevel.WARN)
-                                                                     .withMessage(STARTING_NEW_EXPERIMENT)
-                                                                     .build());
-            try {
-                container.startExperiment(this);
-                startTime = Instant.now();
-                log.info("Asynchronous experiment startup completed");
-                return Boolean.TRUE;
-            } catch (ChaosException ex) {
-                notificationManager.sendNotification(ChaosExperimentEvent.builder()
-                                                                         .fromExperiment(this)
-                                                                         .withNotificationLevel(NotificationLevel.ERROR)
-                                                                         .withMessage(FAILED_TO_START_EXPERIMENT)
-                                                                         .build());
-                return Boolean.FALSE;
-            }
-        } finally {
-            existingMDC.keySet().forEach(MDC::remove);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
         if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
@@ -179,28 +199,8 @@ public abstract class Experiment {
                             .collect(Collectors.toSet());
     }
 
-    void setScriptManager (ScriptManager scriptManager) {
-        this.scriptManager = scriptManager;
-        instantiateExperimentMethod();
-    }
-
-    boolean cannotRunExperimentsNow () {
-        if (holidayManager.isHoliday()) {
-            log.info("Cannot start an experiment right now. Enjoy the holiday");
-            return true;
-        } else if (holidayManager.isOutsideWorkingHours()) {
-            log.info("Cannot start an experiment right now. Come back during working hours");
-            return true;
-        } else if (!adminManager.canRunExperiments()) {
-            log.info("Cannot start an experiment right now. Current admin state is {}", adminManager.getAdminState());
-            return true;
-        }
-        return false;
-    }
-
-    @Autowired
-    void instantiateExperimentMethod () {
-        this.experimentMethod = chooseExperimentMethodConsumer();
+    public Container getContainer () {
+        return container;
     }
 
     public void setPreferredExperiment (String preferredExperiment) {
@@ -279,24 +279,23 @@ public abstract class Experiment {
         return experimentType;
     }
 
-    public Instant getStartTime () {
-        return startTime;
-    }
-
     void callSelfHealing () {
         int selfHealingAttempts = getSelfHealingCounter().get();
         try {
             if (canRunSelfHealing()) {
                 selfHealingAttempts = getSelfHealingCounter().incrementAndGet();
                 log.info("Running self healing for the {} time", selfHealingAttempts);
+                sendNotification(NotificationLevel.WARN, "Running self healing for the " + selfHealingAttempts + " time.");
                 lastSelfHealingTime = Instant.now();
                 selfHealingMethod.call();
             }
         } catch (Exception e) {
+            sendNotification(NotificationLevel.ERROR, AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING);
             log.error("An error occurred while calling self healing method", e);
         } finally {
             evaluateRunningExperiment();
             if (selfHealingAttempts >= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES && getExperimentState().equals(ExperimentState.SELF_HEALING)) {
+                sendNotification(NotificationLevel.ERROR, MAXIMUM_SELF_HEALING_RETRIES_REACHED);
                 setExperimentState(ExperimentState.FAILED);
             }
         }
@@ -312,6 +311,7 @@ public abstract class Experiment {
 
     boolean canRunSelfHealing () {
         if (!adminManager.canRunSelfHealing()) {
+            sendNotification(NotificationLevel.WARN, "Self healing disabled due admin state");
             log.debug("Self healing disallowed by Admin State {}", v("AdminState", adminManager.getAdminState()));
             return false;
         } else if (Optional.ofNullable(lastSelfHealingTime)
@@ -395,6 +395,10 @@ public abstract class Experiment {
         return Instant.now().isBefore(getStartTime().plus(minimumDuration));
     }
 
+    public Instant getStartTime () {
+        return startTime;
+    }
+
     void confirmStartupComplete () {
         log.debug("Checking if experiment startup is done");
         if (experimentStartup.isDone()) {
@@ -423,6 +427,7 @@ public abstract class Experiment {
         try {
             if (getTimeInState().compareTo(finalizationDuration) >= 0) {
                 log.info("Calling finalize method");
+                sendNotification(NotificationLevel.WARN, "Running experiment finalization call");
                 finalizeMethod.call();
                 setExperimentState(ExperimentState.FINISHED);
             } else {
@@ -443,10 +448,14 @@ public abstract class Experiment {
     }
 
     void closeFinishedExperiment () {
+        String message = String.format("Experiment finished. Duration: %d s, SelfHealing Attempts: %d", totalExperimentDuration
+                .getSeconds(), getSelfHealingCounter().get());
+        sendNotification(NotificationLevel.GOOD, message);
         log.info("Experiment ended with duration of {}", v("finalExperimentDuration", totalExperimentDuration));
     }
 
     void closeFailedExperiment () {
+        sendNotification(NotificationLevel.ERROR, String.format("Experiment failed after %d s", totalExperimentDuration.getSeconds()));
         log.error("Experiment failed with duration of {}", v("finalExperimentDuration", totalExperimentDuration));
     }
 
@@ -454,7 +463,7 @@ public abstract class Experiment {
         this.adminManager = adminManager;
     }
 
-    public Boolean getWasSelfHealingRequired() {
+    public Boolean getWasSelfHealingRequired () {
         return getExperimentState().isComplete() ? getSelfHealingCounter().get() > 0 : null;
     }
 

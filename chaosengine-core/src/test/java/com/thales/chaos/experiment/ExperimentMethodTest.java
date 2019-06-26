@@ -52,6 +52,7 @@ public class ExperimentMethodTest {
     public void setUp () {
         doReturn(true).when(container).supportsShellBasedExperiments();
         doReturn(false).when(container).isCattle();
+        doNothing().when(experiment).sendNotification(any(), any());
         experimentMethod = ExperimentMethod.fromScript(container, script);
         experimentMethod.accept(container, experiment);
     }
