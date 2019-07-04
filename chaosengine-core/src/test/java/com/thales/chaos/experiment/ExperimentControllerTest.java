@@ -16,6 +16,7 @@ import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -25,13 +26,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -152,6 +154,18 @@ public class ExperimentControllerTest {
         Long containerId = new Random().nextLong();
         mvc.perform(post("/experiment/start/" + containerId)).andExpect(status().isOk());
         verify(experimentManager, times(1)).experimentContainerId(containerId);
+    }
+
+    @Test
+    public void startExperimentSuite () throws Exception {
+        Collection<Experiment> experiments = Collections.emptySet();
+        ArgumentCaptor<ExperimentSuite> experimentSuiteCaptor = ArgumentCaptor.forClass(ExperimentSuite.class);
+        doReturn(experiments).when(experimentManager).scheduleExperimentSuite(experimentSuiteCaptor.capture());
+        mvc.perform(post("/experiment/build").contentType(APPLICATION_JSON_UTF8)
+                                             .content("{" + "\"platformType\": \"firstPlatform\", " + "\"aggregationIdentifierToExperimentMethodsMap\":{\"application\": [\"method1\", \"method2\"]" + "}" + "}"))
+           .andExpect(status().isOk());
+        ExperimentSuite expectedExperimentSuite = new ExperimentSuite("firstPlatform", Map.of("application", List.of("method1", "method2")));
+        assertEquals(expectedExperimentSuite, experimentSuiteCaptor.getValue());
     }
 
     @Test

@@ -23,6 +23,7 @@ public class GenericContainerExperiment extends Experiment {
         private Duration minimumDuration = Duration.ofSeconds(DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS);
         private Duration maximumDuration = Duration.ofMinutes(DEFAULT_EXPERIMENT_DURATION_MINUTES);
         private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
+        private String specificExperiment;
 
         private GenericContainerExperimentBuilder () {
         }
@@ -56,11 +57,17 @@ public class GenericContainerExperiment extends Experiment {
             return this;
         }
 
+        public GenericContainerExperimentBuilder withSpecificExperiment (String specificExperiment) {
+            this.specificExperiment = specificExperiment;
+            return this;
+        }
+
         public GenericContainerExperiment build () {
             GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment(this.container, this.experimentType);
             genericContainerExperiment.maximumDuration = this.maximumDuration;
             genericContainerExperiment.minimumDuration = this.minimumDuration;
             genericContainerExperiment.finalizationDuration = this.finalizationDuration;
+            genericContainerExperiment.specificExperiment = this.specificExperiment;
             return genericContainerExperiment;
         }
     }

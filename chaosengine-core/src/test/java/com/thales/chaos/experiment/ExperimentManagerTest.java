@@ -3,11 +3,13 @@ package com.thales.chaos.experiment;
 import com.thales.chaos.admin.AdminManager;
 import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.PlatformManager;
 import com.thales.chaos.scripts.ScriptManager;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
@@ -25,7 +28,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.PLATFORM_DOES_NOT_EXIST;
 import static com.thales.chaos.experiment.enums.ExperimentState.STARTED;
 import static com.thales.chaos.experiment.enums.ExperimentState.STARTING;
 import static org.awaitility.Awaitility.await;
@@ -62,6 +70,8 @@ public class ExperimentManagerTest {
     public void setUp () {
         doReturn(new ExperimentManager.AutoCloseableMDCCollection(Collections.emptyMap())).when(experimentManager)
                                                                                           .getExperimentAutoCloseableMDCCollection(any());
+        doReturn("firstPlatform").when(firstPlatform).getPlatformType();
+        doReturn("secondPlatform").when(secondPlatform).getPlatformType();
     }
 
     @Test
@@ -285,6 +295,98 @@ public class ExperimentManagerTest {
         verify(experiment).closeFailedExperiment();
         verify(experiment).closeFinishedExperiment();
         assertThat(usedExperimentStates, containsInAnyOrder(ExperimentState.values()));
+    }
+
+    @Test
+    public void scheduleExperimentSuite () {
+        Experiment experiment1 = mock(Experiment.class);
+        Experiment experiment2 = mock(Experiment.class);
+        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", Map.of("aggregator", List.of("delete", "restart")));
+        doReturn(Stream.of(experiment1, experiment2)).when(experimentManager)
+                                                     .createSpecificExperiments(firstPlatform, "aggregator", List.of("delete", "restart"), 1);
+        assertThat(experimentManager.scheduleExperimentSuite(experimentSuite), containsInAnyOrder(experiment1, experiment2));
+    }
+
+    @Test
+    public void scheduleExperimentSuiteWithInvalidPlatform () {
+        ExperimentSuite experimentSuite = new ExperimentSuite("fakePlatform", Collections.emptyMap());
+        try {
+            experimentManager.scheduleExperimentSuite(experimentSuite);
+            fail("Exception expected");
+        } catch (ChaosException e) {
+            assertThat(e.getMessage(), Matchers.startsWith(String.valueOf(PLATFORM_DOES_NOT_EXIST.getErrorCode())));
+        }
+    }
+
+    @Test
+    public void scheduleExperimentSuiteWhileOtherExperimentsActive () {
+        experimentManager.addExperiment(mock(Experiment.class));
+        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", Map.of("aggregator", List.of("delete", "restart")));
+        assertThat(experimentManager.scheduleExperimentSuite(experimentSuite), empty());
+        verify(firstPlatform, never()).getPlatformType();
+        verify(secondPlatform, never()).getPlatformType();
+    }
+
+    @Test
+    @Repeat(10)
+    public void createSpecificExperiments () {
+        Container container1 = mock(Container.class);
+        Container container2 = mock(Container.class);
+        Container container3 = mock(Container.class);
+        Experiment experiment1 = mock(Experiment.class);
+        Experiment experiment2 = mock(Experiment.class);
+        Experiment experiment3 = mock(Experiment.class);
+        doReturn(experiment1).when(container1).createExperiment(anyString());
+        doReturn(experiment2).when(container2).createExperiment(anyString());
+        doReturn(experiment3).when(container3).createExperiment(anyString());
+        doReturn(Set.of(container1, container2, container3)).when(firstPlatform).getRosterByAggregationId("aggregate");
+        Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, "aggregate", List.of("method1", "method2"), 1)
+                                                       .collect(Collectors.toUnmodifiableSet());
+        assertThat(experiments, Matchers.anyOf(containsInAnyOrder(experiment1, experiment2), containsInAnyOrder(experiment2, experiment3), containsInAnyOrder(experiment1, experiment3)));
+    }
+
+    @Test
+    public void createSpecificExperimentsInsufficientContainerCountException () {
+        doReturn(IntStream.range(0, 10)
+                          .mapToObj(i -> mock(Container.class))
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
+                                                                   .getRosterByAggregationId("aggregate");
+        try {
+            experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
+                                                                                             .mapToObj(String::valueOf)
+                                                                                             .collect(Collectors.toUnmodifiableList()), 1);
+            fail("Should have thrown an exception");
+        } catch (ChaosException e) {
+            assertThat(e.getMessage(), Matchers.startsWith(String.valueOf(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT.getErrorCode())));
+        }
+    }
+
+    @Test
+    public void createSpecificExperimentsInsufficientContainerCountExceptionMoreThanOneSurvivor () {
+        doReturn(IntStream.range(0, 14)
+                          .mapToObj(i -> mock(Container.class))
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
+                                                                   .getRosterByAggregationId("aggregate");
+        try {
+            experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
+                                                                                             .mapToObj(String::valueOf)
+                                                                                             .collect(Collectors.toUnmodifiableList()), 5);
+            fail("Should have thrown an exception");
+        } catch (ChaosException e) {
+            assertThat(e.getMessage(), Matchers.startsWith(String.valueOf(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT.getErrorCode())));
+        }
+    }
+
+    @Test
+    public void createSpecificExperimentsWithNoSurvivors () {
+        doReturn(IntStream.range(0, 10)
+                          .mapToObj(i -> mock(Container.class))
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
+                                                                   .getRosterByAggregationId("aggregate");
+        experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
+                                                                                         .mapToObj(String::valueOf)
+                                                                                         .collect(Collectors.toUnmodifiableList()), 0);
+        // Expect no exceptions.
     }
 
     @Configuration

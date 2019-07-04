@@ -63,6 +63,7 @@ public abstract class Experiment {
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
     @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
+    protected String specificExperiment;
     private Future<Boolean> experimentStartup;
 
     public Experiment (Container container, ExperimentType experimentType) {
@@ -155,6 +156,17 @@ public abstract class Experiment {
         Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
                                                            .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
                                                            .collect(Collectors.toSet());
+        if (specificExperiment != null) {
+            ExperimentMethod<T> specificExperimentMethod = allMethods.stream()
+                                                                     .filter(method -> method.getExperimentName()
+                                                                                             .equals(specificExperiment))
+                                                                     .findFirst()
+                                                                     .orElseThrow(ChaosException::new);
+            ExperimentType newExperimentType = specificExperimentMethod.getExperimentType();
+            log.info("Preferred experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
+            this.experimentType = newExperimentType;
+            return specificExperimentMethod;
+        }
         Optional<ExperimentMethod<T>> preferredMethod = allMethods.stream()
                                                                   .filter(method -> method.getExperimentName()
                                                                                           .equals(preferredExperiment))

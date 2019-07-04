@@ -2,6 +2,8 @@ package com.thales.chaos.experiment;
 
 import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.PlatformManager;
@@ -18,8 +20,11 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.DataDogConstants.*;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -152,6 +157,46 @@ public class ExperimentManager {
 
     Collection<Experiment> getAllExperiments () {
         return allExperiments;
+    }
+
+    Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite) {
+        return scheduleExperimentSuite(experimentSuite, 1);
+    }
+
+    Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
+        synchronized (allExperiments) {
+            if (!allExperiments.isEmpty()) {
+                return Collections.emptySet();
+            }
+            Platform experimentPlatform = platformManager.getPlatforms()
+                                                         .stream()
+                                                         .filter(platform -> platform.getPlatformType()
+                                                                                     .equals(experimentSuite.getPlatformType()))
+                                                         .findFirst()
+                                                         .orElseThrow(ChaosErrorCode.PLATFORM_DOES_NOT_EXIST.asChaosException());
+            Collection<Experiment> createdExperiments = experimentSuite.getAggregationIdentifierToExperimentMethodsMap()
+                                                                       .entrySet()
+                                                                       .stream()
+                                                                       .flatMap((Map.Entry<String, List<String>> containerExperiments) -> createSpecificExperiments(experimentPlatform, containerExperiments
+                                                                               .getKey(), containerExperiments.getValue(), minimumNumberOfSurvivors))
+                                                                       .peek(experiment -> autowireCapableBeanFactory.autowireBean(experiment))
+                                                                       .collect(Collectors.toUnmodifiableSet());
+            allExperiments.addAll(createdExperiments);
+            return allExperiments;
+        }
+    }
+
+    Stream<Experiment> createSpecificExperiments (Platform platform, String containerAggregationIdentifier, List<String> experimentMethods, int minimumNumberOfSurvivors) {
+        List<Container> potentialContainers = new ArrayList<>(platform.getRosterByAggregationId(containerAggregationIdentifier));
+        if (potentialContainers.size() - minimumNumberOfSurvivors < experimentMethods.size()) {
+            throw new ChaosException(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT);
+        }
+        Collections.shuffle(potentialContainers);
+        return IntStream.range(0, experimentMethods.size()).mapToObj(i -> {
+            Container container = potentialContainers.get(i);
+            String experimentMethod = experimentMethods.get(i);
+            return container.createExperiment(experimentMethod);
+        });
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {
