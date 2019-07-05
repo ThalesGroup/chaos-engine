@@ -15,6 +15,7 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -26,13 +27,13 @@ import java.util.stream.Stream;
 import static com.thales.chaos.constants.DataDogConstants.*;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-import static net.logstash.logback.argument.StructuredArguments.v;
+import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Collection<Experiment> allExperiments = new HashSet<>();
+    private final Map<Instant, ExperimentSuite> historicalExperimentSuites = new TreeMap<>(Comparator.reverseOrder());
     @Autowired
     private PlatformManager platformManager;
     @Autowired
@@ -123,16 +124,28 @@ public class ExperimentManager {
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
             synchronized (allExperiments) {
-                return containersToExperiment.stream()
-                                             .map(Container::createExperiment)
-                                             .peek(autowireCapableBeanFactory::autowireBean)
-                                             .map(this::addExperiment)
-                                             .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
-                                                     .getId(), experiment))
-                                             .collect(Collectors.toSet());
+                Set<Experiment> experiments = containersToExperiment.stream()
+                                                                    .map(Container::createExperiment)
+                                                                    .peek(autowireCapableBeanFactory::autowireBean)
+                                                                    .map(this::addExperiment)
+                                                                    .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
+                                                                            .getId(), experiment))
+                                                                    .collect(Collectors.toSet());
+                logExperimentSuiteEquivalent(chosenPlatform, experiments);
+                return experiments;
             }
         }
         return Collections.emptySet();
+    }
+
+    private void logExperimentSuiteEquivalent (Platform platform, Set<Experiment> experiments) {
+        ExperimentSuite experimentSuite = ExperimentSuite.fromExperiments(platform, experiments);
+        addExperimentSuiteToHistory(experimentSuite);
+        log.info("Experiment can be recreated using {}", kv("experimentSuite", experimentSuite));
+    }
+
+    private ExperimentSuite addExperimentSuiteToHistory (ExperimentSuite experimentSuite) {
+        return historicalExperimentSuites.put(Instant.now(), experimentSuite);
     }
 
     Experiment addExperiment (Experiment experiment) {
@@ -163,6 +176,10 @@ public class ExperimentManager {
         return scheduleExperimentSuite(experimentSuite, 1);
     }
 
+    public Map<Instant, ExperimentSuite> getHistoricalExperimentSuites () {
+        return historicalExperimentSuites;
+    }
+
     Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
         synchronized (allExperiments) {
             if (!allExperiments.isEmpty()) {
@@ -174,6 +191,7 @@ public class ExperimentManager {
                                                                                      .equals(experimentSuite.getPlatformType()))
                                                          .findFirst()
                                                          .orElseThrow(ChaosErrorCode.PLATFORM_DOES_NOT_EXIST.asChaosException());
+            experimentPlatform.expireCachedRoster();
             Collection<Experiment> createdExperiments = experimentSuite.getAggregationIdentifierToExperimentMethodsMap()
                                                                        .entrySet()
                                                                        .stream()
@@ -181,6 +199,7 @@ public class ExperimentManager {
                                                                                .getKey(), containerExperiments.getValue(), minimumNumberOfSurvivors))
                                                                        .peek(experiment -> autowireCapableBeanFactory.autowireBean(experiment))
                                                                        .collect(Collectors.toUnmodifiableSet());
+            addExperimentSuiteToHistory(experimentSuite);
             allExperiments.addAll(createdExperiments);
             return allExperiments;
         }

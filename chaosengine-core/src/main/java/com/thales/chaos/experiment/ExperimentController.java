@@ -5,7 +5,9 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -46,5 +48,11 @@ public class ExperimentController {
     @PostMapping("/build")
     public Collection<Experiment> startExperimentSuite (@ApiParam(required = true, value = "The Experiment Suite object of Platform, Container Aggregation ID, and Experiment Methods") @RequestBody ExperimentSuite experimentSuite) {
         return experimentManager.scheduleExperimentSuite(experimentSuite);
+    }
+
+    @ApiOperation(value = "Get parameters for previously run experiments")
+    @GetMapping("/history")
+    public Map<Instant, ExperimentSuite> getHistoricalExperiments () {
+        return experimentManager.getHistoricalExperimentSuites();
     }
 }

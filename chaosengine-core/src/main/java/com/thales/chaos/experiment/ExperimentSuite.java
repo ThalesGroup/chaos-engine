@@ -1,10 +1,13 @@
 package com.thales.chaos.experiment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.thales.chaos.platform.Platform;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 class ExperimentSuite {
     @JsonProperty(required = true)
@@ -43,5 +46,13 @@ class ExperimentSuite {
         ExperimentSuite that = (ExperimentSuite) o;
         if (!Objects.equals(platformType, that.platformType)) return false;
         return Objects.equals(aggregationIdentifierToExperimentMethodsMap, that.aggregationIdentifierToExperimentMethodsMap);
+    }
+
+    static ExperimentSuite fromExperiments (Platform platform, Collection<Experiment> experiments) {
+        Map<String, List<String>> map = experiments.stream()
+                                                   .collect(Collectors.groupingBy(experiment -> experiment.getContainer()
+                                                                                                          .getAggregationIdentifier(), Collectors
+                                                           .mapping(Experiment::getExperimentMethodName, Collectors.toList())));
+        return new ExperimentSuite(platform.getPlatformType(), map);
     }
 }

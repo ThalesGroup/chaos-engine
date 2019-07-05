@@ -47,7 +47,8 @@ public abstract class Platform implements ExperimentalObject {
         this.averageMillisPerExperiment = averageMillisPerExperiment;
         this.scheduler = null;
     }
-    void expireCachedRoster () {
+
+    public void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
 

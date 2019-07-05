@@ -125,7 +125,9 @@ public class ExperimentManagerTest {
     @Test
     public void scheduleExperimentsUnforcedWithRoster () {
         Container container = mock(Container.class);
+        doReturn("aggregate").when(container).getAggregationIdentifier();
         Experiment experiment = mock(Experiment.class);
+        doReturn(container).when(experiment).getContainer();
         doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(false);
@@ -139,7 +141,9 @@ public class ExperimentManagerTest {
     @Test
     public void scheduleExperimentsForcedWithRoster () {
         Container container = mock(Container.class);
+        doReturn("aggregate").when(container).getAggregationIdentifier();
         Experiment experiment = mock(Experiment.class);
+        doReturn(container).when(experiment).getContainer();
         doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(true);
@@ -153,7 +157,9 @@ public class ExperimentManagerTest {
     @Test
     public void scheduleExperimentsUnforcedWithoutRoster () {
         Container container = mock(Container.class);
+        doReturn("aggregate").when(container).getAggregationIdentifier();
         Experiment experiment = mock(Experiment.class);
+        doReturn(container).when(experiment).getContainer();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(false);
         doReturn(firstPlatform).when(firstPlatform).scheduleExperiment();
@@ -203,7 +209,9 @@ public class ExperimentManagerTest {
     public void scheduleExperimentsThreadSafe () throws Exception {
 
         Container container = mock(Container.class);
+        doReturn("aggregate").when(container).getAggregationIdentifier();
         Experiment experiment = mock(Experiment.class);
+        doReturn(container).when(experiment).getContainer();
         doNothing().when(experiment).instantiateExperimentMethod();
         assertThat(experimentManager.getAllExperiments(), empty());
         doReturn(Optional.of(firstPlatform)).when(platformManager).getNextPlatformForExperiment(false);
