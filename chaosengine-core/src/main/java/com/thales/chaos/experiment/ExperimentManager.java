@@ -139,6 +139,7 @@ public class ExperimentManager {
     }
 
     private void logExperimentSuiteEquivalent (Platform platform, Set<Experiment> experiments) {
+        if (experiments.isEmpty()) return;
         ExperimentSuite experimentSuite = ExperimentSuite.fromExperiments(platform, experiments);
         addExperimentSuiteToHistory(experimentSuite);
         log.info("Experiment can be recreated using {}", kv("experimentSuite", experimentSuite));
