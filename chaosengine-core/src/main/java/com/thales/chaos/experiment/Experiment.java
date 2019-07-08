@@ -152,7 +152,7 @@ public abstract class Experiment {
 
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
         Collection<ExperimentMethod<T>> reflectionBasedMethods = getReflectionBasedMethods();
-        Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods();
+        Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods(specificExperiment != null);
         Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
                                                            .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
                                                            .collect(Collectors.toSet());
@@ -199,14 +199,14 @@ public abstract class Experiment {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
+    private <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods (boolean filterOutInvalidScripts) {
         if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
         final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
         return scriptManager.getScripts()
                             .stream()
-                            .filter(script -> script.getDependencies()
-                                                    .stream()
-                                                    .noneMatch(knownMissingCapabilities::contains))
+                            .filter(script -> filterOutInvalidScripts || script.getDependencies()
+                                                                               .stream()
+                                                                               .noneMatch(knownMissingCapabilities::contains))
                             .map(script -> ExperimentMethod.fromScript(getContainer(), script))
                             .map(method -> (ExperimentMethod<T>) method)
                             .collect(Collectors.toSet());
