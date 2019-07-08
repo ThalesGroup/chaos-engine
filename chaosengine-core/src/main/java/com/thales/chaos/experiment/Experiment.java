@@ -104,7 +104,7 @@ public abstract class Experiment {
                 return Boolean.TRUE;
             } catch (ChaosException ex) {
                 sendNotification(NotificationLevel.ERROR, FAILED_TO_START_EXPERIMENT);
-                return Boolean.FALSE;
+                throw ex;
             }
         } finally {
             existingMDC.keySet().forEach(MDC::remove);
@@ -411,7 +411,8 @@ public abstract class Experiment {
                 log.error("Exception occurred while starting experiment", e);
                 setExperimentState(ExperimentState.FAILED);
             } catch (ExecutionException e) {
-                log.error("Exception occurred while starting experiment", e);
+                Exception loggedException = e.getCause() instanceof ChaosException ? (ChaosException) e.getCause() : e;
+                log.error("Exception occurred while starting experiment", loggedException);
                 setExperimentState(ExperimentState.FAILED);
             }
         }

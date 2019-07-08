@@ -15,6 +15,7 @@ import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.scripts.ScriptManager;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -445,7 +446,12 @@ public class ExperimentTest {
         doReturn(NORMAL).when(container).getContainerHealth(experimentType);
         doThrow(new ChaosException(ChaosErrorCode.EXPERIMENT_START_FAILURE)).when(container)
                                                                             .startExperiment(experiment);
-        assertFalse(experiment.startExperimentInner(any()));
+        try {
+            experiment.startExperimentInner(any());
+            fail("Exception expected");
+        } catch (ChaosException e) {
+            assertThat(e.getMessage(), Matchers.startsWith("12001"));
+        }
         verify(container).startExperiment(experiment);
     }
 
