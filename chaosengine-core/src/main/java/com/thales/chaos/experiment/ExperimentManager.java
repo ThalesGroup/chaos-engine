@@ -184,8 +184,10 @@ public class ExperimentManager {
     Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
         synchronized (allExperiments) {
             if (!allExperiments.isEmpty()) {
+                log.warn("Cannot start a planned experiment because another experiment is running");
                 return Collections.emptySet();
             }
+            log.info("Request to start a pre-planned experiment with criteria {}", kv("experimentSuite", experimentSuite));
             Platform experimentPlatform = platformManager.getPlatforms()
                                                          .stream()
                                                          .filter(platform -> platform.getPlatformType()

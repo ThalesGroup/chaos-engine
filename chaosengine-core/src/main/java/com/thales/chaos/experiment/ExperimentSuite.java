@@ -1,6 +1,10 @@
 package com.thales.chaos.experiment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.Platform;
 
 import java.util.Collection;
@@ -9,14 +13,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@JsonPropertyOrder({ ExperimentSuite.PLATFORM_TYPE_KEY, ExperimentSuite.AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY })
 class ExperimentSuite {
-    @JsonProperty(required = true)
+    public static final String PLATFORM_TYPE_KEY = "platformType";
+    public static final String AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY = "aggregationIdentifierToExperimentMethodsMap";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @JsonProperty(required = true, value = PLATFORM_TYPE_KEY)
     private String platformType;
-    @JsonProperty(required = true)
+    @JsonProperty(required = true, value = AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY)
     private Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap;
-
-    public ExperimentSuite () {
-    }
 
     public ExperimentSuite (String platformType, Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap) {
         this.platformType = platformType;
@@ -54,5 +59,14 @@ class ExperimentSuite {
                                                                                                           .getAggregationIdentifier(), Collectors
                                                            .mapping(Experiment::getExperimentMethodName, Collectors.toList())));
         return new ExperimentSuite(platform.getPlatformType(), map);
+    }
+
+    @Override
+    public String toString () {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new ChaosException(e);
+        }
     }
 }

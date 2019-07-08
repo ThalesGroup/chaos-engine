@@ -157,13 +157,14 @@ public abstract class Experiment {
                                                            .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
                                                            .collect(Collectors.toSet());
         if (specificExperiment != null) {
+            log.debug("Experiment creation set to require specific experiment of {}", specificExperiment);
             ExperimentMethod<T> specificExperimentMethod = allMethods.stream()
                                                                      .filter(method -> method.getExperimentName()
                                                                                              .equals(specificExperiment))
                                                                      .findFirst()
                                                                      .orElseThrow(ChaosException::new);
             ExperimentType newExperimentType = specificExperimentMethod.getExperimentType();
-            log.info("Preferred experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
+            log.debug("Specific experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
             this.experimentType = newExperimentType;
             return specificExperimentMethod;
         }
