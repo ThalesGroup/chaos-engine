@@ -24,7 +24,7 @@ class ExperimentSuite {
     @JsonProperty(required = true, value = AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY)
     private Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap;
 
-    public ExperimentSuite (String platformType, Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap) {
+    ExperimentSuite (String platformType, Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap) {
         this.platformType = platformType;
         this.aggregationIdentifierToExperimentMethodsMap = aggregationIdentifierToExperimentMethodsMap;
     }
