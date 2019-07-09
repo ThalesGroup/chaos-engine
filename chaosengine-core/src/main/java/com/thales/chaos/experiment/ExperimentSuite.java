@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.platform.Platform;
 
 import java.util.Collection;
@@ -66,7 +67,7 @@ class ExperimentSuite {
         try {
             return OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new ChaosException(e);
+            throw new ChaosException(ChaosErrorCode.OBJECT_SERIALIZATION_ERROR, e);
         }
     }
 }
