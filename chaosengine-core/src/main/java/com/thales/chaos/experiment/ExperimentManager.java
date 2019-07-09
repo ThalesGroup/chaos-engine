@@ -209,6 +209,7 @@ public class ExperimentManager {
     }
 
     Stream<Experiment> createSpecificExperiments (Platform platform, String containerAggregationIdentifier, List<String> experimentMethods, int minimumNumberOfSurvivors) {
+        log.debug("Creating experiments of type {} against {} with identifier {}", experimentMethods, platform, containerAggregationIdentifier);
         List<Container> potentialContainers = new ArrayList<>(platform.getRosterByAggregationId(containerAggregationIdentifier));
         if (potentialContainers.size() - minimumNumberOfSurvivors < experimentMethods.size()) {
             throw new ChaosException(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT);
