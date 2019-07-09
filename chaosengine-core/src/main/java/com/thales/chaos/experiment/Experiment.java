@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.ExperimentConstants.*;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -162,7 +163,8 @@ public abstract class Experiment {
                                                                      .filter(method -> method.getExperimentName()
                                                                                              .equals(specificExperiment))
                                                                      .findFirst()
-                                                                     .orElseThrow(ChaosException::new);
+                                                                     .orElseThrow(EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER
+                                                                             .asChaosException());
             ExperimentType newExperimentType = specificExperimentMethod.getExperimentType();
             log.debug("Specific experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
             this.experimentType = newExperimentType;
