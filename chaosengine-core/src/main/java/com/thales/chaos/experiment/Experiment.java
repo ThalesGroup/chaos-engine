@@ -415,6 +415,9 @@ public abstract class Experiment {
                 log.error("Exception occurred while starting experiment", loggedException);
                 setExperimentState(ExperimentState.FAILED);
             }
+        } else if (Instant.now().isAfter(startTime.plus(maximumDuration))) {
+            experimentStartup.cancel(true);
+            setExperimentState(ExperimentState.FAILED);
         }
     }
 
