@@ -2,6 +2,7 @@ package com.thales.chaos.experiment;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.scripts.impl.ShellScript;
 import com.thales.chaos.shellclient.ShellOutput;
@@ -30,7 +31,8 @@ public class ExperimentMethodTest {
     private final Container container = mock(Container.class);
     private ExperimentMethod<Container> experimentMethod;
     private Script script;
-    private Experiment experiment = spy(Experiment.class);
+    private Experiment experiment = spy(new Experiment(container, ExperimentType.STATE) {
+    });
 
     public ExperimentMethodTest (String resourceName) {
         this.script = ShellScript.fromResource(new ClassPathResource("com/thales/chaos/experiment/experimentMethodTest/" + resourceName));
@@ -50,6 +52,7 @@ public class ExperimentMethodTest {
     public void setUp () {
         doReturn(true).when(container).supportsShellBasedExperiments();
         doReturn(false).when(container).isCattle();
+        doNothing().when(experiment).sendNotification(any(), any());
         experimentMethod = ExperimentMethod.fromScript(container, script);
         experimentMethod.accept(container, experiment);
     }
@@ -72,6 +75,8 @@ public class ExperimentMethodTest {
     @Test
     public void callSelfHealing () {
         assumeThat(script.getSelfHealingCommand(), is(SELF_HEALING_COMMAND));
+        doReturn(true).when(experiment).canRunSelfHealing();
+        doNothing().when(experiment).evaluateRunningExperiment();
         experiment.callSelfHealing();
         verify(container, times(1)).runCommand(SELF_HEALING_COMMAND);
     }

@@ -15,8 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -35,9 +36,8 @@ public class CloudFoundryApplicationTest {
     private static final String applicationId = UUID.randomUUID().toString();
     private static final int instance = new Random().nextInt(100);
     private static final String name = UUID.randomUUID().toString();
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    @Mock
+    private Experiment experiment;
     @MockBean
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private CloudFoundryApplication cloudFoundryApplication;
@@ -50,6 +50,22 @@ public class CloudFoundryApplicationTest {
                                                          .name(name).applicationRoutes(getRouteList())
                                                          .platform(cloudFoundryApplicationPlatform)
                                                          .build();
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
+
     }
 
     private List<CloudFoundryApplicationRoute> getRouteList () {
@@ -81,26 +97,18 @@ public class CloudFoundryApplicationTest {
     }
 
     @Test
-    public void scaleApplicationHealing () {
+    public void scaleApplicationHealing () throws Exception {
         cloudFoundryApplication.scaleApplication(experiment);
-        Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
-        try {
-            experiment.getSelfHealingMethod().call();
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
+        experiment.getSelfHealingMethod().call();
         assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
     }
 
     @Test
-    public void scaleApplicationFinalization () {
+    public void scaleApplicationFinalization () throws Exception {
         cloudFoundryApplication.scaleApplication(experiment);
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
-        try {
-            experiment.getFinalizeMethod().call();
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        experiment.getFinalizeMethod().call();
         assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
     }
 

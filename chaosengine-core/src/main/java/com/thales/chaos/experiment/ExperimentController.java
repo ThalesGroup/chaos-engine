@@ -21,19 +21,13 @@ public class ExperimentController {
     @ApiOperation(value = "Get Experiments", notes = "Returns a list of all active experiments.")
     @GetMapping
     public Collection<Experiment> getExperiments () {
-        return experimentManager.getActiveExperiments();
+        return experimentManager.getAllExperiments();
     }
 
     @ApiOperation(value = "Get Specific Experiment", notes = "Returns metadata of a specific experiment.")
     @GetMapping("/{uuid}")
     public Experiment getExperimentById (@ApiParam(value = "The UUID of the specific experiment to retrieve metadata off.", required = true) @PathVariable String uuid) {
         return experimentManager.getExperimentByUUID(uuid);
-    }
-
-    @ApiOperation(value = "Get Experiment Queue", notes = "Returns metadata about all experiments queued up to start at the next experiment start interval.")
-    @GetMapping("/queue")
-    public Collection<Experiment> getExperimentQueue () {
-        return experimentManager.getNewExperimentQueue();
     }
 
     @ApiOperation(value = "Start Random Experiment", notes = "Starts a new experiment immediately. This ignores scheduling, and ensures at least one container in the chosen platform is used for experimentation.")

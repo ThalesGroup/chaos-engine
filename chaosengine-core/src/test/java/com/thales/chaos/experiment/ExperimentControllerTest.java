@@ -1,7 +1,7 @@
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.admin.AdminManager;
-import com.thales.chaos.constants.ExperimentConstants;
+import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.annotations.NetworkExperiment;
@@ -23,18 +23,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Queue;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import static java.util.UUID.randomUUID;
-import static org.awaitility.Awaitility.await;
-import static org.hamcrest.collection.IsIn.isIn;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -48,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ExperimentControllerTest {
     @Autowired
     private MockMvc mvc;
+    @MockBean
+    private HolidayManager holidayManager;
     @MockBean
     private ExperimentManager experimentManager;
     @MockBean
@@ -112,30 +108,22 @@ public class ExperimentControllerTest {
                                                 .build();
         autowireCapableBeanFactory.autowireBean(experiment1);
         autowireCapableBeanFactory.autowireBean(experiment2);
+        experiment1.setScriptManager(scriptManager);
+        experiment2.setScriptManager(scriptManager);
     }
 
     @Test
     public void getExperiments () throws Exception {
-        when(experimentManager.getActiveExperiments()).thenReturn(new HashSet<>(Arrays.asList(experiment1, experiment2)));
-        //Scheduled experiments
+        doReturn(List.of(experiment1)).when(experimentManager).getAllExperiments();
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
-           .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
-           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
-           .andExpect(MockMvcResultMatchers.jsonPath("$[0].experimentMethodName", Is.is(ExperimentConstants.EXPERIMENT_METHOD_NOT_SET_YET)))
-           .andExpect(MockMvcResultMatchers.jsonPath("$[1].experimentMethodName", Is.is(ExperimentConstants.EXPERIMENT_METHOD_NOT_SET_YET)));
-        //Running experiments
-        doReturn(true).when(adminManager).canRunExperiments();
-        experiment1.startExperiment();
-        experiment2.startExperiment();
-        await().until(() -> experiment1.getExperimentMethod() != null);
-        await().until(() -> experiment2.getExperimentMethod() != null);
+           .andExpect(jsonPath("$[0].id", is(experiment1.getId())))
+           .andExpect(jsonPath("$[0].experimentMethodName", Is.is("restart")));
+        doReturn(List.of(experiment2)).when(experimentManager).getAllExperiments();
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
-           .andExpect(jsonPath("$[0].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
-           .andExpect(jsonPath("$[1].id", isIn(Arrays.asList(experiment1.getId(), experiment2.getId()))))
-           .andExpect(jsonPath("$[0].experimentMethodName", isIn(Arrays.asList("restart", "latency"))))
-           .andExpect(jsonPath("$[1].experimentMethodName", isIn(Arrays.asList("restart", "latency"))));
+           .andExpect(jsonPath("$[0].id", is(experiment2.getId())))
+           .andExpect(jsonPath("$[0].experimentMethodName", Is.is("latency")));
     }
 
     @Test
@@ -153,18 +141,6 @@ public class ExperimentControllerTest {
            .andExpect(jsonPath("$.experimentType", is("NETWORK")))
            .andExpect(jsonPath("$.startTime", is(experiment2.getStartTime().toString())));
     }
-
-    @Test
-    public void getExperimentQueue () throws Exception {
-        Queue<Experiment> experimentQueue = new LinkedBlockingDeque<>();
-        experimentQueue.add(experiment1);
-        when(experimentManager.getNewExperimentQueue()).thenReturn(experimentQueue);
-        mvc.perform(get("/experiment/queue").contentType(APPLICATION_JSON))
-           .andExpect(status().isOk())
-           .andExpect(jsonPath("$[0].experimentType", is("STATE")))
-           .andExpect(jsonPath("$[0].startTime", is(experiment1.getStartTime().toString())));
-    }
-
     @Test
     public void startExperiments () throws Exception {
         mvc.perform(post("/experiment/start").contentType(APPLICATION_JSON)).andExpect(status().isOk());

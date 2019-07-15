@@ -143,7 +143,7 @@ public class ShellScript implements Script {
     }
 
     private void buildFinalizeCommand () {
-        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse("No finalization command provided");
+        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse(null);
         log.debug("Finalize Command evaluated to be {}", finalizeCommand);
     }
 
