@@ -20,10 +20,7 @@ import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
@@ -50,7 +47,8 @@ public abstract class Platform implements ExperimentalObject {
         this.averageMillisPerExperiment = averageMillisPerExperiment;
         this.scheduler = null;
     }
-    void expireCachedRoster () {
+
+    public void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
 
@@ -89,6 +87,12 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     protected abstract List<Container> generateRoster ();
+
+    public Collection<Container> getRosterByAggregationId (String aggregationId) {
+        return getRoster().stream()
+                          .filter(container -> container.getAggregationIdentifier().equals(aggregationId))
+                          .collect(Collectors.toUnmodifiableSet());
+    }
 
     @Override
     public synchronized boolean canExperiment () {

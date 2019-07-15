@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.ExperimentConstants.*;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -63,6 +64,7 @@ public abstract class Experiment {
     private AtomicInteger selfHealingCounter = new AtomicInteger(0);
     @Value("${preferredExperiment:#{null}}")
     private String preferredExperiment;
+    protected String specificExperiment;
     private Future<Boolean> experimentStartup;
 
     public Experiment (Container container, ExperimentType experimentType) {
@@ -151,10 +153,23 @@ public abstract class Experiment {
 
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
         Collection<ExperimentMethod<T>> reflectionBasedMethods = getReflectionBasedMethods();
-        Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods();
+        Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods(specificExperiment != null);
         Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
                                                            .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
                                                            .collect(Collectors.toSet());
+        if (specificExperiment != null) {
+            log.debug("Experiment creation set to require specific experiment of {}", specificExperiment);
+            ExperimentMethod<T> specificExperimentMethod = allMethods.stream()
+                                                                     .filter(method -> method.getExperimentName()
+                                                                                             .equals(specificExperiment))
+                                                                     .findFirst()
+                                                                     .orElseThrow(EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER
+                                                                             .asChaosException());
+            ExperimentType newExperimentType = specificExperimentMethod.getExperimentType();
+            log.debug("Specific experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
+            this.experimentType = newExperimentType;
+            return specificExperimentMethod;
+        }
         Optional<ExperimentMethod<T>> preferredMethod = allMethods.stream()
                                                                   .filter(method -> method.getExperimentName()
                                                                                           .equals(preferredExperiment))
@@ -186,14 +201,14 @@ public abstract class Experiment {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods () {
+    private <T extends Container> Collection<ExperimentMethod<T>> getScriptBasedMethods (boolean filterOutInvalidScripts) {
         if (!getContainer().supportsShellBasedExperiments()) return Collections.emptySet();
         final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
         return scriptManager.getScripts()
                             .stream()
-                            .filter(script -> script.getDependencies()
-                                                    .stream()
-                                                    .noneMatch(knownMissingCapabilities::contains))
+                            .filter(script -> filterOutInvalidScripts || script.getDependencies()
+                                                                               .stream()
+                                                                               .noneMatch(knownMissingCapabilities::contains))
                             .map(script -> ExperimentMethod.fromScript(getContainer(), script))
                             .map(method -> (ExperimentMethod<T>) method)
                             .collect(Collectors.toSet());

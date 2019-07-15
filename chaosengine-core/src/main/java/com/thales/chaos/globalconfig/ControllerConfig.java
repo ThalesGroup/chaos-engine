@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ControllerConfig {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public void handleChaosException (Exception ex) {
+    public String handleChaosException (Exception ex) {
         ErrorUtils.logStacktraceUsingLastValidLogger(ex, "Unhandled Exception in HTTP Request");
+        return ex.getMessage();
     }
 }

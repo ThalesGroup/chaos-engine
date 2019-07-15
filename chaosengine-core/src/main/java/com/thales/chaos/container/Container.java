@@ -73,6 +73,10 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract Platform getPlatform ();
 
+    public boolean eligibleForExperiments () {
+        return true;
+    }
+
     @JsonIgnore
     public List<ExperimentType> getSupportedExperimentTypes () {
         return supportedExperimentTypes;
@@ -162,6 +166,14 @@ public abstract class Container implements ExperimentalObject {
 
     public Experiment createExperiment (ExperimentType experimentType) {
         return GenericContainerExperiment.builder().withExperimentType(experimentType).withContainer(this).build();
+    }
+
+    public Experiment createExperiment (String experimentMethod) {
+        currentExperiment = GenericContainerExperiment.builder()
+                                                      .withSpecificExperiment(experimentMethod)
+                                                      .withContainer(this)
+                                                      .build();
+        return currentExperiment;
     }
 
     public void startExperiment (Experiment experiment) {
@@ -286,7 +298,4 @@ public abstract class Container implements ExperimentalObject {
                                 .collect(Collectors.toSet());
     }
 
-    public boolean eligibleForExperiments () {
-        return true;
-    }
 }

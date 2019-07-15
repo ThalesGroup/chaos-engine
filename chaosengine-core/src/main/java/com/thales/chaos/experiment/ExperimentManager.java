@@ -2,6 +2,8 @@ package com.thales.chaos.experiment;
 
 import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.PlatformManager;
@@ -13,21 +15,26 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.DataDogConstants.*;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.ANOTHER_EXPERIMENT_IN_PROGRESS;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-import static net.logstash.logback.argument.StructuredArguments.v;
+import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Collection<Experiment> allExperiments = new HashSet<>();
+    private final Map<Instant, ExperimentSuite> historicalExperimentSuites = new TreeMap<>(Comparator.reverseOrder());
     @Autowired
     private PlatformManager platformManager;
     @Autowired
@@ -118,16 +125,29 @@ public class ExperimentManager {
                                                .collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
             synchronized (allExperiments) {
-                return containersToExperiment.stream()
-                                             .map(Container::createExperiment)
-                                             .peek(autowireCapableBeanFactory::autowireBean)
-                                             .map(this::addExperiment)
-                                             .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
-                                                     .getId(), experiment))
-                                             .collect(Collectors.toSet());
+                Set<Experiment> experiments = containersToExperiment.stream()
+                                                                    .map(Container::createExperiment)
+                                                                    .peek(autowireCapableBeanFactory::autowireBean)
+                                                                    .map(this::addExperiment)
+                                                                    .peek(experiment -> log.info("Experiment {}, {} added to the queue", experiment
+                                                                            .getId(), experiment))
+                                                                    .collect(Collectors.toSet());
+                logExperimentSuiteEquivalent(chosenPlatform, experiments);
+                return experiments;
             }
         }
         return Collections.emptySet();
+    }
+
+    private void logExperimentSuiteEquivalent (Platform platform, Set<Experiment> experiments) {
+        if (experiments.isEmpty()) return;
+        ExperimentSuite experimentSuite = ExperimentSuite.fromExperiments(platform, experiments);
+        addExperimentSuiteToHistory(experimentSuite);
+        log.info("Experiment can be recreated using {}", kv("experimentSuite", experimentSuite));
+    }
+
+    private ExperimentSuite addExperimentSuiteToHistory (ExperimentSuite experimentSuite) {
+        return historicalExperimentSuites.put(Instant.now(), experimentSuite);
     }
 
     Experiment addExperiment (Experiment experiment) {
@@ -152,6 +172,55 @@ public class ExperimentManager {
 
     Collection<Experiment> getAllExperiments () {
         return allExperiments;
+    }
+
+    Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite) {
+        return scheduleExperimentSuite(experimentSuite, 1);
+    }
+
+    public Map<Instant, ExperimentSuite> getHistoricalExperimentSuites () {
+        return historicalExperimentSuites;
+    }
+
+    Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
+        synchronized (allExperiments) {
+            if (!allExperiments.isEmpty()) {
+                log.warn("Cannot start a planned experiment because another experiment is running");
+                throw new ChaosException(ANOTHER_EXPERIMENT_IN_PROGRESS);
+            }
+            log.info("Request to start a pre-planned experiment with criteria {}", kv("experimentSuite", experimentSuite));
+            Platform experimentPlatform = platformManager.getPlatforms()
+                                                         .stream()
+                                                         .filter(platform -> platform.getPlatformType()
+                                                                                     .equals(experimentSuite.getPlatformType()))
+                                                         .findFirst()
+                                                         .orElseThrow(ChaosErrorCode.PLATFORM_DOES_NOT_EXIST.asChaosException());
+            experimentPlatform.expireCachedRoster();
+            Collection<Experiment> createdExperiments = experimentSuite.getAggregationIdentifierToExperimentMethodsMap()
+                                                                       .entrySet()
+                                                                       .stream()
+                                                                       .flatMap((Map.Entry<String, List<String>> containerExperiments) -> createSpecificExperiments(experimentPlatform, containerExperiments
+                                                                               .getKey(), containerExperiments.getValue(), minimumNumberOfSurvivors))
+                                                                       .peek(experiment -> autowireCapableBeanFactory.autowireBean(experiment))
+                                                                       .collect(Collectors.toUnmodifiableSet());
+            addExperimentSuiteToHistory(experimentSuite);
+            allExperiments.addAll(createdExperiments);
+            return allExperiments;
+        }
+    }
+
+    Stream<Experiment> createSpecificExperiments (Platform platform, String containerAggregationIdentifier, List<String> experimentMethods, int minimumNumberOfSurvivors) {
+        log.debug("Creating experiments of type {} against {} with identifier {}", experimentMethods, platform, containerAggregationIdentifier);
+        List<Container> potentialContainers = new ArrayList<>(platform.getRosterByAggregationId(containerAggregationIdentifier));
+        if (potentialContainers.size() - minimumNumberOfSurvivors < experimentMethods.size()) {
+            throw new ChaosException(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT);
+        }
+        Collections.shuffle(potentialContainers);
+        return IntStream.range(0, experimentMethods.size()).mapToObj(i -> {
+            Container container = potentialContainers.get(i);
+            String experimentMethod = experimentMethods.get(i);
+            return container.createExperiment(experimentMethod);
+        });
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {
