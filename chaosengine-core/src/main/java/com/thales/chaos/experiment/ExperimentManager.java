@@ -25,6 +25,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.DataDogConstants.*;
+import static com.thales.chaos.exception.enums.ChaosErrorCode.ANOTHER_EXPERIMENT_IN_PROGRESS;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
 import static net.logstash.logback.argument.StructuredArguments.*;
@@ -185,7 +186,7 @@ public class ExperimentManager {
         synchronized (allExperiments) {
             if (!allExperiments.isEmpty()) {
                 log.warn("Cannot start a planned experiment because another experiment is running");
-                return Collections.emptySet();
+                throw new ChaosException(ANOTHER_EXPERIMENT_IN_PROGRESS);
             }
             log.info("Request to start a pre-planned experiment with criteria {}", kv("experimentSuite", experimentSuite));
             Platform experimentPlatform = platformManager.getPlatforms()

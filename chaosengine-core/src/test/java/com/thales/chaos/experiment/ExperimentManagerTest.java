@@ -330,7 +330,12 @@ public class ExperimentManagerTest {
     public void scheduleExperimentSuiteWhileOtherExperimentsActive () {
         experimentManager.addExperiment(mock(Experiment.class));
         ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", Map.of("aggregator", List.of("delete", "restart")));
-        assertThat(experimentManager.scheduleExperimentSuite(experimentSuite), empty());
+        try {
+            experimentManager.scheduleExperimentSuite(experimentSuite);
+            fail("Exception expected");
+        } catch (ChaosException e) {
+            assertThat(e.getMessage(), Matchers.startsWith("13006"));
+        }
         verify(firstPlatform, never()).getPlatformType();
         verify(secondPlatform, never()).getPlatformType();
     }
