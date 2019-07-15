@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -339,6 +340,27 @@ public class ExperimentTest {
         experiment.confirmStartupComplete();
         assertEquals(FAILED, experiment.getExperimentState());
         assertTrue(Thread.interrupted());
+    }
+
+    @Test
+    public void confirmStartupCompleteTimeout () {
+        final AtomicBoolean interruptProcessed = new AtomicBoolean(false);
+        final AtomicBoolean innerThreadStarted = new AtomicBoolean(false);
+        Future<Boolean> futureBoolean = Executors.newSingleThreadExecutor().submit(() -> {
+            try {
+                innerThreadStarted.set(true);
+                Thread.sleep(1000000);
+            } catch (InterruptedException e) {
+                interruptProcessed.set(true);
+            }
+            return true;
+        });
+        experiment.setExperimentStartup(futureBoolean);
+        experiment.setMaximumDuration(Duration.ZERO);
+        await().atMost(1, TimeUnit.SECONDS).until(innerThreadStarted::get);
+        experiment.confirmStartupComplete();
+        await().atMost(1, TimeUnit.SECONDS).until(interruptProcessed::get);
+        assertEquals(FAILED, experiment.getExperimentState());
     }
 
     @Test
