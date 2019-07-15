@@ -399,6 +399,14 @@ public abstract class Experiment {
         return startTime;
     }
 
+    public void setMinimumDuration (Duration minimumDuration) {
+        this.minimumDuration = minimumDuration;
+    }
+
+    public void setMaximumDuration (Duration maximumDuration) {
+        this.maximumDuration = maximumDuration;
+    }
+
     void confirmStartupComplete () {
         log.debug("Checking if experiment startup is done");
         if (experimentStartup.isDone()) {
