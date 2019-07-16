@@ -47,7 +47,7 @@ public class ExperimentManager {
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
         synchronized (allExperiments) {
-            log.info("Experiments count: {}", v("count", allExperiments.size()));
+            log.info("Experiments total count: {}", v("count", allExperiments.size()));
             if (!allExperiments.isEmpty()) {
                 int experimentCount = Math.min(allExperiments.size(), 64);
                 ForkJoinPool threadPool = null;
@@ -65,7 +65,7 @@ public class ExperimentManager {
                       .filter(not(experimentsInStateCount::containsKey))
                       .forEach(entry -> experimentsInStateCount.put(entry, 0L));
                 //noinspection PlaceholderCountMatchesArgumentCount
-                log.debug("Experiments count by experiment state", v("experimentState", experimentsInStateCount));
+                log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
                 Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
                                                                                       .collect(Collectors.groupingBy(Experiment::getExperimentState))
                                                                                       .entrySet()
