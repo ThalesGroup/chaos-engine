@@ -34,8 +34,7 @@ import java.util.stream.Stream;
 
 import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.PLATFORM_DOES_NOT_EXIST;
-import static com.thales.chaos.experiment.enums.ExperimentState.STARTED;
-import static com.thales.chaos.experiment.enums.ExperimentState.STARTING;
+import static com.thales.chaos.experiment.enums.ExperimentState.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -78,6 +77,8 @@ public class ExperimentManagerTest {
     public void updateExperimentStatus () {
         Experiment firstExperiment = mock(Experiment.class);
         Experiment secondExperiment = mock(Experiment.class);
+        when(firstExperiment.getExperimentState()).thenReturn(CREATED);
+        when(secondExperiment.getExperimentState()).thenReturn(CREATED);
         experimentManager.addExperiment(firstExperiment);
         experimentManager.addExperiment(secondExperiment);
         experimentManager.updateExperimentStatus();
@@ -94,6 +95,8 @@ public class ExperimentManagerTest {
     public void updateExperimentStatusAllFinished () {
         Experiment firstExperiment = mock(Experiment.class);
         Experiment secondExperiment = mock(Experiment.class);
+        when(firstExperiment.getExperimentState()).thenReturn(FINISHED);
+        when(secondExperiment.getExperimentState()).thenReturn(FAILED);
         experimentManager.addExperiment(firstExperiment);
         experimentManager.addExperiment(secondExperiment);
         doReturn(true).when(firstExperiment).isComplete();

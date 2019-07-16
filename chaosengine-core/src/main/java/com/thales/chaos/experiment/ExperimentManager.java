@@ -28,6 +28,8 @@ import static com.thales.chaos.constants.DataDogConstants.*;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.ANOTHER_EXPERIMENT_IN_PROGRESS;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toList;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
@@ -45,6 +47,7 @@ public class ExperimentManager {
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
         synchronized (allExperiments) {
+            log.info("Experiments count: {}", v("count", allExperiments.size()));
             if (!allExperiments.isEmpty()) {
                 int experimentCount = Math.min(allExperiments.size(), 64);
                 ForkJoinPool threadPool = null;
@@ -55,6 +58,26 @@ public class ExperimentManager {
                 } finally {
                     if (threadPool != null) threadPool.shutdown();
                 }
+                Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
+                                                                                   .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
+                                                                                           .counting()));
+                Arrays.stream(values())
+                      .filter(not(experimentsInStateCount::containsKey))
+                      .forEach(entry -> experimentsInStateCount.put(entry, 0L));
+                //noinspection PlaceholderCountMatchesArgumentCount
+                log.debug("Experiments count by experiment state", v("experimentState", experimentsInStateCount));
+                Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
+                                                                                      .collect(Collectors.groupingBy(Experiment::getExperimentState))
+                                                                                      .entrySet()
+                                                                                      .stream()
+                                                                                      .collect(Collectors.toMap(Map.Entry::getKey, e -> e
+                                                                                              .getValue()
+                                                                                              .stream()
+                                                                                              .map(Experiment::getId)
+                                                                                              .collect(toList())));
+                //noinspection PlaceholderCountMatchesArgumentCount
+                log.debug("Experiments by state", v("experimentState", experimentsByState));
+
                 allExperiments.removeIf(Experiment::isComplete);
             }
         }
