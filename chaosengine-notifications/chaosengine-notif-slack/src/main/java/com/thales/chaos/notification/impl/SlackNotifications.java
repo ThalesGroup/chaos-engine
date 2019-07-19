@@ -68,8 +68,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
                                  .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
-                                 .withText(chaosNotification.getMessage())
-                                 .withAuthor_name(chaosNotification.getTitle())
+                                 .withText(chaosNotification.getMessage()).withAuthorName(chaosNotification.getTitle())
                                  .withPretext(chaosNotification.getNotificationLevel().toString())
                                  .withTs(Instant.now());
         collectExperimentEventFields(fieldMap, builder);
@@ -221,9 +220,9 @@ class SlackMessage {
         // Message format definition: https://api.slack.com/docs/messages/builder?msg=%7B%22attachments
 class SlackAttachment {
     private String pretext;
-    private String author_name;
+    private String authorName;
     private String title;
-    private String title_link;
+    private String titleLink;
     private String text;
     private String color;
     private String footer;
@@ -239,16 +238,16 @@ class SlackAttachment {
         return pretext;
     }
 
-    public String getAuthor_name () {
-        return author_name;
+    public String getAuthorName () {
+        return authorName;
     }
 
     public String getTitle () {
         return title;
     }
 
-    public String getTitle_link () {
-        return title_link;
+    public String getTitleLink () {
+        return titleLink;
     }
 
     public String getText () {
@@ -276,37 +275,36 @@ class SlackAttachment {
     }
 
     public enum MarkupOpts {
-        fields,
-        text,
-        pretext,
+        FIELDS,
+        TEXT,
+        PRETEXT,
     }
 
     public static final class SlackAttachmentBuilder {
         private String pretext;
-        private String author_name;
+        private String authorName;
         private String title;
-        private String title_link;
+        private String titleLink;
         private String text;
         private String color;
         private String footer;
         private Long ts;
         private String fallback;
-
-        private List<MarkupOpts> mrkdwn_in = new ArrayList<>();
+        private List<MarkupOpts> mrkdwnIn = new ArrayList<>();
         private List<Field> fields = new ArrayList<>();
 
         private SlackAttachmentBuilder () {
         }
 
         public SlackAttachmentBuilder withPretext (String pretext) {
-            String pretext_prefix="_*";
-            String pretext_suffix="*_";
-            this.pretext = pretext_prefix+pretext+pretext_suffix;
+            String pretextPrefix = "_*";
+            String pretextSuffix = "*_";
+            this.pretext = pretextPrefix + pretext + pretextSuffix;
             return this;
         }
 
-        public SlackAttachmentBuilder withAuthor_name (String author_name) {
-            this.author_name = author_name;
+        public SlackAttachmentBuilder withAuthorName (String authorName) {
+            this.authorName = authorName;
             return this;
         }
 
@@ -315,8 +313,8 @@ class SlackAttachment {
             return this;
         }
 
-        SlackAttachmentBuilder withTitle_link (String title_link) {
-            this.title_link = title_link;
+        SlackAttachmentBuilder withTitleLink (String titleLink) {
+            this.titleLink = titleLink;
             return this;
         }
 
@@ -357,7 +355,7 @@ class SlackAttachment {
         }
 
         SlackAttachmentBuilder withMarkupIn (MarkupOpts value) {
-            this.mrkdwn_in.add(value);
+            this.mrkdwnIn.add(value);
             return this;
         }
 
@@ -365,11 +363,11 @@ class SlackAttachment {
         SlackAttachment build () {
             SlackAttachment slackAttachment = new SlackAttachment();
             slackAttachment.pretext = this.pretext;
-            slackAttachment.author_name = this.author_name;
+            slackAttachment.authorName = this.authorName;
             slackAttachment.color = this.color;
             slackAttachment.title = this.title;
             slackAttachment.text = this.text;
-            slackAttachment.title_link = this.title_link;
+            slackAttachment.titleLink = this.titleLink;
             slackAttachment.fallback = this.fallback;
             slackAttachment.footer = this.footer;
             slackAttachment.ts = this.ts;
@@ -382,17 +380,17 @@ class SlackAttachment {
 class Field {
     String title;
     String value;
-    boolean Short = false;
+    boolean isShort = false;
 
     public Field (String title, String value) {
         this.title = title;
         this.value = value;
     }
 
-    public Field (String title, String value, boolean Short) {
+    public Field (String title, String value, boolean isShort) {
         this.title = title;
         this.value = value;
-        this.Short = Short;
+        this.isShort = isShort;
     }
 
     public String getTitle () {
@@ -404,6 +402,6 @@ class Field {
     }
 
     public boolean isShort () {
-        return Short;
+        return isShort;
     }
 }

@@ -131,7 +131,7 @@ public class SlackNotificationsTest {
                                                                  .getNotificationLevel()))
                                                               .withText(chaosExperimentEvent.getMessage())
                                                               .withTs(chaosTime.toInstant())
-                                                              .withAuthor_name(chaosExperimentEvent.getTitle())
+                                                              .withAuthorName(chaosExperimentEvent.getTitle())
                                                               .withPretext(chaosExperimentEvent.getNotificationLevel()
                                                                                           .toString())
                                                               .withField(EXPERIMENT_ID, experimentId)
@@ -157,7 +157,7 @@ public class SlackNotificationsTest {
                                                                         .getNotificationLevel()))
                                                                 .withText(chaosMessage.getMessage())
                                                                 .withTs(Instant.now())
-                                                                .withAuthor_name(chaosMessage.getTitle())
+                                                                .withAuthorName(chaosMessage.getTitle())
                                                                 .withPretext(chaosMessage.getNotificationLevel()
                                                                                          .toString())
                                                                 .build();
