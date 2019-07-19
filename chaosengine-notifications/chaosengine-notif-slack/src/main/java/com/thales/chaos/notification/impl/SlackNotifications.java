@@ -217,7 +217,7 @@ class SlackMessage {
 
 @SuppressWarnings("unused")
         // Variables are used as part of Gson, despite appearing unused.
-        // Message format definition: https://api.slack.com/docs/messages/builder?msg=%7B%22attachments
+        // Message format definition: https://api.slack.com/docs/messages/builder
 class SlackAttachment {
     private String pretext;
     private String authorName;
