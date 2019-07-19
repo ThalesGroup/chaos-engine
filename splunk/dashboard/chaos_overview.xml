@@ -305,7 +305,7 @@
       <title>Self-healing required</title>
       <single>
         <search>
-          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Running self healing for the*" | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -330,7 +330,7 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Running self healing for the*" | stats count by ChaosExperimentEvent.experimentMethod</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
