@@ -9,12 +9,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
 public class DataDogNotificationService {
-    private static final int statsdPort = 8125;
-    private static final String statsdHost = "datadog";
-    private static final String[] staticTags = { "service:chaosengine" };
+    private static final int STATSD_PORT = 8125;
+    private static final String STATSD_HOST = "datadog";
+    private static final String[] STATIC_TAGS = { "service:chaosengine" };
 
     @Bean
     StatsDClient statsDClient(){
-        return new NonBlockingStatsDClient("", statsdHost, statsdPort, staticTags);
+        return new NonBlockingStatsDClient("", STATSD_HOST, STATSD_PORT, STATIC_TAGS);
     }
 }
