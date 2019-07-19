@@ -22,7 +22,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class DataDogNotification implements NotificationMethods {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");
-    private final static String CONTAINER_TAG_PREFIX = "container.";
+    private static final String CONTAINER_TAG_PREFIX = "container.";
     private final Collection<String> ignoredContainerFields = List.of("knownMissingCapabilities");
     private final Collection<String> complexContainerFields = List.of("shellCapabilities");
 
