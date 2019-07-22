@@ -1,5 +1,6 @@
 package com.thales.chaos.platform.impl;
 
+import com.google.gson.JsonSyntaxException;
 import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
@@ -13,7 +14,6 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.impl.KubernetesShellClient;
-import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.AppsV1Api;
@@ -111,9 +111,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                 case JOB:
                 case CRON_JOB:
                     log.warn("Job containers are not supported");
-                    return false;
                 default:
-                    log.error("Found unsupported owner reference {}", instance.getOwnerKind());
                     return false;
             }
         } catch (ApiException e) {

@@ -476,7 +476,6 @@ public class KubernetesPlatformTest {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
-        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("CronJob");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Unsupported");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
