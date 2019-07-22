@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
@@ -657,6 +658,13 @@ public class KubernetesPlatformTest {
         KubernetesPodContainer container = mock(KubernetesPodContainer.class);
         platform.recycleContainer(container);
         verify(platform, times(1)).deletePod(container);
+    }
+
+    @Test
+    public void testGetConnectedShellClient () throws IOException, ApiException {
+        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        platform.getConnectedShellClient(kubernetesPodContainer);
+        verify(exec, never()).exec(anyString(), anyString(), any(), anyString(), anyBoolean(), anyBoolean());
     }
 
     @Configuration

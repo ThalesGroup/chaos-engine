@@ -81,10 +81,6 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
     public boolean isDesiredReplicas (KubernetesPodContainer instance) {
-        //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
-        if (instance.getOwnerKind() == null) {
-            return false;
-        }
         try {
             switch (instance.getOwnerKind()) {
                 case REPLICATION_CONTROLLER:
@@ -111,7 +107,9 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                 case JOB:
                 case CRON_JOB:
                     log.warn("Job containers are not supported");
+                    return false;
                 default:
+                    log.error("Unsupported owner type");
                     return false;
             }
         } catch (ApiException e) {
