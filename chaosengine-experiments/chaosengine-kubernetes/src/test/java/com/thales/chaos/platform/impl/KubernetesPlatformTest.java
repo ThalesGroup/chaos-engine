@@ -103,6 +103,22 @@ public class KubernetesPlatformTest {
     }
 
     @Test
+    public void testPodExists () throws ApiException {
+        V1PodList v1PodList = getV1PodList(true);
+        V1Pod pod = v1PodList.getItems().get(0);
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pod);
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(v1PodList)
+                .thenReturn(new V1PodList())
+                .thenThrow(new ApiException(HttpStatus.SC_NOT_FOUND, "Not Found"))
+                .thenThrow(new ApiException(HttpStatus.SC_FORBIDDEN, "Forbidden"));
+        assertTrue("POD exists", platform.podExists(kubernetesPodContainer));
+        assertFalse("POD does not exists", platform.podExists(kubernetesPodContainer));
+        assertFalse("POD does not exists", platform.podExists(kubernetesPodContainer));
+        assertTrue("Undefined result, pod considered present", platform.podExists(kubernetesPodContainer));
+    }
+
+    @Test
     public void testApiStatus () throws ApiException {
         V1APIVersions v1APIVersions = new V1APIVersionsBuilder().addToVersions("1")
                                                                 .withApiVersion("apiVersion")
@@ -568,7 +584,7 @@ public class KubernetesPlatformTest {
         final String podName = randomUUID().toString();
         final String namespace = randomUUID().toString();
         final KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
-        doReturn(UUID).when(kubernetesPodContainer).getUUID();
+        doReturn(UUID).when(kubernetesPodContainer).getUuid();
         doReturn(podName).when(kubernetesPodContainer).getPodName();
         doReturn(namespace).when(kubernetesPodContainer).getNamespace();
         final V1Pod v1Pod = mock(V1Pod.class);

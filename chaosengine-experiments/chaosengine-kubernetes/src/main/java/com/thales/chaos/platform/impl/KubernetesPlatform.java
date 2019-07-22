@@ -120,7 +120,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
         try {
-            if (Boolean.FALSE.equals(podExists(kubernetesPodContainer))) {
+            if (!podExists(kubernetesPodContainer)) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
             V1Pod result = coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer
@@ -141,20 +141,23 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         return ContainerHealth.RUNNING_EXPERIMENT;
     }
 
-    private Boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
+    boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
             V1PodList pods = listAllPodsInNamespace();
             Boolean podExists = pods.getItems()
                                     .stream()
                                     .map(V1Pod::getMetadata)
                                     .map(V1ObjectMeta::getUid)
-                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
+                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUuid()));
             log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
             return podExists;
         } catch (ApiException e) {
             log.debug("Exception when checking container existence", e);
-            return null;
+            if (HttpStatus.SC_NOT_FOUND == e.getCode()) {
+                return false;
+            }
         }
+        return true;
     }
 
     private V1PodList listAllPodsInNamespace () throws ApiException {
