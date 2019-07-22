@@ -134,9 +134,8 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                            .orElse(ContainerHealth.DOES_NOT_EXIST);
         } catch (ApiException e) {
             log.debug("Exception when checking container health", e);
-            switch (e.getCode()) {
-                case HttpStatus.SC_NOT_FOUND:
-                    return ContainerHealth.DOES_NOT_EXIST;
+            if (HttpStatus.SC_NOT_FOUND == e.getCode()) {
+                return ContainerHealth.DOES_NOT_EXIST;
             }
         }
         return ContainerHealth.RUNNING_EXPERIMENT;
