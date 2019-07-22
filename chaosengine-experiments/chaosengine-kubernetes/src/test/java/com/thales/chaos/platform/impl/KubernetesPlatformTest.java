@@ -1,5 +1,6 @@
 package com.thales.chaos.platform.impl;
 
+import com.google.gson.JsonSyntaxException;
 import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -9,7 +10,6 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
-import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.AppsV1Api;
@@ -443,7 +443,7 @@ public class KubernetesPlatformTest {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
-        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ControllerKind");
+        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Job");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
