@@ -58,26 +58,27 @@ public class ExperimentManager {
                 } finally {
                     if (threadPool != null) threadPool.shutdown();
                 }
-                Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
-                                                                                   .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
-                                                                                           .counting()));
-                Arrays.stream(values())
-                      .filter(not(experimentsInStateCount::containsKey))
-                      .forEach(entry -> experimentsInStateCount.put(entry, 0L));
-                //noinspection PlaceholderCountMatchesArgumentCount
-                log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
-                Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
-                                                                                      .collect(Collectors.groupingBy(Experiment::getExperimentState))
-                                                                                      .entrySet()
-                                                                                      .stream()
-                                                                                      .collect(Collectors.toMap(Map.Entry::getKey, e -> e
-                                                                                              .getValue()
-                                                                                              .stream()
-                                                                                              .map(Experiment::getId)
-                                                                                              .collect(toList())));
-                //noinspection PlaceholderCountMatchesArgumentCount
-                log.debug("Experiments by state", v("experimentState", experimentsByState));
-
+                if (log.isDebugEnabled()) {
+                    Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
+                                                                                       .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
+                                                                                               .counting()));
+                    Arrays.stream(values())
+                          .filter(not(experimentsInStateCount::containsKey))
+                          .forEach(entry -> experimentsInStateCount.put(entry, 0L));
+                    //noinspection PlaceholderCountMatchesArgumentCount
+                    log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
+                    Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
+                                                                                          .collect(Collectors.groupingBy(Experiment::getExperimentState))
+                                                                                          .entrySet()
+                                                                                          .stream()
+                                                                                          .collect(Collectors.toMap(Map.Entry::getKey, e -> e
+                                                                                                  .getValue()
+                                                                                                  .stream()
+                                                                                                  .map(Experiment::getId)
+                                                                                                  .collect(toList())));
+                    //noinspection PlaceholderCountMatchesArgumentCount
+                    log.debug("Experiments by state", v("experimentState", experimentsByState));
+                }
                 allExperiments.removeIf(Experiment::isComplete);
             }
         }
