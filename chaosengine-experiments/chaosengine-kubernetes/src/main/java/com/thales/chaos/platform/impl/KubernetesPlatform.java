@@ -1,5 +1,6 @@
 package com.thales.chaos.platform.impl;
 
+import com.google.gson.JsonSyntaxException;
 import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
@@ -13,7 +14,6 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.impl.KubernetesShellClient;
-import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.AppsV1Api;
@@ -68,7 +68,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
-        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer).orElse(false) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     /**
@@ -81,10 +81,6 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
      * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
      */
     public boolean isDesiredReplicas (KubernetesPodContainer instance) {
-        //As stated in https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html, Ensure that the expression in any switch statement is not null to prevent a NullPointerException from being thrown.
-        if (instance.getOwnerKind() == null) {
-            return false;
-        }
         try {
             switch (instance.getOwnerKind()) {
                 case REPLICATION_CONTROLLER:
@@ -113,7 +109,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                     log.warn("Job containers are not supported");
                     return false;
                 default:
-                    log.error("Found unsupported owner reference {}", instance.getOwnerKind());
+                    log.error("Unsupported owner type");
                     return false;
             }
         } catch (ApiException e) {
@@ -122,9 +118,28 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         }
     }
 
+    Optional<Boolean> podExists (KubernetesPodContainer kubernetesPodContainer) {
+        try {
+            V1PodList pods = listAllPodsInNamespace();
+            Boolean podExists = pods.getItems()
+                                    .stream()
+                                    .map(V1Pod::getMetadata)
+                                    .map(V1ObjectMeta::getUid)
+                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUuid()));
+            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
+            return Optional.of(podExists);
+        } catch (ApiException e) {
+            log.debug("Exception when checking container existence", e);
+            return Optional.empty();
+        }
+    }
+
     public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
         try {
-            if (Boolean.FALSE.equals(podExists(kubernetesPodContainer))) {
+            Optional<Boolean> podExists = podExists(kubernetesPodContainer);
+            if (podExists.isEmpty()) {
+                return ContainerHealth.RUNNING_EXPERIMENT;
+            } else if (!podExists.get()) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
             V1Pod result = coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer
@@ -138,28 +153,11 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                            .orElse(ContainerHealth.DOES_NOT_EXIST);
         } catch (ApiException e) {
             log.debug("Exception when checking container health", e);
-            switch (e.getCode()) {
-                case HttpStatus.SC_NOT_FOUND:
-                    return ContainerHealth.DOES_NOT_EXIST;
+            if (HttpStatus.SC_NOT_FOUND == e.getCode()) {
+                return ContainerHealth.DOES_NOT_EXIST;
             }
         }
         return ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    private Boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
-        try {
-            V1PodList pods = listAllPodsInNamespace();
-            Boolean podExists = pods.getItems()
-                                    .stream()
-                                    .map(V1Pod::getMetadata)
-                                    .map(V1ObjectMeta::getUid)
-                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUUID()));
-            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
-            return podExists;
-        } catch (ApiException e) {
-            log.debug("Exception when checking container existence", e);
-            return null;
-        }
     }
 
     private V1PodList listAllPodsInNamespace () throws ApiException {

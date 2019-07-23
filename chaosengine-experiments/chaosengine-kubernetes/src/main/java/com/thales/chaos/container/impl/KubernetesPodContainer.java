@@ -19,7 +19,7 @@ import static com.thales.chaos.exception.enums.KubernetesChaosErrorCode.POD_HAS_
 import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class KubernetesPodContainer extends Container {
-    private String UUID;
+    private String uuid;
     private String podName;
     private String namespace;
     private Map<String, String> labels = new HashMap<>();
@@ -39,8 +39,8 @@ public class KubernetesPodContainer extends Container {
         return KubernetesPodContainerBuilder.aKubernetesPodContainer();
     }
 
-    public String getUUID () {
-        return UUID;
+    public String getUuid () {
+        return uuid;
     }
 
     public String getPodName () {
@@ -120,7 +120,7 @@ public class KubernetesPodContainer extends Container {
     }
 
     public static final class KubernetesPodContainerBuilder {
-        private String UUID;
+        private String uuid;
         private final Map<String, String> labels = new HashMap<>();
         private final Map<String, String> dataDogTags = new HashMap<>();
         private String podName;
@@ -183,14 +183,14 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
-        public KubernetesPodContainerBuilder withUUID (String UUID) {
-            this.UUID = UUID;
+        public KubernetesPodContainerBuilder withUUID (String uuid) {
+            this.uuid = uuid;
             return this;
         }
 
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
-            kubernetesPodContainer.UUID = this.UUID;
+            kubernetesPodContainer.uuid = this.uuid;
             kubernetesPodContainer.podName = this.podName;
             kubernetesPodContainer.namespace = this.namespace;
             kubernetesPodContainer.isBackedByController = this.isBackedByController;

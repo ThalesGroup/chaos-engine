@@ -11,7 +11,7 @@ public enum ControllerKind {
     DAEMON_SET("DaemonSet"),
     JOB("Job"),
     CRON_JOB("CronJob"),
-    ;
+    UNKNOWN("Unknown");
     private static final Map<String, ControllerKind> invertedStringMap;
 
     static {
@@ -28,6 +28,6 @@ public enum ControllerKind {
     }
 
     public static ControllerKind mapFromString (String string) {
-        return invertedStringMap.get(string);
+        return invertedStringMap.getOrDefault(string, UNKNOWN);
     }
 }

@@ -1,5 +1,6 @@
 package com.thales.chaos.platform.impl;
 
+import com.google.gson.JsonSyntaxException;
 import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -9,7 +10,6 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
-import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.apis.AppsV1Api;
@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
@@ -99,6 +100,19 @@ public class KubernetesPlatformTest {
         assertEquals("Error while checking container presence", ContainerHealth.RUNNING_EXPERIMENT, platform.checkHealth((KubernetesPodContainer) platform
                 .getRoster()
                 .get(0)));
+    }
+
+    @Test
+    public void testPodExists () throws ApiException {
+        V1PodList v1PodList = getV1PodList(true);
+        V1Pod pod = v1PodList.getItems().get(0);
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pod);
+        when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(v1PodList)
+                .thenReturn(new V1PodList()).thenThrow(new ApiException(new IOException()));
+        assertTrue("POD exists", platform.podExists(kubernetesPodContainer).orElseThrow());
+        assertFalse("POD does not exist", platform.podExists(kubernetesPodContainer).orElseThrow());
+        assertTrue("IO Exception", platform.podExists(kubernetesPodContainer).isEmpty());
     }
 
     @Test
@@ -443,7 +457,7 @@ public class KubernetesPlatformTest {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
-        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ControllerKind");
+        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Job");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -476,7 +490,6 @@ public class KubernetesPlatformTest {
         V1PodList pods = getV1PodList(true);
         when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(pods);
-        pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("CronJob");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Unsupported");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
@@ -568,7 +581,7 @@ public class KubernetesPlatformTest {
         final String podName = randomUUID().toString();
         final String namespace = randomUUID().toString();
         final KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
-        doReturn(UUID).when(kubernetesPodContainer).getUUID();
+        doReturn(UUID).when(kubernetesPodContainer).getUuid();
         doReturn(podName).when(kubernetesPodContainer).getPodName();
         doReturn(namespace).when(kubernetesPodContainer).getNamespace();
         final V1Pod v1Pod = mock(V1Pod.class);
@@ -658,6 +671,13 @@ public class KubernetesPlatformTest {
         KubernetesPodContainer container = mock(KubernetesPodContainer.class);
         platform.recycleContainer(container);
         verify(platform, times(1)).deletePod(container);
+    }
+
+    @Test
+    public void testGetConnectedShellClient () throws IOException, ApiException {
+        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
+        platform.getConnectedShellClient(kubernetesPodContainer);
+        verify(exec, never()).exec(anyString(), anyString(), any(), anyString(), anyBoolean(), anyBoolean());
     }
 
     @Configuration
