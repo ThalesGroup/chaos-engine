@@ -1,5 +1,6 @@
 package com.thales.chaos.notification.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.notification.BufferedNotificationMethod;
@@ -115,7 +116,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
         SlackMessage slackMessage = slackMessageBuilder.build();
         try {
+            log.debug("Sending Slack notification");
             sendSlackMessage(slackMessage);
+            log.debug("Slack notification sent");
         } catch (Exception e) {
             throw new ChaosException(NOTIFICATION_SEND_ERROR, e);
         }
@@ -143,10 +146,10 @@ public class SlackNotifications extends BufferedNotificationMethod {
         try {
             response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
         } catch (HttpServerErrorException e) {
-            throw new IOException("unexpected response from server");
+            throw new IOException("unexpected response from server: " + e.getMessage());
         }
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new IOException("unexpected response from server");
+            throw new IOException("unexpected response from server: HTTP status code " + response.getStatusCode());
         }
     }
 
@@ -171,7 +174,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
 }
 
 class SlackMessage {
+    @JsonProperty("text")
     private String text;
+    @JsonProperty("attachments")
     private List<SlackAttachment> attachments;
 
     static SlackMessageBuilder builder () {
@@ -219,15 +224,25 @@ class SlackMessage {
         // Variables are used as part of Gson, despite appearing unused.
         // Message format definition: https://api.slack.com/docs/messages/builder
 class SlackAttachment {
+    @JsonProperty("pretext")
     private String pretext;
+    @JsonProperty("author_name")
     private String authorName;
+    @JsonProperty("title")
     private String title;
+    @JsonProperty("title_link")
     private String titleLink;
+    @JsonProperty("text")
     private String text;
+    @JsonProperty("color")
     private String color;
+    @JsonProperty("footer")
     private String footer;
+    @JsonProperty("ts")
     private Long ts;
+    @JsonProperty("fallback")
     private String fallback;
+    @JsonProperty("fields")
     private List<Field> fields;
 
     static SlackAttachmentBuilder builder () {
@@ -378,8 +393,11 @@ class SlackAttachment {
 }
 
 class Field {
+    @JsonProperty("title")
     String title;
+    @JsonProperty("value")
     String value;
+    @JsonProperty("short")
     boolean isShort = false;
 
     public Field (String title, String value) {
