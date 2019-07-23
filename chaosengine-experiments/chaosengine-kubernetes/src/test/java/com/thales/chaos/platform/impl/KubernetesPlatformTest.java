@@ -109,13 +109,10 @@ public class KubernetesPlatformTest {
         KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pod);
         when(coreV1Api.listNamespacedPod(anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(v1PodList)
-                .thenReturn(new V1PodList())
-                .thenThrow(new ApiException(HttpStatus.SC_NOT_FOUND, "Not Found"))
-                .thenThrow(new ApiException(HttpStatus.SC_FORBIDDEN, "Forbidden"));
-        assertTrue("POD exists", platform.podExists(kubernetesPodContainer));
-        assertFalse("POD does not exists", platform.podExists(kubernetesPodContainer));
-        assertFalse("POD does not exists", platform.podExists(kubernetesPodContainer));
-        assertTrue("Undefined result, pod considered present", platform.podExists(kubernetesPodContainer));
+                .thenReturn(new V1PodList()).thenThrow(new ApiException(new IOException()));
+        assertTrue("POD exists", platform.podExists(kubernetesPodContainer).orElseThrow());
+        assertFalse("POD does not exist", platform.podExists(kubernetesPodContainer).orElseThrow());
+        assertTrue("IO Exception", platform.podExists(kubernetesPodContainer).isEmpty());
     }
 
     @Test
