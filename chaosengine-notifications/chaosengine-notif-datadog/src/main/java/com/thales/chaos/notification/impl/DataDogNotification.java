@@ -22,7 +22,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class DataDogNotification implements NotificationMethods {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");
-    private final static String CONTAINER_TAG_PREFIX = "container.";
+    private static final String CONTAINER_TAG_PREFIX = "container.";
     private final Collection<String> ignoredContainerFields = List.of("knownMissingCapabilities");
     private final Collection<String> complexContainerFields = List.of("shellCapabilities");
 
@@ -39,7 +39,7 @@ public class DataDogNotification implements NotificationMethods {
         try {
             log.debug("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
             statsDClient.recordEvent(evt, tags.toArray(String[]::new));
-            log.debug("DataDog notification send: {}, {}", v("notice", evt.getText()), v("tags", tags));
+            log.debug("DataDog notification sent: {}, {}", v("notice", evt.getText()), v("tags", tags));
         } catch (StatsDClientException ex) {
             log.error("Cannot send DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
         }

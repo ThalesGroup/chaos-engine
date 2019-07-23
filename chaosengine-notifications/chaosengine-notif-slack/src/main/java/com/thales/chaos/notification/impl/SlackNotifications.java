@@ -1,5 +1,6 @@
 package com.thales.chaos.notification.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.notification.BufferedNotificationMethod;
@@ -68,8 +69,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                  .withFooter(FOOTER_PREFIX + hostname)
                                  .withTitle(TITLE)
                                  .withColor(getSlackNotificationColor(chaosNotification.getNotificationLevel()))
-                                 .withText(chaosNotification.getMessage())
-                                 .withAuthor_name(chaosNotification.getTitle())
+                                 .withText(chaosNotification.getMessage()).withAuthorName(chaosNotification.getTitle())
                                  .withPretext(chaosNotification.getNotificationLevel().toString())
                                  .withTs(Instant.now());
         collectExperimentEventFields(fieldMap, builder);
@@ -116,7 +116,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
         SlackMessage slackMessage = slackMessageBuilder.build();
         try {
+            log.debug("Sending Slack notification");
             sendSlackMessage(slackMessage);
+            log.debug("Slack notification sent");
         } catch (Exception e) {
             throw new ChaosException(NOTIFICATION_SEND_ERROR, e);
         }
@@ -144,10 +146,10 @@ public class SlackNotifications extends BufferedNotificationMethod {
         try {
             response = restTemplate.postForEntity(webhookUri, httpEntity, String.class);
         } catch (HttpServerErrorException e) {
-            throw new IOException("unexpected response from server");
+            throw new IOException("unexpected response from server: " + e.getMessage());
         }
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new IOException("unexpected response from server");
+            throw new IOException("unexpected response from server: HTTP status code " + response.getStatusCode());
         }
     }
 
@@ -172,7 +174,9 @@ public class SlackNotifications extends BufferedNotificationMethod {
 }
 
 class SlackMessage {
+    @JsonProperty("text")
     private String text;
+    @JsonProperty("attachments")
     private List<SlackAttachment> attachments;
 
     static SlackMessageBuilder builder () {
@@ -218,17 +222,27 @@ class SlackMessage {
 
 @SuppressWarnings("unused")
         // Variables are used as part of Gson, despite appearing unused.
-        // Message format definition: https://api.slack.com/docs/messages/builder?msg=%7B%22attachments
+        // Message format definition: https://api.slack.com/docs/messages/builder
 class SlackAttachment {
+    @JsonProperty("pretext")
     private String pretext;
-    private String author_name;
+    @JsonProperty("author_name")
+    private String authorName;
+    @JsonProperty("title")
     private String title;
-    private String title_link;
+    @JsonProperty("title_link")
+    private String titleLink;
+    @JsonProperty("text")
     private String text;
+    @JsonProperty("color")
     private String color;
+    @JsonProperty("footer")
     private String footer;
+    @JsonProperty("ts")
     private Long ts;
+    @JsonProperty("fallback")
     private String fallback;
+    @JsonProperty("fields")
     private List<Field> fields;
 
     static SlackAttachmentBuilder builder () {
@@ -239,16 +253,16 @@ class SlackAttachment {
         return pretext;
     }
 
-    public String getAuthor_name () {
-        return author_name;
+    public String getAuthorName () {
+        return authorName;
     }
 
     public String getTitle () {
         return title;
     }
 
-    public String getTitle_link () {
-        return title_link;
+    public String getTitleLink () {
+        return titleLink;
     }
 
     public String getText () {
@@ -276,37 +290,36 @@ class SlackAttachment {
     }
 
     public enum MarkupOpts {
-        fields,
-        text,
-        pretext,
+        FIELDS,
+        TEXT,
+        PRETEXT,
     }
 
     public static final class SlackAttachmentBuilder {
         private String pretext;
-        private String author_name;
+        private String authorName;
         private String title;
-        private String title_link;
+        private String titleLink;
         private String text;
         private String color;
         private String footer;
         private Long ts;
         private String fallback;
-
-        private List<MarkupOpts> mrkdwn_in = new ArrayList<>();
+        private List<MarkupOpts> mrkdwnIn = new ArrayList<>();
         private List<Field> fields = new ArrayList<>();
 
         private SlackAttachmentBuilder () {
         }
 
         public SlackAttachmentBuilder withPretext (String pretext) {
-            String pretext_prefix="_*";
-            String pretext_suffix="*_";
-            this.pretext = pretext_prefix+pretext+pretext_suffix;
+            String pretextPrefix = "_*";
+            String pretextSuffix = "*_";
+            this.pretext = pretextPrefix + pretext + pretextSuffix;
             return this;
         }
 
-        public SlackAttachmentBuilder withAuthor_name (String author_name) {
-            this.author_name = author_name;
+        public SlackAttachmentBuilder withAuthorName (String authorName) {
+            this.authorName = authorName;
             return this;
         }
 
@@ -315,8 +328,8 @@ class SlackAttachment {
             return this;
         }
 
-        SlackAttachmentBuilder withTitle_link (String title_link) {
-            this.title_link = title_link;
+        SlackAttachmentBuilder withTitleLink (String titleLink) {
+            this.titleLink = titleLink;
             return this;
         }
 
@@ -357,7 +370,7 @@ class SlackAttachment {
         }
 
         SlackAttachmentBuilder withMarkupIn (MarkupOpts value) {
-            this.mrkdwn_in.add(value);
+            this.mrkdwnIn.add(value);
             return this;
         }
 
@@ -365,11 +378,11 @@ class SlackAttachment {
         SlackAttachment build () {
             SlackAttachment slackAttachment = new SlackAttachment();
             slackAttachment.pretext = this.pretext;
-            slackAttachment.author_name = this.author_name;
+            slackAttachment.authorName = this.authorName;
             slackAttachment.color = this.color;
             slackAttachment.title = this.title;
             slackAttachment.text = this.text;
-            slackAttachment.title_link = this.title_link;
+            slackAttachment.titleLink = this.titleLink;
             slackAttachment.fallback = this.fallback;
             slackAttachment.footer = this.footer;
             slackAttachment.ts = this.ts;
@@ -380,19 +393,22 @@ class SlackAttachment {
 }
 
 class Field {
+    @JsonProperty("title")
     String title;
+    @JsonProperty("value")
     String value;
-    boolean Short = false;
+    @JsonProperty("short")
+    boolean isShort = false;
 
     public Field (String title, String value) {
         this.title = title;
         this.value = value;
     }
 
-    public Field (String title, String value, boolean Short) {
+    public Field (String title, String value, boolean isShort) {
         this.title = title;
         this.value = value;
-        this.Short = Short;
+        this.isShort = isShort;
     }
 
     public String getTitle () {
@@ -404,6 +420,6 @@ class Field {
     }
 
     public boolean isShort () {
-        return Short;
+        return isShort;
     }
 }
