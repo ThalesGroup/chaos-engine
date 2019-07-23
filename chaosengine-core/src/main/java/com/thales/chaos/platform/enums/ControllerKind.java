@@ -28,10 +28,6 @@ public enum ControllerKind {
     }
 
     public static ControllerKind mapFromString (String string) {
-        ControllerKind controllerKind = invertedStringMap.get(string);
-        if (controllerKind != null) {
-            return controllerKind;
-        }
-        return UNKNOWN;
+        return invertedStringMap.getOrDefault(string, UNKNOWN);
     }
 }
