@@ -2,6 +2,7 @@ package com.thales.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.constants.DataDogConstants;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
@@ -100,26 +101,40 @@ public abstract class Container implements ExperimentalObject {
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
     public long getIdentity () {
-        StringBuilder identity = new StringBuilder();
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
-            try {
-                if (field.get(this) != null) {
-                    if (identity.length() > 1) {
-                        identity.append("$$$$$");
-                    }
-                    identity.append(field.get(this).toString());
-                }
-            } catch (IllegalAccessException e) {
-                log.error("Caught IllegalAccessException ", e);
-            }
-        }
-        byte[] primitiveByteArray = identity.toString().getBytes();
+        final List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
+                                                    .filter(Container::isIdentifyingField)
+                                                    .sorted(Comparator.comparingInt(Container::getFieldOrder))
+                                                    .collect(Collectors.toUnmodifiableList());
+        identifyingFields.forEach(f -> f.setAccessible(true));
+        final List<String> identifyingFieldValues = identifyingFields.stream()
+                                                                     .map(field -> {
+                                                                         try {
+                                                                             return field.get(this);
+                                                                         } catch (IllegalAccessException e) {
+                                                                             log.error("Caught IllegalAccessException ", e);
+                                                                             return null;
+                                                                         }
+                                                                     })
+                                                                     .filter(Objects::nonNull)
+                                                                     .map(Object::toString)
+                                                                     .filter(s -> s.length() > 0)
+                                                                     .collect(Collectors.toUnmodifiableList());
+        String identity = String.join("$$$$$", identifyingFieldValues);
+        byte[] primitiveByteArray = identity.getBytes();
         CRC32 checksum = new CRC32();
         checksum.update(primitiveByteArray);
         return checksum.getValue();
+    }
+
+    public static boolean isIdentifyingField (Field field) {
+        return !Modifier.isTransient(field.getModifiers());
+    }
+
+    public static int getFieldOrder (Field value) {
+        return Optional.of(value)
+                       .map(field -> field.getAnnotation(Identifier.class))
+                       .map(Identifier::order)
+                       .orElse(Integer.MIN_VALUE + value.getName().hashCode());
     }
 
     @Override
