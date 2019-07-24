@@ -122,7 +122,7 @@ public abstract class Container implements ExperimentalObject {
     }
 
     private static boolean isIdentifyingField (Field field) {
-        return Arrays.stream(field.getAnnotations()).map(Annotation::annotationType).anyMatch(Identifier.class::equals);
+        return field.getAnnotation(Identifier.class) != null;
     }
 
     private static int getFieldOrder (Field value) {
