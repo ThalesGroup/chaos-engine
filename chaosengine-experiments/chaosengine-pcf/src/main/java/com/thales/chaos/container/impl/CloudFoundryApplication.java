@@ -102,7 +102,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     public String getAggregationIdentifier () {
-        return name;
+        return getSimpleName();
     }
 
     @ResourceExperiment
