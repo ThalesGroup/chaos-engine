@@ -7,7 +7,7 @@ public class ChaosMessage implements ChaosNotification {
     private String title;
     private String message;
     private NotificationLevel notificationLevel;
-    public static final transient String CHAOS_MESSAGE_PREFIX = "Chaos Message";
+    public static final String CHAOS_MESSAGE_PREFIX = "Chaos Message";
 
     public static ChaosMessageBuilder builder () {
         return ChaosMessageBuilder.builder();

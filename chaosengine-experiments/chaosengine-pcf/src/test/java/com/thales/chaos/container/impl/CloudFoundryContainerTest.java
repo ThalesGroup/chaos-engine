@@ -76,7 +76,7 @@ public class CloudFoundryContainerTest {
     public void getIdentity () {
         cloudFoundryContainer = new CloudFoundryContainer("AppID", "ApplicationEngine", 1);
         CRC32 checksum = new CRC32();
-        checksum.update("ApplicationEngine$$$$$1$$$$$AppID".getBytes());
+        checksum.update("AppID$$$$$ApplicationEngine$$$$$1".getBytes());
         assertEquals(checksum.getValue(), cloudFoundryContainer.getIdentity());
     }
 

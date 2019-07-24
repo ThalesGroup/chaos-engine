@@ -5,6 +5,7 @@ import com.amazonaws.services.rds.model.DBSnapshotNotFoundException;
 import com.thales.chaos.constants.AwsRDSConstants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.NetworkExperiment;
@@ -24,9 +25,11 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
+    @Identifier(order = 0)
     private String dbInstanceIdentifier;
+    @Identifier(order = 1)
     private String engine;
-    private transient AwsRDSPlatform awsRDSPlatform;
+    private AwsRDSPlatform awsRDSPlatform;
 
     public String getDbInstanceIdentifier () {
         return dbInstanceIdentifier;

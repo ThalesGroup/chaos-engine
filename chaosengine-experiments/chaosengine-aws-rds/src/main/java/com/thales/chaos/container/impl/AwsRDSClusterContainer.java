@@ -3,19 +3,20 @@ package com.thales.chaos.container.impl;
 import com.amazonaws.services.rds.model.DBClusterNotFoundException;
 import com.amazonaws.services.rds.model.DBClusterSnapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thales.chaos.constants.AwsConstants;
 import com.thales.chaos.constants.AwsRDSConstants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.AwsChaosErrorCode;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.StateExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.AwsRDSPlatform;
-import com.thales.chaos.constants.AwsConstants;
-import com.thales.chaos.exception.enums.AwsChaosErrorCode;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
@@ -26,9 +27,11 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSClusterContainer extends AwsContainer {
+    @Identifier(order = 0)
     private String dbClusterIdentifier;
+    @Identifier(order = 1)
     private String engine;
-    private transient AwsRDSPlatform awsRDSPlatform;
+    private AwsRDSPlatform awsRDSPlatform;
 
     public static AwsRDSClusterContainerBuilder builder () {
         return AwsRDSClusterContainerBuilder.anAwsRDSClusterContainer();

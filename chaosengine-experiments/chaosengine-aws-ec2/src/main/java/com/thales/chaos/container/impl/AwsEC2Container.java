@@ -3,6 +3,7 @@ package com.thales.chaos.container.impl;
 import com.thales.chaos.constants.AwsEC2Constants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
@@ -29,21 +30,27 @@ import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
+    @Identifier(order = 0)
     private String instanceId;
+    @Identifier(order = 1)
     private String keyName;
+    @Identifier(order = 2)
     private String name;
+    @Identifier(order = 3)
     private String publicAddress;
+    @Identifier(order = 4)
     private String privateAddress;
+    @Identifier(order = 5)
     private String imageId;
-
+    @Identifier(order = 6)
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
-    private transient AwsEC2Platform awsEC2Platform;
-    private final transient Callable<Void> startContainerMethod = () -> {
+    private AwsEC2Platform awsEC2Platform;
+    private final Callable<Void> startContainerMethod = () -> {
         awsEC2Platform.startInstance(instanceId);
         return null;
     };
-    private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
+    private final Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
 
     private AwsEC2Container () {
         super();

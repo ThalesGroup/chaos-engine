@@ -23,7 +23,6 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -38,7 +37,7 @@ import static com.thales.chaos.util.MethodUtils.getMethodsWithAnnotation;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
-    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private final Map<String, Boolean> shellCapabilities = new HashMap<>();
@@ -123,7 +122,7 @@ public abstract class Container implements ExperimentalObject {
     }
 
     private static boolean isIdentifyingField (Field field) {
-        return !Modifier.isTransient(field.getModifiers());
+        return Arrays.stream(field.getAnnotations()).map(Annotation::annotationType).anyMatch(Identifier.class::equals);
     }
 
     private static int getFieldOrder (Field value) {
