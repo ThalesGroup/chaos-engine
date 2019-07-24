@@ -53,7 +53,7 @@ public class ContainerManagerTest {
 
     }
 
-    @Test
+    @Test(expected = Test.None.class /* No exception expected */)
     @Repeat(10)
     public void threadSafe () {
         ExecutorService service = Executors.newFixedThreadPool(100);
