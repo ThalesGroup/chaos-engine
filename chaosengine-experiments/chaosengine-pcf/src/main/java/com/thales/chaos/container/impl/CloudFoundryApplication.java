@@ -22,8 +22,8 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
-    private transient static final Integer MAX_INSTANCES = 5;
-    private transient static final Integer MIN_INSTANCES = 1;
+    private static final transient Integer MAX_INSTANCES = 5;
+    private static final transient Integer MIN_INSTANCES = 1;
     private String name;
     private Integer originalContainerInstances;
     private Integer actualContainerInstances;
