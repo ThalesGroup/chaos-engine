@@ -30,11 +30,11 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
 import static com.thales.chaos.exception.enums.ChaosErrorCode.*;
 import static com.thales.chaos.util.MethodUtils.getMethodsWithAnnotation;
-import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
@@ -101,11 +101,7 @@ public abstract class Container implements ExperimentalObject {
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
     public long getIdentity () {
-        final List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
-                                                    .filter(Container::isIdentifyingField)
-                                                    .sorted(Comparator.comparingInt(Container::getFieldOrder))
-                                                    .collect(Collectors.toUnmodifiableList());
-        identifyingFields.forEach(f -> f.setAccessible(true));
+        final List<Field> identifyingFields = getIdentifyingFields();
         final List<String> identifyingFieldValues = identifyingFields.stream()
                                                                      .map(field -> {
                                                                          try {
@@ -137,26 +133,29 @@ public abstract class Container implements ExperimentalObject {
                        .orElse(Integer.MIN_VALUE + value.getName().hashCode());
     }
 
+    private List<Field> getIdentifyingFields () {
+        List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
+                                              .filter(Container::isIdentifyingField)
+                                              .sorted(Comparator.comparingInt(Container::getFieldOrder))
+                                              .collect(Collectors.toUnmodifiableList());
+        identifyingFields.forEach(f -> f.setAccessible(true));
+        return identifyingFields;
+    }
+
     @Override
     public String toString () {
-        StringBuilder output = new StringBuilder();
-        output.append("Container type: ");
-        output.append(this.getClass().getSimpleName());
-        Arrays.stream(this.getClass().getDeclaredFields())
-              .filter(not(field -> Modifier.isTransient(field.getModifiers())))
-              .filter(not(Field::isSynthetic))
-              .forEachOrdered(field -> {
-                  field.setAccessible(true);
-                  try {
-                      output.append("\n\t");
-                      output.append(field.getName());
-                      output.append(":\t");
-                      output.append(field.get(this));
-                  } catch (IllegalAccessException e) {
-                      log.error("Could not read from field {}", field.getName(), e);
-                  }
-              });
-        return output.toString();
+        final List<Field> identifyingFields = getIdentifyingFields();
+        List<String> fieldValues = Stream.concat(Stream.of("Container type: " + getClass().getSimpleName()), identifyingFields
+                .stream()
+                .map(field -> {
+                    try {
+                        return field.getName() + ":\t" + field.get(this);
+                    } catch (IllegalAccessException e) {
+                        log.error("Caught IllegalAccessException ", e);
+                        return "";
+                    }
+                })).collect(Collectors.toUnmodifiableList());
+        return String.join("\n\t", fieldValues);
     }
 
     public boolean supportsExperimentType (ExperimentType experimentType) {
