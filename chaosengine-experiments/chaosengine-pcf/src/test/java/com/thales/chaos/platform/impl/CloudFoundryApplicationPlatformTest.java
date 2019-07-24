@@ -94,10 +94,18 @@ public class CloudFoundryApplicationPlatformTest {
                                      .type("tcp")
                                      .status(Status.SHARED)
                                      .build();
+    private Domain bogusDomain = Domain.builder()
+                                       .id("bogusDomain")
+                                       .name("bogus.domain.com")
+                                       .type("bogus")
+                                       .status(Status.SHARED)
+                                       .build();
     private RouteEntity httpRoute = RouteEntity.builder().host("httpHost").domainId(httpDomain.getId()).build();
     private RouteEntity tcpRoute = RouteEntity.builder().port(666).domainId(tcpDomain.getId()).build();
+    private RouteEntity bogusRoute = RouteEntity.builder().host("bogusDomain").domainId(bogusDomain.getId()).build();
     private CloudFoundryApplicationRoute app1_httpRoute;
     private CloudFoundryApplicationRoute app1_tcpRoute;
+    private CloudFoundryApplicationRoute app1_bogusRoute;
 
     @Before
     public void setUp () {
@@ -111,10 +119,16 @@ public class CloudFoundryApplicationPlatformTest {
                                                     .domain(tcpDomain)
                                                     .applicationName(APPLICATION_NAME)
                                                     .build();
+        app1_bogusRoute = CloudFoundryApplicationRoute.builder()
+                                                      .route(bogusRoute)
+                                                      .domain(bogusDomain)
+                                                      .applicationName(APPLICATION_NAME)
+                                                      .build();
 
         List<CloudFoundryApplicationRoute> app1_routes = new ArrayList<>();
         app1_routes.add(app1_httpRoute);
         app1_routes.add(app1_tcpRoute);
+        app1_routes.add(app1_bogusRoute);
 
         EXPECTED_CONTAINER_1 = CloudFoundryApplication.builder()
                                                       .containerInstances(INSTANCES)
@@ -155,7 +169,7 @@ public class CloudFoundryApplicationPlatformTest {
         Flux<ApplicationSummary> applicationsFlux = Flux.just(applicationSummary_1, applicationSummary_2, stoppedApplicationSummary, zeroInstancesApplicationSummary);
         doReturn(applications).when(cloudFoundryOperations).applications();
         doReturn(applicationsFlux).when(applications).list();
-        Flux<Domain> domainFlux = Flux.just(httpDomain, tcpDomain);
+        Flux<Domain> domainFlux = Flux.just(httpDomain, tcpDomain, bogusDomain);
         doReturn(domains).when(cloudFoundryOperations).domains();
         doReturn(domainFlux).when(domains).list();
         ListApplicationRoutesRequest app1_listApplicationRoutesRequest = ListApplicationRoutesRequest.builder()
@@ -166,8 +180,9 @@ public class CloudFoundryApplicationPlatformTest {
                                                                                                      .build();
         RouteResource httpRouteResource = RouteResource.builder().entity(httpRoute).build();
         RouteResource tcpRouteResource = RouteResource.builder().entity(tcpRoute).build();
+        RouteResource bogusRouteResource = RouteResource.builder().entity(bogusRoute).build();
         ListApplicationRoutesResponse app1_listApplicationRoutesResponse = ListApplicationRoutesResponse.builder()
-                                                                                                        .resources(httpRouteResource, tcpRouteResource)
+                                                                                                        .resources(httpRouteResource, tcpRouteResource, bogusRouteResource)
                                                                                                         .build();
         Mono<ListApplicationRoutesResponse> app1_listApplicationRoutesResponses = Mono.just(app1_listApplicationRoutesResponse);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
@@ -184,6 +199,10 @@ public class CloudFoundryApplicationPlatformTest {
         List<Container> roster = cloudFoundryApplicationPlatform.getRoster();
         assertEquals(2, roster.size());
         assertThat(roster, IsIterableContainingInAnyOrder.containsInAnyOrder(EXPECTED_CONTAINER_1, EXPECTED_CONTAINER_2));
+        CloudFoundryApplication application1 = (CloudFoundryApplication) roster.get(0);
+        CloudFoundryApplication application2 = (CloudFoundryApplication) roster.get(1);
+        assertEquals(2, application1.getApplicationRoutes().size());
+        assertEquals(0, application2.getApplicationRoutes().size());
     }
 
     @Test
