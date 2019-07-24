@@ -126,11 +126,11 @@ public abstract class Container implements ExperimentalObject {
         return checksum.getValue();
     }
 
-    public static boolean isIdentifyingField (Field field) {
+    private static boolean isIdentifyingField (Field field) {
         return !Modifier.isTransient(field.getModifiers());
     }
 
-    public static int getFieldOrder (Field value) {
+    private static int getFieldOrder (Field value) {
         return Optional.of(value)
                        .map(field -> field.getAnnotation(Identifier.class))
                        .map(Identifier::order)
