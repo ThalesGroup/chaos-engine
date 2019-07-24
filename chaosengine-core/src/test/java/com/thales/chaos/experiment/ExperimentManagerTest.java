@@ -393,7 +393,7 @@ public class ExperimentManagerTest {
         }
     }
 
-    @Test
+    @Test(expected = Test.None.class /* No exception is expected */)
     public void createSpecificExperimentsWithNoSurvivors () {
         doReturn(IntStream.range(0, 10)
                           .mapToObj(i -> mock(Container.class))

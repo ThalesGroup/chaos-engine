@@ -168,8 +168,4 @@ public class ExperimentControllerTest {
         assertEquals(expectedExperimentSuite, experimentSuiteCaptor.getValue());
     }
 
-    @Test
-    public void startExperimentAlwaysReturnsExperiment () {
-        experimentManager.scheduleExperiments(true);
-    }
 }
