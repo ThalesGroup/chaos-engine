@@ -11,7 +11,6 @@ import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.UNKNOWN;
 
 public class CloudFoundryApplicationRoute {
-    private RouteEntity route;
     private Domain domain;
     private String applicationName;
     private String host;
@@ -66,7 +65,6 @@ public class CloudFoundryApplicationRoute {
         public CloudFoundryApplicationRoute build () {
             CloudFoundryApplicationRoute cloudFoundryApplicationRoute = new CloudFoundryApplicationRoute();
             cloudFoundryApplicationRoute.applicationName = applicationName;
-            cloudFoundryApplicationRoute.route = route;
             cloudFoundryApplicationRoute.domain = domain;
             cloudFoundryApplicationRoute.host = route.getHost();
             cloudFoundryApplicationRoute.path = route.getPath();
