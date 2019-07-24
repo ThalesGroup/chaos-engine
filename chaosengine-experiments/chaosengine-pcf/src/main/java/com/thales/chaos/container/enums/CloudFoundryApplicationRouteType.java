@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CloudFoundryApplicationRouteType {
-    HTTP("http"),
+    HTTP(""),
     TCP("tcp"),
     UNKNOWN("unknown");
     private static final Map<String, CloudFoundryApplicationRouteType> invertedStringMap;
