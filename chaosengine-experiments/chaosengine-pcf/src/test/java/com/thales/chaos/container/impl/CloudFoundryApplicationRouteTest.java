@@ -101,7 +101,7 @@ public class CloudFoundryApplicationRouteTest {
 
     @Test
     public void testToString () {
-        assertTrue(httpRoute.toString().contains("type=http"));
-        assertTrue(tcpRoute.toString().contains("type=tcp"));
+        assertTrue(httpRoute.toString().contains("type=HTTP"));
+        assertTrue(tcpRoute.toString().contains("type=TCP"));
     }
 }

@@ -1,15 +1,16 @@
 package com.thales.chaos.platform.impl;
 
 import com.thales.chaos.constants.CloudFoundryConstants;
+import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
+import com.thales.chaos.container.enums.CloudFoundryApplicationRouteType;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.CloudFoundryApplication;
 import com.thales.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
-import com.thales.chaos.constants.DataDogConstants;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -38,6 +39,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.UNKNOWN;
+import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.mapFromString;
 import static com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -174,13 +177,21 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         if (routeResources != null) {
             for (RouteResource route : routeResources) {
                 RouteEntity routeEntity = route.getEntity();
-                CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute.builder()
-                                                                                                        .applicationName(applicationName)
-                                                                                                        .route(routeEntity)
-                                                                                                        .domain(getAppRouteDomain(routeEntity
-                                                                                                                .getDomainId()))
-                                                                                                        .build();
-                routes.add(cloudFoundryApplicationRoute);
+                Domain domain = getAppRouteDomain(routeEntity.getDomainId());
+                if (domain != null) {
+                    CloudFoundryApplicationRouteType cloudFoundryApplicationRouteType = mapFromString(domain.getType());
+                    if (cloudFoundryApplicationRouteType != UNKNOWN) {
+                        CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute.builder()
+                                                                                                                .applicationName(applicationName)
+                                                                                                                .route(routeEntity)
+                                                                                                                .domain(domain)
+                                                                                                                .build();
+                        routes.add(cloudFoundryApplicationRoute);
+                    } else {
+                        log.warn("Application route {} will be skipped because it has unsupported type {}", domain.getName(), domain
+                                .getType());
+                    }
+                }
             }
         }
 
