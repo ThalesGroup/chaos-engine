@@ -22,6 +22,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
+    private static final transient Random RANDOM = new Random();
     private transient static final Integer MAX_INSTANCES = 5;
     private transient static final Integer MIN_INSTANCES = 1;
     private String name;
@@ -110,10 +111,9 @@ public class CloudFoundryApplication extends Container {
         experiment.setSelfHealingMethod(rescaleApplicationToDefault);
         experiment.setCheckContainerHealth(isAppHealthy);
         experiment.setFinalizeMethod(rescaleApplicationToDefault);
-        Random rand = new Random();
         int newScale;
         do {
-            newScale = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
+            newScale = RANDOM.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
         } while (newScale == actualContainerInstances);
         actualContainerInstances = newScale;
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
@@ -138,8 +138,7 @@ public class CloudFoundryApplication extends Container {
     public void unmapRoute (Experiment experiment) {
         experiment.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {
-            Random rand = new Random();
-            int routeIndex = rand.nextInt(applicationRoutes.size());
+            int routeIndex = RANDOM.nextInt(applicationRoutes.size());
             this.routeUnderExperiment = applicationRoutes.get(routeIndex);
             experiment.setSelfHealingMethod(mapApplicationRoute);
             experiment.setFinalizeMethod(mapApplicationRoute);
