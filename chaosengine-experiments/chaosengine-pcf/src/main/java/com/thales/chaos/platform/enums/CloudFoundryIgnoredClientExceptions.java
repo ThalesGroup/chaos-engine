@@ -3,7 +3,7 @@ package com.thales.chaos.platform.enums;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 
 public enum CloudFoundryIgnoredClientExceptions {
-    NotStaged(170002, "CF-NotStaged", "App has not finished staging");
+    NOT_STAGED(170002, "CF-NotStaged", "App has not finished staging");
     private Integer code;
     private String description;
     private String errorCode;
