@@ -5,6 +5,7 @@ import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Status;
 import org.cloudfoundry.operations.routes.MapRouteRequest;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,7 +14,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryApplicationRouteTest {
@@ -101,7 +102,7 @@ public class CloudFoundryApplicationRouteTest {
 
     @Test
     public void testToString () {
-        assertTrue(httpRoute.toString().contains("type=HTTP"));
-        assertTrue(tcpRoute.toString().contains("type=TCP"));
+        assertThat(httpRoute.toString(), CoreMatchers.containsString("type=HTTP"));
+        assertThat(tcpRoute.toString(), CoreMatchers.containsString("type=TCP"));
     }
 }
