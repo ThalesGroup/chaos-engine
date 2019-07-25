@@ -1,5 +1,6 @@
 package com.thales.chaos.container.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.container.enums.CloudFoundryApplicationRouteType;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode;
@@ -22,6 +23,15 @@ public class CloudFoundryApplicationRoute {
         return CloudFoundryApplicationRouteBuilder.builder();
     }
 
+    public String getHost () {
+        return host;
+    }
+
+    public CloudFoundryApplicationRouteType getType () {
+        return type;
+    }
+
+    @JsonIgnore
     public UnmapRouteRequest getUnmapRouteRequest () {
         UnmapRouteRequest.Builder builder = UnmapRouteRequest.builder();
         builder.applicationName(applicationName).domain(domain.getName());
@@ -35,6 +45,7 @@ public class CloudFoundryApplicationRoute {
         }
     }
 
+    @JsonIgnore
     public MapRouteRequest getMapRouteRequest () {
         MapRouteRequest.Builder builder = MapRouteRequest.builder();
         builder.applicationName(applicationName).domain(domain.getName());
