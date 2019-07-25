@@ -23,6 +23,9 @@ public enum CloudFoundryApplicationRouteType {
     }
 
     public static CloudFoundryApplicationRouteType mapFromString (String string) {
+        // PCF domain.getType() API call which is used to determine route type
+        // returns null if the selected application route is of the HTTP type
+        // It is not possible to have a null as a Map key thus following extra handling was added
         if (string == null) {
             return HTTP;
         }
