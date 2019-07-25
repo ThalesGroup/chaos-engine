@@ -65,10 +65,10 @@ public class CloudFoundryContainerPlatformTest {
     private CloudFoundrySelfAwareness cloudFoundrySelfAwareness;
     @Autowired
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    private String APPLICATION_ID = randomUUID().toString();
-    private String APPLICATION_NAME = randomUUID().toString();
-    private Integer INSTANCES = 2;
-    private CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
+    private final String APPLICATION_ID = randomUUID().toString();
+    private final String APPLICATION_NAME = randomUUID().toString();
+    private final Integer INSTANCES = 2;
+    private final CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
                                                                               .applicationId(APPLICATION_ID)
                                                                               .instance(0)
                                                                               .platform(cloudFoundryContainerPlatform)
