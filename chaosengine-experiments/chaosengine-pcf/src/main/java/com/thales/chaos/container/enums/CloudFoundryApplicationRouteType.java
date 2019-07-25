@@ -23,6 +23,9 @@ public enum CloudFoundryApplicationRouteType {
     }
 
     public static CloudFoundryApplicationRouteType mapFromString (String string) {
+        if (string == null) {
+            return HTTP;
+        }
         return invertedStringMap.getOrDefault(string, UNKNOWN);
     }
 }
