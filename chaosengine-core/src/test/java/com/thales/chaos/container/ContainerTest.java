@@ -1,5 +1,6 @@
 package com.thales.chaos.container;
 
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.annotations.NetworkExperiment;
 import com.thales.chaos.experiment.annotations.StateExperiment;
@@ -135,5 +136,52 @@ public class ContainerTest {
     public void getContainerHealth () {
         assertEquals(ContainerHealth.NORMAL, testContainer.getContainerHealth(null));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
+    }
+
+    @Test
+    public void getIdentityWithUnorderedFields () {
+        /*
+        This test validates that the identifier fields are evaluated in a consistent order. The names of the fields
+        control the order that Identifier fields are parsed if they have identical `order` values.
+         */
+        Container badlyConstructedContainer = new Container() {
+            @Identifier
+            private String field1 = "firstField";
+            @Identifier
+            private String field2 = "secondField";
+            @Identifier
+            private String field3 = "thirdField";
+
+            @Override
+            public Platform getPlatform () {
+                return null;
+            }
+
+            @Override
+            protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+                return null;
+            }
+
+            @Override
+            public String getSimpleName () {
+                return null;
+            }
+
+            @Override
+            public String getAggregationIdentifier () {
+                return null;
+            }
+
+            @Override
+            public DataDogIdentifier getDataDogIdentifier () {
+                return null;
+            }
+
+            @Override
+            protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+                return false;
+            }
+        };
+        assertEquals(2890670807L, badlyConstructedContainer.getIdentity());
     }
 }

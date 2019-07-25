@@ -135,6 +135,7 @@ public abstract class Container implements ExperimentalObject {
     private List<Field> getIdentifyingFields () {
         List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
                                               .filter(Container::isIdentifyingField)
+                                              .sorted(Comparator.comparingInt(field -> field.getName().hashCode()))
                                               .sorted(Comparator.comparingInt(Container::getFieldOrder))
                                               .collect(Collectors.toUnmodifiableList());
         identifyingFields.forEach(f -> f.setAccessible(true));
