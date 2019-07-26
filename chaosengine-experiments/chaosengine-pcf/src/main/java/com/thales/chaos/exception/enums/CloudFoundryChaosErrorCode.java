@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 public enum CloudFoundryChaosErrorCode implements ErrorCode {
     EMPTY_RESPONSE(31001),
     NO_ROUTES(32001),
+    UNSUPPORTED_ROUTE_TYPE(32002),
     ;
     private final int errorCode;
     private final String shortName;

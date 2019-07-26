@@ -1,58 +1,61 @@
 package com.thales.chaos.container.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.container.enums.CloudFoundryApplicationRouteType;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.routes.MapRouteRequest;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 
-import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.http;
-import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.tcp;
+import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.UNKNOWN;
 
 public class CloudFoundryApplicationRoute {
-    private RouteEntity route;
     private Domain domain;
     private String applicationName;
     private String host;
     private String path;
     private Integer port;
-    private CloudFoundryApplicationRouteType type = http;
+    private CloudFoundryApplicationRouteType type = UNKNOWN;
 
     public static CloudFoundryApplicationRouteBuilder builder () {
         return CloudFoundryApplicationRouteBuilder.builder();
     }
 
+    public String getHost () {
+        return host;
+    }
+
+    public CloudFoundryApplicationRouteType getType () {
+        return type;
+    }
+
+    @JsonIgnore
     public UnmapRouteRequest getUnmapRouteRequest () {
-        if (type == http) {
-            return UnmapRouteRequest.builder()
-                                    .applicationName(applicationName)
-                                    .domain(domain.getName())
-                                    .path(path)
-                                    .host(host)
-                                    .build();
-        } else {
-            return UnmapRouteRequest.builder()
-                                    .applicationName(applicationName)
-                                    .domain(domain.getName())
-                                    .port(port)
-                                    .build();
+        UnmapRouteRequest.Builder builder = UnmapRouteRequest.builder();
+        builder.applicationName(applicationName).domain(domain.getName());
+        switch (type) {
+            case HTTP:
+                return builder.path(path).host(host).build();
+            case TCP:
+                return builder.port(port).build();
+            default:
+                throw new ChaosException(CloudFoundryChaosErrorCode.UNSUPPORTED_ROUTE_TYPE);
         }
     }
 
+    @JsonIgnore
     public MapRouteRequest getMapRouteRequest () {
-        if (type == http) {
-            return MapRouteRequest.builder()
-                                  .applicationName(applicationName)
-                                  .domain(domain.getName())
-                                  .path(path)
-                                  .host(host)
-                                  .build();
-        } else {
-            return MapRouteRequest.builder()
-                                  .applicationName(applicationName)
-                                  .domain(domain.getName())
-                                  .port(port)
-                                  .build();
+        MapRouteRequest.Builder builder = MapRouteRequest.builder();
+        builder.applicationName(applicationName).domain(domain.getName());
+        switch (type) {
+            case HTTP:
+                return builder.path(path).host(host).build();
+            case TCP:
+                return builder.port(port).build();
+            default:
+                throw new ChaosException(CloudFoundryChaosErrorCode.UNSUPPORTED_ROUTE_TYPE);
         }
     }
 
@@ -73,15 +76,11 @@ public class CloudFoundryApplicationRoute {
         public CloudFoundryApplicationRoute build () {
             CloudFoundryApplicationRoute cloudFoundryApplicationRoute = new CloudFoundryApplicationRoute();
             cloudFoundryApplicationRoute.applicationName = applicationName;
-            cloudFoundryApplicationRoute.route = route;
             cloudFoundryApplicationRoute.domain = domain;
             cloudFoundryApplicationRoute.host = route.getHost();
             cloudFoundryApplicationRoute.path = route.getPath();
             cloudFoundryApplicationRoute.port = route.getPort();
-            if (tcp.toString().equals(domain.getType())) {
-                cloudFoundryApplicationRoute.type = tcp;
-            }
-
+            cloudFoundryApplicationRoute.type = CloudFoundryApplicationRouteType.mapFromString(domain.getType());
             return cloudFoundryApplicationRoute;
         }
 

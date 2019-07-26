@@ -49,6 +49,10 @@ public class CloudFoundryApplication extends Container {
         return null;
     };
 
+    public List<CloudFoundryApplicationRoute> getApplicationRoutes () {
+        return applicationRoutes;
+    }
+
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return DataDogIdentifier.dataDogIdentifier().withKey("application")
@@ -98,7 +102,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     public String getSimpleName () {
-        return name;
+        return getAggregationIdentifier();
     }
 
     @Override
