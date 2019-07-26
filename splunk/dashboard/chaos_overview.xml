@@ -87,8 +87,8 @@
       <single>
         <search>
           <query>sourcetype="container:log" "Experiments total count\:" | spath input=log | head 1 | table count</query>
-          <earliest>-4h@m</earliest>
-          <latest>now</latest>
+            <earliest>rt-1m</earliest>
+            <latest>rtnow</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -111,17 +111,20 @@
       </single>
       <chart>
         <search>
-          <query>sourcetype="container:log" "Experiments count by state" | spath input=log
-            | stats last(experimentState.CREATED) as CREATED,
-            last(experimentState.FAILED) as FAILED,
-            last(experimentState.FINALIZING) as FINALIZING,
-            last(experimentState.FINISHED) as FINISHED,
-            last(experimentState.SELF_HEALING) as SELF_HEALING,
-            last(experimentState.STARTED) as STARTED,
-            last(experimentState.STARTING) as STARTING|transpose
+            <query>sourcetype="container:log" "Experiments count by state" | head 1 | spath input=log
+                |rename experimentState.CREATED as CREATED,
+                experimentState.FAILED as FAILED,
+                experimentState.FINALIZING as FINALIZING,
+                experimentState.FINISHED as FINISHED,
+                experimentState.SELF_HEALING as SELF_HEALING,
+                experimentState.STARTED as STARTED,
+                experimentState.STARTING as STARTING
+
+                | table CREATED, FAILED,FINALIZING,FINISHED, SELF_HEALING, STARTED,STARTING
+                |transpose
           </query>
-          <earliest>-2m@m</earliest>
-          <latest>now</latest>
+            <earliest>rt-1m</earliest>
+            <latest>rtnow</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>

@@ -56,6 +56,11 @@ public class CloudFoundryApplication extends Container {
         log.warn("There is no recovery method for this kind of experiment.");
         return null;
     };
+
+    public List<CloudFoundryApplicationRoute> getApplicationRoutes () {
+        return applicationRoutes;
+    }
+
     private Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
 
     public CloudFoundryApplication () {
@@ -90,7 +95,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     public String getSimpleName () {
-        return name;
+        return getAggregationIdentifier();
     }
 
     @Override

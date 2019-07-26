@@ -557,7 +557,7 @@ public class AwsEC2PlatformTest {
         assertEquals("ec2-user", awsEC2Platform.getUsernameForImageId("centos"));
     }
 
-    @Test
+    @Test(expected = Test.None.class /* No exception expected */)
     public void routableCidrBlockNoException () {
         Collection<String> cidrBlocks = Set.of("192.168.1.0/24", "172.16.0.0/16", "10.0.0.0/8");
         awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);

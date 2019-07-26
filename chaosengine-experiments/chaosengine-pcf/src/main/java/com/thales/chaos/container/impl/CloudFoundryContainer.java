@@ -63,9 +63,8 @@ public class CloudFoundryContainer extends Container {
         return name + " - (" + instance + ")";
     }
 
-    @Override
-    public String getAggregationIdentifier () {
-        return name;
+    public String getName () {
+        return getAggregationIdentifier();
     }
 
     @Override
@@ -109,7 +108,8 @@ public class CloudFoundryContainer extends Container {
         return applicationId;
     }
 
-    public String getName () {
+    @Override
+    public String getAggregationIdentifier () {
         return name;
     }
 
