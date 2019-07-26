@@ -26,6 +26,12 @@ public class CloudFoundryApplicationRouteTest {
                                       .type("")
                                       .status(Status.SHARED)
                                       .build();
+    private Domain httpDomain2 = Domain.builder()
+                                       .id("httpDomain2")
+                                       .name("http.domain.com")
+                                       .type(null)
+                                       .status(Status.SHARED)
+                                       .build();
     private Domain tcpDomain = Domain.builder()
                                      .id("tcpDomain")
                                      .name("tcp.domain.com")
@@ -35,6 +41,7 @@ public class CloudFoundryApplicationRouteTest {
     private RouteEntity httpRouteEntity = RouteEntity.builder().host("httpHost").domainId(httpDomain.getId()).build();
     private RouteEntity tcpRouteEntity = RouteEntity.builder().port(666).domainId(tcpDomain.getId()).build();
     private CloudFoundryApplicationRoute httpRoute;
+    private CloudFoundryApplicationRoute httpRoute2;
     private CloudFoundryApplicationRoute tcpRoute;
 
     @Before
@@ -44,6 +51,11 @@ public class CloudFoundryApplicationRouteTest {
                                                 .domain(httpDomain)
                                                 .route(httpRouteEntity)
                                                 .build();
+        httpRoute2 = CloudFoundryApplicationRoute.builder()
+                                                 .applicationName(APP1_NAME)
+                                                 .domain(httpDomain2)
+                                                 .route(httpRouteEntity)
+                                                 .build();
         tcpRoute = CloudFoundryApplicationRoute.builder()
                                                .applicationName(APP2_NAME)
                                                .domain(tcpDomain)
@@ -61,6 +73,7 @@ public class CloudFoundryApplicationRouteTest {
                                                                  .port(httpRouteEntity.getPort())
                                                                  .build();
         assertEquals(expectedMapRouteRequest, httpRoute.getMapRouteRequest());
+        assertEquals(expectedMapRouteRequest, httpRoute2.getMapRouteRequest());
     }
 
     @Test
@@ -77,26 +90,27 @@ public class CloudFoundryApplicationRouteTest {
 
     @Test
     public void httpRouteUnMap () {
-        UnmapRouteRequest expectedMapRouteRequest = UnmapRouteRequest.builder()
-                                                                     .applicationName(APP1_NAME)
-                                                                     .domain(httpDomain.getName())
-                                                                     .host(httpRouteEntity.getHost())
-                                                                     .path(httpRouteEntity.getPath())
-                                                                     .port(httpRouteEntity.getPort())
-                                                                     .build();
-        assertEquals(expectedMapRouteRequest, httpRoute.getUnmapRouteRequest());
+        UnmapRouteRequest expectedUnMapRouteRequest = UnmapRouteRequest.builder()
+                                                                       .applicationName(APP1_NAME)
+                                                                       .domain(httpDomain.getName())
+                                                                       .host(httpRouteEntity.getHost())
+                                                                       .path(httpRouteEntity.getPath())
+                                                                       .port(httpRouteEntity.getPort())
+                                                                       .build();
+        assertEquals(expectedUnMapRouteRequest, httpRoute.getUnmapRouteRequest());
+        assertEquals(expectedUnMapRouteRequest, httpRoute2.getUnmapRouteRequest());
     }
 
     @Test
     public void tcpRouteUnMap () {
-        UnmapRouteRequest expectedMapRouteRequest = UnmapRouteRequest.builder()
-                                                                     .applicationName(APP2_NAME)
-                                                                     .domain(tcpDomain.getName())
-                                                                     .host(tcpRouteEntity.getHost())
-                                                                     .path(tcpRouteEntity.getPath())
-                                                                     .port(tcpRouteEntity.getPort())
-                                                                     .build();
-        assertEquals(expectedMapRouteRequest, tcpRoute.getUnmapRouteRequest());
+        UnmapRouteRequest expectedUnMapRouteRequest = UnmapRouteRequest.builder()
+                                                                       .applicationName(APP2_NAME)
+                                                                       .domain(tcpDomain.getName())
+                                                                       .host(tcpRouteEntity.getHost())
+                                                                       .path(tcpRouteEntity.getPath())
+                                                                       .port(tcpRouteEntity.getPort())
+                                                                       .build();
+        assertEquals(expectedUnMapRouteRequest, tcpRoute.getUnmapRouteRequest());
 
     }
 
