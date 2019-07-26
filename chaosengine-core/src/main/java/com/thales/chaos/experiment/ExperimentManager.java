@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -85,30 +84,20 @@ public class ExperimentManager {
     }
 
     void evaluateExperiments () {
-        allExperiments.parallelStream()
-                      .peek(runOnLevel(CREATED, Experiment::startExperiment))
-                      .peek(runOnLevel(STARTING, Experiment::confirmStartupComplete))
-                      .peek(runOnLevel(STARTED, Experiment::evaluateRunningExperiment))
-                      .peek(runOnLevel(SELF_HEALING, Experiment::callSelfHealing))
-                      .peek(runOnLevel(FINALIZING, Experiment::callFinalize))
-                      .peek(runOnLevel(FINISHED, Experiment::closeFinishedExperiment))
-                      .peek(runOnLevel(FAILED, Experiment::closeFailedExperiment))
-                      /*
-                      It's important to add a terminal operation here. I could have put a forEach on the last runOnLevel,
-                      but then if we add more levels it needs to be updated. Logging is important anyways, and this also
-                      helps to log how quickly experiment analysis is getting through here.
-                       */
-                      .forEach(experiment -> log.info("Evaluated experiment: {}", v("experiment", experiment)));
+        allExperiments.parallelStream().forEach(this::runExperimentSteps);
     }
 
-    Consumer<Experiment> runOnLevel (ExperimentState experimentState, Consumer<? super Experiment> experimentStep) {
-        return experiment -> {
-            if (experimentState.equals(experiment.getExperimentState())) {
-                try (AutoCloseableMDCCollection ignored = getExperimentAutoCloseableMDCCollection(experiment)) {
-                    experimentStep.accept(experiment);
-                }
-            }
-        };
+    void runExperimentSteps (Experiment experiment) {
+        try (AutoCloseableMDCCollection ignored = getExperimentAutoCloseableMDCCollection(experiment)) {
+            if (experiment.getExperimentState().equals(CREATED)) experiment.startExperiment();
+            if (experiment.getExperimentState().equals(STARTING)) experiment.confirmStartupComplete();
+            if (experiment.getExperimentState().equals(STARTED)) experiment.evaluateRunningExperiment();
+            if (experiment.getExperimentState().equals(SELF_HEALING)) experiment.callSelfHealing();
+            if (experiment.getExperimentState().equals(FINALIZING)) experiment.callFinalize();
+            if (experiment.getExperimentState().equals(FINISHED)) experiment.closeFinishedExperiment();
+            if (experiment.getExperimentState().equals(FAILED)) experiment.closeFailedExperiment();
+            log.info("Evaluated experiment: {}", v("experiment", experiment));
+        }
     }
 
     AutoCloseableMDCCollection getExperimentAutoCloseableMDCCollection (Experiment experiment) {

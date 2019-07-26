@@ -27,7 +27,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -112,17 +111,6 @@ public class ExperimentManagerTest {
         doReturn(Collections.emptySet()).when(experimentManager).scheduleExperiments(captor.capture());
         experimentManager.scheduleExperiments();
         assertThat(captor.getValue(), is(false));
-    }
-
-    @Test
-    public void runOnLevel () {
-        Experiment experiment = mock(Experiment.class);
-        doReturn(STARTING, STARTED).when(experiment).getExperimentState();
-        experimentManager.runOnLevel(STARTED, e -> fail()).accept(experiment);
-        AtomicBoolean accepted = new AtomicBoolean(false);
-        experimentManager.runOnLevel(STARTED, e -> accepted.set(true)).accept(experiment);
-        assertTrue(accepted.get());
-        verify(experimentManager).getExperimentAutoCloseableMDCCollection(experiment);
     }
 
     @Test
@@ -290,22 +278,28 @@ public class ExperimentManagerTest {
 
     @Test
     public void evaluateExperiments () {
-        Collection<ExperimentState> usedExperimentStates = new TreeSet<>();
         Experiment experiment = experimentManager.addExperiment(mock(Experiment.class));
-        doAnswer(invocationOnMock -> {
-            Object[] arguments = invocationOnMock.getArguments();
-            assertTrue(usedExperimentStates.add((ExperimentState) arguments[0]));
-            return arguments[1];
-        }).when(experimentManager).runOnLevel(any(), any());
+        doNothing().when(experimentManager).runExperimentSteps(experiment);
         experimentManager.evaluateExperiments();
-        verify(experiment).startExperiment();
-        verify(experiment).confirmStartupComplete();
-        verify(experiment).evaluateRunningExperiment();
-        verify(experiment).callSelfHealing();
-        verify(experiment).callFinalize();
-        verify(experiment).closeFailedExperiment();
-        verify(experiment).closeFinishedExperiment();
-        assertThat(usedExperimentStates, containsInAnyOrder(ExperimentState.values()));
+        verify(experimentManager, times(1)).runExperimentSteps(experiment);
+    }
+
+    @Test
+    public void runExperimentSteps () {
+        Experiment experiment = experimentManager.addExperiment(mock(Experiment.class));
+        final ExperimentState[] experimentStates = values();
+        for (int i = 0; i < experimentStates.length; i++) {
+            doReturn(experimentStates[i]).when(experiment).getExperimentState();
+            experimentManager.runExperimentSteps(experiment);
+            verify(experiment, times(i == 0 ? 1 : 0)).startExperiment();
+            verify(experiment, times(i == 1 ? 1 : 0)).confirmStartupComplete();
+            verify(experiment, times(i == 2 ? 1 : 0)).evaluateRunningExperiment();
+            verify(experiment, times(i == 3 ? 1 : 0)).callSelfHealing();
+            verify(experiment, times(i == 4 ? 1 : 0)).callFinalize();
+            verify(experiment, times(i == 5 ? 1 : 0)).closeFinishedExperiment();
+            verify(experiment, times(i == 6 ? 1 : 0)).closeFailedExperiment();
+            reset(experiment);
+        }
     }
 
     @Test
