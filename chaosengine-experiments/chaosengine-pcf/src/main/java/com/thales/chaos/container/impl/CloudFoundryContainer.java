@@ -1,6 +1,7 @@
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.StateExperiment;
@@ -19,15 +20,18 @@ import java.util.concurrent.Callable;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class CloudFoundryContainer extends Container {
+    @Identifier(order = 0)
     private String applicationId;
+    @Identifier(order = 1)
     private String name;
+    @Identifier(order = 2)
     private Integer instance;
-    private transient CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    private transient Callable<Void> restageApplication = () -> {
+    private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
+    private Callable<Void> restageApplication = () -> {
         cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
         return null;
     };
-    private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
+    private Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {
         super();

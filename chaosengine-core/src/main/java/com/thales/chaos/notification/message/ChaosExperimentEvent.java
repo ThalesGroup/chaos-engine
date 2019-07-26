@@ -24,7 +24,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
     @JsonProperty
     private String experimentMethod;
     private NotificationLevel notificationLevel;
-    public static final transient String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
+    public static final String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
     public static ChaosEventBuilder builder () {
         return ChaosEventBuilder.builder();
     }

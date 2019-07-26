@@ -2,6 +2,7 @@ package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.StateExperiment;
@@ -19,17 +20,22 @@ import static com.thales.chaos.exception.enums.KubernetesChaosErrorCode.POD_HAS_
 import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class KubernetesPodContainer extends Container {
+    @Identifier(order = 0)
     private String uuid;
+    @Identifier(order = 1)
     private String podName;
+    @Identifier(order = 2)
     private String namespace;
     private Map<String, String> labels = new HashMap<>();
     private boolean isBackedByController = false;
-    private transient KubernetesPlatform kubernetesPlatform;
+    private KubernetesPlatform kubernetesPlatform;
+    @Identifier(order = 3)
     private ControllerKind ownerKind;
+    @Identifier(order = 4)
     private String ownerName;
     private Collection<String> subcontainers = new HashSet<>();
-    private transient String targetedSubcontainer;
-    private transient Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
+    private String targetedSubcontainer;
+    private Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
 
     private KubernetesPodContainer () {
         super();

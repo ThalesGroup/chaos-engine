@@ -2,6 +2,7 @@ package com.thales.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.constants.DataDogConstants;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
@@ -22,22 +23,21 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
 import static com.thales.chaos.exception.enums.ChaosErrorCode.*;
 import static com.thales.chaos.util.MethodUtils.getMethodsWithAnnotation;
-import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
-    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
     private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private final Map<String, Boolean> shellCapabilities = new HashMap<>();
@@ -100,48 +100,62 @@ public abstract class Container implements ExperimentalObject {
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
     public long getIdentity () {
-        StringBuilder identity = new StringBuilder();
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
-            try {
-                if (field.get(this) != null) {
-                    if (identity.length() > 1) {
-                        identity.append("$$$$$");
-                    }
-                    identity.append(field.get(this).toString());
-                }
-            } catch (IllegalAccessException e) {
-                log.error("Caught IllegalAccessException ", e);
-            }
-        }
-        byte[] primitiveByteArray = identity.toString().getBytes();
+        final List<Field> identifyingFields = getIdentifyingFields();
+        final List<String> identifyingFieldValues = identifyingFields.stream()
+                                                                     .map(field -> {
+                                                                         try {
+                                                                             return field.get(this);
+                                                                         } catch (IllegalAccessException e) {
+                                                                             log.error("Caught IllegalAccessException ", e);
+                                                                             return null;
+                                                                         }
+                                                                     })
+                                                                     .filter(Objects::nonNull)
+                                                                     .map(Object::toString)
+                                                                     .filter(s -> s.length() > 0)
+                                                                     .collect(Collectors.toUnmodifiableList());
+        String identity = String.join("$$$$$", identifyingFieldValues);
+        byte[] primitiveByteArray = identity.getBytes();
         CRC32 checksum = new CRC32();
         checksum.update(primitiveByteArray);
         return checksum.getValue();
     }
 
+    private static boolean isIdentifyingField (Field field) {
+        return field.getAnnotation(Identifier.class) != null;
+    }
+
+    private static int getFieldOrder (Field value) {
+        return Optional.of(value)
+                       .map(field -> field.getAnnotation(Identifier.class))
+                       .map(Identifier::order)
+                       .orElse(Integer.MIN_VALUE + value.getName().hashCode());
+    }
+
+    private List<Field> getIdentifyingFields () {
+        List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
+                                              .filter(Container::isIdentifyingField)
+                                              .sorted(Comparator.comparingInt(field -> field.getName().hashCode()))
+                                              .sorted(Comparator.comparingInt(Container::getFieldOrder))
+                                              .collect(Collectors.toUnmodifiableList());
+        identifyingFields.forEach(f -> f.setAccessible(true));
+        return identifyingFields;
+    }
+
     @Override
     public String toString () {
-        StringBuilder output = new StringBuilder();
-        output.append("Container type: ");
-        output.append(this.getClass().getSimpleName());
-        Arrays.stream(this.getClass().getDeclaredFields())
-              .filter(not(field -> Modifier.isTransient(field.getModifiers())))
-              .filter(not(Field::isSynthetic))
-              .forEachOrdered(field -> {
-                  field.setAccessible(true);
-                  try {
-                      output.append("\n\t");
-                      output.append(field.getName());
-                      output.append(":\t");
-                      output.append(field.get(this));
-                  } catch (IllegalAccessException e) {
-                      log.error("Could not read from field {}", field.getName(), e);
-                  }
-              });
-        return output.toString();
+        final List<Field> identifyingFields = getIdentifyingFields();
+        List<String> fieldValues = Stream.concat(Stream.of("Container type: " + getClass().getSimpleName()), identifyingFields
+                .stream()
+                .map(field -> {
+                    try {
+                        return field.getName() + ":\t" + field.get(this);
+                    } catch (IllegalAccessException e) {
+                        log.error("Caught IllegalAccessException ", e);
+                        return "";
+                    }
+                })).collect(Collectors.toUnmodifiableList());
+        return String.join("\n\t", fieldValues);
     }
 
     public boolean supportsExperimentType (ExperimentType experimentType) {
