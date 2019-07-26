@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CloudFoundryApplicationRouteType {
+    /*
+      If the route is of the HTTP type the API returns null
+      That's why the empty string is used because null can't be used as a key in the reverse map
+    */
     HTTP(""),
     TCP("tcp"),
     UNKNOWN("unknown");
