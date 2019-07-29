@@ -162,10 +162,10 @@ public class AwsRDSClusterContainerTest {
         verify(experiment, times(1)).setFinalizeMethod(any());
         verify(experiment, times(1)).setSelfHealingMethod(any());
         verify(experiment, times(1)).setCheckContainerHealth(any());
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
         reset(awsRDSPlatform);
-        experiment.getFinalizeMethod().call();
+        experiment.getFinalizeMethod().run();
         verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
         reset(awsRDSPlatform);
         doReturn(true, false).when(awsRDSPlatform).isClusterSnapshotRunning(dbClusterIdentifier);

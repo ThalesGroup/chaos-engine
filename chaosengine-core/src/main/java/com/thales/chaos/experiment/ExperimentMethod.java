@@ -56,10 +56,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
             throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL_EXPERIMENTS);
         }
         final boolean cattle = script.isRequiresCattle();
-        final Callable<Void> selfHealingMethod = cattle ? container.recycleCattle() : () -> {
-            container.runCommand(script.getSelfHealingCommand());
-            return null;
-        };
+        final Runnable selfHealingMethod = cattle ? container.recycleCattle() : () -> container.runCommand(script.getSelfHealingCommand());
         Callable<ContainerHealth> checkContainerHealthMethod = () -> {
             if (cattle) {
                 return container.isContainerRecycled() ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
@@ -71,12 +68,9 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         };
-        Callable<Void> finalizeMethod;
+        Runnable finalizeMethod;
         String finalizeCommand = script.getFinalizeCommand();
-        finalizeMethod = (finalizeCommand == null || finalizeCommand.isBlank()) ? null : () -> {
-            container.runCommand(finalizeCommand);
-            return null;
-        };
+        finalizeMethod = (finalizeCommand == null || finalizeCommand.isBlank()) ? null : () -> container.runCommand(finalizeCommand);
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.experimentType = script.getExperimentType();
         experimentMethod.cattleOnly = cattle;

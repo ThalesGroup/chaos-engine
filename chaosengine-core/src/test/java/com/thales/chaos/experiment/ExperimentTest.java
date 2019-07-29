@@ -127,10 +127,7 @@ public class ExperimentTest {
         experiment.setExperimentState(SELF_HEALING);
         doNothing().when(experiment).evaluateRunningExperiment();
         doReturn(true).when(experiment).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> {
-            selfHealingMethodCalled.set(true);
-            return null;
-        });
+        experiment.setSelfHealingMethod(() -> selfHealingMethodCalled.set(true));
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertTrue(selfHealingMethodCalled.get());
@@ -142,10 +139,7 @@ public class ExperimentTest {
         experiment.setExperimentState(SELF_HEALING);
         doNothing().when(experiment).evaluateRunningExperiment();
         doReturn(false).when(experiment).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> {
-            selfHealingMethodCalled.set(true);
-            return null;
-        });
+        experiment.setSelfHealingMethod(() -> selfHealingMethodCalled.set(true));
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertFalse(selfHealingMethodCalled.get());
@@ -173,10 +167,7 @@ public class ExperimentTest {
         experiment.setSelfHealingCounter(new AtomicInteger(9));
         doNothing().when(experiment).evaluateRunningExperiment();
         doReturn(true).when(experiment).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> {
-            selfHealingMethodCalled.set(true);
-            return null;
-        });
+        experiment.setSelfHealingMethod(() -> selfHealingMethodCalled.set(true));
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertTrue(selfHealingMethodCalled.get());
@@ -190,10 +181,7 @@ public class ExperimentTest {
         experiment.setSelfHealingCounter(new AtomicInteger(8));
         doNothing().when(experiment).evaluateRunningExperiment();
         doReturn(true).when(experiment).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> {
-            selfHealingMethodCalled.set(true);
-            return null;
-        });
+        experiment.setSelfHealingMethod(() -> selfHealingMethodCalled.set(true));
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertTrue(selfHealingMethodCalled.get());
@@ -210,10 +198,7 @@ public class ExperimentTest {
             return null;
         }).when(experiment).evaluateRunningExperiment();
         doReturn(true).when(experiment).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> {
-            selfHealingMethodCalled.set(true);
-            return null;
-        });
+        experiment.setSelfHealingMethod(() -> selfHealingMethodCalled.set(true));
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertTrue(selfHealingMethodCalled.get());
@@ -235,7 +220,8 @@ public class ExperimentTest {
     @Test
     public void canRunSelfHealingFailDueToRecentExecution () {
         doReturn(true).when(adminManager).canRunSelfHealing();
-        experiment.setSelfHealingMethod(() -> null);
+        experiment.setSelfHealingMethod(() -> {
+        });
         doReturn(true).when(experiment).canRunSelfHealing();
         doReturn(Duration.ofSeconds(30)).when(container).getMinimumSelfHealingInterval();
         doNothing().when(experiment).evaluateRunningExperiment();
@@ -375,10 +361,7 @@ public class ExperimentTest {
         final AtomicBoolean finalizeMethodCalled = new AtomicBoolean(false);
         doReturn(Duration.ofSeconds(45)).when(experiment).getTimeInState();
         experiment.setExperimentState(FINALIZING);
-        experiment.setFinalizeMethod(() -> {
-            finalizeMethodCalled.set(true);
-            return null;
-        });
+        experiment.setFinalizeMethod(() -> finalizeMethodCalled.set(true));
         experiment.callFinalize();
         assertEquals(FINISHED, experiment.getExperimentState());
         assertTrue(finalizeMethodCalled.get());
@@ -389,10 +372,7 @@ public class ExperimentTest {
         final AtomicBoolean finalizeMethodCalled = new AtomicBoolean(false);
         doReturn(Duration.ofSeconds(15)).when(experiment).getTimeInState();
         experiment.setExperimentState(FINALIZING);
-        experiment.setFinalizeMethod(() -> {
-            finalizeMethodCalled.set(true);
-            return null;
-        });
+        experiment.setFinalizeMethod(() -> finalizeMethodCalled.set(true));
         experiment.callFinalize();
         assertEquals(FINALIZING, experiment.getExperimentState());
         assertFalse(finalizeMethodCalled.get());

@@ -54,9 +54,10 @@ public abstract class Experiment {
     private ScriptManager scriptManager;
     @Autowired
     private HolidayManager holidayManager;
-    private Callable<Void> selfHealingMethod = () -> null;
+    private Runnable selfHealingMethod = () -> {
+    };
     private Callable<ContainerHealth> checkContainerHealth;
-    private Callable<Void> finalizeMethod;
+    private Runnable finalizeMethod;
     private Instant startTime = Instant.now();
     private Instant transitionTime = Instant.now();
     private Instant lastSelfHealingTime;
@@ -252,20 +253,20 @@ public abstract class Experiment {
         return experimentMethod;
     }
 
-    public Callable<Void> getSelfHealingMethod () {
+    public Runnable getSelfHealingMethod () {
         return selfHealingMethod;
     }
 
-    public void setSelfHealingMethod (Callable<Void> selfHealingMethod) {
+    public void setSelfHealingMethod (Runnable selfHealingMethod) {
         this.selfHealingMethod = selfHealingMethod;
     }
 
     @JsonIgnore
-    public Callable<Void> getFinalizeMethod () {
+    public Runnable getFinalizeMethod () {
         return finalizeMethod;
     }
 
-    public void setFinalizeMethod (Callable<Void> finalizeMethod) {
+    public void setFinalizeMethod (Runnable finalizeMethod) {
         this.finalizeMethod = finalizeMethod;
     }
 
@@ -302,7 +303,7 @@ public abstract class Experiment {
                 log.info("Running self healing for the {} time", selfHealingAttempts);
                 sendNotification(NotificationLevel.WARN, "Running self healing for the " + selfHealingAttempts + " time.");
                 lastSelfHealingTime = Instant.now();
-                selfHealingMethod.call();
+                selfHealingMethod.run();
             }
         } catch (Exception e) {
             sendNotification(NotificationLevel.ERROR, AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING);
@@ -455,7 +456,7 @@ public abstract class Experiment {
             if (getTimeInState().compareTo(finalizationDuration) >= 0) {
                 log.info("Calling finalize method");
                 sendNotification(NotificationLevel.WARN, "Running experiment finalization call");
-                finalizeMethod.call();
+                finalizeMethod.run();
                 setExperimentState(ExperimentState.FINISHED);
             } else {
                 log.debug("Waiting to call finalize method until sufficient time has passed");

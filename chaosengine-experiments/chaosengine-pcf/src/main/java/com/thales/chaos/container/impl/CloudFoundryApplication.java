@@ -36,26 +36,18 @@ public class CloudFoundryApplication extends Container {
     private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
     private List<CloudFoundryApplicationRoute> applicationRoutes;
     private CloudFoundryApplicationRoute routeUnderExperiment;
-    private Callable<Void> rescaleApplicationToDefault = () -> {
+    private Runnable rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
-        return null;
     };
-    private Callable<Void> restageApplication = () -> {
-        cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
-        return null;
-    };
-    private Callable<Void> mapApplicationRoute = () -> {
+    private Runnable restageApplication = () -> cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+    private Runnable mapApplicationRoute = () -> {
         if (routeUnderExperiment != null) {
             log.debug("Mapping application route: {}", routeUnderExperiment);
             cloudFoundryApplicationPlatform.mapRoute(routeUnderExperiment.getMapRouteRequest());
         }
-        return null;
     };
-    private Callable<Void> noRecovery = () -> {
-        log.warn("There is no recovery method for this kind of experiment.");
-        return null;
-    };
+    private Runnable noRecovery = () -> log.warn("There is no recovery method for this kind of experiment.");
 
     public List<CloudFoundryApplicationRoute> getApplicationRoutes () {
         return applicationRoutes;

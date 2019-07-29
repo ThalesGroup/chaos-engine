@@ -121,7 +121,7 @@ public class AwsEC2ContainerTest {
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
         experiment.getCheckContainerHealth().call();
@@ -135,7 +135,7 @@ public class AwsEC2ContainerTest {
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
         Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         await().atMost(4, TimeUnit.MINUTES)
                .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
@@ -155,9 +155,9 @@ public class AwsEC2ContainerTest {
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         // Case 3 - Verify self healing method calls Trigger Autoscaling Unhealthy
         verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
 
 
@@ -207,7 +207,7 @@ public class AwsEC2ContainerTest {
         experiment.getCheckContainerHealth().call();
         Mockito.verify(awsEC2Platform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
     }
 
@@ -276,21 +276,21 @@ public class AwsEC2ContainerTest {
     @SuppressWarnings("unchecked")
     public void autoscalingSelfHealingWrapper () throws Exception {
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
-        Callable<Void> baseMethod = Mockito.spy(Callable.class);
-        Callable<Void> callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
-        callable.call();
+        Runnable baseMethod = Mockito.spy(Runnable.class);
+        Runnable callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
+        callable.run();
         /*
         On the first call, it should use the Autoscaling method, and not touch the base method.
          */
         verify(awsEC2Platform, atLeastOnce()).triggerAutoscalingUnhealthy(anyString());
-        verify(baseMethod, never()).call();
+        verify(baseMethod, never()).run();
         reset(baseMethod, awsEC2Platform);
-        callable.call();
+        callable.run();
         /*
         On the second call, it should not use the Autoscaling method, and use the base method.
          */
         verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(anyString());
-        verify(baseMethod, atLeastOnce()).call();
+        verify(baseMethod, atLeastOnce()).run();
         reset(baseMethod, awsEC2Platform);
         /*
         If a Runtime exception occurs with the autoscaling method, it should use the base method on subsequent calls.
@@ -298,18 +298,19 @@ public class AwsEC2ContainerTest {
         callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
         doThrow(new RuntimeException()).when(awsEC2Platform).triggerAutoscalingUnhealthy(anyString());
         try {
-            callable.call();
+            callable.run();
             fail("We expect an exception to be thrown for this test.");
         } catch (RuntimeException expected) {
         }
-        callable.call();
-        verify(baseMethod, times(1)).call();
+        callable.run();
+        verify(baseMethod, times(1)).run();
     }
 
     @Test
     public void autoscalingSelfHealingWrapperOnNativeInstance () {
         doReturn(false).when(awsEC2Container).isNativeAwsAutoscaling();
-        Callable<Void> baseMethod = () -> null;
+        Runnable baseMethod = () -> {
+        };
         assertSame(baseMethod, awsEC2Container.autoscalingSelfHealingWrapper(baseMethod));
     }
 

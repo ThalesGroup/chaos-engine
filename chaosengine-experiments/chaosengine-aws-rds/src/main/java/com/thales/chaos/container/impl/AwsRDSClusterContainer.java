@@ -135,7 +135,6 @@ public class AwsRDSClusterContainer extends AwsContainer {
             } catch (DBClusterNotFoundException e) {
                 log.warn("Tried to clean up cluster snapshot, but it was already deleted", v(DataDogConstants.RDS_CLUSTER_SNAPSHOT, dbClusterSnapshot), e);
             }
-            return null;
         });
         experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
         // On finalize clean up the snapshot.
