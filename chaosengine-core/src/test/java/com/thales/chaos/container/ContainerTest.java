@@ -62,7 +62,6 @@ public class ContainerTest {
         }
 
         @ChaosExperiment(experimentType = ExperimentType.NETWORK)
-
         private void nullNetworkMethod () {
         }
 
