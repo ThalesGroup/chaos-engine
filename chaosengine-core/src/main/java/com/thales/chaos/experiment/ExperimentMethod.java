@@ -73,6 +73,8 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         experimentMethod.cattleOnly = cattle;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {
+            experiment.setMaximumDuration(script.getMaximumDuration());
+            experiment.setMinimumDuration(script.getMinimumDuration());
             experiment.setSelfHealingMethod(selfHealingMethod);
             experiment.setCheckContainerHealth(checkContainerHealthMethod);
             experiment.setFinalizeMethod(finalizeMethod);
