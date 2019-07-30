@@ -8,6 +8,7 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.ExperimentalObject;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
@@ -18,9 +19,9 @@ import com.thales.chaos.shellclient.ShellOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.validation.constraints.NotNull;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -38,17 +39,19 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public abstract class Container implements ExperimentalObject {
     protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
-    private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
+    private final Collection<ExperimentType> supportedExperimentTypes = new HashSet<>();
     private final Map<String, Boolean> shellCapabilities = new HashMap<>();
     private ContainerHealth containerHealth;
     private Experiment currentExperiment;
 
     protected Container () {
-        for (ExperimentType experimentType : ExperimentType.values()) {
-            if (!getMethodsWithAnnotation(this.getClass(), experimentType.getAnnotation()).isEmpty()) {
-                supportedExperimentTypes.add(experimentType);
-            }
+        for (Method method : getMethodsWithAnnotation(getClass(), ChaosExperiment.class)) {
+            final ChaosExperiment annotation = AnnotationUtils.getAnnotation(method, ChaosExperiment.class);
+            Optional.ofNullable(annotation)
+                    .map(ChaosExperiment::experimentType)
+                    .ifPresent(supportedExperimentTypes::add);
         }
+
     }
 
     public Map<String, Boolean> getShellCapabilities () {
@@ -76,9 +79,10 @@ public abstract class Container implements ExperimentalObject {
         return true;
     }
 
-    @JsonIgnore
-    public List<ExperimentType> getSupportedExperimentTypes () {
-        return supportedExperimentTypes;
+    public Experiment createExperiment () {
+        currentExperiment = createExperiment(getSupportedExperimentTypes().get(new Random().nextInt(supportedExperimentTypes
+                .size())));
+        return currentExperiment;
     }
 
     @Override
@@ -172,9 +176,9 @@ public abstract class Container implements ExperimentalObject {
 
     protected abstract ContainerHealth updateContainerHealthImpl (ExperimentType experimentType);
 
-    public Experiment createExperiment () {
-        currentExperiment = createExperiment(supportedExperimentTypes.get(new Random().nextInt(supportedExperimentTypes.size())));
-        return currentExperiment;
+    @JsonIgnore
+    public List<ExperimentType> getSupportedExperimentTypes () {
+        return new ArrayList<>(supportedExperimentTypes);
     }
 
     public Experiment createExperiment (ExperimentType experimentType) {
@@ -238,10 +242,8 @@ public abstract class Container implements ExperimentalObject {
     }
 
     @JsonIgnore
-    public Map<Class<? extends Annotation>, List<Method>> getExperimentMethods () {
-        return Arrays.stream(ExperimentType.values())
-                     .map(ExperimentType::getAnnotation)
-                     .collect(Collectors.toMap(Function.identity(), k -> getMethodsWithAnnotation(this.getClass(), k)));
+    public List<Method> getExperimentMethods () {
+        return getMethodsWithAnnotation(getClass(), ChaosExperiment.class);
     }
 
     @SuppressWarnings("unchecked")

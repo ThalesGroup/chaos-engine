@@ -6,9 +6,7 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.ResourceExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -105,7 +103,7 @@ public class CloudFoundryApplication extends Container {
         return uniqueIdentifier.equals(name);
     }
 
-    @ResourceExperiment
+    @ChaosExperiment(experimentType = ExperimentType.RESOURCE)
     public void scaleApplication (Experiment experiment) {
         experiment.setSelfHealingMethod(rescaleApplicationToDefault);
         experiment.setCheckContainerHealth(isAppHealthy);
@@ -119,14 +117,14 @@ public class CloudFoundryApplication extends Container {
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartApplication (Experiment experiment) {
         experiment.setSelfHealingMethod(restageApplication);
         experiment.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restageApplication (Experiment experiment) {
         experiment.setCheckContainerHealth(isAppHealthy);
         experiment.setSelfHealingMethod(noRecovery);
@@ -139,7 +137,7 @@ public class CloudFoundryApplication extends Container {
         return restageApplicationRequest;
     }
 
-    @NetworkExperiment
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void unmapRoute (Experiment experiment) {
         experiment.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {

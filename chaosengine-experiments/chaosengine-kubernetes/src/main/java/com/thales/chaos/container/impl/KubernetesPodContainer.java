@@ -5,7 +5,7 @@ import com.thales.chaos.container.Container;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -119,7 +119,7 @@ public class KubernetesPodContainer extends Container {
         return uniqueIdentifier.equals(podName);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void deletePod (Experiment experiment) {
         experiment.setCheckContainerHealth(replicaSetRecovered);
         kubernetesPlatform.deletePod(this);

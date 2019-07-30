@@ -6,9 +6,7 @@ import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.ChaosErrorCode;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.ResourceExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.NotificationManager;
@@ -68,7 +66,7 @@ public class ExperimentTest {
     public static Collection<Object[]> parameters () {
         Collection<Object[]> parameters = new ArrayList<>();
         Container stateContainer = spy(new MostlyAbstractContainer() {
-            @StateExperiment
+            @ChaosExperiment(experimentType = ExperimentType.STATE)
             public void stateExperiment () {
             }
         });
@@ -76,7 +74,7 @@ public class ExperimentTest {
         };
         parameters.add(new Object[]{ stateExperiment, stateContainer, STATE });
         Container networkContainer = spy(new MostlyAbstractContainer() {
-            @NetworkExperiment
+            @ChaosExperiment(experimentType = NETWORK)
             public void networkExperiment () {
             }
         });
@@ -84,7 +82,7 @@ public class ExperimentTest {
         };
         parameters.add(new Object[]{ networkExperiment, networkContainer, NETWORK });
         Container resourceContainer = spy(new MostlyAbstractContainer() {
-            @ResourceExperiment
+            @ChaosExperiment(experimentType = RESOURCE)
             public void resourceExperiment () {
             }
         });

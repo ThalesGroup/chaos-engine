@@ -8,8 +8,7 @@ import com.thales.chaos.container.AwsContainer;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -55,7 +54,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return dbInstanceIdentifier;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartInstance (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
@@ -71,7 +70,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return uniqueIdentifier.equals(dbInstanceIdentifier);
     }
 
-    @NetworkExperiment
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void removeSecurityGroups (Experiment experiment) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
         log.info("Existing security groups for {} are {}", value(getDataDogIdentifier().getKey(), getDataDogIdentifier().getValue()), value("securityGroups", existingSecurityGroups));
@@ -82,7 +81,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void startSnapshot (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
         final DBSnapshot dbSnapshot = awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);

@@ -4,8 +4,7 @@ import com.thales.chaos.admin.AdminManager;
 import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.NotificationManager;
@@ -89,11 +88,11 @@ public class ExperimentControllerTest {
             return false;
         }
 
-        @StateExperiment
+        @ChaosExperiment(experimentType = ExperimentType.STATE)
         public void restart (Experiment experiment) {
         }
 
-        @NetworkExperiment
+        @ChaosExperiment(experimentType = ExperimentType.NETWORK)
         public void latency (Experiment experiment) {
         }
     };
