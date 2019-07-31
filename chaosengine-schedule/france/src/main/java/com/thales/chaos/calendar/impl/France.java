@@ -1,37 +1,29 @@
 package com.thales.chaos.calendar.impl;
 
-import com.thales.chaos.calendar.HolidayCalendar;
+import com.thales.chaos.calendar.ChaosCalendar;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
-import java.util.*;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 @Component("FRA")
-public class France implements HolidayCalendar {
-    private static final String TZ = "Europe/Paris";
-    private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
-    private static final int START_OF_DAY = 9;
-    private static final int END_OF_DAY = 17;
-    private final Set<Integer> holidays = new TreeSet<>();
-
-    @Override
-    public boolean isHoliday (Calendar day) {
-        int year = day.get(Calendar.YEAR);
-        if (!holidays.contains(year)) {
-            renderHolidays(year);
-        }
-        return holidays.contains(day.get(Calendar.DAY_OF_YEAR));
+public class France extends ChaosCalendar {
+    France () {
+        super("Europe/Paris", 9, 17);
     }
-
-    private void renderHolidays (int year) {
-        holidays.clear();
+    @Override
+    protected Set<Integer> computeHolidays (int year) {
+        Set<Integer> holidays = new HashSet<>();
         holidays.addAll(getStaticHolidays(year));
         holidays.addAll(getMovingHolidays(year));
         holidays.addAll(getLinkedDays(holidays, year));
-        holidays.add(year);
+        return holidays;
     }
 
-    private Collection<? extends Integer> getStaticHolidays (int year) {
+    @Override
+    protected Set<Integer> getStaticHolidays (int year) {
         Set<Integer> staticHolidays = new TreeSet<>();
         // New Years
         staticHolidays.add(getDate(year, Calendar.JANUARY, 1));
@@ -59,7 +51,8 @@ public class France implements HolidayCalendar {
         return staticHolidays;
     }
 
-    private Collection<? extends Integer> getMovingHolidays (int year) {
+    @Override
+    protected Set<Integer> getMovingHolidays (int year) {
         Set<Integer> movingHolidays = new TreeSet<>();
         Integer easter = getEaster(year);
         // Good Friday, 2 days before Easter
@@ -73,24 +66,5 @@ public class France implements HolidayCalendar {
         return movingHolidays;
     }
 
-    @Override
-    public ZoneId getTimeZoneId () {
-        return TIME_ZONE_ID;
-    }
-
-    @Override
-    public int getStartOfDay () {
-        return START_OF_DAY;
-    }
-
-    @Override
-    public int getEndOfDay () {
-        return END_OF_DAY;
-    }
-
-    @Override
-    public TimeZone getTimeZone () {
-        return TimeZone.getTimeZone(TZ);
-    }
 }
 
