@@ -77,7 +77,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         log.info("Existing security groups for {} are {}", value(getDataDogIdentifier().getKey(), getDataDogIdentifier().getValue()), value("securityGroups", existingSecurityGroups));
         experiment.setSelfHealingMethod(() -> {
             awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);
-            return null;
         });
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
@@ -93,7 +92,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             } catch (DBSnapshotNotFoundException e) {
                 log.warn("Attempted to delete snapshot, but it was already deleted", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshot), e);
             }
-            return null;
         });
         experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
     }

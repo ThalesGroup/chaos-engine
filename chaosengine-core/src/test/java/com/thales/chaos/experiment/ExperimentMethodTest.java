@@ -82,9 +82,9 @@ public class ExperimentMethodTest {
     }
 
     @Test
-    public void callFinalizeCommand () throws Exception {
+    public void callFinalizeCommand () {
         assumeThat(script.getFinalizeCommand(), is(FINALIZE_COMMAND));
-        experiment.getFinalizeMethod().call();
+        experiment.getFinalizeMethod().run();
         verify(container, times(1)).runCommand(FINALIZE_COMMAND);
     }
 }

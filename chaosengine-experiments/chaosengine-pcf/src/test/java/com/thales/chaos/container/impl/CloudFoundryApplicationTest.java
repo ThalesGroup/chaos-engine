@@ -100,7 +100,7 @@ public class CloudFoundryApplicationTest {
     public void scaleApplicationHealing () throws Exception {
         cloudFoundryApplication.scaleApplication(experiment);
         verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
     }
 
@@ -108,7 +108,7 @@ public class CloudFoundryApplicationTest {
     public void scaleApplicationFinalization () throws Exception {
         cloudFoundryApplication.scaleApplication(experiment);
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).rescaleApplication(eq(name), any(Integer.class));
-        experiment.getFinalizeMethod().call();
+        experiment.getFinalizeMethod().run();
         assertEquals(cloudFoundryApplication.getOriginalContainerInstances(), cloudFoundryApplication.getActualContainerInstances());
     }
 
@@ -128,7 +128,7 @@ public class CloudFoundryApplicationTest {
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restageApplication(restageApplicationRequest);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
     }
 
     @Test
@@ -137,7 +137,7 @@ public class CloudFoundryApplicationTest {
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).restartApplication(name);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
     }
 
     @Test
@@ -146,7 +146,7 @@ public class CloudFoundryApplicationTest {
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryApplicationPlatform, times(1)).unmapRoute(ArgumentMatchers.any());
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
     }
 
     @Test(expected = ChaosException.class)

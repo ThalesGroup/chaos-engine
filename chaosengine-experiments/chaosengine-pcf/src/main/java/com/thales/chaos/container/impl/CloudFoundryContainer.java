@@ -27,10 +27,7 @@ public class CloudFoundryContainer extends Container {
     @Identifier(order = 2)
     private Integer instance;
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    private Callable<Void> restageApplication = () -> {
-        cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
-        return null;
-    };
+    private Runnable restageApplication = () -> cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
     private Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {

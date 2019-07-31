@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -246,13 +245,12 @@ public abstract class Container implements ExperimentalObject {
     }
 
     @SuppressWarnings("unchecked")
-    public Callable<Void> recycleCattle () {
+    public Runnable recycleCattle () {
         if (!isCattle() || !supportsShellBasedExperiments()) {
             throw new ChaosException(RECYCLING_UNSUPPORTED);
         }
         return () -> {
             getScriptPlatform().recycleContainer(this);
-            return null;
         };
     }
 

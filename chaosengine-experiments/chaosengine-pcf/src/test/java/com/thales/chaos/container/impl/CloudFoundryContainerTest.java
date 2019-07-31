@@ -87,7 +87,7 @@ public class CloudFoundryContainerTest {
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         Mockito.verify(cloudFoundryContainerPlatform, times(1))
                .restartInstance(any(RestartApplicationInstanceRequest.class));
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
     }
 
     @Test
