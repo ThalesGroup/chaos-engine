@@ -18,6 +18,7 @@ install:
 
 sonar_scan:
   stage: test
+  only: develop
   dependencies:
     - install
   script:
