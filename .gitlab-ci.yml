@@ -2,12 +2,15 @@ image: "maven"
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
 
 install:
   stage: build
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
+  cache:
+    paths:
+      - ".m2/"
   artifacts:
     when: on_success
     expire_in: 5 days
