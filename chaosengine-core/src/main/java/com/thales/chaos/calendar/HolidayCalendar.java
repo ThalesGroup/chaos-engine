@@ -36,6 +36,14 @@ public interface HolidayCalendar {
         return TimeZone.getTimeZone("GMT");
     }
 
+    /**
+     * Given a year, month, and day, return an integer day-of-year
+     *
+     * @param year  Given year
+     * @param month Given month
+     * @param day   Given day-of-month
+     * @return Integer day-of-year value matching the parameters
+     */
     default int getDate (int year, int month, int day) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.YEAR, year);
@@ -44,6 +52,15 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * Given a year, month, week of month, and day of week, return the integer day-of-year
+     *
+     * @param year Given year
+     * @param month Given month
+     * @param weekOfmonth Given Week-of-Month
+     * @param dayOfWeek Given day-of-week
+     * @return Integer day-of-year value matching the parameters
+     */
     default int getDate (int year, int month, int weekOfmonth, int dayOfWeek) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.DAY_OF_WEEK, dayOfWeek);
@@ -53,6 +70,13 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * Calculates days related to known holidays that are either observed days for work, or isolated days in the workweek which many people will take as a vacation day.
+     *
+     * @param holidays A set of Integers representing days of the year on which a holiday occurs
+     * @param year     The year associated with the set holidays set
+     * @return A set of Integers representing days of the year where many or all people will be out of the office due to holidays
+     */
     default Set<Integer> getLinkedDays (Set<Integer> holidays, int year) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {

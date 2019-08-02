@@ -1,39 +1,26 @@
 package com.thales.chaos.calendar.impl;
 
-import com.thales.chaos.calendar.HolidayCalendar;
+import com.thales.chaos.calendar.ChaosCalendar;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeSet;
+import java.util.*;
 
 @Component("CZE")
-public class Czechia implements HolidayCalendar {
-    private static final String TZ = "Europe/Prague";
-    private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
-    private static final int START_OF_DAY = 9;
-    private static final int END_OF_DAY = 17;
-    private final Set<Integer> holidays = new TreeSet<>();
+public class Czechia extends ChaosCalendar {
+    Czechia () {
+        super("Europe/Prague", 9, 17);
+    }
 
     @Override
-    public boolean isHoliday (Calendar day) {
-        int year = day.get(Calendar.YEAR);
-        if (!holidays.contains(year)) {
-            renderHolidays(year);
-        }
-        return holidays.contains(day.get(Calendar.DAY_OF_YEAR));
-    }
-
-    private void renderHolidays (int year) {
-        holidays.clear();
+    protected Collection<Integer> computeHolidays (int year) {
+        Set<Integer> holidays = new HashSet<>();
         holidays.addAll(getStaticHolidays(year));
         holidays.addAll(getLinkedDays(holidays, year));
-        holidays.add(year);
+        return holidays;
     }
 
-    private Set<Integer> getStaticHolidays (int year) {
+    @Override
+    protected Set<Integer> getStaticHolidays (int year) {
         Set<Integer> staticHolidays = new TreeSet<>();
         // Restoration Day of the Independent Czech State; New Year's Day
         staticHolidays.add(getDate(year, Calendar.JANUARY, 1));
@@ -60,24 +47,5 @@ public class Czechia implements HolidayCalendar {
         return staticHolidays;
     }
 
-    @Override
-    public ZoneId getTimeZoneId () {
-        return TIME_ZONE_ID;
-    }
-
-    @Override
-    public int getStartOfDay () {
-        return START_OF_DAY;
-    }
-
-    @Override
-    public int getEndOfDay () {
-        return END_OF_DAY;
-    }
-
-    @Override
-    public TimeZone getTimeZone () {
-        return TimeZone.getTimeZone(TZ);
-    }
 }
 
