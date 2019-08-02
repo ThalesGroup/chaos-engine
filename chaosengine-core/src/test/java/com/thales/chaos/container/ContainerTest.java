@@ -2,8 +2,7 @@ package com.thales.chaos.container;
 
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -58,11 +57,11 @@ public class ContainerTest {
         }
     };
     private Container testContainer2 = new Container() {
-        @StateExperiment
+        @ChaosExperiment(experimentType = ExperimentType.STATE)
         private void nullStateMethod () {
         }
 
-        @NetworkExperiment
+        @ChaosExperiment(experimentType = ExperimentType.NETWORK)
         private void nullNetworkMethod () {
         }
 

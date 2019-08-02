@@ -193,9 +193,7 @@ public abstract class Experiment {
     @SuppressWarnings("unchecked")
     private <T extends Container> Collection<ExperimentMethod<T>> getReflectionBasedMethods () {
         return getContainer().getExperimentMethods()
-                             .values()
                              .stream()
-                             .flatMap(Collection::stream)
                              .map(ExperimentMethod::fromMethod)
                              .map(method -> (ExperimentMethod<T>) method)
                              .collect(Collectors.toSet());

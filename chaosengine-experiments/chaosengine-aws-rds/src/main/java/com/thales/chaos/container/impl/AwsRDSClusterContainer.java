@@ -12,7 +12,7 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.AwsChaosErrorCode;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -82,7 +82,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return awsRDSPlatform.getClusterInstances(dbClusterIdentifier);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartInstances (Experiment experiment) {
         final String[] dbInstanceIdentifiers = getSomeMembers().toArray(new String[0]);
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifiers));
@@ -125,7 +125,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
         return returnSet;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void startSnapshot (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
         final DBClusterSnapshot dbClusterSnapshot = awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
@@ -140,7 +140,7 @@ public class AwsRDSClusterContainer extends AwsContainer {
         // On finalize clean up the snapshot.
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void initiateFailover (Experiment experiment) {
         final String[] members = getMembers().toArray(new String[0]);
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(members));

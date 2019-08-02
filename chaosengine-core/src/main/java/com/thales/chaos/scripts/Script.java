@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import org.springframework.core.io.Resource;
 
+import java.time.Duration;
 import java.util.Collection;
 
 public interface Script {
@@ -25,4 +26,8 @@ public interface Script {
     ExperimentType getExperimentType ();
 
     Collection<String> getDependencies ();
+
+    Duration getMaximumDuration ();
+
+    Duration getMinimumDuration ();
 }

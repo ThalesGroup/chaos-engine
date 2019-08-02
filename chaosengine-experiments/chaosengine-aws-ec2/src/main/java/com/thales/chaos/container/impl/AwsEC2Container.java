@@ -7,9 +7,7 @@ import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.CattleExperiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -145,24 +143,11 @@ public class AwsEC2Container extends AwsContainer {
         return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
         experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(checkContainerStartedMethod));
-    }
-
-    @StateExperiment
-    @CattleExperiment
-    public void terminateASGContainer (Experiment experiment) {
-        if (!isNativeAwsAutoscaling()) {
-            log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
-            throw new ChaosException(NOT_PART_OF_ASG);
-        }
-        awsEC2Platform.terminateInstance(instanceId);
-        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> ContainerHealth.RUNNING_EXPERIMENT));
-        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {
-        }));
     }
 
     Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
@@ -186,7 +171,7 @@ public class AwsEC2Container extends AwsContainer {
         return nativeAwsAutoscaling;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartContainer (Experiment experiment) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsEC2Platform.restartInstance(instanceId);
@@ -194,6 +179,17 @@ public class AwsEC2Container extends AwsContainer {
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> hardRebootTimer.isBefore(Instant.now()) ? awsEC2Platform
                 .checkHealth(instanceId) : ContainerHealth.RUNNING_EXPERIMENT));
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.STATE, cattleOnly = true)
+    public void terminateASGContainer (Experiment experiment) {
+        if (!isNativeAwsAutoscaling()) {
+            log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
+            throw new ChaosException(NOT_PART_OF_ASG);
+        }
+        awsEC2Platform.terminateInstance(instanceId);
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> ContainerHealth.RUNNING_EXPERIMENT));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {}));
     }
 
     Runnable autoscalingSelfHealingWrapper (@NotNull Runnable baseMethod) {
@@ -208,7 +204,7 @@ public class AwsEC2Container extends AwsContainer {
         } : baseMethod;
     }
 
-    @NetworkExperiment
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void removeSecurityGroups (Experiment experiment) {
         List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId)));

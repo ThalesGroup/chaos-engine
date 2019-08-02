@@ -3,16 +3,15 @@ package com.thales.chaos.experiment;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
-import com.thales.chaos.experiment.annotations.CattleExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.shellclient.ShellOutput;
+import org.springframework.core.annotation.AnnotationUtils;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Optional;
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 
@@ -32,22 +31,20 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         } catch (ClassCastException e) {
             throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
         }
+        final ChaosExperiment experimentConfiguration = AnnotationUtils.getAnnotation(method, ChaosExperiment.class);
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.actualBiconsumer = (container, experiment) -> {
             try {
+                ((Experiment) experiment).setMinimumDuration(Duration.ofSeconds(experimentConfiguration.minimumDurationInSeconds()));
+                ((Experiment) experiment).setMaximumDuration(Duration.ofSeconds(experimentConfiguration.maximumDurationInSeconds()));
                 method.invoke(container, experiment);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
             }
         };
         experimentMethod.experimentName = method.getName();
-        Optional<Annotation> experimentTypeAnnotation = Arrays.stream(method.getAnnotations())
-                                                              .filter(ExperimentType::isExperiment)
-                                                              .findFirst();
-        experimentTypeAnnotation.ifPresent(annotation -> experimentMethod.experimentType = ExperimentType.valueOf(annotation));
-        experimentMethod.cattleOnly = Arrays.stream(method.getAnnotations())
-                                            .map(Annotation::annotationType)
-                                            .anyMatch(c -> c.equals(CattleExperiment.class));
+        experimentMethod.experimentType = experimentConfiguration.experimentType();
+        experimentMethod.cattleOnly = experimentConfiguration.cattleOnly();
         return experimentMethod;
     }
 
@@ -76,6 +73,8 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         experimentMethod.cattleOnly = cattle;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {
+            experiment.setMaximumDuration(script.getMaximumDuration());
+            experiment.setMinimumDuration(script.getMinimumDuration());
             experiment.setSelfHealingMethod(selfHealingMethod);
             experiment.setCheckContainerHealth(checkContainerHealthMethod);
             experiment.setFinalizeMethod(finalizeMethod);

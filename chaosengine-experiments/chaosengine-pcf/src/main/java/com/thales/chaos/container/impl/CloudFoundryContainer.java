@@ -4,7 +4,7 @@ import com.thales.chaos.container.Container;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -79,7 +79,7 @@ public class CloudFoundryContainer extends Container {
         return true;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartContainer (Experiment experiment) {
         experiment.setSelfHealingMethod(restageApplication);
         experiment.setCheckContainerHealth(isInstanceRunning);

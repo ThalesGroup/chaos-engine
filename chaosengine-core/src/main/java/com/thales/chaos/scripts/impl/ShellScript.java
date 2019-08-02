@@ -13,6 +13,7 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -37,6 +38,8 @@ public class ShellScript implements Script {
     private boolean requiresCattle;
     private String finalizeCommand;
     private ExperimentType experimentType;
+    private Duration maximumDuration;
+    private Duration minimumDuration;
 
     public static ShellScript fromResource (Resource resource) {
         ShellScript script = new ShellScript();
@@ -62,6 +65,8 @@ public class ShellScript implements Script {
             buildSelfHealingCommand();
             buildRequiresCattle();
             buildFinalizeCommand();
+            buildMinimumDuration();
+            buildMaximumDuration();
             buildExperimentType();
         }
     }
@@ -128,6 +133,16 @@ public class ShellScript implements Script {
     private void buildDescription () {
         description = getOptionalFieldFromCommentBlock("Description").orElse("No description provided");
         log.debug("Description evaluated to be {}", description);
+    }
+
+    private void buildMinimumDuration () {
+        minimumDuration = Duration.ofSeconds(Long.valueOf(getOptionalFieldFromCommentBlock("Minimum Duration").orElse("30")));
+        log.debug("Minimum Duration evaluated to be {}", minimumDuration);
+    }
+
+    private void buildMaximumDuration () {
+        maximumDuration = Duration.ofSeconds(Long.valueOf(getOptionalFieldFromCommentBlock("Maximum Duration").orElse("300")));
+        log.debug("Maximum Duration evaluated to be {}", maximumDuration);
     }
 
     public String getShebang () {
@@ -202,6 +217,16 @@ public class ShellScript implements Script {
     @Override
     public Collection<String> getDependencies () {
         return dependencies;
+    }
+
+    @Override
+    public Duration getMaximumDuration () {
+        return maximumDuration;
+    }
+
+    @Override
+    public Duration getMinimumDuration () {
+        return minimumDuration;
     }
 
     public String getDescription () {
