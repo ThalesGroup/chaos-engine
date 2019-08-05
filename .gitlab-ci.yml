@@ -28,3 +28,17 @@ sonar_scan:
     - install
   script:
     - mvn $MAVEN_CLI_OPTS sonar:sonar -Dsonar.projectKey="$SONAR_PROJECT_KEY"  -Dsonar.host.url="$SONAR_URL"  -Dsonar.login="$SONAR_TOKEN"
+
+clamav_scan:
+  stage: test
+  dependencies:
+    - install
+  image:
+    name: alpine
+  script:
+    - apk add --no-cache clamav rsyslog wget clamav-libunrar
+    - /usr/bin/freshclam
+    - /usr/bin/clamscan -vr . --log=av.log
+  artifacts:
+    paths:
+      - "av.log"
