@@ -18,7 +18,7 @@ import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
-@ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
+@ConditionalOnProperty(name = "datadog.enableEvents", havingValue = "true")
 public class DataDogNotification implements NotificationMethods {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title", "message", "targetContainer");

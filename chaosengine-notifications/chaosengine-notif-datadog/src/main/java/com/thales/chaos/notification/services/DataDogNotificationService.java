@@ -3,18 +3,28 @@ package com.thales.chaos.notification.services;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(name = "dd_enable_events", havingValue = "true")
+@ConfigurationProperties(prefix = "datadog")
+@ConditionalOnProperty(name = "datadog.enableEvents", havingValue = "true")
 public class DataDogNotificationService {
-    private static final int STATSD_PORT = 8125;
-    private static final String STATSD_HOST = "datadog";
+    private int statsdPort = 8125;
+    private String statsdHost = "datadog";
     private static final String[] STATIC_TAGS = { "service:chaosengine" };
+
+    public void setStatsdPort (int statsdPort) {
+        this.statsdPort = statsdPort;
+    }
+
+    public void setStatsdHost (String statsdHost) {
+        this.statsdHost = statsdHost;
+    }
 
     @Bean
     StatsDClient statsDClient(){
-        return new NonBlockingStatsDClient("", STATSD_HOST, STATSD_PORT, STATIC_TAGS);
+        return new NonBlockingStatsDClient("", statsdHost, statsdPort, STATIC_TAGS);
     }
 }
