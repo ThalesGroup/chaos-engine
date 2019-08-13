@@ -52,6 +52,6 @@ sonar_scan:
      echo "Alert status: $ALERT_STATUS"
      echo "Bugs detected: $BUG_COUNT"
      echo "Vulnerabilities: $VULN_COUNT"
-     #exit 1
+     exit 1
     fi
     echo "Sonar scan passed"
