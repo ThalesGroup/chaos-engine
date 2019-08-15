@@ -23,11 +23,16 @@ install:
 sonar_scan:
   stage: test
   only:
-    - develop
+    refs:
+      - develop
+    variables:
+      - $SONAR_URL
+      - $SONAR_TOKEN
+      - $SONAR_PROJECT_KEY
   dependencies:
     - install
   script:
-    - mvn $MAVEN_CLI_OPTS sonar:sonar -Dsonar.projectKey="$SONAR_PROJECT_KEY"  -Dsonar.host.url="$SONAR_URL"  -Dsonar.login="$SONAR_TOKEN"
+    - ./ci/test/sonar_scan.sh
 
 clamav_scan:
   stage: test
