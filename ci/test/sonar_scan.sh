@@ -20,6 +20,9 @@ QUALITY_GATE_STATUS=$(curl -s "$SONAR_URL/api/project_branches/list?project=$SON
 ALERT_STATUS=$(curl -s "$SONAR_URL/api/measures/search?projectKeys=$SONAR_PROJECT_KEY&metricKeys=alert_status" | jq -r '.[]|.[] .value')
 BUG_COUNT=$(curl -s "$SONAR_URL/api/measures/search?projectKeys=$SONAR_PROJECT_KEY&metricKeys=bugs" | jq -r '.[]|.[] .value')
 VULN_COUNT=$(curl -s "$SONAR_URL/api/measures/search?projectKeys=$SONAR_PROJECT_KEY&metricKeys=vulnerabilities" | jq -r '.[]|.[] .value')
+CODE_COVERAGE=$(curl -s "$SONAR_URL/api/measures/search?projectKeys=$SONAR_PROJECT_KEY&metricKeys=coverage" | jq -r '.[]|.[] .value')
+
+echo "Code Coverage: $CODE_COVERAGE"
 
 if [[ "$QUALITY_GATE_STATUS" != "OK" || "$ALERT_STATUS" != "OK" || "$BUG_COUNT" != "0" || "$VULN_COUNT" != "0" ]]; then
   echo "Sonar has detected issues"
