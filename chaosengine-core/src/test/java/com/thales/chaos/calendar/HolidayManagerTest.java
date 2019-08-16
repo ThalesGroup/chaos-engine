@@ -68,7 +68,7 @@ public class HolidayManagerTest {
 
         @Bean
         public HolidayManager holidayManager () {
-            return new HolidayManager(holidayCalendar);
+            return new HolidayManager();
         }
     }
 }

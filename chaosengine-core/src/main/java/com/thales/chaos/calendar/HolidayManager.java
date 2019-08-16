@@ -2,7 +2,6 @@ package com.thales.chaos.calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -21,14 +20,6 @@ public class HolidayManager {
     private static final Logger log = LoggerFactory.getLogger(HolidayManager.class);
     @Resource(name = "${holidays:CAN}")
     private HolidayCalendar holidayCalendar;
-
-    @Autowired
-    HolidayManager () {
-    }
-
-    HolidayManager (HolidayCalendar holidayCalendar) {
-        this.holidayCalendar = holidayCalendar;
-    }
 
     @EventListener(ApplicationReadyEvent.class)
     private void logCreation () {
