@@ -204,6 +204,12 @@ public class ContainerTest {
         Container firstEqualContainer = new EqualityTestContainer("containerName", 0);
         Container secondEqualContainer = new EqualityTestContainer("containerName", 0);
         Container unequalContainer = new EqualityTestContainer("containerName", 1);
+
+        /* IntelliJ is suggesting that these be replaced from assertTrue/False with assert(Not)Equals.
+        This cannot be done because we specifically want to call the equals method. Using assertions does
+        a significant amount of sanitizing beforehand, which doesn't reach the equals method.
+         */
+
         assertEquals(firstEqualContainer, secondEqualContainer);
         assertFalse(firstEqualContainer.equals(unequalContainer));
         assertFalse(secondEqualContainer.equals(unequalContainer));
