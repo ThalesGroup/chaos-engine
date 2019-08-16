@@ -10,7 +10,6 @@ import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Status;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -164,9 +163,8 @@ public class CloudFoundryApplicationTest {
 
     @Test
     public void createExperiment () {
-        Experiment experiment = cloudFoundryApplication.createExperiment(ExperimentType.RESOURCE);
+        Experiment experiment = cloudFoundryApplication.createExperiment();
         assertEquals(cloudFoundryApplication, experiment.getContainer());
-        Assert.assertEquals(ExperimentType.RESOURCE, experiment.getExperimentType());
     }
 
     @Test

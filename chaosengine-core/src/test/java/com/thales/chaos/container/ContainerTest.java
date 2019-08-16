@@ -6,8 +6,6 @@ import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
-import org.hamcrest.collection.IsEmptyIterable;
-import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -103,32 +101,10 @@ public class ContainerTest {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     public void canExperiment () {
-        // TODO : Mock the random class inside the container.
-        doReturn(1D).when(platform).getDestructionProbability();
-        assertFalse(testContainer.canExperiment());
-        doReturn(0D).when(platform).getDestructionProbability();
-        assertFalse(testContainer.canExperiment());
-
         doReturn(1D).when(platform).getDestructionProbability();
         assertTrue(testContainer2.canExperiment());
         doReturn(0D).when(platform).getDestructionProbability();
         assertFalse(testContainer2.canExperiment());
-    }
-
-    @Test
-    public void getSupportedExperimentTypes () {
-        assertThat(testContainer.getSupportedExperimentTypes(), IsEmptyIterable.emptyIterableOf(ExperimentType.class));
-        assertThat(testContainer2.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE, ExperimentType.NETWORK));
-    }
-
-    @Test
-    public void supportsExperimentType () {
-        assertFalse(testContainer.supportsExperimentType(ExperimentType.STATE));
-        assertFalse(testContainer.supportsExperimentType(ExperimentType.NETWORK));
-        assertFalse(testContainer.supportsExperimentType(ExperimentType.RESOURCE));
-        assertTrue(testContainer2.supportsExperimentType(ExperimentType.STATE));
-        assertTrue(testContainer2.supportsExperimentType(ExperimentType.NETWORK));
-        assertFalse(testContainer2.supportsExperimentType(ExperimentType.RESOURCE));
     }
 
     @Test

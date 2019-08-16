@@ -2,7 +2,6 @@ package com.thales.chaos.experiment;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.scripts.impl.ShellScript;
 import com.thales.chaos.shellclient.ShellOutput;
@@ -31,7 +30,7 @@ public class ExperimentMethodTest {
     private final Container container = mock(Container.class);
     private ExperimentMethod<Container> experimentMethod;
     private Script script;
-    private Experiment experiment = spy(new Experiment(container, ExperimentType.STATE) {
+    private Experiment experiment = spy(new Experiment(container) {
     });
 
     public ExperimentMethodTest (String resourceName) {

@@ -2,15 +2,14 @@ package com.thales.chaos.experiment.impl;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.enums.ExperimentType;
 
 import java.time.Duration;
 
 import static com.thales.chaos.constants.ExperimentConstants.*;
 
 public class GenericContainerExperiment extends Experiment {
-    public GenericContainerExperiment (Container container, ExperimentType experimentType) {
-        super(container, experimentType);
+    public GenericContainerExperiment (Container container) {
+        super(container);
     }
 
     public static GenericContainerExperimentBuilder builder () {
@@ -19,7 +18,6 @@ public class GenericContainerExperiment extends Experiment {
 
     public static final class GenericContainerExperimentBuilder {
         protected Container container;
-        private ExperimentType experimentType;
         private Duration minimumDuration = Duration.ofSeconds(DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS);
         private Duration maximumDuration = Duration.ofMinutes(DEFAULT_EXPERIMENT_DURATION_MINUTES);
         private Duration finalizationDuration = Duration.ofSeconds(DEFAULT_TIME_BEFORE_FINALIZATION_SECONDS);
@@ -34,11 +32,6 @@ public class GenericContainerExperiment extends Experiment {
 
         public GenericContainerExperimentBuilder withContainer (Container container) {
             this.container = container;
-            return this;
-        }
-
-        public GenericContainerExperimentBuilder withExperimentType (ExperimentType experimentType) {
-            this.experimentType = experimentType;
             return this;
         }
 
@@ -63,7 +56,7 @@ public class GenericContainerExperiment extends Experiment {
         }
 
         public GenericContainerExperiment build () {
-            GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment(this.container, this.experimentType);
+            GenericContainerExperiment genericContainerExperiment = new GenericContainerExperiment(this.container);
             genericContainerExperiment.maximumDuration = this.maximumDuration;
             genericContainerExperiment.minimumDuration = this.minimumDuration;
             genericContainerExperiment.finalizationDuration = this.finalizationDuration;

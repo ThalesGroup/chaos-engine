@@ -70,7 +70,7 @@ public class ExperimentTest {
             public void stateExperiment () {
             }
         });
-        Experiment stateExperiment = new Experiment(stateContainer, STATE) {
+        Experiment stateExperiment = new Experiment(stateContainer) {
         };
         parameters.add(new Object[]{ stateExperiment, stateContainer, STATE });
         Container networkContainer = spy(new MostlyAbstractContainer() {
@@ -78,7 +78,7 @@ public class ExperimentTest {
             public void networkExperiment () {
             }
         });
-        Experiment networkExperiment = new Experiment(networkContainer, NETWORK) {
+        Experiment networkExperiment = new Experiment(networkContainer) {
         };
         parameters.add(new Object[]{ networkExperiment, networkContainer, NETWORK });
         Container resourceContainer = spy(new MostlyAbstractContainer() {
@@ -86,7 +86,7 @@ public class ExperimentTest {
             public void resourceExperiment () {
             }
         });
-        Experiment resourceExperiment = new Experiment(resourceContainer, RESOURCE) {
+        Experiment resourceExperiment = new Experiment(resourceContainer) {
         };
         parameters.add(new Object[]{ resourceExperiment, resourceContainer, RESOURCE });
         return parameters;
