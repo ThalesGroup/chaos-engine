@@ -2,10 +2,14 @@ package com.thales.chaos.container;
 
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.experiment.Experiment;
+import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
+import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsEmptyIterable;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
@@ -16,8 +20,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.validation.constraints.NotNull;
 
+import static com.thales.chaos.container.enums.ContainerHealth.RUNNING_EXPERIMENT;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ContainerTest {
@@ -72,7 +77,7 @@ public class ContainerTest {
 
         @Override
         protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-            return ContainerHealth.RUNNING_EXPERIMENT;
+            return RUNNING_EXPERIMENT;
         }
 
         @Override
@@ -133,7 +138,7 @@ public class ContainerTest {
     @Test
     public void getContainerHealth () {
         assertEquals(ContainerHealth.NORMAL, testContainer.getContainerHealth(null));
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
+        assertEquals(RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
     }
 
     @Test
@@ -204,6 +209,34 @@ public class ContainerTest {
         assertFalse(secondEqualContainer.equals(unequalContainer));
         assertFalse(firstEqualContainer.equals("A string"));
         assertFalse(firstEqualContainer.equals(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void startExperiment () {
+        ExperimentMethod experimentMethod = mock(ExperimentMethod.class);
+        Experiment experiment = mock(Experiment.class);
+        doReturn(experimentMethod).when(experiment).getExperimentMethod();
+        testContainer.startExperiment(experiment);
+        verify(experimentMethod).accept(testContainer, experiment);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void startExperimentException () {
+        ExperimentMethod experimentMethod = mock(ExperimentMethod.class);
+        Experiment experiment = mock(Experiment.class);
+        RuntimeException experimentException = new RuntimeException();
+        doReturn(experimentMethod).when(experiment).getExperimentMethod();
+        doThrow(experimentException).when(experimentMethod).accept(testContainer, experiment);
+        try {
+            testContainer.startExperiment(experiment);
+            fail("Exception expected");
+        } catch (ChaosException e) {
+            verify(experimentMethod).accept(testContainer, experiment);
+            assertSame(experimentException, e.getCause());
+            assertThat(e.getMessage(), Matchers.startsWith("12001"));
+        }
     }
 
     private class EqualityTestContainer extends MostlyAbstractContainer {
