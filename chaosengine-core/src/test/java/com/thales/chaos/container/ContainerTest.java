@@ -183,4 +183,45 @@ public class ContainerTest {
         };
         assertEquals(2890670807L, badlyConstructedContainer.getIdentity());
     }
+
+    @Test
+    public void toStringTest () {
+        Container containerWithFields = new Container() {
+            @Identifier(order = 0)
+            private String name = "container name";
+            @Identifier(order = 1)
+            private int index = 0;
+
+            @Override
+            public Platform getPlatform () {
+                return null;
+            }
+
+            @Override
+            protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+                return null;
+            }
+
+            @Override
+            public String getSimpleName () {
+                return null;
+            }
+
+            @Override
+            public String getAggregationIdentifier () {
+                return null;
+            }
+
+            @Override
+            public DataDogIdentifier getDataDogIdentifier () {
+                return null;
+            }
+
+            @Override
+            protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+                return false;
+            }
+        };
+        assertEquals("Container type: \n" + "\tname:\tcontainer name\n" + "\tindex:\t0", containerWithFields.toString());
+    }
 }
