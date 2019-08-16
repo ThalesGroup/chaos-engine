@@ -108,7 +108,6 @@ public class ContainerTest {
         assertFalse(testContainer.canExperiment());
         doReturn(0D).when(platform).getDestructionProbability();
         assertFalse(testContainer.canExperiment());
-
         doReturn(1D).when(platform).getDestructionProbability();
         assertTrue(testContainer2.canExperiment());
         doReturn(0D).when(platform).getDestructionProbability();
@@ -186,42 +185,68 @@ public class ContainerTest {
 
     @Test
     public void toStringTest () {
-        Container containerWithFields = new Container() {
+        Container containerWithFields = new MostlyAbstractContainer() {
             @Identifier(order = 0)
             private String name = "container name";
             @Identifier(order = 1)
             private int index = 0;
-
-            @Override
-            public Platform getPlatform () {
-                return null;
-            }
-
-            @Override
-            protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-                return null;
-            }
-
-            @Override
-            public String getSimpleName () {
-                return null;
-            }
-
-            @Override
-            public String getAggregationIdentifier () {
-                return null;
-            }
-
-            @Override
-            public DataDogIdentifier getDataDogIdentifier () {
-                return null;
-            }
-
-            @Override
-            protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
-                return false;
-            }
         };
         assertEquals("Container type: \n" + "\tname:\tcontainer name\n" + "\tindex:\t0", containerWithFields.toString());
+    }
+
+    @Test
+    public void equalsTest () {
+        Container firstEqualContainer = new EqualityTestContainer("containerName", 0);
+        Container secondEqualContainer = new EqualityTestContainer("containerName", 0);
+        Container unequalContainer = new EqualityTestContainer("containerName", 1);
+        assertEquals(firstEqualContainer, secondEqualContainer);
+        assertFalse(firstEqualContainer.equals(unequalContainer));
+        assertFalse(secondEqualContainer.equals(unequalContainer));
+        assertFalse(firstEqualContainer.equals("A string"));
+        assertFalse(firstEqualContainer.equals(null));
+    }
+
+    private class EqualityTestContainer extends MostlyAbstractContainer {
+        @Identifier(order = 0)
+        private String name;
+        @Identifier(order = 1)
+        private int index;
+
+        EqualityTestContainer (String name, int index) {
+            this.name = name;
+            this.index = index;
+        }
+    }
+
+    private abstract class MostlyAbstractContainer extends Container {
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
     }
 }
