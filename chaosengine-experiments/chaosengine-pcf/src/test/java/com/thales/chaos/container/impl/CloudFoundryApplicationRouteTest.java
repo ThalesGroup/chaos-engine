@@ -1,5 +1,7 @@
 package com.thales.chaos.container.impl;
 
+import com.thales.chaos.container.enums.CloudFoundryApplicationRouteType;
+import com.thales.chaos.exception.ChaosException;
 import org.cloudfoundry.client.v2.routes.RouteEntity;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Status;
@@ -13,8 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class CloudFoundryApplicationRouteTest {
@@ -35,14 +36,23 @@ public class CloudFoundryApplicationRouteTest {
     private Domain tcpDomain = Domain.builder()
                                      .id("tcpDomain")
                                      .name("tcp.domain.com")
-                                     .type("tcp")
-                                     .status(Status.SHARED)
-                                     .build();
+                                     .type("tcp").status(Status.SHARED).build();
+    private Domain unknownDomainType = Domain.builder()
+                                             .id("unknownDomain")
+                                             .name("unknownDomain.domain.com")
+                                             .type("unknown")
+                                             .status(Status.SHARED)
+                                             .build();
     private RouteEntity httpRouteEntity = RouteEntity.builder().host("httpHost").domainId(httpDomain.getId()).build();
     private RouteEntity tcpRouteEntity = RouteEntity.builder().port(666).domainId(tcpDomain.getId()).build();
+    private RouteEntity unknownRouteEntity = RouteEntity.builder()
+                                                        .host("unknownRouteEntity")
+                                                        .domainId(unknownDomainType.getId())
+                                                        .build();
     private CloudFoundryApplicationRoute httpRoute;
     private CloudFoundryApplicationRoute httpRoute2;
     private CloudFoundryApplicationRoute tcpRoute;
+    private CloudFoundryApplicationRoute unknownRouteType;
 
     @Before
     public void setUp () {
@@ -61,6 +71,11 @@ public class CloudFoundryApplicationRouteTest {
                                                .domain(tcpDomain)
                                                .route(tcpRouteEntity)
                                                .build();
+        unknownRouteType = CloudFoundryApplicationRoute.builder()
+                                                       .applicationName(APP2_NAME)
+                                                       .domain(unknownDomainType)
+                                                       .route(unknownRouteEntity)
+                                                       .build();
     }
 
     @Test
@@ -86,6 +101,11 @@ public class CloudFoundryApplicationRouteTest {
                                                                  .port(tcpRouteEntity.getPort())
                                                                  .build();
         assertEquals(expectedMapRouteRequest, tcpRoute.getMapRouteRequest());
+    }
+
+    @Test(expected = ChaosException.class)
+    public void unknownRouteMap () {
+        unknownRouteType.getMapRouteRequest();
     }
 
     @Test
@@ -114,9 +134,28 @@ public class CloudFoundryApplicationRouteTest {
 
     }
 
+    @Test(expected = ChaosException.class)
+    public void unknownRouteUnMap () {
+        unknownRouteType.getUnmapRouteRequest();
+    }
+
     @Test
     public void testToString () {
         assertThat(httpRoute.toString(), CoreMatchers.containsString("type=HTTP"));
         assertThat(tcpRoute.toString(), CoreMatchers.containsString("type=TCP"));
+    }
+
+    @Test
+    public void testRouteType () {
+        assertEquals(CloudFoundryApplicationRouteType.HTTP, httpRoute.getType());
+        assertEquals(CloudFoundryApplicationRouteType.HTTP, httpRoute2.getType());
+        assertEquals(CloudFoundryApplicationRouteType.TCP, tcpRoute.getType());
+    }
+
+    @Test
+    public void testGetHost () {
+        assertEquals(httpRouteEntity.getHost(), httpRoute.getHost());
+        assertEquals(httpRouteEntity.getHost(), httpRoute2.getHost());
+        assertNull(tcpRouteEntity.getHost());
     }
 }
