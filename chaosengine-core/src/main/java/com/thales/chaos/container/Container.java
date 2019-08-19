@@ -19,7 +19,6 @@ import com.thales.chaos.shellclient.ShellOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
@@ -38,20 +37,9 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public abstract class Container implements ExperimentalObject {
     protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
-    private final Collection<ExperimentType> supportedExperimentTypes = new HashSet<>();
     private final Map<String, Boolean> shellCapabilities = new HashMap<>();
     private ContainerHealth containerHealth;
     private Experiment currentExperiment;
-
-    protected Container () {
-        for (Method method : getMethodsWithAnnotation(getClass(), ChaosExperiment.class)) {
-            final ChaosExperiment annotation = AnnotationUtils.getAnnotation(method, ChaosExperiment.class);
-            Optional.ofNullable(annotation)
-                    .map(ChaosExperiment::experimentType)
-                    .ifPresent(supportedExperimentTypes::add);
-        }
-
-    }
 
     public Map<String, Boolean> getShellCapabilities () {
         return shellCapabilities;
@@ -64,7 +52,7 @@ public abstract class Container implements ExperimentalObject {
 
     @Override
     public boolean canExperiment () {
-        if (!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()) {
+        if (new Random().nextDouble() < getPlatform().getDestructionProbability()) {
             return eligibleForExperiments();
         }
         log.debug("Cannot experiment on the container right now", v(DataDogConstants.DATADOG_CONTAINER_KEY, this));
@@ -79,8 +67,7 @@ public abstract class Container implements ExperimentalObject {
     }
 
     public Experiment createExperiment () {
-        currentExperiment = createExperiment(getSupportedExperimentTypes().get(new Random().nextInt(supportedExperimentTypes
-                .size())));
+        currentExperiment = GenericContainerExperiment.builder().withContainer(this).build();
         return currentExperiment;
     }
 
@@ -160,10 +147,6 @@ public abstract class Container implements ExperimentalObject {
         return String.join("\n\t", fieldValues);
     }
 
-    public boolean supportsExperimentType (ExperimentType experimentType) {
-        return supportedExperimentTypes.contains(experimentType);
-    }
-
     public ContainerHealth getContainerHealth (ExperimentType experimentType) {
         updateContainerHealth(experimentType);
         return containerHealth;
@@ -174,15 +157,6 @@ public abstract class Container implements ExperimentalObject {
     }
 
     protected abstract ContainerHealth updateContainerHealthImpl (ExperimentType experimentType);
-
-    @JsonIgnore
-    public List<ExperimentType> getSupportedExperimentTypes () {
-        return new ArrayList<>(supportedExperimentTypes);
-    }
-
-    public Experiment createExperiment (ExperimentType experimentType) {
-        return GenericContainerExperiment.builder().withExperimentType(experimentType).withContainer(this).build();
-    }
 
     public Experiment createExperiment (String experimentMethod) {
         currentExperiment = GenericContainerExperiment.builder()

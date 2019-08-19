@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import static com.thales.chaos.constants.ExperimentConstants.*;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER;
+import static com.thales.chaos.util.CollectionUtils.getRandomItemFromCollection;
 import static java.util.UUID.randomUUID;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -68,9 +69,8 @@ public abstract class Experiment {
     protected String specificExperiment;
     private Future<Boolean> experimentStartup;
 
-    public Experiment (Container container, ExperimentType experimentType) {
+    public Experiment (Container container) {
         this.container = container;
-        this.experimentType = experimentType;
         setExperimentLayer(container.getPlatform());
     }
 
@@ -182,10 +182,11 @@ public abstract class Experiment {
             log.info("Preferred experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
             this.experimentType = newExperimentType;
         } else {
-            method = allMethods.stream().filter(m -> experimentType.equals(m.getExperimentType()))
-                               .sorted(Comparator.comparingInt(i -> new Random().nextInt()))
-                               .findAny()
-                               .orElse(null);
+            final Map<ExperimentType, List<ExperimentMethod<T>>> groupedMethods = allMethods.stream()
+                                                                                            .collect(Collectors.groupingBy(ExperimentMethod::getExperimentType));
+            experimentType = getRandomItemFromCollection(groupedMethods.keySet());
+            final List<ExperimentMethod<T>> availableMethods = groupedMethods.get(experimentType);
+            return getRandomItemFromCollection(availableMethods);
         }
         return method;
     }

@@ -100,12 +100,10 @@ public class ExperimentControllerTest {
     @Before
     public void setUp () {
         experiment1 = GenericContainerExperiment.builder()
-                                                .withContainer(container)
-                                                .withExperimentType(ExperimentType.STATE)
+                                                .withContainer(container).withSpecificExperiment("restart")
                                                 .build();
         experiment2 = GenericContainerExperiment.builder()
-                                                .withContainer(container)
-                                                .withExperimentType(ExperimentType.NETWORK)
+                                                .withContainer(container).withSpecificExperiment("latency")
                                                 .build();
         autowireCapableBeanFactory.autowireBean(experiment1);
         autowireCapableBeanFactory.autowireBean(experiment2);

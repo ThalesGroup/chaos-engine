@@ -1,7 +1,6 @@
 package com.thales.chaos.platform;
 
 import com.thales.chaos.container.Container;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
@@ -59,14 +58,6 @@ public class PlatformTest {
         });
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
-    public void getSupportedExperimentTypes () {
-        doReturn(Collections.singletonList(ExperimentType.STATE)).when(container).getSupportedExperimentTypes();
-        assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));
-        assertThat(platform.getSupportedExperimentTypes(), IsIterableContainingInAnyOrder.containsInAnyOrder(ExperimentType.STATE));
-        Mockito.verify(container, times(1)).getSupportedExperimentTypes();
-    }
 
     @Test
     public void getRoster () {

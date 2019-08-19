@@ -5,7 +5,6 @@ import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.ExperimentalObject;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
@@ -33,7 +32,6 @@ public abstract class Platform implements ExperimentalObject {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private long averageMillisPerExperiment = 14400000L;
     private Scheduler scheduler;
-    private List<ExperimentType> supportedExperimentTypes;
     private Expiring<List<Container>> roster;
     private Set<Instant> experimentTimes = new HashSet<>();
     @Autowired
@@ -64,17 +62,6 @@ public abstract class Platform implements ExperimentalObject {
 
     public String getPlatformType () {
         return this.getClass().getSimpleName();
-    }
-
-    List<ExperimentType> getSupportedExperimentTypes () {
-        if (supportedExperimentTypes == null) {
-            supportedExperimentTypes = getRoster().stream()
-                                                  .map(Container::getSupportedExperimentTypes)
-                                                  .flatMap(List::stream)
-                                                  .distinct()
-                                                  .collect(Collectors.toList());
-        }
-        return supportedExperimentTypes;
     }
 
     public synchronized List<Container> getRoster () {
