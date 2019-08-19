@@ -1,6 +1,5 @@
 package com.thales.chaos.calendar;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,10 +10,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -26,11 +28,19 @@ public class HolidayManagerTest {
 
     @Before
     public void setUp () {
-        doReturn(true, false).when(holidayCalendar).isHoliday(any());
+        doCallRealMethod().when(holidayCalendar).isWeekend(any());
+        doCallRealMethod().when(holidayCalendar).getToday();
+        doCallRealMethod().when(holidayCalendar).isBeforeWorkingHours(any());
+        doReturn(false).when(holidayCalendar).isHoliday(any());
+        doReturn(ZoneId.of("GMT")).when(holidayCalendar).getTimeZoneId();
+        doReturn(8).when(holidayCalendar).getStartOfDay();
+        doReturn(16).when(holidayCalendar).getEndOfDay();
     }
 
     @Test
     public void getPreviousWorkingDay () {
+        doReturn(true, false).when(holidayCalendar).isHoliday(any());
+
         Calendar c = Calendar.getInstance();
         c.set(Calendar.DAY_OF_MONTH, 29);
         c.set(Calendar.MONTH, Calendar.JUNE);
@@ -41,7 +51,14 @@ public class HolidayManagerTest {
         actual.set(Calendar.MONTH, Calendar.JULY);
         actual.set(Calendar.YEAR, 2018);
         Instant previousWorkingDay = holidayManager.getPreviousWorkingDay(actual).truncatedTo(ChronoUnit.DAYS);
-        Assert.assertEquals(expected, previousWorkingDay);
+        assertEquals(expected, previousWorkingDay);
+    }
+
+    @Test
+    public void getInstanceAfterWorkingMillis () {
+        final Instant startTime = Instant.ofEpochSecond(1565971200);
+        assertEquals(Instant.ofEpochSecond(1566204300), holidayManager.getInstantAfterWorkingMillis(startTime, 2700000L));
+        assertEquals(Instant.ofEpochSecond(1566313200), holidayManager.getInstantAfterWorkingMillis(startTime, 54000000L));
     }
 
     @Configuration
@@ -51,7 +68,7 @@ public class HolidayManagerTest {
 
         @Bean
         public HolidayManager holidayManager () {
-            return new HolidayManager(holidayCalendar);
+            return new HolidayManager();
         }
     }
 }

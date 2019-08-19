@@ -2,13 +2,11 @@ package com.thales.chaos.calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,14 +20,6 @@ public class HolidayManager {
     private static final Logger log = LoggerFactory.getLogger(HolidayManager.class);
     @Resource(name = "${holidays:CAN}")
     private HolidayCalendar holidayCalendar;
-
-    @Autowired
-    HolidayManager () {
-    }
-
-    HolidayManager (HolidayCalendar holidayCalendar) {
-        this.holidayCalendar = holidayCalendar;
-    }
 
     @EventListener(ApplicationReadyEvent.class)
     private void logCreation () {
@@ -109,47 +99,6 @@ public class HolidayManager {
 
     private boolean isWorkingHours (Instant now) {
         return holidayCalendar.isWorkingHours(now);
-    }
-
-    public long getOvernightMillis () {
-        Instant startOfDay = getStartOfDay();
-        Calendar lastWorkingDay = holidayCalendar.getToday();
-        shiftBackToLastWorkingDay(lastWorkingDay);
-        lastWorkingDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
-        lastWorkingDay.set(Calendar.MINUTE, 0);
-        return Duration.between(startOfDay, lastWorkingDay.toInstant()).toMillis();
-    }
-
-    public long getWorkingMillisInDuration (Duration duration) {
-        Instant startTime = Instant.now().minus(duration);
-        return getWorkingMillisSinceInstant(startTime);
-    }
-
-    private long getWorkingMillisSinceInstant (Instant startTime) {
-        Calendar startDay = GregorianCalendar.from(ZonedDateTime.ofInstant(startTime, holidayCalendar.getTimeZoneId()));
-        long millis = 0;
-        while (startDay.before(getStartOfDay())) {
-            millis += isHoliday(startDay) ? getTotalMillisInDay() : 0;
-            startDay.add(Calendar.DATE, 1);
-        }
-        return millis;
-    }
-
-    private Instant getStartOfDay () {
-        Calendar startOfDay = holidayCalendar.getToday();
-        startOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getStartOfDay());
-        return startOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
-    }
-
-    private long getTotalMillisInDay () {
-        if (isHoliday()) {
-            return 0;
-        }
-        long startOfDayEpoch = getStartOfDay().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
-        Calendar endOfDay = holidayCalendar.getToday();
-        endOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
-        long endOfDayEpoch = endOfDay.toInstant().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
-        return endOfDayEpoch - startOfDayEpoch;
     }
 
     private boolean isBeforeStartOfWork (Calendar from) {

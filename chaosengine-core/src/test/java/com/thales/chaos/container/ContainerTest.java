@@ -2,6 +2,9 @@ package com.thales.chaos.container;
 
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.experiment.Experiment;
+import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
@@ -14,8 +17,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.validation.constraints.NotNull;
 
+import static com.thales.chaos.container.enums.ContainerHealth.RUNNING_EXPERIMENT;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ContainerTest {
@@ -70,7 +74,7 @@ public class ContainerTest {
 
         @Override
         protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-            return ContainerHealth.RUNNING_EXPERIMENT;
+            return RUNNING_EXPERIMENT;
         }
 
         @Override
@@ -110,7 +114,7 @@ public class ContainerTest {
     @Test
     public void getContainerHealth () {
         assertEquals(ContainerHealth.NORMAL, testContainer.getContainerHealth(null));
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
+        assertEquals(RUNNING_EXPERIMENT, testContainer2.getContainerHealth(null));
     }
 
     @Test
@@ -158,5 +162,106 @@ public class ContainerTest {
             }
         };
         assertEquals(2890670807L, badlyConstructedContainer.getIdentity());
+    }
+
+    @Test
+    public void toStringTest () {
+        Container containerWithFields = new MostlyAbstractContainer() {
+            @Identifier(order = 0)
+            private String name = "container name";
+            @Identifier(order = 1)
+            private int index = 0;
+        };
+        assertEquals("Container type: \n" + "\tname:\tcontainer name\n" + "\tindex:\t0", containerWithFields.toString());
+    }
+
+    @Test
+    public void equalsTest () {
+        Container firstEqualContainer = new EqualityTestContainer("containerName", 0);
+        Container secondEqualContainer = new EqualityTestContainer("containerName", 0);
+        Container unequalContainer = new EqualityTestContainer("containerName", 1);
+
+        /* IntelliJ is suggesting that these be replaced from assertTrue/False with assert(Not)Equals.
+        This cannot be done because we specifically want to call the equals method. Using assertions does
+        a significant amount of sanitizing beforehand, which doesn't reach the equals method.
+         */
+
+        assertEquals(firstEqualContainer, secondEqualContainer);
+        assertFalse(firstEqualContainer.equals(unequalContainer));
+        assertFalse(secondEqualContainer.equals(unequalContainer));
+        assertFalse(firstEqualContainer.equals("A string"));
+        assertFalse(firstEqualContainer.equals(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void startExperiment () {
+        ExperimentMethod experimentMethod = mock(ExperimentMethod.class);
+        Experiment experiment = mock(Experiment.class);
+        doReturn(experimentMethod).when(experiment).getExperimentMethod();
+        testContainer.startExperiment(experiment);
+        verify(experimentMethod).accept(testContainer, experiment);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void startExperimentException () {
+        ExperimentMethod experimentMethod = mock(ExperimentMethod.class);
+        Experiment experiment = mock(Experiment.class);
+        RuntimeException experimentException = new RuntimeException();
+        doReturn(experimentMethod).when(experiment).getExperimentMethod();
+        doThrow(experimentException).when(experimentMethod).accept(testContainer, experiment);
+        try {
+            testContainer.startExperiment(experiment);
+            fail("Exception expected");
+        } catch (ChaosException e) {
+            verify(experimentMethod).accept(testContainer, experiment);
+            assertSame(experimentException, e.getCause());
+            assertThat(e.getMessage(), Matchers.startsWith("12001"));
+        }
+    }
+
+    private class EqualityTestContainer extends MostlyAbstractContainer {
+        @Identifier(order = 0)
+        private String name;
+        @Identifier(order = 1)
+        private int index;
+
+        EqualityTestContainer (String name, int index) {
+            this.name = name;
+            this.index = index;
+        }
+    }
+
+    private abstract class MostlyAbstractContainer extends Container {
+        @Override
+        public Platform getPlatform () {
+            return null;
+        }
+
+        @Override
+        protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+            return null;
+        }
+
+        @Override
+        public String getSimpleName () {
+            return null;
+        }
+
+        @Override
+        public String getAggregationIdentifier () {
+            return null;
+        }
+
+        @Override
+        public DataDogIdentifier getDataDogIdentifier () {
+            return null;
+        }
+
+        @Override
+        protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+            return false;
+        }
     }
 }

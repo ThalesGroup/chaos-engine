@@ -103,7 +103,7 @@ public interface HolidayCalendar {
 
     @SuppressWarnings("MagicConstant")
     // Easter Algorithm depends on math, and therefore, calendar is set with n-1 instead of Calendar.MARCH or Calendar.APRIL
-    default Integer getEaster (int year) {
+    default int getEaster (int year) {
         // Computus calculation from https://en.wikipedia.org/wiki/Computus
         int a = year % 19;
         int b = year / 100;
