@@ -5,9 +5,11 @@
 #  $1 - The file path to save the scan log under
 #  $2 - The directory path to save the definition files
 
-mkdir -p $2
+set -euxo pipefail
 
-chown 100:101 $2
+mkdir -p ${2-.clamav/}
+
+chown 100:101 ${2-.clamav/}
 
 apk add --no-cache \
     clamav \
@@ -15,6 +17,6 @@ apk add --no-cache \
     wget \
     clamav-libunrar
 
-/usr/bin/freshclam --datadir=$2
+/usr/bin/freshclam --datadir=${2-.clamav/}
 
-/usr/bin/clamscan -d $2 -vr . --log=$1
+/usr/bin/clamscan -d ${2-.clamav/} -vr . --log=${1-av.log}
