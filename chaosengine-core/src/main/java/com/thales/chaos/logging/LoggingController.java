@@ -15,7 +15,7 @@ public class LoggingController {
 
     @ApiOperation(value = "Enable Debug Mode", notes = "Increases the log level for Thales classes to DEBUG")
     @PostMapping({ "", "/{timeout}" })
-    public String setDebugMode (@PathVariable(required = false) @ApiParam(value = "Duration before automatically reverting logs") Duration timeout) {
+    public String setDebugMode (@PathVariable(required = false) @ApiParam(value = "Duration before automatically reverting logs. Formatted as \"PT[nH][nM][nS]\".", example = "PT1H15M45S") Duration timeout) {
         if (timeout == null) {
             loggingManager.setDebugMode();
         } else {
