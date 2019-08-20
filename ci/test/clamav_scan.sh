@@ -15,6 +15,6 @@ apk add --no-cache \
     wget \
     clamav-libunrar
 
-/usr/bin/freshclam --datadir $2
+/usr/bin/freshclam --datadir=$2
 
 /usr/bin/clamscan -d $2 -vr . --log=$1
