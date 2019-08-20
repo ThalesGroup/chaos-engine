@@ -40,8 +40,12 @@ clamav_scan:
     - install
   image:
     name: alpine
+  cache:
+    key: clamav-definitions
+    paths:
+      - ".clamav/"
   script:
-    - ./ci/test/clamav_scan.sh av.log
+    - ./ci/test/clamav_scan.sh av.log .clamav/
   artifacts:
     paths:
       - "av.log"
