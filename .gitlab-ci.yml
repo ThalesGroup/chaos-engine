@@ -35,6 +35,9 @@ sonar_scan:
     - ./ci/test/sonar_scan.sh
 
 clamav_scan:
+  variables:
+    SCAN_LOG: "av.log"
+    DEFINITIONS_PATH: ".clamav/"
   stage: test
   dependencies:
     - install
@@ -43,9 +46,9 @@ clamav_scan:
   cache:
     key: clamav-definitions
     paths:
-      - ".clamav/"
+      - ${DEFINITIONS_PATH}
   script:
-    - ./ci/test/clamav_scan.sh av.log .clamav/
+    - ./ci/test/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
   artifacts:
     paths:
-      - "av.log"
+      - ${SCAN_LOG}
