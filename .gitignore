@@ -38,3 +38,7 @@ ci/secret-vars.yml
 # Ignore files needed to startup development environment
 .datadog_api_key
 developer-tools/vault-loader/vault-secrets.json
+
+
+# Ignore the MkDocs Built Site
+site/
