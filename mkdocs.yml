@@ -1,7 +1,7 @@
 site_name: Chaos Engine
 site_description: 'A tool for automated Chaos Experimentation'
 repo_url: https://gitlab.gemaltocloud.com/chaos/chaos-engine
-repo_name: GitLab
+repo_name: chaos/chaos-engine @ GitLab
 
 strict: true
 
@@ -23,3 +23,6 @@ markdown_extensions:
   - codehilite
   - pymdownx.details
   - pymdownx.superfences
+
+extra:
+  repo_icon: gitlab
