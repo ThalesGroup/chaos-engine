@@ -8,10 +8,6 @@ Documentation: &documentation
   artifacts:
     paths:
       - ${BUILD_PATH}
-  only:
-    changes:
-      - 'docs/**'
-
 
 pages:
   <<: *documentation
