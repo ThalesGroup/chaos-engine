@@ -8,6 +8,7 @@ Documentation: &documentation
   artifacts:
     paths:
       - ${BUILD_PATH}
+    expire_in: 5 days
 
 pages:
   <<: *documentation
