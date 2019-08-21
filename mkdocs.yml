@@ -8,3 +8,8 @@ theme:
   logo:
     icon: 'cloud_off'
 
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.details
+  - pymdownx.superfences
