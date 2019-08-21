@@ -1,1 +1,10 @@
 site_name: My Docs
+
+theme:
+  name: 'material'
+  palette:
+    primary: 'blue grey'
+    accent: 'deep orange'
+  logo:
+    icon: 'cloud_off'
+
