@@ -57,6 +57,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
         result = 31 * result + (experimentType != null ? experimentType.hashCode() : 0);
         result = 31 * result + (experimentMethod != null ? experimentMethod.hashCode() : 0);
         result = 31 * result + (notificationLevel != null ? notificationLevel.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
         return result;
     }
 
@@ -73,6 +74,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
         if (experimentType != that.experimentType) return false;
         if (experimentMethod != null ? !experimentMethod.equals(that.experimentMethod) : that.experimentMethod != null)
             return false;
+        if (!title.equals(that.title)) return false;
         return notificationLevel == that.notificationLevel;
     }
 
