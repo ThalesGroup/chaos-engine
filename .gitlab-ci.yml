@@ -35,15 +35,20 @@ sonar_scan:
     - ./ci/test/sonar_scan.sh
 
 clamav_scan:
+  variables:
+    SCAN_LOG: "av.log"
+    DEFINITIONS_PATH: ".clamav/"
   stage: test
   dependencies:
     - install
   image:
     name: alpine
+  cache:
+    key: clamav-definitions
+    paths:
+      - ${DEFINITIONS_PATH}
   script:
-    - apk add --no-cache clamav rsyslog wget clamav-libunrar
-    - /usr/bin/freshclam
-    - /usr/bin/clamscan -vr . --log=av.log
+    - ./ci/test/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
   artifacts:
     paths:
-      - "av.log"
+      - ${SCAN_LOG}
