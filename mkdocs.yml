@@ -1,4 +1,9 @@
-site_name: My Docs
+site_name: Chaos Engine
+site_description: 'A tool for automated Chaos Experimentation'
+repo_url: https://gitlab.gemaltocloud.com/chaos/chaos-engine
+repo_name: GitLab
+
+strict: true
 
 theme:
   name: 'material'
