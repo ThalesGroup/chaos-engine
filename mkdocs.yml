@@ -10,6 +10,8 @@ theme:
   palette:
     primary: 'blue grey'
     accent: 'deep orange'
+  feature:
+    tabs: true
   logo:
     icon: 'cloud_off'
 
