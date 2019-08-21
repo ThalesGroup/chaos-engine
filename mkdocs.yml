@@ -10,6 +10,9 @@ theme:
   palette:
     primary: 'blue grey'
     accent: 'deep orange'
+  font:
+    text: Fira Sans Condensed
+    code: Fira Code
   feature:
     tabs: true
   logo:
