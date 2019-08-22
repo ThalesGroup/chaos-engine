@@ -26,3 +26,6 @@ markdown_extensions:
 
 extra:
   repo_icon: gitlab
+  social:
+    - type: tags
+      link: 'https://jira.gemalto.com/secure/RapidBoard.jspa?rapidView=17823&useStoredSettings=true'
