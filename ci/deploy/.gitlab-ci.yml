@@ -1,4 +1,4 @@
-build:
+.docker build: &docker_build
   stage: deploy
   variables:
     KANIKO_OPTS: "--no-push"
@@ -7,5 +7,16 @@ build:
     entrypoint: [""]
   script:
     - ./ci/deploy/docker_build.sh
-#  only:
-#    - tags
+
+Docker Build:
+  <<: *docker_build
+  variables:
+    KANIKO_OPTS: ""
+  only:
+    - tags
+
+Docker Build Test:
+  <<: *docker_build
+  stage: test
+  except:
+    - tags
