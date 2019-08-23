@@ -1,10 +1,5 @@
 image: "maven"
 
-stages:
-  - build
-  - test
-  - package
-
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
@@ -59,7 +54,7 @@ clamav_scan:
       - ${SCAN_LOG}
 
 build:
-  stage: package
+  stage: deploy
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
