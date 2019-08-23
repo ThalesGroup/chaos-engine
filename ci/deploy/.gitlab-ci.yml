@@ -6,6 +6,8 @@
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
+    - pwd
+    - find .
     - ./ci/deploy/docker_build.sh
 
 Docker Build:
