@@ -217,6 +217,8 @@ public class ExperimentManager {
             Collection<Experiment> createdExperiments = experimentSuite.getAggregationIdentifierToExperimentMethodsMap()
                                                                        .entrySet()
                                                                        .stream()
+                                                                       .sorted(Comparator.comparingInt(i -> i.getValue()
+                                                                                                             .size()))
                                                                        .flatMap((Map.Entry<String, List<String>> containerExperiments) -> createSpecificExperiments(experimentPlatform, containerExperiments
                                                                                .getKey(), containerExperiments.getValue(), minimumNumberOfSurvivors))
                                                                        .peek(experiment -> autowireCapableBeanFactory.autowireBean(experiment))
