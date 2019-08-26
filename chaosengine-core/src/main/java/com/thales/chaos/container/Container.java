@@ -201,7 +201,7 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract DataDogIdentifier getDataDogIdentifier ();
 
-    boolean compareUniqueIdentifier (String uniqueIdentifier) {
+    public boolean compareUniqueIdentifier (String uniqueIdentifier) {
         return uniqueIdentifier != null && compareUniqueIdentifierInner(uniqueIdentifier);
     }
 

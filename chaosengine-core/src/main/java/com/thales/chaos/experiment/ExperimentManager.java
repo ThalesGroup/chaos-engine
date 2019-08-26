@@ -251,7 +251,8 @@ public class ExperimentManager {
     }
 
     private Experiment createSingleExperiment (Platform platform, String containerIdentifier, String experimentMethod) {
-        return null;
+        Container container = platform.getContainerByIdentifier(containerIdentifier);
+        return container != null ? container.createExperiment(experimentMethod) : null;
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {
