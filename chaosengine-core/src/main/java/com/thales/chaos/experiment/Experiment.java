@@ -479,11 +479,13 @@ public abstract class Experiment {
                 .getSeconds(), getSelfHealingCounter().get());
         sendNotification(NotificationLevel.GOOD, message);
         log.info("Experiment ended with duration of {}", v("finalExperimentDuration", totalExperimentDuration));
+        container.clearExperiment();
     }
 
     void closeFailedExperiment () {
         sendNotification(NotificationLevel.ERROR, String.format("Experiment failed after %d s", totalExperimentDuration.getSeconds()));
         log.error("Experiment failed with duration of {}", v("finalExperimentDuration", totalExperimentDuration));
+        container.clearExperiment();
     }
 
     void setAdminManager (AdminManager adminManager) {

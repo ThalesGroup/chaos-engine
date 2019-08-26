@@ -52,6 +52,7 @@ public abstract class Container implements ExperimentalObject {
 
     @Override
     public boolean canExperiment () {
+        if (currentExperiment != null) return false;
         if (new Random().nextDouble() < getPlatform().getDestructionProbability()) {
             return eligibleForExperiments();
         }
@@ -283,6 +284,10 @@ public abstract class Container implements ExperimentalObject {
                                 .filter(stringBooleanEntry -> !Boolean.TRUE.equals(stringBooleanEntry.getValue()))
                                 .map(Map.Entry::getKey)
                                 .collect(Collectors.toSet());
+    }
+
+    public void clearExperiment () {
+        currentExperiment = null;
     }
 
 }
