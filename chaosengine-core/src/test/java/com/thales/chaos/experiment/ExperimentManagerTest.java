@@ -16,6 +16,7 @@ import com.thales.chaos.scripts.ScriptManager;
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +82,13 @@ public class ExperimentManagerTest {
         doReturn("secondPlatform").when(secondPlatform).getPlatformType();
     }
 
+    @After
+    public void after () {
+        final Logger logger = (Logger) LoggerFactory.getLogger(ExperimentManager.class);
+        logger.detachAndStopAllAppenders();
+        logger.setLevel(Level.OFF);
+    }
+
     @Test
     public void updateExperimentStatus () {
         Experiment firstExperiment = mock(Experiment.class);
@@ -91,6 +99,29 @@ public class ExperimentManagerTest {
         experimentManager.addExperiment(secondExperiment);
         experimentManager.updateExperimentStatus();
         verify(experimentManager).evaluateExperiments();
+    }
+
+    @Test
+    public void updateExperimentStatusDebugEnabled () {
+        final Logger logger = (Logger) LoggerFactory.getLogger(ExperimentManager.class);
+        ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
+        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
+        logger.addAppender(appender);
+        logger.setLevel(Level.DEBUG);
+        String firstExperimentID = randomUUID().toString();
+        String secondExperimentID = randomUUID().toString();
+        Experiment firstExperiment = mock(Experiment.class);
+        Experiment secondExperiment = mock(Experiment.class);
+        when(firstExperiment.getExperimentState()).thenReturn(CREATED);
+        when(secondExperiment.getExperimentState()).thenReturn(CREATED);
+        when(firstExperiment.getId()).thenReturn(firstExperimentID);
+        when(secondExperiment.getId()).thenReturn(secondExperimentID);
+        experimentManager.addExperiment(firstExperiment);
+        experimentManager.addExperiment(secondExperiment);
+        experimentManager.updateExperimentStatus();
+        logger.setLevel(Level.INFO);
+        experimentManager.updateExperimentStatus();
+        verify(experimentManager).calculateExperimentStats();
     }
 
     @Test
