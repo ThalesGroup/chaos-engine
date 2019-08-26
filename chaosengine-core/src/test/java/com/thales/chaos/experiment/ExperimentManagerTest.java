@@ -1,5 +1,9 @@
 package com.thales.chaos.experiment;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import com.thales.chaos.admin.AdminManager;
 import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
@@ -9,11 +13,14 @@ import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.PlatformManager;
 import com.thales.chaos.scripts.ScriptManager;
+import net.logstash.logback.argument.StructuredArgument;
+import net.logstash.logback.argument.StructuredArguments;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -23,6 +30,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -34,6 +42,7 @@ import java.util.stream.Stream;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.PLATFORM_DOES_NOT_EXIST;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
+import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -42,7 +51,7 @@ import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -397,6 +406,56 @@ public class ExperimentManagerTest {
                                                                                          .mapToObj(String::valueOf)
                                                                                          .collect(Collectors.toUnmodifiableList()), 0);
         // Expect no exceptions.
+    }
+
+    @Test
+    public void calculateExperimentStats () throws IOException {
+        final Logger logger = (Logger) LoggerFactory.getLogger(ExperimentManager.class);
+        ArgumentCaptor<ILoggingEvent> iLoggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
+        @SuppressWarnings("unchecked") final Appender<ILoggingEvent> appender = mock(Appender.class);
+        logger.addAppender(appender);
+        logger.setLevel(Level.DEBUG);
+        String firstExperimentID = randomUUID().toString();
+        String secondExperimentID = randomUUID().toString();
+        String thirdExperimentID = randomUUID().toString();
+        Map<ExperimentState, Long> expectedStateCountMap = new HashMap<>();
+        expectedStateCountMap.put(CREATED, 2L);
+        expectedStateCountMap.put(STARTING, 0L);
+        expectedStateCountMap.put(STARTED, 1L);
+        expectedStateCountMap.put(SELF_HEALING, 0L);
+        expectedStateCountMap.put(FINALIZING, 0L);
+        expectedStateCountMap.put(FINISHED, 0L);
+        expectedStateCountMap.put(FAILED, 0L);
+        StructuredArgument expectedCountByStateArgument = StructuredArguments.v("experimentState", expectedStateCountMap);
+        Map<ExperimentState, List<String>> expectedExperimentsByStateMap = new HashMap<>();
+        ArrayList<String> list = new ArrayList<>();
+        list.add(firstExperimentID);
+        list.add(secondExperimentID);
+        list.sort(Comparator.naturalOrder());
+        expectedExperimentsByStateMap.put(CREATED, list);
+        expectedExperimentsByStateMap.put(STARTED, List.of(thirdExperimentID));
+        StructuredArgument expectedExperimentsByStateArgument = StructuredArguments.v("experimentState", expectedExperimentsByStateMap);
+        Experiment firstExperiment = mock(Experiment.class);
+        Experiment secondExperiment = mock(Experiment.class);
+        Experiment thirdExperiment = mock(Experiment.class);
+        when(firstExperiment.getExperimentState()).thenReturn(CREATED);
+        when(secondExperiment.getExperimentState()).thenReturn(CREATED);
+        when(thirdExperiment.getExperimentState()).thenReturn(STARTED);
+        when(firstExperiment.getId()).thenReturn(firstExperimentID);
+        when(secondExperiment.getId()).thenReturn(secondExperimentID);
+        when(thirdExperiment.getId()).thenReturn(thirdExperimentID);
+        experimentManager.addExperiment(firstExperiment);
+        experimentManager.addExperiment(secondExperiment);
+        experimentManager.addExperiment(thirdExperiment);
+        experimentManager.calculateExperimentStats();
+        verify(appender, times(2)).doAppend(iLoggingEventCaptor.capture());
+        final List<ILoggingEvent> loggingEvent = iLoggingEventCaptor.getAllValues();
+        ILoggingEvent countByStateEvent = loggingEvent.get(0);
+        ILoggingEvent experimentsByStateEvent = loggingEvent.get(1);
+        StructuredArgument countByStateArgument = (StructuredArgument) countByStateEvent.getArgumentArray()[0];
+        StructuredArgument experimentsByStateArgument = (StructuredArgument) experimentsByStateEvent.getArgumentArray()[0];
+        assertEquals(expectedCountByStateArgument, countByStateArgument);
+        assertEquals(expectedExperimentsByStateArgument, experimentsByStateArgument);
     }
 
     @Configuration

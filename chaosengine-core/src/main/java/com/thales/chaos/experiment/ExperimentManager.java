@@ -58,29 +58,34 @@ public class ExperimentManager {
                     if (threadPool != null) threadPool.shutdown();
                 }
                 if (log.isDebugEnabled()) {
-                    Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
-                                                                                       .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
-                                                                                               .counting()));
-                    Arrays.stream(values())
-                          .filter(not(experimentsInStateCount::containsKey))
-                          .forEach(entry -> experimentsInStateCount.put(entry, 0L));
-                    //noinspection PlaceholderCountMatchesArgumentCount
-                    log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
-                    Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
-                                                                                          .collect(Collectors.groupingBy(Experiment::getExperimentState))
-                                                                                          .entrySet()
-                                                                                          .stream()
-                                                                                          .collect(Collectors.toMap(Map.Entry::getKey, e -> e
-                                                                                                  .getValue()
-                                                                                                  .stream()
-                                                                                                  .map(Experiment::getId)
-                                                                                                  .collect(toList())));
-                    //noinspection PlaceholderCountMatchesArgumentCount
-                    log.debug("Experiments by state", v("experimentState", experimentsByState));
+                    calculateExperimentStats();
                 }
                 allExperiments.removeIf(Experiment::isComplete);
             }
         }
+    }
+
+    void calculateExperimentStats () {
+        Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
+                                                                           .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
+                                                                                   .counting()));
+        Arrays.stream(values())
+              .filter(not(experimentsInStateCount::containsKey))
+              .forEach(entry -> experimentsInStateCount.put(entry, 0L));
+        //noinspection PlaceholderCountMatchesArgumentCount
+        log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
+        Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
+                                                                              .collect(Collectors.groupingBy(Experiment::getExperimentState))
+                                                                              .entrySet()
+                                                                              .stream()
+                                                                              .collect(Collectors.toMap(Map.Entry::getKey, e -> e
+                                                                                      .getValue()
+                                                                                      .stream()
+                                                                                      .map(Experiment::getId)
+                                                                                      .sorted(Comparator.naturalOrder())
+                                                                                      .collect(toList())));
+        //noinspection PlaceholderCountMatchesArgumentCount
+        log.debug("Experiments by state", v("experimentState", experimentsByState));
     }
 
     void evaluateExperiments () {
