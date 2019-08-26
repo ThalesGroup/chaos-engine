@@ -230,6 +230,13 @@ public class ExperimentManager {
     }
 
     Stream<Experiment> createSpecificExperiments (Platform platform, String containerAggregationIdentifier, List<String> experimentMethods, int minimumNumberOfSurvivors) {
+        if (experimentMethods.size() == 1) {
+            Experiment singleExperiment = createSingleExperiment(platform, containerAggregationIdentifier, experimentMethods
+                    .get(0));
+            if (singleExperiment != null) {
+                return Stream.of(singleExperiment);
+            }
+        }
         log.debug("Creating experiments of type {} against {} with identifier {}", experimentMethods, platform, containerAggregationIdentifier);
         List<Container> potentialContainers = new ArrayList<>(platform.getRosterByAggregationId(containerAggregationIdentifier));
         if (potentialContainers.size() - minimumNumberOfSurvivors < experimentMethods.size()) {
@@ -241,6 +248,10 @@ public class ExperimentManager {
             String experimentMethod = experimentMethods.get(i);
             return container.createExperiment(experimentMethod);
         });
+    }
+
+    private Experiment createSingleExperiment (Platform platform, String containerIdentifier, String experimentMethod) {
+        return null;
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {
