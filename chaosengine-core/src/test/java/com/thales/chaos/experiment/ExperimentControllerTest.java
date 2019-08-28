@@ -33,8 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -163,6 +162,23 @@ public class ExperimentControllerTest {
            .andExpect(status().isOk());
         ExperimentSuite expectedExperimentSuite = new ExperimentSuite("firstPlatform", Map.of("application", List.of("method1", "method2")));
         assertEquals(expectedExperimentSuite, experimentSuiteCaptor.getValue());
+    }
+
+    @Test
+    public void isAutomatedMode () throws Exception {
+        mvc.perform(get("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+    }
+
+    @Test
+    public void enableAutomatedMode () throws Exception {
+        mvc.perform(post("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+        verify(experimentManager, times(1)).setAutomatedMode(true);
+    }
+
+    @Test
+    public void disableAutomatedMode () throws Exception {
+        mvc.perform(delete("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+        verify(experimentManager, times(1)).setAutomatedMode(false);
     }
 
 }

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -42,6 +43,17 @@ public class ExperimentManager {
     private HolidayManager holidayManager;
     @Autowired
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
+    @Value("${automatedMode:#{true}}")
+    private boolean automatedMode;
+
+    boolean isAutomatedMode () {
+        return automatedMode;
+    }
+
+    void setAutomatedMode (boolean automatedMode) {
+        log.debug("Experiment manager automated mode enabled: {} ", automatedMode);
+        this.automatedMode = automatedMode;
+    }
 
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
@@ -115,7 +127,9 @@ public class ExperimentManager {
 
     @Scheduled(fixedDelay = 1000 * 15)
     void scheduleExperiments () {
-        scheduleExperiments(false);
+        if (automatedMode) {
+            scheduleExperiments(false);
+        }
     }
 
     synchronized Set<Experiment> scheduleExperiments (final boolean force) {

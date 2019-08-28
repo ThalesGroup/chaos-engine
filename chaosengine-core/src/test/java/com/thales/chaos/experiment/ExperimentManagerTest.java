@@ -489,6 +489,13 @@ public class ExperimentManagerTest {
         assertEquals(expectedExperimentsByStateArgument, experimentsByStateArgument);
     }
 
+    @Test
+    public void isAutomatedMode () {
+        assertTrue(experimentManager.isAutomatedMode());
+        experimentManager.setAutomatedMode(false);
+        assertFalse(experimentManager.isAutomatedMode());
+    }
+
     @Configuration
     static class ExperimentManagerTestConfiguration {
         @Autowired
