@@ -26,15 +26,9 @@ public class ExperimentSuiteTest {
         doReturn(CONTAINER_AGGREGATOR).when(container).getAggregationIdentifier();
         doReturn(EXPERIMENT_METHOD_NAME).when(experiment).getExperimentMethodName();
         ExperimentSuite generatedExperimentSuite = ExperimentSuite.fromExperiments(platform, Set.of(experiment));
-        ExperimentSuite expectedExperimentSuite = new ExperimentSuite(PLATFORM_TYPE, Map.of(CONTAINER_AGGREGATOR, List.of(EXPERIMENT_METHOD_NAME)));
+        ExperimentSuite expectedExperimentSuite = new ExperimentSuite(PLATFORM_TYPE, ExperimentSuite.fromMap(Map.of(CONTAINER_AGGREGATOR, List
+                .of(EXPERIMENT_METHOD_NAME))));
         assertEquals(expectedExperimentSuite, generatedExperimentSuite);
     }
 
-    @Test
-    public void toStringTest () {
-        ExperimentSuite experimentSuite;
-        experimentSuite = new ExperimentSuite("chosen platform", Map.of("container", List.of("delete", "restart", "blow up")));
-        assertEquals("{\"platformType\":\"chosen platform\",\"aggregationIdentifierToExperimentMethodsMap\":{\"container\":[\"delete\",\"restart\",\"blow up\"]}}", experimentSuite
-                .toString());
-    }
 }

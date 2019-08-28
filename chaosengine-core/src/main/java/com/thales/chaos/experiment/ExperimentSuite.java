@@ -1,5 +1,6 @@
 package com.thales.chaos.experiment;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,50 +9,23 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.platform.Platform;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@JsonPropertyOrder({ ExperimentSuite.PLATFORM_TYPE_KEY, ExperimentSuite.AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY })
-class ExperimentSuite {
+@JsonPropertyOrder({ ExperimentSuite.PLATFORM_TYPE_KEY, ExperimentSuite.EXPERIMENT_CRITERIA })
+public class ExperimentSuite {
     public static final String PLATFORM_TYPE_KEY = "platformType";
-    public static final String AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY = "aggregationIdentifierToExperimentMethodsMap";
+    public static final String EXPERIMENT_CRITERIA = "experimentCriteria";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @JsonProperty(required = true, value = PLATFORM_TYPE_KEY)
     private String platformType;
-    @JsonProperty(required = true, value = AGGREGATION_IDENTIFIER_EXPERIMENT_METHOD_MAP_KEY)
-    private Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap;
+    @JsonProperty(required = true, value = EXPERIMENT_CRITERIA)
+    private Collection<ExperimentCriteria> experimentCriteria;
 
-    ExperimentSuite (String platformType, Map<String, List<String>> aggregationIdentifierToExperimentMethodsMap) {
+    @JsonCreator
+    ExperimentSuite (@JsonProperty(required = true, value = PLATFORM_TYPE_KEY) String platformType, @JsonProperty(required = true, value = EXPERIMENT_CRITERIA) Collection<ExperimentCriteria> experimentCriteria) {
         this.platformType = platformType;
-        this.aggregationIdentifierToExperimentMethodsMap = aggregationIdentifierToExperimentMethodsMap;
-    }
-
-    String getPlatformType () {
-        return platformType;
-    }
-
-    Map<String, List<String>> getAggregationIdentifierToExperimentMethodsMap () {
-        return aggregationIdentifierToExperimentMethodsMap;
-    }
-
-    @Override
-    public int hashCode () {
-        int result = platformType != null ? platformType.hashCode() : 0;
-        result = 31 * result + (aggregationIdentifierToExperimentMethodsMap != null ? aggregationIdentifierToExperimentMethodsMap
-                .hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public boolean equals (Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ExperimentSuite that = (ExperimentSuite) o;
-        if (!Objects.equals(platformType, that.platformType)) return false;
-        return Objects.equals(aggregationIdentifierToExperimentMethodsMap, that.aggregationIdentifierToExperimentMethodsMap);
+        this.experimentCriteria = experimentCriteria;
     }
 
     static ExperimentSuite fromExperiments (Platform platform, Collection<Experiment> experiments) {
@@ -59,7 +33,23 @@ class ExperimentSuite {
                                                    .collect(Collectors.groupingBy(experiment -> experiment.getContainer()
                                                                                                           .getAggregationIdentifier(), Collectors
                                                            .mapping(Experiment::getExperimentMethodName, Collectors.toList())));
-        return new ExperimentSuite(platform.getPlatformType(), map);
+        return new ExperimentSuite(platform.getPlatformType(), fromMap(map));
+    }
+
+    static Set<ExperimentCriteria> fromMap (Map<String, List<String>> map) {
+        return map.entrySet().stream().map(ExperimentSuite::fromMapEntry).collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static ExperimentCriteria fromMapEntry (Map.Entry<String, List<String>> mapEntry) {
+        return new ExperimentCriteria(mapEntry.getKey(), mapEntry.getValue());
+    }
+
+    Collection<ExperimentCriteria> getExperimentCriteria () {
+        return experimentCriteria;
+    }
+
+    String getPlatformType () {
+        return platformType;
     }
 
     @Override
@@ -68,6 +58,75 @@ class ExperimentSuite {
             return OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new ChaosException(ChaosErrorCode.OBJECT_SERIALIZATION_ERROR, e);
+        }
+    }
+
+    @Override
+    public int hashCode () {
+        int result = platformType.hashCode();
+        result = 31 * result + experimentCriteria.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals (Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ExperimentSuite that = (ExperimentSuite) o;
+        if (!platformType.equals(that.platformType)) return false;
+        return experimentCriteria.containsAll(that.experimentCriteria);
+    }
+
+    public static class ExperimentCriteria {
+        @JsonProperty(required = true, value = "containerIdentifier")
+        private final String containerIdentifier;
+        @JsonProperty(required = true, value = "experimentMethods")
+        private List<String> experimentMethods;
+        @JsonProperty(defaultValue = "[]", value = "specificContainerTargets")
+        private List<String> specificContainerTargets;
+
+        ExperimentCriteria (String containerIdentifier, List<String> experimentMethods) {
+            this(containerIdentifier, experimentMethods, Collections.emptyList());
+        }
+
+        @JsonCreator
+        ExperimentCriteria (@JsonProperty(required = true, value = "containerIdentifier") String containerIdentifier, @JsonProperty(required = true, value = "experimentMethods") List<String> experimentMethods, @JsonProperty(defaultValue = "[]", value = "specificContainerTargets") List<String> specificContainerTargets) {
+            this.containerIdentifier = containerIdentifier;
+            this.experimentMethods = experimentMethods;
+            this.specificContainerTargets = specificContainerTargets;
+            if (specificContainerTargets.size() > experimentMethods.size()) {
+                throw new IllegalArgumentException("Experiment Methods should be at least the same size as Specific Container Targets");
+            }
+        }
+
+        String getContainerIdentifier () {
+            return containerIdentifier;
+        }
+
+        List<String> getExperimentMethods () {
+            return experimentMethods;
+        }
+
+        List<String> getSpecificContainerTargets () {
+            return specificContainerTargets;
+        }
+
+        @Override
+        public int hashCode () {
+            int result = containerIdentifier.hashCode();
+            result = 31 * result + experimentMethods.hashCode();
+            result = 31 * result + specificContainerTargets.hashCode();
+            return result;
+        }
+
+        @Override
+        public boolean equals (Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ExperimentCriteria that = (ExperimentCriteria) o;
+            if (!containerIdentifier.equals(that.containerIdentifier)) return false;
+            if (!experimentMethods.equals(that.experimentMethods)) return false;
+            return specificContainerTargets.equals(that.specificContainerTargets);
         }
     }
 }

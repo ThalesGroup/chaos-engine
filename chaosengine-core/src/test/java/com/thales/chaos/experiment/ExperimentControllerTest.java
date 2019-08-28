@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 
+import static com.thales.chaos.experiment.ExperimentSuite.fromMap;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -158,10 +159,10 @@ public class ExperimentControllerTest {
         Collection<Experiment> experiments = Collections.emptySet();
         ArgumentCaptor<ExperimentSuite> experimentSuiteCaptor = ArgumentCaptor.forClass(ExperimentSuite.class);
         doReturn(experiments).when(experimentManager).scheduleExperimentSuite(experimentSuiteCaptor.capture());
+        ExperimentSuite expectedExperimentSuite = new ExperimentSuite("firstPlatform", fromMap(Map.of("application", List
+                .of("method1", "method2"))));
         mvc.perform(post("/experiment/build").contentType(APPLICATION_JSON_UTF8)
-                                             .content("{" + "\"platformType\": \"firstPlatform\", " + "\"aggregationIdentifierToExperimentMethodsMap\":{\"application\": [\"method1\", \"method2\"]" + "}" + "}"))
-           .andExpect(status().isOk());
-        ExperimentSuite expectedExperimentSuite = new ExperimentSuite("firstPlatform", Map.of("application", List.of("method1", "method2")));
+                                             .content(expectedExperimentSuite.toString())).andExpect(status().isOk());
         assertEquals(expectedExperimentSuite, experimentSuiteCaptor.getValue());
     }
 

@@ -196,11 +196,11 @@ public class ExperimentManager {
         return scheduleExperimentSuite(experimentSuite, 1);
     }
 
-    public Map<Instant, ExperimentSuite> getHistoricalExperimentSuites () {
+    Map<Instant, ExperimentSuite> getHistoricalExperimentSuites () {
         return historicalExperimentSuites;
     }
 
-    Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
+    private Collection<Experiment> scheduleExperimentSuite (ExperimentSuite experimentSuite, int minimumNumberOfSurvivors) {
         synchronized (allExperiments) {
             if (!allExperiments.isEmpty()) {
                 log.warn("Cannot start a planned experiment because another experiment is running");
@@ -214,45 +214,47 @@ public class ExperimentManager {
                                                          .findFirst()
                                                          .orElseThrow(ChaosErrorCode.PLATFORM_DOES_NOT_EXIST.asChaosException());
             experimentPlatform.expireCachedRoster();
-            Collection<Experiment> createdExperiments = experimentSuite.getAggregationIdentifierToExperimentMethodsMap()
-                                                                       .entrySet()
+            Collection<Experiment> createdExperiments = experimentSuite.getExperimentCriteria()
                                                                        .stream()
-                                                                       .sorted(Comparator.comparingInt(i -> i.getValue()
-                                                                                                             .size()))
-                                                                       .flatMap((Map.Entry<String, List<String>> containerExperiments) -> createSpecificExperiments(experimentPlatform, containerExperiments
-                                                                               .getKey(), containerExperiments.getValue(), minimumNumberOfSurvivors))
-                                                                       .peek(experiment -> autowireCapableBeanFactory.autowireBean(experiment))
+                                                                       .flatMap(experimentCriteria -> createSpecificExperiments(experimentPlatform, experimentCriteria, minimumNumberOfSurvivors))
                                                                        .collect(Collectors.toUnmodifiableSet());
+            createdExperiments.forEach(autowireCapableBeanFactory::autowireBean);
             addExperimentSuiteToHistory(experimentSuite);
             allExperiments.addAll(createdExperiments);
             return allExperiments;
         }
     }
 
-    Stream<Experiment> createSpecificExperiments (Platform platform, String containerAggregationIdentifier, List<String> experimentMethods, int minimumNumberOfSurvivors) {
-        if (experimentMethods.size() == 1) {
-            Experiment singleExperiment = createSingleExperiment(platform, containerAggregationIdentifier, experimentMethods
-                    .get(0));
-            if (singleExperiment != null) {
-                return Stream.of(singleExperiment);
-            }
-        }
+    Stream<Experiment> createSpecificExperiments (Platform platform, ExperimentSuite.ExperimentCriteria experimentCriteria, int minimumNumberOfSurvivors) {
+        String containerAggregationIdentifier = experimentCriteria.getContainerIdentifier();
+        List<String> experimentMethods = experimentCriteria.getExperimentMethods();
+        List<String> specificContainerTargets = experimentCriteria.getSpecificContainerTargets();
         log.debug("Creating experiments of type {} against {} with identifier {}", experimentMethods, platform, containerAggregationIdentifier);
         List<Container> potentialContainers = new ArrayList<>(platform.getRosterByAggregationId(containerAggregationIdentifier));
         if (potentialContainers.size() - minimumNumberOfSurvivors < experimentMethods.size()) {
             throw new ChaosException(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT);
         }
+        Stream<Experiment> experimentStream1 = IntStream.range(0, specificContainerTargets.size()).mapToObj(i -> {
+            String experimentMethod = experimentMethods.get(i);
+            Experiment experiment = createSingleExperiment(platform, specificContainerTargets.get(i), experimentMethod);
+            Optional.ofNullable(experiment).map(Experiment::getContainer).ifPresent(potentialContainers::remove);
+            return experiment;
+        });
         Collections.shuffle(potentialContainers);
-        return IntStream.range(0, experimentMethods.size()).mapToObj(i -> {
+        Stream<Experiment> experimentStream2 = IntStream.range(0, experimentMethods.size() - specificContainerTargets.size())
+                                                        .mapToObj(i -> {
             Container container = potentialContainers.get(i);
             String experimentMethod = experimentMethods.get(i);
             return container.createExperiment(experimentMethod);
         });
+        return Stream.concat(experimentStream1, experimentStream2);
     }
 
-    private Experiment createSingleExperiment (Platform platform, String containerIdentifier, String experimentMethod) {
-        Container container = platform.getContainerByIdentifier(containerIdentifier);
-        return container != null ? container.createExperiment(experimentMethod) : null;
+    Experiment createSingleExperiment (Platform platform, String containerIdentifier, String experimentMethod) {
+        return Optional.of(platform)
+                       .map(platform1 -> platform1.getContainerByIdentifier(containerIdentifier))
+                       .map(container -> container.createExperiment(experimentMethod))
+                       .orElse(null);
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {
