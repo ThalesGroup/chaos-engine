@@ -135,8 +135,8 @@ public class AwsRDSPlatform extends Platform {
         final String randomAvailabilityZone = availabilityZones[new Random().nextInt(availabilityZones.length)];
         log.debug("Experiment on {} will use {}", keyValue(DataDogConstants.DATADOG_PLATFORM_KEY, this.getPlatformType()), keyValue(DataDogConstants.AVAILABILITY_ZONE, randomAvailabilityZone));
         List<Container> chosenSet = new ArrayList<>();
-        chosenSet.addAll(availabilityZoneMap.get(randomAvailabilityZone));
-        chosenSet.addAll(availabilityZoneMap.get(AwsConstants.NO_AZ_INFORMATION));
+        chosenSet.addAll(availabilityZoneMap.getOrDefault(randomAvailabilityZone, Collections.emptyList()));
+        chosenSet.addAll(availabilityZoneMap.getOrDefault(AwsConstants.NO_AZ_INFORMATION, Collections.emptyList()));
         return chosenSet;
     }
 
