@@ -52,7 +52,6 @@ public abstract class Container implements ExperimentalObject {
 
     @Override
     public boolean canExperiment () {
-        if (currentExperiment != null) return false;
         if (new Random().nextDouble() < getPlatform().getDestructionProbability()) {
             return eligibleForExperiments();
         }
