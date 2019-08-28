@@ -240,11 +240,13 @@ public class ExperimentManager {
             Optional.ofNullable(experiment).map(Experiment::getContainer).ifPresent(potentialContainers::remove);
             return experiment;
         });
+        List<String> leftoverExperimentMethods = experimentMethods.subList(specificContainerTargets.size(), experimentMethods
+                .size());
         Collections.shuffle(potentialContainers);
-        Stream<Experiment> experimentStream2 = IntStream.range(0, experimentMethods.size() - specificContainerTargets.size())
+        Stream<Experiment> experimentStream2 = IntStream.range(0, leftoverExperimentMethods.size())
                                                         .mapToObj(i -> {
             Container container = potentialContainers.get(i);
-            String experimentMethod = experimentMethods.get(i);
+                                                            String experimentMethod = leftoverExperimentMethods.get(i);
             return container.createExperiment(experimentMethod);
         });
         return Stream.concat(experimentStream1, experimentStream2);

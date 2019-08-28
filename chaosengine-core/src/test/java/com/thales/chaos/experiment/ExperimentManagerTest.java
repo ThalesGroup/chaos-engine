@@ -16,6 +16,7 @@ import com.thales.chaos.scripts.ScriptManager;
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -464,6 +465,11 @@ public class ExperimentManagerTest {
         Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", List
                 .of("method1", "method2"), List.of("container1")), 1).collect(Collectors.toUnmodifiableSet());
         assertThat(experiments, Matchers.anyOf(containsInAnyOrder(experiment1, experiment2), containsInAnyOrder(experiment1, experiment3)));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(container2, atLeast(0)).createExperiment(captor.capture());
+        verify(container3, atLeast(0)).createExperiment(captor.capture());
+        assertThat(captor.getAllValues(), IsIterableWithSize.iterableWithSize(1));
+        assertThat(captor.getAllValues(), containsInAnyOrder("method2"));
     }
 
     @Test
