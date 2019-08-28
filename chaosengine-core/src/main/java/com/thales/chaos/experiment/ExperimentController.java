@@ -14,6 +14,7 @@ import java.util.Set;
 @RequestMapping(value = "/experiment", produces = "application/json; charset=utf-8")
 public class ExperimentController {
     private ExperimentManager experimentManager;
+    private static final String MODE_PATH = "/automated";
 
     @Autowired
     public ExperimentController (ExperimentManager experimentManager) {
@@ -57,21 +58,21 @@ public class ExperimentController {
     }
 
     @ApiOperation(value = "Enable Automated Mode", notes = "Enable automated scheduling of experiments ")
-    @PostMapping("/automated/")
+    @PostMapping(MODE_PATH)
     public String enableAutomatedMode () {
         experimentManager.setAutomatedMode(true);
         return "ok";
     }
 
     @ApiOperation(value = "Disable Automated Mode", notes = "Disable automated scheduling of experiments ")
-    @DeleteMapping("/automated/")
+    @DeleteMapping(MODE_PATH)
     public String disableAutomatedMode () {
         experimentManager.setAutomatedMode(false);
         return "ok";
     }
 
     @ApiOperation(value = "Get Automated Mode Status", notes = "Returns true if automated mode is enabled")
-    @GetMapping("/automated/")
+    @GetMapping(MODE_PATH)
     public Boolean isAutomatedMode () {
         return experimentManager.isAutomatedMode();
     }
