@@ -55,4 +55,27 @@ public class ExperimentController {
     public Map<Instant, ExperimentSuite> getHistoricalExperiments () {
         return experimentManager.getHistoricalExperimentSuites();
     }
+
+    @ApiOperation(value = "Enable Automated Mode", notes = "Enable automated scheduling of experiments ")
+    @PostMapping("/automated/")
+    public String enableAutomatedMode () {
+        experimentManager.setAutomatedMode(true);
+        return "ok";
+    }
+
+    @ApiOperation(value = "Disable Automated Mode", notes = "Disable automated scheduling of experiments ")
+    @DeleteMapping("/automated/")
+    public String disableAutomatedMode () {
+        experimentManager.setAutomatedMode(false);
+        return "ok";
+    }
+
+    @ApiOperation(value = "Get Automated Mode Status", notes = "Returns true if automated mode is enabled")
+    @GetMapping("/automated/")
+    public Boolean isAutomatedMode () {
+        return experimentManager.isAutomatedMode();
+    }
+
+
+
 }
