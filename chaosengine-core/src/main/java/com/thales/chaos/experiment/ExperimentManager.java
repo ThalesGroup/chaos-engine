@@ -79,11 +79,15 @@ public class ExperimentManager {
                 }
                 allExperiments.removeIf(Experiment::isComplete);
                 if (allExperiments.isEmpty()) {
-                    lastExperimentComplete = Instant.now();
+                    setLastExperimentComplete();
                     log.info("As of {}, there are no active experiments. The next experiment can run in {}.", lastExperimentComplete, experimentBackoffPeriod);
                 }
             } else log.debug("No experiments to evaluate right now.");
         }
+    }
+
+    void setLastExperimentComplete () {
+        lastExperimentComplete = Instant.now();
     }
 
     public void setExperimentBackoffPeriod (Duration experimentBackoffPeriod) {
@@ -188,7 +192,7 @@ public class ExperimentManager {
         return Collections.emptySet();
     }
 
-    private boolean inBackoffPeriod () {
+    boolean inBackoffPeriod () {
         return Optional.ofNullable(lastExperimentComplete)
                        .map(instant -> instant.plus(experimentBackoffPeriod))
                        .map(instant -> instant.isAfter(Instant.now()))

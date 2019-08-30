@@ -16,6 +16,7 @@ import com.thales.chaos.scripts.ScriptManager;
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.After;
 import org.junit.Before;
@@ -33,6 +34,7 @@ import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -550,6 +552,37 @@ public class ExperimentManagerTest {
         assertTrue(experimentManager.isAutomatedMode());
         experimentManager.setAutomatedMode(false);
         assertFalse(experimentManager.isAutomatedMode());
+    }
+
+    @Test
+    public void inBackoffPeriodFromStartup () {
+        assertFalse("Without any changes should not be in backoff at startup", experimentManager.inBackoffPeriod());
+    }
+
+    @Test
+    public void inBackoffPeriodLowTime () {
+        experimentManager.setLastExperimentComplete();
+        experimentManager.setExperimentBackoffPeriod(Duration.ofMillis(500));
+        assertTrue(experimentManager.inBackoffPeriod());
+        await().atLeast(400, TimeUnit.MILLISECONDS)
+               .atMost(600, TimeUnit.MILLISECONDS)
+               .until(() -> !experimentManager.inBackoffPeriod());
+    }
+
+    @Test
+    public void scheduleExperimentsInBackoffUnforced () {
+        doReturn(true).when(experimentManager).inBackoffPeriod();
+        assertThat(experimentManager.scheduleExperiments(false), IsEmptyCollection.empty());
+        verify(experimentManager, times(1)).inBackoffPeriod();
+        verify(platformManager, never()).getPlatforms();
+    }
+
+    @Test
+    public void scheduleExperimentsInBackoffForced () {
+        doReturn(Collections.emptySet()).when(platformManager).getPlatforms();
+        assertThat(experimentManager.scheduleExperiments(true), IsEmptyCollection.empty());
+        verify(experimentManager, never()).inBackoffPeriod();
+        verify(platformManager, times(1)).getPlatforms();
     }
 
     @Configuration
