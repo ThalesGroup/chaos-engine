@@ -150,11 +150,11 @@ public class ExperimentManager {
     }
 
     synchronized Set<Experiment> scheduleExperiments (final boolean force) {
-        if (!force && inBackoffPeriod()) {
-            log.debug("Cannot start experiments due to backoff period.");
-            return Collections.emptySet();
-        }
         if (allExperiments.isEmpty()) {
+            if (!force && inBackoffPeriod()) {
+                log.debug("Cannot start experiments due to backoff period.");
+                return Collections.emptySet();
+            }
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
                 return Collections.emptySet();
