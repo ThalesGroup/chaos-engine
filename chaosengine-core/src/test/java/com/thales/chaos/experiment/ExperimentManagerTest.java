@@ -16,6 +16,7 @@ import com.thales.chaos.scripts.ScriptManager;
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -346,15 +347,17 @@ public class ExperimentManagerTest {
     public void scheduleExperimentSuite () {
         Experiment experiment1 = mock(Experiment.class);
         Experiment experiment2 = mock(Experiment.class);
-        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", Map.of("aggregator", List.of("delete", "restart")));
+        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", ExperimentSuite.fromMap(Map.of("aggregator", List
+                .of("delete", "restart"))));
         doReturn(Stream.of(experiment1, experiment2)).when(experimentManager)
-                                                     .createSpecificExperiments(firstPlatform, "aggregator", List.of("delete", "restart"), 1);
+                                                     .createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregator", List
+                                                             .of("delete", "restart"), Collections.emptyList()), 1);
         assertThat(experimentManager.scheduleExperimentSuite(experimentSuite), containsInAnyOrder(experiment1, experiment2));
     }
 
     @Test
     public void scheduleExperimentSuiteWithInvalidPlatform () {
-        ExperimentSuite experimentSuite = new ExperimentSuite("fakePlatform", Collections.emptyMap());
+        ExperimentSuite experimentSuite = new ExperimentSuite("fakePlatform", ExperimentSuite.fromMap(Collections.emptyMap()));
         try {
             experimentManager.scheduleExperimentSuite(experimentSuite);
             fail("Exception expected");
@@ -366,7 +369,8 @@ public class ExperimentManagerTest {
     @Test
     public void scheduleExperimentSuiteWhileOtherExperimentsActive () {
         experimentManager.addExperiment(mock(Experiment.class));
-        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", Map.of("aggregator", List.of("delete", "restart")));
+        ExperimentSuite experimentSuite = new ExperimentSuite("firstPlatform", ExperimentSuite.fromMap(Map.of("aggregator", List
+                .of("delete", "restart"))));
         try {
             experimentManager.scheduleExperimentSuite(experimentSuite);
             fail("Exception expected");
@@ -390,7 +394,8 @@ public class ExperimentManagerTest {
         doReturn(experiment2).when(container2).createExperiment(anyString());
         doReturn(experiment3).when(container3).createExperiment(anyString());
         doReturn(Set.of(container1, container2, container3)).when(firstPlatform).getRosterByAggregationId("aggregate");
-        Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, "aggregate", List.of("method1", "method2"), 1)
+        Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", List
+                .of("method1", "method2"), Collections.emptyList()), 1)
                                                        .collect(Collectors.toUnmodifiableSet());
         assertThat(experiments, Matchers.anyOf(containsInAnyOrder(experiment1, experiment2), containsInAnyOrder(experiment2, experiment3), containsInAnyOrder(experiment1, experiment3)));
     }
@@ -402,9 +407,10 @@ public class ExperimentManagerTest {
                           .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
                                                                    .getRosterByAggregationId("aggregate");
         try {
-            experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
-                                                                                             .mapToObj(String::valueOf)
-                                                                                             .collect(Collectors.toUnmodifiableList()), 1);
+            experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
+                    .range(0, 10)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.toUnmodifiableList()), Collections.emptyList()), 1);
             fail("Should have thrown an exception");
         } catch (ChaosException e) {
             assertThat(e.getMessage(), Matchers.startsWith(String.valueOf(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT.getErrorCode())));
@@ -418,9 +424,10 @@ public class ExperimentManagerTest {
                           .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
                                                                    .getRosterByAggregationId("aggregate");
         try {
-            experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
-                                                                                             .mapToObj(String::valueOf)
-                                                                                             .collect(Collectors.toUnmodifiableList()), 5);
+            experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
+                    .range(0, 10)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.toUnmodifiableList()), Collections.emptyList()), 5);
             fail("Should have thrown an exception");
         } catch (ChaosException e) {
             assertThat(e.getMessage(), Matchers.startsWith(String.valueOf(NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT.getErrorCode())));
@@ -433,10 +440,59 @@ public class ExperimentManagerTest {
                           .mapToObj(i -> mock(Container.class))
                           .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
                                                                    .getRosterByAggregationId("aggregate");
-        experimentManager.createSpecificExperiments(firstPlatform, "aggregate", IntStream.range(0, 10)
-                                                                                         .mapToObj(String::valueOf)
-                                                                                         .collect(Collectors.toUnmodifiableList()), 0);
+        experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
+                .range(0, 10)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.toUnmodifiableList()), Collections.emptyList()), 0);
         // Expect no exceptions.
+    }
+
+    @Test
+    @Repeat(10)
+    public void createSpecificExperimentsWithDesignatedTargets () {
+        Container container1 = mock(Container.class);
+        Container container2 = mock(Container.class);
+        Container container3 = mock(Container.class);
+        Experiment experiment1 = mock(Experiment.class);
+        Experiment experiment2 = mock(Experiment.class);
+        Experiment experiment3 = mock(Experiment.class);
+        doReturn(container1).when(experiment1).getContainer();
+        doReturn(experiment1).when(experimentManager).createSingleExperiment(firstPlatform, "container1", "method1");
+        doThrow(new RuntimeException()).when(container1).createExperiment(anyString());
+        doReturn(experiment2).when(container2).createExperiment(anyString());
+        doReturn(experiment3).when(container3).createExperiment(anyString());
+        doReturn(Set.of(container1, container2, container3)).when(firstPlatform).getRosterByAggregationId("aggregate");
+        Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", List
+                .of("method1", "method2"), List.of("container1")), 1).collect(Collectors.toUnmodifiableSet());
+        assertThat(experiments, Matchers.anyOf(containsInAnyOrder(experiment1, experiment2), containsInAnyOrder(experiment1, experiment3)));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(container2, atLeast(0)).createExperiment(captor.capture());
+        verify(container3, atLeast(0)).createExperiment(captor.capture());
+        assertThat(captor.getAllValues(), IsIterableWithSize.iterableWithSize(1));
+        assertThat(captor.getAllValues(), containsInAnyOrder("method2"));
+    }
+
+    @Test
+    public void createSingletonExperiment () {
+        Container container = mock(Container.class);
+        Experiment experiment = mock(Experiment.class);
+        doReturn(container).when(firstPlatform).getContainerByIdentifier("identifier");
+        doReturn(experiment).when(container).createExperiment("experimentMethod");
+        assertSame(experiment, experimentManager.createSingleExperiment(firstPlatform, "identifier", "experimentMethod"));
+    }
+
+    @Test
+    public void createSingletonExperimentNullContainer () {
+        doReturn(null).when(firstPlatform).getContainerByIdentifier("identifier");
+        assertNull(experimentManager.createSingleExperiment(firstPlatform, "identifier", "experimentMethod"));
+    }
+
+    @Test
+    public void createSingletonExperimentNullExperiment () {
+        Container container = mock(Container.class);
+        doReturn(container).when(firstPlatform).getContainerByIdentifier("identifier");
+        doReturn(null).when(container).createExperiment("experimentMethod");
+        assertNull(experimentManager.createSingleExperiment(firstPlatform, "identifier", "experimentMethod"));
     }
 
     @Test

@@ -200,7 +200,7 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract DataDogIdentifier getDataDogIdentifier ();
 
-    boolean compareUniqueIdentifier (String uniqueIdentifier) {
+    public boolean compareUniqueIdentifier (String uniqueIdentifier) {
         return uniqueIdentifier != null && compareUniqueIdentifierInner(uniqueIdentifier);
     }
 
@@ -283,6 +283,10 @@ public abstract class Container implements ExperimentalObject {
                                 .filter(stringBooleanEntry -> !Boolean.TRUE.equals(stringBooleanEntry.getValue()))
                                 .map(Map.Entry::getKey)
                                 .collect(Collectors.toSet());
+    }
+
+    public void clearExperiment () {
+        currentExperiment = null;
     }
 
 }

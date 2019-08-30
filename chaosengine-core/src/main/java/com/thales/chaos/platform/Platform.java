@@ -129,4 +129,11 @@ public abstract class Platform implements ExperimentalObject {
     public boolean hasEligibleContainersForExperiments () {
         return getRoster().stream().anyMatch(Container::eligibleForExperiments);
     }
+
+    public Container getContainerByIdentifier (String containerIdentifier) {
+        return getRoster().stream()
+                          .filter(container -> container.compareUniqueIdentifier(containerIdentifier))
+                          .findFirst()
+                          .orElse(null);
+    }
 }
