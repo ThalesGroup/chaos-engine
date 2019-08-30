@@ -13,9 +13,11 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -33,10 +35,13 @@ import static java.util.stream.Collectors.toList;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
 @Component
+@ConfigurationProperties("experiments")
 public class ExperimentManager {
     private static final Logger log = LoggerFactory.getLogger(ExperimentManager.class);
     private final Collection<Experiment> allExperiments = new HashSet<>();
     private final Map<Instant, ExperimentSuite> historicalExperimentSuites = new TreeMap<>(Comparator.reverseOrder());
+    private Instant lastExperimentComplete;
+    private Duration experimentBackoffPeriod = Duration.ofMinutes(15);
     @Autowired
     private PlatformManager platformManager;
     @Autowired
@@ -58,8 +63,8 @@ public class ExperimentManager {
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
         synchronized (allExperiments) {
-            log.info("Experiments total count: {}", v("count", allExperiments.size()));
             if (!allExperiments.isEmpty()) {
+                log.info("Experiments total count: {}", v("count", allExperiments.size()));
                 int experimentCount = Math.min(allExperiments.size(), 64);
                 ForkJoinPool threadPool = null;
                 try {
@@ -73,8 +78,16 @@ public class ExperimentManager {
                     calculateExperimentStats();
                 }
                 allExperiments.removeIf(Experiment::isComplete);
-            }
+                if (allExperiments.isEmpty()) {
+                    lastExperimentComplete = Instant.now();
+                    log.info("As of {}, there are no active experiments. The next experiment can run in {}.", lastExperimentComplete, experimentBackoffPeriod);
+                }
+            } else log.debug("No experiments to evaluate right now.");
         }
+    }
+
+    public void setExperimentBackoffPeriod (Duration experimentBackoffPeriod) {
+        this.experimentBackoffPeriod = experimentBackoffPeriod;
     }
 
     void calculateExperimentStats () {
@@ -133,6 +146,10 @@ public class ExperimentManager {
     }
 
     synchronized Set<Experiment> scheduleExperiments (final boolean force) {
+        if (!force && inBackoffPeriod()) {
+            log.debug("Cannot start experiments due to backoff period.");
+            return Collections.emptySet();
+        }
         if (allExperiments.isEmpty()) {
             if (platformManager.getPlatforms().isEmpty()) {
                 log.warn("There are no platforms enabled");
@@ -169,6 +186,13 @@ public class ExperimentManager {
             }
         }
         return Collections.emptySet();
+    }
+
+    private boolean inBackoffPeriod () {
+        return Optional.ofNullable(lastExperimentComplete)
+                       .map(instant -> instant.plus(experimentBackoffPeriod))
+                       .map(instant -> instant.isAfter(Instant.now()))
+                       .orElse(false);
     }
 
     private void logExperimentSuiteEquivalent (Platform platform, Set<Experiment> experiments) {
