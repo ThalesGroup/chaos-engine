@@ -42,3 +42,6 @@ developer-tools/vault-loader/vault-secrets.json
 
 # Ignore the MkDocs Built Site
 site/
+# Ignore the default build directories for MkDocs CI Script
+public/
+.public/
