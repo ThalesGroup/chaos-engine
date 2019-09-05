@@ -1,6 +1,6 @@
 Documentation: &documentation
   image: python:3-alpine
-  stage: test
+  stage: build
   variables:
     BUILD_PATH: '.public'
   before_script:
