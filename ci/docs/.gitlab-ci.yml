@@ -3,6 +3,8 @@ Documentation: &documentation
   stage: test
   variables:
     BUILD_PATH: '.public'
+  before_script:
+    - ./ci/docs/mkdocs_pre_build.sh
   script:
     - ./ci/docs/mkdocs_build.sh ${BUILD_PATH-public}
   artifacts:
