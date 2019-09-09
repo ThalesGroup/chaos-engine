@@ -66,12 +66,7 @@ public abstract class BufferedNotificationMethod implements NotificationMethods 
                     throw new ChaosException(NOTIFICATION_BUFFER_RETRY_EXCEEDED, e);
                 }
             }
-            try {
-                wait(waitTime);
-            } catch (InterruptedException e1) {
-                log.error("Interrupted while sleeping", e1);
-                throw e1;
-            }
+            wait(waitTime);
         }
     }
 
