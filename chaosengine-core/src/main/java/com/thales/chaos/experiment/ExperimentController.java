@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -77,6 +78,10 @@ public class ExperimentController {
         return experimentManager.isAutomatedMode();
     }
 
-
+    @ApiOperation(value = "Change ExperimentBackoff duration", notes = "Controls the minimum amount of time between experiments")
+    @PatchMapping("/backoff")
+    public void setBackoffDuration (@ApiParam(required = true, value = "New minimum backoff period between experiments") @RequestParam Duration backoffDuration) {
+        experimentManager.setExperimentBackoffPeriod(backoffDuration);
+    }
 
 }
