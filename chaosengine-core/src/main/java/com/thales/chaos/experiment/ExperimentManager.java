@@ -63,8 +63,8 @@ public class ExperimentManager {
     @Scheduled(fixedDelay = 15 * 1000)
     void updateExperimentStatus () {
         synchronized (allExperiments) {
+            log.info("Experiments total count: {}", v("count", allExperiments.size()));
             if (!allExperiments.isEmpty()) {
-                log.info("Experiments total count: {}", v("count", allExperiments.size()));
                 int experimentCount = Math.min(allExperiments.size(), 64);
                 ForkJoinPool threadPool = null;
                 try {
@@ -82,7 +82,7 @@ public class ExperimentManager {
                     setLastExperimentComplete();
                     log.info("As of {}, there are no active experiments. The next experiment can run in {}.", lastExperimentComplete, experimentBackoffPeriod);
                 }
-            } else log.debug("No experiments to evaluate right now.");
+            }
         }
     }
 
