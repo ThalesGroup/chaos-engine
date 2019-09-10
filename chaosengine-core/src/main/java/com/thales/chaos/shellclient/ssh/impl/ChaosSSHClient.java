@@ -55,18 +55,13 @@ public class ChaosSSHClient implements SSHClientWrapper {
             Thread.currentThread().interrupt();
             throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         } catch (ExecutionException | TimeoutException e) {
-            log.error("Failed to connect within the timeout", e);
             throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         }
         try {
             log.debug("Connection made, sending authentication");
             sshClient.auth(sshCredentials.getUsername(), sshCredentials.getAuthMethods());
             opened = true;
-        } catch (UserAuthException e) {
-            log.error("Authentication failure connecting to SSH", e);
-            throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
-        } catch (TransportException e) {
-            log.error("Networking exception connecting to SSH", e);
+        } catch (UserAuthException | TransportException e) {
             throw new ChaosException(SHELL_CLIENT_CONNECT_FAILURE, e);
         } finally {
             if (!opened) {
@@ -139,7 +134,6 @@ public class ChaosSSHClient implements SSHClientWrapper {
             log.debug("About to run {}", shellCommand);
             return runCommandInShell(session, shellCommand);
         } catch (IOException e) {
-            log.error("Error running SSH Command", e);
             throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
     }
@@ -160,7 +154,6 @@ public class ChaosSSHClient implements SSHClientWrapper {
                 return shellOutput;
             }
         } catch (IOException e) {
-            log.error("Error running SSH Command", e);
             throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
         }
     }

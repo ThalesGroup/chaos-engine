@@ -2,9 +2,9 @@ package com.thales.chaos.shellclient.impl;
 
 import com.thales.chaos.constants.SSHConstants;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.ShellOutput;
-import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import org.apache.logging.log4j.util.Strings;
@@ -71,7 +71,6 @@ public class KubernetesShellClient implements ShellClient {
             Thread.currentThread().interrupt();
             return ShellOutput.EMPTY_SHELL_OUTPUT;
         } catch (IOException | ApiException e) {
-            log.error("Received exception while processing command", e);
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_CLIENT_ERROR, e);
         } finally {
             if (proc != null) proc.destroy();
@@ -112,7 +111,6 @@ public class KubernetesShellClient implements ShellClient {
             }
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_TRANSFER_FAIL);
         } catch (ApiException e) {
-            log.error("Received exception while processing command", e);
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_TRANSFER_FAIL, e);
         } catch (InterruptedException e) {
             log.error("Interrupted while processing, throwing Interrupt up thread", e);
