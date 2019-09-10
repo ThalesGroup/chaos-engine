@@ -52,3 +52,17 @@ clamav_scan:
   artifacts:
     paths:
       - ${SCAN_LOG}
+
+black_duck_scan:
+  stage: test
+  only:
+    refs:
+      - develop
+    variables:
+      - $BLACK_DUCK_URL
+      - $BLACK_DUCK_PROJECT_NAME
+      - $BLACK_DUCK_TOKEN
+  dependencies:
+    - install
+  script:
+    - ./ci/test/black_duck_scan.sh
