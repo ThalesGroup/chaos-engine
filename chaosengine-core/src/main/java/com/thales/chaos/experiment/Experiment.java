@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -137,9 +154,7 @@ public abstract class Experiment {
     }
 
     public String getExperimentMethodName () {
-        return Optional.ofNullable(experimentMethod)
-                       .map(ExperimentMethod::getExperimentName)
-                       .orElse(EXPERIMENT_METHOD_NOT_SET_YET);
+        return Optional.ofNullable(experimentMethod).map(ExperimentMethod::getExperimentName).orElse(EXPERIMENT_METHOD_NOT_SET_YET);
     }
 
     void setScriptManager (ScriptManager scriptManager) {
@@ -161,8 +176,7 @@ public abstract class Experiment {
         if (specificExperiment != null) {
             log.debug("Experiment creation set to require specific experiment of {}", specificExperiment);
             ExperimentMethod<T> specificExperimentMethod = allMethods.stream()
-                                                                     .filter(method -> method.getExperimentName()
-                                                                                             .equals(specificExperiment))
+                                                                     .filter(method -> method.getExperimentName().equals(specificExperiment))
                                                                      .findFirst()
                                                                      .orElseThrow(EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER
                                                                              .asChaosException());
@@ -172,8 +186,7 @@ public abstract class Experiment {
             return specificExperimentMethod;
         }
         Optional<ExperimentMethod<T>> preferredMethod = allMethods.stream()
-                                                                  .filter(method -> method.getExperimentName()
-                                                                                          .equals(preferredExperiment))
+                                                                  .filter(method -> method.getExperimentName().equals(preferredExperiment))
                                                                   .findFirst();
         ExperimentMethod<T> method;
         if (preferredMethod.isPresent()) {
@@ -182,8 +195,7 @@ public abstract class Experiment {
             log.info("Preferred experiment chosen, changing experiment type to {}", v("experimentType", newExperimentType));
             this.experimentType = newExperimentType;
         } else {
-            final Map<ExperimentType, List<ExperimentMethod<T>>> groupedMethods = allMethods.stream()
-                                                                                            .collect(Collectors.groupingBy(ExperimentMethod::getExperimentType));
+            final Map<ExperimentType, List<ExperimentMethod<T>>> groupedMethods = allMethods.stream().collect(Collectors.groupingBy(ExperimentMethod::getExperimentType));
             experimentType = getRandomItemFromCollection(groupedMethods.keySet());
             final List<ExperimentMethod<T>> availableMethods = groupedMethods.get(experimentType);
             return getRandomItemFromCollection(availableMethods);
@@ -206,9 +218,7 @@ public abstract class Experiment {
         final Collection<String> knownMissingCapabilities = container.getKnownMissingCapabilities();
         return scriptManager.getScripts()
                             .stream()
-                            .filter(script -> filterOutInvalidScripts || script.getDependencies()
-                                                                               .stream()
-                                                                               .noneMatch(knownMissingCapabilities::contains))
+                            .filter(script -> filterOutInvalidScripts || script.getDependencies().stream().noneMatch(knownMissingCapabilities::contains))
                             .map(script -> ExperimentMethod.fromScript(getContainer(), script))
                             .map(method -> (ExperimentMethod<T>) method)
                             .collect(Collectors.toSet());

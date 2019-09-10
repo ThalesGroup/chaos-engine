@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.admin;
 
 import com.thales.chaos.admin.enums.AdminState;
@@ -23,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebMvcTest(controllers = AdminController.class)
 public class AdminControllerTest {
-
     @MockBean
     private NotificationManager notificationManager;
     @SpyBean
@@ -38,16 +54,12 @@ public class AdminControllerTest {
 
     @Test
     public void getAdminState () throws Exception {
-        mvc.perform(get("/admin" + "/state").contentType(APPLICATION_JSON))
-           .andExpect(status().isOk())
-           .andExpect(jsonPath("$", is("STARTED")));
+        mvc.perform(get("/admin" + "/state").contentType(APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$", is("STARTED")));
     }
 
     @Test
     public void setAdminState () throws Exception {
-        mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "BOGUS STATE"))
-           .andExpect(status().is5xxServerError());
-        mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "PAUSED"))
-           .andExpect(status().isOk());
+        mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "BOGUS STATE")).andExpect(status().is5xxServerError());
+        mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "PAUSED")).andExpect(status().isOk());
     }
 }

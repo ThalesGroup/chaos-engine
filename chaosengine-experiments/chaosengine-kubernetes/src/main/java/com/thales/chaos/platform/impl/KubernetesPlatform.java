@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.google.gson.JsonSyntaxException;
@@ -97,9 +114,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                     return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
                 case DAEMON_SET:
                     V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
-                    return (daemonSet.getStatus()
-                                     .getCurrentNumberScheduled()
-                                     .equals(daemonSet.getStatus().getDesiredNumberScheduled()));
+                    return (daemonSet.getStatus().getCurrentNumberScheduled().equals(daemonSet.getStatus().getDesiredNumberScheduled()));
                 case DEPLOYMENT:
                     V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
                             .getNamespace(), "true");
@@ -121,11 +136,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     Optional<Boolean> podExists (KubernetesPodContainer kubernetesPodContainer) {
         try {
             V1PodList pods = listAllPodsInNamespace();
-            Boolean podExists = pods.getItems()
-                                    .stream()
-                                    .map(V1Pod::getMetadata)
-                                    .map(V1ObjectMeta::getUid)
-                                    .anyMatch(uid -> uid.equals(kubernetesPodContainer.getUuid()));
+            Boolean podExists = pods.getItems().stream().map(V1Pod::getMetadata).map(V1ObjectMeta::getUid).anyMatch(uid -> uid.equals(kubernetesPodContainer.getUuid()));
             log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
             return Optional.of(podExists);
         } catch (ApiException e) {
@@ -241,8 +252,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                                               .withNamespace(pod.getMetadata().getNamespace())
                                               .withLabels(pod.getMetadata().getLabels())
                                               .withKubernetesPlatform(this)
-                                              .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata()
-                                                                                                  .getOwnerReferences()))
+                                              .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata().getOwnerReferences()))
                                               .withOwnerKind(Optional.of(pod.getMetadata().getOwnerReferences())
                                                                      .flatMap(list -> list.stream().findFirst())
                                                                      .map(V1OwnerReference::getKind)

@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.notification.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,12 +145,11 @@ public class SlackNotificationsTest {
                                                               .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils.getMachineHostname())
                                                               .withTitle(SlackNotifications.TITLE)
                                                               .withColor(slackNotifications.getSlackNotificationColor(chaosExperimentEvent
-                                                                 .getNotificationLevel()))
+                                                                      .getNotificationLevel()))
                                                               .withText(chaosExperimentEvent.getMessage())
                                                               .withTs(chaosTime.toInstant())
                                                               .withAuthorName(chaosExperimentEvent.getTitle())
-                                                              .withPretext(chaosExperimentEvent.getNotificationLevel()
-                                                                                          .toString())
+                                                              .withPretext(chaosExperimentEvent.getNotificationLevel().toString())
                                                               .withField(EXPERIMENT_ID, experimentId)
                                                               .withField(EXPERIMENT_METHOD, experimentMethod)
                                                               .withField(EXPERIMENT_TYPE, experimentType.name())
@@ -144,11 +160,7 @@ public class SlackNotificationsTest {
         SlackMessage.SlackMessageBuilder slackMessageBuilder = SlackMessage.builder();
         expectedSlackEvent = slackMessageBuilder.withAttachment(slackAttachmentEvent).build();
         slackMessageBuilder = SlackMessage.builder();
-        chaosMessage = ChaosMessage.builder()
-                                   .withMessage(message)
-                                   .withTitle(title)
-                                   .withNotificationLevel(level)
-                                   .build();
+        chaosMessage = ChaosMessage.builder().withMessage(message).withTitle(title).withNotificationLevel(level).build();
         SlackAttachment slackAttachmentMessage = SlackAttachment.builder().withFallback(chaosMessage.asMap().toString())
                                                                 .withFooter(SlackNotifications.FOOTER_PREFIX + HttpUtils
                                                                         .getMachineHostname())
@@ -158,8 +170,7 @@ public class SlackNotificationsTest {
                                                                 .withText(chaosMessage.getMessage())
                                                                 .withTs(Instant.now())
                                                                 .withAuthorName(chaosMessage.getTitle())
-                                                                .withPretext(chaosMessage.getNotificationLevel()
-                                                                                         .toString())
+                                                                .withPretext(chaosMessage.getNotificationLevel().toString())
                                                                 .build();
         expectedSlackMessage = slackMessageBuilder.withAttachment(slackAttachmentMessage).build();
     }
@@ -183,8 +194,6 @@ public class SlackNotificationsTest {
             responseCode = 200;
         }
     }
-
-
 
     @Test
     public void logEvent () throws IOException {
@@ -267,8 +276,7 @@ public class SlackNotificationsTest {
                                      .stream()
                                      .anyMatch(slackAttachment -> slackAttachment.getFields()
                                                                                  .stream()
-                                                                                 .anyMatch(field -> field.getTitle()
-                                                                                                         .equals("New Field") && field
+                                                                                 .anyMatch(field -> field.getTitle().equals("New Field") && field
                                                                                          .getValue()
                                                                                          .equals("12345"))));
     }

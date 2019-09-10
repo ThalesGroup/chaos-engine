@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.admin.AdminManager;
@@ -392,17 +409,14 @@ public class ExperimentTest {
         experiment.setExperimentState(CREATED);
         experiment.setExperimentState(STARTING);
         assertTrue(experiment.getTimeInState().getSeconds() < 1);
-        await().atLeast(500, TimeUnit.MILLISECONDS)
-               .atMost(1, TimeUnit.SECONDS)
-               .until(() -> experiment.getTimeInState().getNano() > 500000000);
+        await().atLeast(500, TimeUnit.MILLISECONDS).atMost(1, TimeUnit.SECONDS).until(() -> experiment.getTimeInState().getNano() > 500000000);
     }
 
     @Test
     public void isComplete () {
         EnumMap<ExperimentState, Boolean> completeExperimentStateMap;
         completeExperimentStateMap = new EnumMap<>(ExperimentState.class);
-        Arrays.stream(ExperimentState.values())
-              .forEach(experimentState -> completeExperimentStateMap.put(experimentState, false));
+        Arrays.stream(ExperimentState.values()).forEach(experimentState -> completeExperimentStateMap.put(experimentState, false));
         completeExperimentStateMap.put(FINISHED, true);
         completeExperimentStateMap.put(FAILED, true);
         completeExperimentStateMap.forEach((k, v) -> {
@@ -444,8 +458,7 @@ public class ExperimentTest {
     public void startExperimentInnerFail () {
         doReturn(false).when(experiment).cannotRunExperimentsNow();
         doReturn(NORMAL).when(container).getContainerHealth(experimentType);
-        doThrow(new ChaosException(ChaosErrorCode.EXPERIMENT_START_FAILURE)).when(container)
-                                                                            .startExperiment(experiment);
+        doThrow(new ChaosException(ChaosErrorCode.EXPERIMENT_START_FAILURE)).when(container).startExperiment(experiment);
         try {
             experiment.startExperimentInner(any());
             fail("Exception expected");

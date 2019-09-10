@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -99,8 +116,7 @@ public class AwsRDSPlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances().stream()
-                                                                                     .map(DBInstance::getDBInstanceStatus);
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> getAllDBInstances().stream().map(DBInstance::getDBInstanceStatus);
         if (!dbInstanceStatusSupplier.get().allMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
             if (dbInstanceStatusSupplier.get().anyMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
                 return PlatformHealth.DEGRADED;
@@ -116,19 +132,13 @@ public class AwsRDSPlatform extends Platform {
                                                                         .filter(dbInstance -> dbInstance.getDBClusterIdentifier() == null)
                                                                         .map(this::createContainerFromDBInstance)
                                                                         .collect(toSet());
-        Collection<Container> dbClusterContainers = getAllDBClusters().stream()
-                                                                      .map(this::createContainerFromDBCluster)
-                                                                      .collect(toSet());
-        return Stream.of(dbClusterContainers, dbInstanceContainers)
-                     .flatMap(Collection::stream)
-                     .collect(Collectors.toList());
+        Collection<Container> dbClusterContainers = getAllDBClusters().stream().map(this::createContainerFromDBCluster).collect(toSet());
+        return Stream.of(dbClusterContainers, dbInstanceContainers).flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     @Override
     public List<Container> generateExperimentRoster () {
-        Map<String, List<AwsContainer>> availabilityZoneMap = getRoster().stream()
-                                                                         .map(AwsContainer.class::cast)
-                                                                         .collect(groupingBy(AwsContainer::getAvailabilityZone));
+        Map<String, List<AwsContainer>> availabilityZoneMap = getRoster().stream().map(AwsContainer.class::cast).collect(groupingBy(AwsContainer::getAvailabilityZone));
         final String[] availabilityZones = availabilityZoneMap.keySet().stream().filter(not(AwsConstants.NO_AZ_INFORMATION::equals))
                                                               .collect(toSet())
                                                               .toArray(new String[]{});
@@ -195,10 +205,7 @@ public class AwsRDSPlatform extends Platform {
     }
 
     private Collection<Tag> generateTagsFromFilters () {
-        return getFilter().entrySet()
-                          .stream()
-                          .map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue()))
-                          .collect(Collectors.toSet());
+        return getFilter().entrySet().stream().map(f -> new Tag().withKey(f.getKey()).withValue(f.getValue())).collect(Collectors.toSet());
     }
 
     public Map<String, String> getFilter () {
@@ -327,16 +334,13 @@ public class AwsRDSPlatform extends Platform {
                     break;
             }
         }
-        return containerHealthCollection.stream()
-                                        .max(Comparator.comparingInt(ContainerHealth::getHealthLevel))
-                                        .orElse(ContainerHealth.NORMAL);
+        return containerHealthCollection.stream().max(Comparator.comparingInt(ContainerHealth::getHealthLevel)).orElse(ContainerHealth.NORMAL);
     }
 
     private ContainerHealth getInstanceStatus (String dbInstanceIdentifier) {
         List<DBInstance> dbInstances = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                                                 .getDBInstances();
-        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> dbInstances.stream()
-                                                                             .map(DBInstance::getDBInstanceStatus);
+        Supplier<Stream<String>> dbInstanceStatusSupplier = () -> dbInstances.stream().map(DBInstance::getDBInstanceStatus);
         if (dbInstanceStatusSupplier.get().count() == 0) {
             return ContainerHealth.DOES_NOT_EXIST;
         } else if (dbInstanceStatusSupplier.get().noneMatch(s -> s.equals(AwsRDSConstants.AWS_RDS_AVAILABLE))) {
@@ -407,8 +411,7 @@ public class AwsRDSPlatform extends Platform {
                         .getSecurityGroups()
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
-                        .filter(securityGroup -> securityGroup.getGroupName()
-                                                              .equals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId))
+                        .filter(securityGroup -> securityGroup.getGroupName().equals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId))
                         .map(SecurityGroup::getGroupId)
                         .findFirst()
                         .orElseGet(() -> createChaosSecurityGroup(vpcId));
@@ -419,8 +422,7 @@ public class AwsRDSPlatform extends Platform {
         String groupId = amazonEC2.createSecurityGroup(new CreateSecurityGroupRequest().withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
                                                                                        .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
                                                                                        .withVpcId(vpcId)).getGroupId();
-        amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withGroupId(groupId)
-                                                                                  .withIpPermissions(DEFAULT_IP_PERMISSION));
+        amazonEC2.revokeSecurityGroupEgress(new RevokeSecurityGroupEgressRequest().withGroupId(groupId).withIpPermissions(DEFAULT_IP_PERMISSION));
         log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
     }
@@ -573,8 +575,7 @@ public class AwsRDSPlatform extends Platform {
         boolean snapshotRunning = amazonRDS.describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier))
                                            .getDBInstances()
                                            .stream()
-                                           .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus()
-                                                                             .equals(AWS_RDS_BACKING_UP));
+                                           .anyMatch(dbInstance -> dbInstance.getDBInstanceStatus().equals(AWS_RDS_BACKING_UP));
         log.info("{} is backing up = {}", kv(AWS_RDS_INSTANCE_DATADOG_IDENTIFIER, dbInstanceIdentifier), v("backupInProgress", snapshotRunning));
         return snapshotRunning;
     }

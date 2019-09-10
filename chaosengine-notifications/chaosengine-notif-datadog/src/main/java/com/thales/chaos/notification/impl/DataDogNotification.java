@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.notification.ChaosNotification;
@@ -25,7 +42,6 @@ public class DataDogNotification implements NotificationMethods {
     private static final String CONTAINER_TAG_PREFIX = "container.";
     private final Collection<String> ignoredContainerFields = List.of("knownMissingCapabilities");
     private final Collection<String> complexContainerFields = List.of("shellCapabilities");
-
     @Autowired
     private StatsDClient statsDClient;
 
@@ -44,6 +60,7 @@ public class DataDogNotification implements NotificationMethods {
             log.error("Cannot send DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
         }
     }
+
     public DataDogNotification () {
         log.info("DataDog notification channel created");
     }
@@ -58,24 +75,15 @@ public class DataDogNotification implements NotificationMethods {
         Event buildFromNotification (ChaosNotification chaosNotification) {
             Event.Builder evtBuilder = Event.builder();
             Map<String, Object> fieldMap = chaosNotification.asMap();
-            Optional.ofNullable(fieldMap.get("experimentId"))
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .ifPresent(evtBuilder::withAggregationKey);
+            Optional.ofNullable(fieldMap.get("experimentId")).filter(String.class::isInstance).map(String.class::cast).ifPresent(evtBuilder::withAggregationKey);
             Optional.ofNullable(fieldMap.get("notificationLevel"))
                     .filter(NotificationLevel::isNotificationLevel)
                     .map(Object::toString)
                     .map(NotificationLevel::valueOf)
                     .map(this::mapLevel)
                     .ifPresent(evtBuilder::withAlertType);
-            Optional.ofNullable(fieldMap.get("title"))
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .ifPresent(evtBuilder::withTitle);
-            Optional.ofNullable(fieldMap.get("message"))
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .ifPresent(evtBuilder::withText);
+            Optional.ofNullable(fieldMap.get("title")).filter(String.class::isInstance).map(String.class::cast).ifPresent(evtBuilder::withTitle);
+            Optional.ofNullable(fieldMap.get("message")).filter(String.class::isInstance).map(String.class::cast).ifPresent(evtBuilder::withText);
             evtBuilder.withSourceTypeName(SOURCE_TYPE);
             return evtBuilder.build();
         }
@@ -94,12 +102,7 @@ public class DataDogNotification implements NotificationMethods {
         Collection<String> generateTags (ChaosNotification chaosNotification) {
             Map<String, Object> fieldMap = chaosNotification.asMap();
             Collection<String> tags = collectContainerTags(fieldMap);
-
-            fieldMap.keySet()
-                    .stream()
-                    .map(Object::toString)
-                    .filter(not(knownChaosEventFields::contains))
-                    .forEach(k -> tags.add(k + ":" + fieldMap.get(k)));
+            fieldMap.keySet().stream().map(Object::toString).filter(not(knownChaosEventFields::contains)).forEach(k -> tags.add(k + ":" + fieldMap.get(k)));
             return tags;
         }
 

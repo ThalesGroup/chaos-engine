@@ -1,12 +1,29 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
+import com.thales.chaos.constants.CloudFoundryConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.CloudFoundrySelfAwareness;
-import com.thales.chaos.constants.CloudFoundryConstants;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.RestageApplicationRequest;
@@ -26,7 +43,6 @@ public abstract class CloudFoundryPlatform extends Platform {
     @Autowired
     public CloudFoundryPlatform () {
     }
-
 
     @Autowired(required = false)
     void setCloudFoundrySelfAwareness (CloudFoundrySelfAwareness cloudFoundrySelfAwareness) {
@@ -58,8 +74,7 @@ public abstract class CloudFoundryPlatform extends Platform {
     public PlatformHealth getPlatformHealth () {
         Flux<ApplicationSummary> runningInstances = cloudFoundryOperations.applications()
                                                                           .list()
-                                                                          .filter(a -> a.getRequestedState()
-                                                                                        .equals(CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED));
+                                                                          .filter(a -> a.getRequestedState().equals(CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED));
         if (runningInstances.filter(a -> a.getInstances() > 0)
                             .filter(a -> a.getRunningInstances() == 0)
                             .hasElements()
@@ -84,5 +99,4 @@ public abstract class CloudFoundryPlatform extends Platform {
     public void restageApplication (RestageApplicationRequest restageApplicationRequest) {
         cloudFoundryOperations.applications().restage(restageApplicationRequest).block();
     }
-
 }

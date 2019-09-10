@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import ch.qos.logback.classic.Level;
@@ -79,8 +96,7 @@ public class ExperimentManagerTest {
 
     @Before
     public void setUp () {
-        doReturn(new ExperimentManager.AutoCloseableMDCCollection(Collections.emptyMap())).when(experimentManager)
-                                                                                          .getExperimentAutoCloseableMDCCollection(any());
+        doReturn(new ExperimentManager.AutoCloseableMDCCollection(Collections.emptyMap())).when(experimentManager).getExperimentAutoCloseableMDCCollection(any());
         doReturn("firstPlatform").when(firstPlatform).getPlatformType();
         doReturn("secondPlatform").when(secondPlatform).getPlatformType();
     }
@@ -241,7 +257,6 @@ public class ExperimentManagerTest {
 
     @Test
     public void scheduleExperimentsThreadSafe () throws Exception {
-
         Container container = mock(Container.class);
         doReturn("aggregate").when(container).getAggregationIdentifier();
         Experiment experiment = mock(Experiment.class);
@@ -255,22 +270,17 @@ public class ExperimentManagerTest {
         doReturn(experiment).when(container).createExperiment();
         Future<Set<Experiment>> futureSetOfExperiments;
         synchronized (experimentManager.getAllExperiments()) {
-            futureSetOfExperiments = Executors.newSingleThreadExecutor()
-                                              .submit(() -> experimentManager.scheduleExperiments(false));
+            futureSetOfExperiments = Executors.newSingleThreadExecutor().submit(() -> experimentManager.scheduleExperiments(false));
             await().atMost(5, TimeUnit.SECONDS)
                    .until(() -> mockingDetails(container).getInvocations()
                                                          .stream()
-                                                         .anyMatch(invocation -> invocation.getMethod()
-                                                                                           .getName()
-                                                                                           .equals("canExperiment")));
+                                                         .anyMatch(invocation -> invocation.getMethod().getName().equals("canExperiment")));
             assertFalse(futureSetOfExperiments.isDone());
         }
         await().atMost(5, TimeUnit.SECONDS)
                .until(() -> mockingDetails(container).getInvocations()
                                                      .stream()
-                                                     .anyMatch(invocation -> invocation.getMethod()
-                                                                                       .getName()
-                                                                                       .equals("createExperiment")));
+                                                     .anyMatch(invocation -> invocation.getMethod().getName().equals("createExperiment")));
         await().atMost(1, TimeUnit.SECONDS).until(futureSetOfExperiments::isDone);
         assertThat(futureSetOfExperiments.get(), containsInAnyOrder(experiment));
     }
@@ -397,8 +407,7 @@ public class ExperimentManagerTest {
         doReturn(experiment3).when(container3).createExperiment(anyString());
         doReturn(Set.of(container1, container2, container3)).when(firstPlatform).getRosterByAggregationId("aggregate");
         Set<Experiment> experiments = experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", List
-                .of("method1", "method2"), Collections.emptyList()), 1)
-                                                       .collect(Collectors.toUnmodifiableSet());
+                .of("method1", "method2"), Collections.emptyList()), 1).collect(Collectors.toUnmodifiableSet());
         assertThat(experiments, Matchers.anyOf(containsInAnyOrder(experiment1, experiment2), containsInAnyOrder(experiment2, experiment3), containsInAnyOrder(experiment1, experiment3)));
     }
 
@@ -406,8 +415,7 @@ public class ExperimentManagerTest {
     public void createSpecificExperimentsInsufficientContainerCountException () {
         doReturn(IntStream.range(0, 10)
                           .mapToObj(i -> mock(Container.class))
-                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
-                                                                   .getRosterByAggregationId("aggregate");
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform).getRosterByAggregationId("aggregate");
         try {
             experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
                     .range(0, 10)
@@ -423,8 +431,7 @@ public class ExperimentManagerTest {
     public void createSpecificExperimentsInsufficientContainerCountExceptionMoreThanOneSurvivor () {
         doReturn(IntStream.range(0, 14)
                           .mapToObj(i -> mock(Container.class))
-                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
-                                                                   .getRosterByAggregationId("aggregate");
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform).getRosterByAggregationId("aggregate");
         try {
             experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
                     .range(0, 10)
@@ -440,8 +447,7 @@ public class ExperimentManagerTest {
     public void createSpecificExperimentsWithNoSurvivors () {
         doReturn(IntStream.range(0, 10)
                           .mapToObj(i -> mock(Container.class))
-                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform)
-                                                                   .getRosterByAggregationId("aggregate");
+                          .collect(Collectors.toUnmodifiableSet())).when(firstPlatform).getRosterByAggregationId("aggregate");
         experimentManager.createSpecificExperiments(firstPlatform, new ExperimentSuite.ExperimentCriteria("aggregate", IntStream
                 .range(0, 10)
                 .mapToObj(String::valueOf)
@@ -564,9 +570,7 @@ public class ExperimentManagerTest {
         experimentManager.setLastExperimentComplete();
         experimentManager.setExperimentBackoffPeriod(Duration.ofMillis(500));
         assertTrue(experimentManager.inBackoffPeriod());
-        await().atLeast(400, TimeUnit.MILLISECONDS)
-               .atMost(600, TimeUnit.MILLISECONDS)
-               .until(() -> !experimentManager.inBackoffPeriod());
+        await().atLeast(400, TimeUnit.MILLISECONDS).atMost(600, TimeUnit.MILLISECONDS).until(() -> !experimentManager.inBackoffPeriod());
     }
 
     @Test

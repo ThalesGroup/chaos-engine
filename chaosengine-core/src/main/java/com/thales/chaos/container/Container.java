@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -90,19 +107,14 @@ public abstract class Container implements ExperimentalObject {
      */
     public long getIdentity () {
         final List<Field> identifyingFields = getIdentifyingFields();
-        final List<String> identifyingFieldValues = identifyingFields.stream()
-                                                                     .map(field -> {
-                                                                         try {
-                                                                             return field.get(this);
-                                                                         } catch (IllegalAccessException e) {
-                                                                             log.error("Caught IllegalAccessException ", e);
-                                                                             return null;
-                                                                         }
-                                                                     })
-                                                                     .filter(Objects::nonNull)
-                                                                     .map(Object::toString)
-                                                                     .filter(s -> s.length() > 0)
-                                                                     .collect(Collectors.toUnmodifiableList());
+        final List<String> identifyingFieldValues = identifyingFields.stream().map(field -> {
+            try {
+                return field.get(this);
+            } catch (IllegalAccessException e) {
+                log.error("Caught IllegalAccessException ", e);
+                return null;
+            }
+        }).filter(Objects::nonNull).map(Object::toString).filter(s -> s.length() > 0).collect(Collectors.toUnmodifiableList());
         String identity = String.join("$$$$$", identifyingFieldValues);
         byte[] primitiveByteArray = identity.getBytes();
         CRC32 checksum = new CRC32();
@@ -115,10 +127,7 @@ public abstract class Container implements ExperimentalObject {
     }
 
     private static int getFieldOrder (Field value) {
-        return Optional.of(value)
-                       .map(field -> field.getAnnotation(Identifier.class))
-                       .map(Identifier::order)
-                       .orElse(Integer.MIN_VALUE + value.getName().hashCode());
+        return Optional.of(value).map(field -> field.getAnnotation(Identifier.class)).map(Identifier::order).orElse(Integer.MIN_VALUE + value.getName().hashCode());
     }
 
     private List<Field> getIdentifyingFields () {
@@ -288,5 +297,4 @@ public abstract class Container implements ExperimentalObject {
     public void clearExperiment () {
         currentExperiment = null;
     }
-
 }

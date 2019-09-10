@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.thales.chaos.constants.CloudFoundryConstants;
@@ -64,8 +81,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     public ContainerHealth checkPlatformHealth () {
         Iterable<ApplicationSummary> apps = cloudFoundryOperations.applications()
                                                                   .list()
-                                                                  .filter(app -> app.getRequestedState()
-                                                                                    .equals(CLOUDFOUNDRY_APPLICATION_STARTED))
+                                                                  .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
                                                                   .filter(app -> app.getInstances() > 0)
                                                                   .toIterable();
         for (ApplicationSummary app : apps) {
@@ -194,7 +210,6 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
                 }
             }
         }
-
         log.debug("Application {} routes: {}", applicationName, routes);
         return routes;
     }
@@ -208,6 +223,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         }
         return null;
     }
+
     public void rescaleApplication (String applicationName, int instances) {
         ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
                                                                                  .name(applicationName)
@@ -217,9 +233,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     }
 
     public void restartApplication (String applicationName) {
-        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder()
-                                                                                       .name(applicationName)
-                                                                                       .build();
+        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder().name(applicationName).build();
         cloudFoundryOperations.applications().restart(restartApplicationRequest).block();
     }
 
