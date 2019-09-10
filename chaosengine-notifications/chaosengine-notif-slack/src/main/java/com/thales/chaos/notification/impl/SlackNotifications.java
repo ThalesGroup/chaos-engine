@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.notification.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,7 +60,6 @@ public class SlackNotifications extends BufferedNotificationMethod {
     private final Collection<String> knownChaosEventFields = List.of("title", "message", "notificationLevel", "experimentId", "experimentType", "experimentMethod", "chaosTime", "targetContainer");
     private final Collection<String> knownContainerFields = List.of("aggregationIdentifier", "simpleName", "containerType");
 
-
     @Autowired
     SlackNotifications (@Value("${slack_webhookuri}") @NotNull String webhookUri) {
         super();
@@ -87,14 +103,12 @@ public class SlackNotifications extends BufferedNotificationMethod {
                 .stream()
                 .filter(e -> knownChaosEventFields.contains(e.getKey()))
                 .filter(e -> e.getKey().startsWith("experiment") && e.getValue() != null)
-                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue()
-                                                                                                     .toString()));
+                .forEach(e -> builder.withField(StringUtils.convertCamelCaseToSentence(e.getKey()), e.getValue().toString()));
         Optional.ofNullable(fieldMap.get("chaosTime"))
                 .filter(Long.class::isInstance)
                 .map(Long.class::cast)
                 .map(Instant::ofEpochMilli)
                 .ifPresent(builder::withTs);
-
         Optional.ofNullable(fieldMap.get("targetContainer"))
                 .filter(Map.class::isInstance)
                 .map(o -> (Map<String, String>) o)
@@ -131,7 +145,6 @@ public class SlackNotifications extends BufferedNotificationMethod {
                                                 .build();
         sendSlackMessage(slackMessage);
     }
-
 
     String getSlackNotificationColor (NotificationLevel notificationLevel) {
         return Optional.ofNullable(slackNotificationColorMap.get(notificationLevel)).orElse("danger");
@@ -373,7 +386,6 @@ class SlackAttachment {
             this.mrkdwnIn.add(value);
             return this;
         }
-
 
         SlackAttachment build () {
             SlackAttachment slackAttachment = new SlackAttachment();

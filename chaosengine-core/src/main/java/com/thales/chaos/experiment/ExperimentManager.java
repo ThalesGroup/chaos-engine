@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.calendar.HolidayManager;
@@ -98,9 +115,7 @@ public class ExperimentManager {
         Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
                                                                            .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
                                                                                    .counting()));
-        Arrays.stream(values())
-              .filter(not(experimentsInStateCount::containsKey))
-              .forEach(entry -> experimentsInStateCount.put(entry, 0L));
+        Arrays.stream(values()).filter(not(experimentsInStateCount::containsKey)).forEach(entry -> experimentsInStateCount.put(entry, 0L));
         //noinspection PlaceholderCountMatchesArgumentCount
         log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
         Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
@@ -173,9 +188,7 @@ public class ExperimentManager {
             }
             Set<Container> containersToExperiment;
             do {
-                containersToExperiment = roster.parallelStream()
-                                               .filter(Container::canExperiment)
-                                               .collect(Collectors.toSet());
+                containersToExperiment = roster.parallelStream().filter(Container::canExperiment).collect(Collectors.toSet());
             } while (force && containersToExperiment.isEmpty());
             synchronized (allExperiments) {
                 Set<Experiment> experiments = containersToExperiment.stream()
@@ -251,8 +264,7 @@ public class ExperimentManager {
             log.info("Request to start a pre-planned experiment with criteria {}", kv("experimentSuite", experimentSuite));
             Platform experimentPlatform = platformManager.getPlatforms()
                                                          .stream()
-                                                         .filter(platform -> platform.getPlatformType()
-                                                                                     .equals(experimentSuite.getPlatformType()))
+                                                         .filter(platform -> platform.getPlatformType().equals(experimentSuite.getPlatformType()))
                                                          .findFirst()
                                                          .orElseThrow(ChaosErrorCode.PLATFORM_DOES_NOT_EXIST.asChaosException());
             experimentPlatform.expireCachedRoster();
@@ -285,10 +297,9 @@ public class ExperimentManager {
         List<String> leftoverExperimentMethods = experimentMethods.subList(specificContainerTargets.size(), experimentMethods
                 .size());
         Collections.shuffle(potentialContainers);
-        Stream<Experiment> experimentStream2 = IntStream.range(0, leftoverExperimentMethods.size())
-                                                        .mapToObj(i -> {
+        Stream<Experiment> experimentStream2 = IntStream.range(0, leftoverExperimentMethods.size()).mapToObj(i -> {
             Container container = potentialContainers.get(i);
-                                                            String experimentMethod = leftoverExperimentMethods.get(i);
+            String experimentMethod = leftoverExperimentMethods.get(i);
             return container.createExperiment(experimentMethod);
         });
         return Stream.concat(experimentStream1, experimentStream2);

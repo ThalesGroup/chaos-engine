@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -58,8 +75,6 @@ public class CloudFoundryContainerTest {
             doReturn(args[0]).when(experiment).getFinalizeMethod();
             return null;
         }).when(experiment).setFinalizeMethod(any());
-
-
     }
 
     @Test
@@ -85,8 +100,7 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer.restartContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(cloudFoundryContainerPlatform, times(1))
-               .restartInstance(any(RestartApplicationInstanceRequest.class));
+        Mockito.verify(cloudFoundryContainerPlatform, times(1)).restartInstance(any(RestartApplicationInstanceRequest.class));
         experiment.getSelfHealingMethod().run();
     }
 
@@ -114,8 +128,7 @@ public class CloudFoundryContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("host")
-                                      .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
+        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("host").withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
     }
 
     @Test

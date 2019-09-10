@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.thales.chaos.container.Container;
@@ -69,11 +86,11 @@ public class CloudFoundryContainerPlatformTest {
     private final String APPLICATION_NAME = randomUUID().toString();
     private final Integer INSTANCES = 2;
     private final CloudFoundryContainer EXPECTED_CONTAINER_1 = CloudFoundryContainer.builder()
-                                                                              .applicationId(APPLICATION_ID)
-                                                                              .instance(0)
-                                                                              .platform(cloudFoundryContainerPlatform)
-                                                                              .name(APPLICATION_NAME)
-                                                                              .build();
+                                                                                    .applicationId(APPLICATION_ID)
+                                                                                    .instance(0)
+                                                                                    .platform(cloudFoundryContainerPlatform)
+                                                                                    .name(APPLICATION_NAME)
+                                                                                    .build();
 
     @Test
     public void getRoster () {
@@ -184,8 +201,7 @@ public class CloudFoundryContainerPlatformTest {
         ApplicationInstancesResponse applicationInstancesResponse = ApplicationInstancesResponse.builder().build();
         Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
-        doReturn(applicationInstancesResponseMono).when(applicationsV2)
-                                                  .instances(any(ApplicationInstancesRequest.class));
+        doReturn(applicationInstancesResponseMono).when(applicationsV2).instances(any(ApplicationInstancesRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
@@ -208,8 +224,7 @@ public class CloudFoundryContainerPlatformTest {
                                                                                                 .build();
         Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
-        doReturn(applicationInstancesResponseMono).when(applicationsV2)
-                                                  .instances(any(ApplicationInstancesRequest.class));
+        doReturn(applicationInstancesResponseMono).when(applicationsV2).instances(any(ApplicationInstancesRequest.class));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
@@ -222,11 +237,9 @@ public class CloudFoundryContainerPlatformTest {
 
     @Test
     public void checkHealthException () {
-        doThrow(new ClientV2Exception(0, 170001, "Any other exception", "CF-NotStaged")).when(cloudFoundryClient)
-                                                                                        .applicationsV2();
+        doThrow(new ClientV2Exception(0, 170001, "Any other exception", "CF-NotStaged")).when(cloudFoundryClient).applicationsV2();
         assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
-        doThrow(new ClientV2Exception(0, 170002, "Any other exception", "CF-Staged")).when(cloudFoundryClient)
-                                                                                     .applicationsV2();
+        doThrow(new ClientV2Exception(0, 170002, "Any other exception", "CF-Staged")).when(cloudFoundryClient).applicationsV2();
         assertEquals(ContainerHealth.DOES_NOT_EXIST, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, 0));
     }
 
@@ -249,8 +262,7 @@ public class CloudFoundryContainerPlatformTest {
                                                                                                 .build();
         Mono<ApplicationInstancesResponse> applicationInstancesResponseMono = Mono.just(applicationInstancesResponse);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
-        doReturn(applicationInstancesResponseMono).when(applicationsV2)
-                                                  .instances(any(ApplicationInstancesRequest.class));
+        doReturn(applicationInstancesResponseMono).when(applicationsV2).instances(any(ApplicationInstancesRequest.class));
         assertEquals(ContainerHealth.NORMAL, cloudFoundryContainerPlatform.checkHealth(APPLICATION_ID, INSTANCE_ID));
     }
 
@@ -322,10 +334,7 @@ public class CloudFoundryContainerPlatformTest {
     public void getTimeInState () {
         String applicationId = UUID.randomUUID().toString();
         Integer index = new Random().nextInt(100) + 1;
-        CloudFoundryContainer container = CloudFoundryContainer.builder()
-                                                               .applicationId(applicationId)
-                                                               .instance(index)
-                                                               .build();
+        CloudFoundryContainer container = CloudFoundryContainer.builder().applicationId(applicationId).instance(index).build();
         // Return an applicationsV2 mock
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
@@ -338,9 +347,7 @@ public class CloudFoundryContainerPlatformTest {
                                                                             .instance(index.toString(), instanceInfo)
                                                                             .build();
         doReturn(Mono.just(response)).when(applicationsV2)
-                                     .instances(ApplicationInstancesRequest.builder()
-                                                                           .applicationId(applicationId)
-                                                                           .build());
+                                     .instances(ApplicationInstancesRequest.builder().applicationId(applicationId).build());
         Instant expected = DateTimeFormatter.ISO_INSTANT.parse("2019-03-14T13:25:58Z", Instant::from);
         assertEquals(expected, cloudFoundryContainerPlatform.getTimeInState(container));
     }
@@ -349,16 +356,12 @@ public class CloudFoundryContainerPlatformTest {
     public void getTimeInStateChaosException () {
         String applicationId = UUID.randomUUID().toString();
         Integer index = new Random().nextInt(100) + 1;
-        CloudFoundryContainer container = CloudFoundryContainer.builder()
-                                                               .applicationId(applicationId)
-                                                               .instance(index)
-                                                               .build();
+        CloudFoundryContainer container = CloudFoundryContainer.builder().applicationId(applicationId).instance(index).build();
         // Return an applicationsV2 mock
         ApplicationsV2 applicationsV2 = mock(ApplicationsV2.class);
         doReturn(applicationsV2).when(cloudFoundryClient).applicationsV2();
         // Return a mono of an ApplicationInstancesResponse
-        doReturn(Mono.empty()).when(applicationsV2)
-                              .instances(ApplicationInstancesRequest.builder().applicationId(applicationId).build());
+        doReturn(Mono.empty()).when(applicationsV2).instances(ApplicationInstancesRequest.builder().applicationId(applicationId).build());
         cloudFoundryContainerPlatform.getTimeInState(container);
     }
 
@@ -376,10 +379,8 @@ public class CloudFoundryContainerPlatformTest {
         containerHealthMap.put(ContainerHealth.DOES_NOT_EXIST, Boolean.FALSE);
         for (Map.Entry<ContainerHealth, Boolean> entry : containerHealthMap.entrySet()) {
             doReturn(entry.getKey()).when(cloudFoundryContainerPlatform).checkHealth(applicationId, index);
-            doReturn(Instant.ofEpochMilli(1552569958455L)).when(cloudFoundryContainerPlatform)
-                                                          .getTimeInState(container);
-            doReturn(Instant.ofEpochMilli(1552569958454L), Instant.ofEpochMilli(1552569958456L)).when(container)
-                                                                                                .getExperimentStartTime();
+            doReturn(Instant.ofEpochMilli(1552569958455L)).when(cloudFoundryContainerPlatform).getTimeInState(container);
+            doReturn(Instant.ofEpochMilli(1552569958454L), Instant.ofEpochMilli(1552569958456L)).when(container).getExperimentStartTime();
             assertEquals(entry.getValue(), cloudFoundryContainerPlatform.isContainerRecycled(container));
             assertFalse(cloudFoundryContainerPlatform.isContainerRecycled(container));
         }
@@ -406,7 +407,6 @@ public class CloudFoundryContainerPlatformTest {
 
     @Configuration
     static class ContextConfiguration {
-
         @Bean
         CloudFoundryContainerPlatform cloudFoundryContainerPlatform () {
             return Mockito.spy(new CloudFoundryContainerPlatform());

@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.AwsEC2Constants;
@@ -154,8 +171,7 @@ public class AwsEC2Container extends AwsContainer {
         return isMemberOfScaledGroup() ? () -> {
             if (awsEC2Platform.isContainerTerminated(instanceId)) {
                 if (isNativeAwsAutoscaling()) {
-                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier))
-                        return ContainerHealth.NORMAL;
+                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier)) return ContainerHealth.NORMAL;
                     else {
                         log.info("Instance is terminated but scaling group is not at desired capacity");
                         return ContainerHealth.RUNNING_EXPERIMENT;

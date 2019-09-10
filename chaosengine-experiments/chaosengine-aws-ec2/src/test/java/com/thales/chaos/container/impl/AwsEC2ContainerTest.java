@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.AwsEC2Constants;
@@ -68,10 +85,6 @@ public class AwsEC2ContainerTest {
             doReturn(args[0]).when(experiment).getFinalizeMethod();
             return null;
         }).when(experiment).setFinalizeMethod(any());
-
-
-
-
     }
 
     @Test
@@ -137,14 +150,12 @@ public class AwsEC2ContainerTest {
         Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
         experiment.getSelfHealingMethod().run();
         Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
-        await().atMost(4, TimeUnit.MINUTES)
-               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
+        await().atMost(4, TimeUnit.MINUTES).until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
         experiment.getCheckContainerHealth().call();
     }
 
     @Test
     public void terminateASGContainer () throws Exception {
-
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         awsEC2Container.terminateASGContainer(experiment);
@@ -159,8 +170,6 @@ public class AwsEC2ContainerTest {
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
         experiment.getSelfHealingMethod().run();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
-
-
         //Healthcheck is triggered by triggerAutoscalingUnhealthy method
         doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
         verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
@@ -190,19 +199,16 @@ public class AwsEC2ContainerTest {
     @Test
     public void removeSecurityGroups () throws Exception {
         String chaosSecurityGroupId = UUID.randomUUID().toString();
-        List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID()
-                                                                                                 .toString());
+        List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
         doReturn(configuredSecurityGroupId).when(awsEC2Platform).getSecurityGroupIds(INSTANCE_ID);
         doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0))
-               .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
+        Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
         verify(experiment, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(0)).setSelfHealingMethod(ArgumentMatchers.any());
         awsEC2Container.removeSecurityGroups(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1))
-               .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
+        Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
         Mockito.verify(awsEC2Platform, times(0)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
         experiment.getCheckContainerHealth().call();
         Mockito.verify(awsEC2Platform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
@@ -213,9 +219,7 @@ public class AwsEC2ContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        TestCase.assertEquals(DataDogIdentifier.dataDogIdentifier()
-                                               .withValue(INSTANCE_ID)
-                                               .withKey("host"), awsEC2Container.getDataDogIdentifier());
+        TestCase.assertEquals(DataDogIdentifier.dataDogIdentifier().withValue(INSTANCE_ID).withKey("host"), awsEC2Container.getDataDogIdentifier());
     }
 
     @Test
@@ -247,8 +251,7 @@ public class AwsEC2ContainerTest {
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
-                                                                        .call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
         verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
@@ -259,8 +262,7 @@ public class AwsEC2ContainerTest {
         Callable<ContainerHealth> callable = mock(Callable.class);
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
-                                                                        .call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
         verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
