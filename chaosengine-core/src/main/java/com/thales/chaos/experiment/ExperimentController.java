@@ -80,7 +80,7 @@ public class ExperimentController {
 
     @ApiOperation(value = "Change ExperimentBackoff duration", notes = "Controls the minimum amount of time between experiments")
     @PatchMapping("/backoff")
-    public void setBackoffDuration (@ApiParam(required = true, value = "New minimum backoff period between experiments") @RequestParam Duration backoffDuration) {
+    public void setBackoffDuration (@ApiParam(required = true, value = "New minimum backoff period between experiments. Formatted as \"PT[nH][nM][nS]\".", example = "PT1H15M45S") @RequestParam Duration backoffDuration) {
         experimentManager.setExperimentBackoffPeriod(backoffDuration);
     }
 
