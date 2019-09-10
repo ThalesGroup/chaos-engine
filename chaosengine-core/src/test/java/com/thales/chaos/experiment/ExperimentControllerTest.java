@@ -25,6 +25,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.util.*;
 
 import static com.thales.chaos.experiment.ExperimentSuite.fromMap;
@@ -182,4 +183,14 @@ public class ExperimentControllerTest {
         verify(experimentManager, times(1)).setAutomatedMode(false);
     }
 
+    @Test
+    public void setBackoffPeriod () throws Exception {
+        for (int i = 100; i < 1000; i = i + 100) {
+            Duration duration = Duration.ofSeconds(i);
+            mvc.perform(patch("/experiment/backoff").contentType(APPLICATION_JSON_UTF8)
+                                                    .param("backoffDuration", duration.toString()))
+               .andExpect(status().isOk());
+            verify(experimentManager, times(1)).setExperimentBackoffPeriod(duration);
+        }
+    }
 }
