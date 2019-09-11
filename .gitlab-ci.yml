@@ -53,16 +53,24 @@ clamav_scan:
     paths:
       - ${SCAN_LOG}
 
-black_duck_scan:
-  stage: test
-  only:
-    refs:
-      - develop
-    variables:
-      - $BLACK_DUCK_URL
-      - $BLACK_DUCK_PROJECT_NAME
-      - $BLACK_DUCK_TOKEN
-  dependencies:
-    - install
+.blackduck: &blackduck_scan
+  before_script: []
   script:
     - ./ci/test/black_duck_scan.sh
+
+blackduck:daily:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - master
+      - develop
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+blackduck:merge_request:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - pom.xml
