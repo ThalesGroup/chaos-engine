@@ -2,7 +2,7 @@
   stage: test
   before_script: []
   script:
-    - ./ci/test/black_duck_scan.sh
+    - ./ci/test/blackduck/black_duck_scan.sh
 
 blackduck:daily:
   <<: *blackduck_scan
