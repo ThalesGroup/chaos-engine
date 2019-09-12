@@ -1,0 +1,22 @@
+.blackduck: &blackduck_scan
+  stage: test
+  before_script: []
+  script:
+    - ./ci/test/black_duck_scan.sh
+
+blackduck:daily:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - master
+      - develop
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+blackduck:merge_request:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - pom.xml
