@@ -54,4 +54,4 @@ clamav_scan:
       - ${SCAN_LOG}
 
 include:
-  - local: /ci/test/blackduck/black_duck.yml
+  - local: /ci/test/blackduck/.gitlab-ci.yml
