@@ -1,0 +1,24 @@
+.blackduck: &blackduck_scan
+  stage: test
+  variables:
+    BLACK_DUCK_FAIL_ON_SEVERITIES: "CRITICAL,BLOCKER"
+  before_script: []
+  script:
+    - ./ci/test/blackduck/black_duck_scan.sh
+
+blackduck:daily:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - master
+      - develop
+    variables:
+      - $CI_PIPELINE_SOURCE == "schedule"
+
+blackduck:merge_request:
+  <<: *blackduck_scan
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - pom.xml

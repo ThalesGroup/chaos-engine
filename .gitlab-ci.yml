@@ -52,3 +52,6 @@ clamav_scan:
   artifacts:
     paths:
       - ${SCAN_LOG}
+
+include:
+  - local: /ci/test/blackduck/.gitlab-ci.yml
