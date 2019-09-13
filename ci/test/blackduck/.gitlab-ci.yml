@@ -1,6 +1,7 @@
 .blackduck: &blackduck_scan
   stage: test
   variables:
+    MAVEN_OPTS: ""
     BLACK_DUCK_FAIL_ON_SEVERITIES: "CRITICAL,BLOCKER"
   before_script: []
   script:
@@ -22,12 +23,4 @@ blackduck:merge_request:
       - merge_requests
     changes:
       - pom.xml
-
-blackduck:test:
-  <<: *blackduck_scan
-  variables:
-    MAVEN_OPTS: ""
-  only:
-    refs:
-      - "feature/andrew-ci-test"
 
