@@ -22,3 +22,12 @@ blackduck:merge_request:
       - merge_requests
     changes:
       - pom.xml
+
+blackduck:test:
+  <<: *blackduck_scan
+  variables:
+    MAVEN_OPTS: ""
+  only:
+    refs:
+      - "feature/andrew-ci-test"
+
