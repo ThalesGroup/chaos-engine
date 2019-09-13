@@ -20,7 +20,6 @@ package com.thales.chaos.util;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,9 +29,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.time.Instant;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class AwsMetadataUtilTest {
     private static final String RESPONSE = "{\n" + "    \"devpayProductCodes\" : null,\n" + "    \"marketplaceProductCodes\" : [ \"1abc2defghijklm3nopqrs4tu\" ], \n" + "    \"availabilityZone\" : \"us-west-2b\",\n" + "    \"privateIp\" : \"10.158.112.84\",\n" + "    \"version\" : \"2017-09-30\",\n" + "    \"instanceId\" : \"i-1234567890abcdef0\",\n" + "    \"billingProducts\" : null,\n" + "    \"instanceType\" : \"t2.micro\",\n" + "    \"accountId\" : \"123456789012\",\n" + "    \"imageId\" : \"ami-5fb8c835\",\n" + "    \"pendingTime\" : \"2016-11-19T16:32:11Z\",\n" + "    \"architecture\" : \"x86_64\",\n" + "    \"kernelId\" : null,\n" + "    \"ramdiskId\" : null,\n" + "    \"region\" : \"us-west-2\"\n" + "}";
@@ -67,20 +66,10 @@ public class AwsMetadataUtilTest {
         AwsMetadataUtil.fetchAwsInstanceIdentity(uri);
         AwsMetadataUtil.AwsInstanceIdentity identity = AwsMetadataUtil.getAwsInstanceIdentity();
         assertNotNull(identity);
-        assertNull(identity.getDevpayProductCodes());
         assertEquals("i-1234567890abcdef0", identity.getInstanceId());
-        assertThat(identity.getMarketplaceProductCodes(), IsIterableContainingInAnyOrder.containsInAnyOrder("1abc2defghijklm3nopqrs4tu"));
         assertEquals("us-west-2b", identity.getAvailabilityZone());
-        assertEquals("10.158.112.84", identity.getPrivateIp());
-        assertEquals("2017-09-30", identity.getVersion());
-        assertNull(identity.getBillingProducts());
-        assertEquals("t2.micro", identity.getInstanceType());
         assertEquals("123456789012", identity.getAccountId());
         assertEquals("ami-5fb8c835", identity.getImageId());
-        assertEquals(Instant.parse("2016-11-19T16:32:11Z"), identity.getPendingTime());
-        assertEquals("x86_64", identity.getArchitecture());
-        assertNull(identity.getKernelId());
-        assertNull(identity.getRamdiskId());
         assertEquals("us-west-2", identity.getRegion());
     }
 

@@ -17,6 +17,7 @@
 
 package com.thales.chaos.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +27,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 
 public class AwsMetadataUtil {
@@ -64,37 +63,18 @@ public class AwsMetadataUtil {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AwsInstanceIdentity {
         @JsonProperty
         private String accountId;
         @JsonProperty
         private String availabilityZone;
         @JsonProperty
-        private String ramdiskId;
-        @JsonProperty
-        private String kernelId;
-        @JsonProperty
-        private Instant pendingTime;
-        @JsonProperty
-        private String architecture;
-        @JsonProperty
-        private String privateIp;
-        @JsonProperty
-        private Collection<String> marketplaceProductCodes;
-        @JsonProperty
-        private String devpayProductCodes;
-        @JsonProperty
-        private String version;
-        @JsonProperty
         private String region;
         @JsonProperty
         private String imageId;
         @JsonProperty
-        private String billingProducts;
-        @JsonProperty
         private String instanceId;
-        @JsonProperty
-        private String instanceType;
 
         public String getAccountId () {
             return accountId;
@@ -102,38 +82,6 @@ public class AwsMetadataUtil {
 
         public String getAvailabilityZone () {
             return availabilityZone;
-        }
-
-        public String getRamdiskId () {
-            return ramdiskId;
-        }
-
-        public String getKernelId () {
-            return kernelId;
-        }
-
-        public Instant getPendingTime () {
-            return pendingTime;
-        }
-
-        public String getArchitecture () {
-            return architecture;
-        }
-
-        public String getPrivateIp () {
-            return privateIp;
-        }
-
-        public Collection<String> getMarketplaceProductCodes () {
-            return marketplaceProductCodes;
-        }
-
-        public String getDevpayProductCodes () {
-            return devpayProductCodes;
-        }
-
-        public String getVersion () {
-            return version;
         }
 
         public String getRegion () {
@@ -144,16 +92,8 @@ public class AwsMetadataUtil {
             return imageId;
         }
 
-        public String getBillingProducts () {
-            return billingProducts;
-        }
-
         public String getInstanceId () {
             return instanceId;
-        }
-
-        public String getInstanceType () {
-            return instanceType;
         }
     }
 }
