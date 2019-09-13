@@ -570,7 +570,7 @@ public class ExperimentManagerTest {
         experimentManager.setLastExperimentComplete();
         experimentManager.setExperimentBackoffPeriod(Duration.ofMillis(500));
         assertTrue(experimentManager.inBackoffPeriod());
-        await().atLeast(400, TimeUnit.MILLISECONDS).atMost(600, TimeUnit.MILLISECONDS).until(() -> !experimentManager.inBackoffPeriod());
+        await().atLeast(100, TimeUnit.MILLISECONDS).atMost(600, TimeUnit.MILLISECONDS).until(() -> !experimentManager.inBackoffPeriod());
     }
 
     @Test
