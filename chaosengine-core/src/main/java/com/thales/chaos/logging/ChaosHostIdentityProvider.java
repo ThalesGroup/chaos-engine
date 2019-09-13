@@ -19,6 +19,7 @@ package com.thales.chaos.logging;
 
 import ch.qos.logback.core.PropertyDefinerBase;
 import com.thales.chaos.util.AwsMetadataUtil;
+import com.thales.chaos.util.GoogleCloudMetadataUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -55,10 +56,10 @@ public class ChaosHostIdentityProvider extends PropertyDefinerBase {
     }
 
     String getNetworkIdentifier () {
-        return Stream.<Supplier<String>>of(this::getAwsIdentifier, this::getIpAddress).map(Supplier::get)
-                                                                                      .filter(Objects::nonNull)
-                                                                                      .findFirst()
-                                                                                      .orElse(null);
+        return Stream.<Supplier<String>>of(this::getAwsIdentifier, this::getGoogleCloudIdentifier, this::getIpAddress).map(Supplier::get)
+                                                                                                                      .filter(Objects::nonNull)
+                                                                                                                      .findFirst()
+                                                                                                                      .orElse(null);
     }
 
     String getHostName () {
@@ -82,6 +83,19 @@ public class ChaosHostIdentityProvider extends PropertyDefinerBase {
         if (awsInstanceIdentity == null) return null;
         return Stream.of("aws", awsInstanceIdentity.getInstanceId(), awsInstanceIdentity.getAccountId(), awsInstanceIdentity
                 .getRegion()).filter(Objects::nonNull).filter(not(String::isBlank)).collect(Collectors.joining(":"));
+    }
+
+    String getGoogleCloudIdentifier () {
+        GoogleCloudMetadataUtil.GoogleCloudInstanceIdentity googleIdentity = getGoogleIdentity();
+        if (googleIdentity == null) return null;
+        return Stream.of("gcp", googleIdentity.getName(), googleIdentity.getZone())
+                     .filter(Objects::nonNull)
+                     .filter(not(String::isBlank))
+                     .collect(Collectors.joining(":"));
+    }
+
+    GoogleCloudMetadataUtil.GoogleCloudInstanceIdentity getGoogleIdentity () {
+        return GoogleCloudMetadataUtil.getGoogleCloudInstanceIdentity();
     }
 
     String getIpAddress () {

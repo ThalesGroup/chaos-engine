@@ -18,6 +18,7 @@
 package com.thales.chaos.logging;
 
 import com.thales.chaos.util.AwsMetadataUtil;
+import com.thales.chaos.util.GoogleCloudMetadataUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -126,9 +127,19 @@ public class ChaosHostIdentityProviderTest {
     }
 
     @Test
+    public void getNetworkIdentifierWithGoogleIdentifier () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getNetworkIdentifier();
+        doReturn(null).when(chaosHostIdentityProvider).getAwsIdentifier();
+        doReturn("gcp:kubelet:project/12345/zone/us-central1-a").when(chaosHostIdentityProvider)
+                                                                .getGoogleCloudIdentifier();
+        assertEquals("gcp:kubelet:project/12345/zone/us-central1-a", chaosHostIdentityProvider.getNetworkIdentifier());
+    }
+
+    @Test
     public void getNetworkIdentifierWithIpAddress () {
         doCallRealMethod().when(chaosHostIdentityProvider).getNetworkIdentifier();
         doReturn(null).when(chaosHostIdentityProvider).getAwsIdentifier();
+        doReturn(null).when(chaosHostIdentityProvider).getGoogleCloudIdentifier();
         doReturn("1.2.3.4").when(chaosHostIdentityProvider).getIpAddress();
         assertEquals("1.2.3.4", chaosHostIdentityProvider.getNetworkIdentifier());
     }
@@ -137,7 +148,17 @@ public class ChaosHostIdentityProviderTest {
     public void getNetworkIdentifierWithNullEverything () {
         doCallRealMethod().when(chaosHostIdentityProvider).getNetworkIdentifier();
         doReturn(null).when(chaosHostIdentityProvider).getAwsIdentifier();
+        doReturn(null).when(chaosHostIdentityProvider).getGoogleCloudIdentifier();
         doReturn(null).when(chaosHostIdentityProvider).getIpAddress();
         assertNull(chaosHostIdentityProvider.getNetworkIdentifier());
+    }
+
+    @Test
+    public void getGoogleCloudIdentifier () {
+        GoogleCloudMetadataUtil.GoogleCloudInstanceIdentity identity = mock(GoogleCloudMetadataUtil.GoogleCloudInstanceIdentity.class);
+        doReturn(identity).when(chaosHostIdentityProvider).getGoogleIdentity();
+        doReturn("kubelet-12345").when(identity).getName();
+        doReturn("project/123456789/zone/us-central1-a").when(identity).getZone();
+        assertEquals("gcp:kubelet-12345:project/123456789/zone/us-central1-a", chaosHostIdentityProvider.getGoogleCloudIdentifier());
     }
 }
