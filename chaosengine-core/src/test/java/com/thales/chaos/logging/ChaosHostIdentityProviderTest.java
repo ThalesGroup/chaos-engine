@@ -113,14 +113,15 @@ public class ChaosHostIdentityProviderTest {
         doReturn(identity).when(chaosHostIdentityProvider).getAwsInstanceIdentity();
         doReturn("i-123456abcdef").when(identity).getInstanceId();
         doReturn("012345678901").when(identity).getAccountId();
-        assertEquals("aws:i-123456abcdef/012345678901", chaosHostIdentityProvider.getAwsIdentifier());
+        doReturn("us-west-2").when(identity).getRegion();
+        assertEquals("aws:i-123456abcdef:012345678901:us-west-2", chaosHostIdentityProvider.getAwsIdentifier());
     }
 
     @Test
     public void getNetworkIdentifierWithAwsIdentifier () {
         doCallRealMethod().when(chaosHostIdentityProvider).getNetworkIdentifier();
-        doReturn("aws:i-123456abcdef/012345678901").when(chaosHostIdentityProvider).getAwsIdentifier();
-        assertEquals("aws:i-123456abcdef/012345678901", chaosHostIdentityProvider.getNetworkIdentifier());
+        doReturn("aws:i-123456abcdef:012345678901:us-west-2").when(chaosHostIdentityProvider).getAwsIdentifier();
+        assertEquals("aws:i-123456abcdef:012345678901:us-west-2", chaosHostIdentityProvider.getNetworkIdentifier());
         verify(chaosHostIdentityProvider, never()).getIpAddress();
     }
 

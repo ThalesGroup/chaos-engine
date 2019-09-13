@@ -27,7 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
 
 public class ChaosHostIdentityProvider extends PropertyDefinerBase {
     private static final String KUBERNETES_NAMESPACE_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
@@ -77,7 +80,8 @@ public class ChaosHostIdentityProvider extends PropertyDefinerBase {
     String getAwsIdentifier () {
         AwsMetadataUtil.AwsInstanceIdentity awsInstanceIdentity = getAwsInstanceIdentity();
         if (awsInstanceIdentity == null) return null;
-        return "aws:" + awsInstanceIdentity.getInstanceId() + "/" + awsInstanceIdentity.getAccountId();
+        return Stream.of("aws", awsInstanceIdentity.getInstanceId(), awsInstanceIdentity.getAccountId(), awsInstanceIdentity
+                .getRegion()).filter(Objects::nonNull).filter(not(String::isBlank)).collect(Collectors.joining(":"));
     }
 
     String getIpAddress () {
