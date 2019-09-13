@@ -30,6 +30,9 @@ import java.net.URI;
 import java.util.List;
 
 public class AwsMetadataUtil {
+    private AwsMetadataUtil () {
+    }
+
     private static final URI AWS_DYNAMIC_INSTANCE_IDENTITY_DOCUMENT_URI = UriComponentsBuilder.newInstance()
                                                                                               .scheme("http")
                                                                                               .host("169.254.169.254")
