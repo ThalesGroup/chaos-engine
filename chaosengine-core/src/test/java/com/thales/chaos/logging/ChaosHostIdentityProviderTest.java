@@ -25,6 +25,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
@@ -160,5 +162,41 @@ public class ChaosHostIdentityProviderTest {
         doReturn("kubelet-12345").when(identity).getName();
         doReturn("project/123456789/zone/us-central1-a").when(identity).getZone();
         assertEquals("gcp:kubelet-12345:project/123456789/zone/us-central1-a", chaosHostIdentityProvider.getGoogleCloudIdentifier());
+    }
+
+    @Test
+    public void getKubernetesNamespace () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getKubernetesNamespace();
+        doReturn(List.of("namespace")).when(chaosHostIdentityProvider).getNamespaceFileContents();
+        assertEquals("namespace", chaosHostIdentityProvider.getKubernetesNamespace());
+    }
+
+    @Test
+    public void getKubernetesNamespaceWithExtraData () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getKubernetesNamespace();
+        doReturn(List.of("namespace", "other data")).when(chaosHostIdentityProvider).getNamespaceFileContents();
+        assertEquals("namespace", chaosHostIdentityProvider.getKubernetesNamespace());
+    }
+
+    @Test
+    public void getKubernetesNamespaceWithBlankFirstLine () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getKubernetesNamespace();
+        doReturn(List.of(" ", "namespace")).when(chaosHostIdentityProvider).getNamespaceFileContents();
+        assertEquals("namespace", chaosHostIdentityProvider.getKubernetesNamespace());
+    }
+
+    @Test
+    public void getKubernetesNamespaceWithWhitespace () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getKubernetesNamespace();
+        doReturn(List.of(" namespace ")).when(chaosHostIdentityProvider).getNamespaceFileContents();
+        assertEquals("namespace", chaosHostIdentityProvider.getKubernetesNamespace());
+    }
+
+    @Test
+    public void getKubernetesNamespaceWithManyPostProcessingSteps () {
+        doCallRealMethod().when(chaosHostIdentityProvider).getKubernetesNamespace();
+        doReturn(List.of("", " ", " namespace ", "other data")).when(chaosHostIdentityProvider)
+                                                               .getNamespaceFileContents();
+        assertEquals("namespace", chaosHostIdentityProvider.getKubernetesNamespace());
     }
 }

@@ -26,6 +26,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -107,14 +109,18 @@ public class ChaosHostIdentityProvider extends PropertyDefinerBase {
     }
 
     String getKubernetesNamespace () {
+        return getNamespaceFileContents().stream()
+                                         .filter(not(String::isBlank))
+                                         .findFirst()
+                                         .map(String::strip)
+                                         .orElse(null);
+    }
+
+    List<String> getNamespaceFileContents () {
         try {
-            return Files.readAllLines(Paths.get(KUBERNETES_NAMESPACE_FILE))
-                        .stream()
-                        .filter(not(String::isBlank))
-                        .findFirst()
-                        .orElse(null);
-        } catch (IOException | IndexOutOfBoundsException ignored) {
-            return null;
+            return Files.readAllLines(Paths.get(KUBERNETES_NAMESPACE_FILE));
+        } catch (IOException e) {
+            return Collections.emptyList();
         }
     }
 
