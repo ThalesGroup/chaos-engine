@@ -55,6 +55,7 @@ clamav_scan:
     key: clamav-definitions
     paths:
       - ${DEFINITIONS_PATH}
+  before_script: []
   script:
     - ./ci/test/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
   artifacts:
