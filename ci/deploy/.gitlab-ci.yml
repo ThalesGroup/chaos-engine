@@ -14,7 +14,8 @@
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
   script:
-    - /kaniko/executor $KANIKO_OPTS
+    - |
+      /kaniko/executor $KANIKO_OPTS
       --context $CI_PROJECT_DIR
       --digest-file $DIGEST_FILE
       --dockerfile $CI_PROJECT_DIR/Dockerfile
