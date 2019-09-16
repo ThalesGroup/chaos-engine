@@ -108,7 +108,11 @@ public class ChaosHostIdentityProvider extends PropertyDefinerBase {
 
     String getKubernetesNamespace () {
         try {
-            return Files.readAllLines(Paths.get(KUBERNETES_NAMESPACE_FILE)).get(0);
+            return Files.readAllLines(Paths.get(KUBERNETES_NAMESPACE_FILE))
+                        .stream()
+                        .filter(not(String::isBlank))
+                        .findFirst()
+                        .orElse(null);
         } catch (IOException | IndexOutOfBoundsException ignored) {
             return null;
         }
