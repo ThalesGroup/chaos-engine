@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -59,7 +58,7 @@ public class AwsMetadataUtil {
         try {
             ResponseEntity<AwsInstanceIdentity> response = restTemplate.getForEntity(endpoint, AwsInstanceIdentity.class);
             awsInstanceIdentity = response.getBody();
-        } catch (ResourceAccessException ignored) {
+        } catch (RuntimeException ignored) {
             /*
             ResourceAccessException will occur if RestTemplate cannot reach the endpoint. We'll just let the identity stay null.
             */

@@ -24,7 +24,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -62,7 +61,7 @@ public class GoogleCloudMetadataUtil {
             HttpEntity<?> httpEntity = new HttpEntity<>(headers);
             ResponseEntity<GoogleCloudInstanceIdentity> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, GoogleCloudInstanceIdentity.class);
             googleCloudInstanceIdentity = response.getBody();
-        } catch (ResourceAccessException ignored) {
+        } catch (RuntimeException ignored) {
             /*
             ResourceAccessException will occur if RestTemplate cannot reach the endpoint. We'll just let the identity stay null.
             */
