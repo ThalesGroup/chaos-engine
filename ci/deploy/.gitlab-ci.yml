@@ -3,7 +3,6 @@
   variables:
     KANIKO_OPTS: "--no-push"
     DIGEST_FILE: "chaosengine-docker-digest.txt"
-    DOCKER_IMAGE_TAG: ${CI_COMMIT_TAG}
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -14,6 +13,7 @@
       - $DIGEST_FILE
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_IMAGE_TAG=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA} ; else DOCKER_IMAGE_TAG=${CI_COMMIT_TAG}; fi
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
@@ -32,7 +32,5 @@ Docker Build:
 Docker Build Test:
   <<: *docker_build
   stage: test
-  variables:
-    DOCKER_IMAGE_TAG: ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}
   except:
     - tags
