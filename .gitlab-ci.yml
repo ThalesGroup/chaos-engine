@@ -10,7 +10,7 @@ before_script:
   - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then BRANCH_TAG="" ; fi
   - TIMESTAMP=-$(date +%s)
   - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then TIMESTAMP="" ; fi
-  - mvn -B versions:set -DnewVersion=${VERSION_TAG}${BRANCH_TAG}${TIMESTAMP}
+  - mvn -B versions:set -DnewVersion=${VERSION_TAG}${BRANCH_TAG}${TIMESTAMP} -DprocessAllModules
 
 install:
   stage: build
