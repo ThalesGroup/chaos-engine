@@ -6,7 +6,7 @@ variables:
 
 before_script:
   - VERSION_TAG=$(git describe --tags --abbrev=0)
-  - BRANCH_TAG=-${CI_COMMIT_REF_NAME}
+  - BRANCH_TAG=-${CI_COMMIT_REF_SLUG}
   - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then BRANCH_TAG="" ; fi
   - TIMESTAMP=-$(date +%s)
   - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then TIMESTAMP="" ; fi
