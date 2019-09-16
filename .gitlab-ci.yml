@@ -4,6 +4,14 @@ variables:
   MAVEN_CLI_OPTS: "--batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
 
+before_script:
+  - VERSION_TAG=$(git describe --tags --abbrev=0)
+  - BRANCH_TAG=-${CI_COMMIT_REF_NAME}
+  - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then BRANCH_TAG="" ; fi
+  - TIMESTAMP=-$(date +%s)
+  - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then TIMESTAMP="" ; fi
+  - mvn -B versions:set -DnewVersion=${VERSION_TAG}${BRANCH_TAG}${TIMESTAMP}
+
 install:
   stage: build
   script:
