@@ -5,7 +5,7 @@ variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
 
 before_script:
-  - if [ ! -z "${CI_COMMIT_TAG}" ]; then VERSION_TAG=$(git describe --tags --abbrev=0)-${CI_COMMIT_REF_SLUG}-${GIT_COMMIT_SHORT_SHA}; else VERSION_TAG=${CI_COMMIT_TAG} ; fi
+  - if [ -z "${CI_COMMIT_TAG}" ]; then VERSION_TAG=$(git describe --tags --abbrev=0)-${CI_COMMIT_REF_SLUG}-${GIT_COMMIT_SHORT_SHA}; else VERSION_TAG=${CI_COMMIT_TAG} ; fi
   - mvn -B versions:set -DnewVersion=${VERSION_TAG} -DprocessAllModules
 
 install:
