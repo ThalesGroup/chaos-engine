@@ -17,6 +17,7 @@
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
     - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
+    - if [ "${CI_COMMIT_REF_SLUG}" != "master" ] ; then DOCKER_LATEST_TAG=${CI_COMMIT_REF_SLUG}-latest ; else DOCKER_LATEST_TAG=latest ; fi
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
@@ -26,6 +27,7 @@
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
       --single-snapshot \
+      --destination $CI_REGISTRY_IMAGE:$DOCKER_LATEST_TAG \
       --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG
 
 Docker Build:
