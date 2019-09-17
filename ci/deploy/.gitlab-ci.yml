@@ -16,6 +16,7 @@
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
+    - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
