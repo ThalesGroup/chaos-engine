@@ -20,7 +20,7 @@
       --context $CI_PROJECT_DIR \
       --digest-file $DIGEST_FILE \
       --dockerfile $CI_PROJECT_DIR/Dockerfile \
-      --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG
+      --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG
 
 Docker Build:
