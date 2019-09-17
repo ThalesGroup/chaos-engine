@@ -14,6 +14,7 @@
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_IMAGE_TAG=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA} ; else DOCKER_IMAGE_TAG=${CI_COMMIT_TAG}; fi
+    - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
@@ -21,6 +22,7 @@
       --digest-file $DIGEST_FILE \
       --dockerfile $CI_PROJECT_DIR/Dockerfile \
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
+      --target $DOCKER_BUILD_TARGET
       --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG
 
 Docker Build:
