@@ -40,5 +40,8 @@ Docker Build:
 Docker Build Test:
   <<: *docker_build
   stage: test
+  only:
+    - branches
+    - merge_requests
   except:
     - tags

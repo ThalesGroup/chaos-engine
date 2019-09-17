@@ -1,6 +1,10 @@
 version:
   stage: version
   image: alpine
+  only:
+    - branches
+    - tags
+    - merge_requests
   before_script:
     - apk add --no-cache git
   script:

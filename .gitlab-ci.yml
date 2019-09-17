@@ -15,6 +15,10 @@ before_script:
 
 install:
   stage: build
+  only:
+    - branches
+    - tags
+    - merge_requests
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
   cache:
@@ -50,6 +54,10 @@ clamav_scan:
     - install
   image:
     name: alpine
+  only:
+    - branches
+    - tags
+    - merge_requests
   cache:
     key: clamav-definitions
     paths:
