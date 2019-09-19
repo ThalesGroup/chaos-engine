@@ -3,7 +3,7 @@
   variables:
     MAVEN_OPTS: ""
     BLACK_DUCK_FAIL_ON_SEVERITIES: "CRITICAL,BLOCKER"
-  before_script: []
+  dependencies: []
   script:
     - ./ci/test/blackduck/black_duck_scan.sh
 
