@@ -12,7 +12,7 @@
     when: on_success
     expire_in: 5 days
     paths:
-      - $DIGEST_FILE
+      - /kaniko/$DIGEST_FILE
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
@@ -22,7 +22,7 @@
     - |
       /kaniko/executor $KANIKO_OPTS \
       --context $CI_PROJECT_DIR \
-      --digest-file $DIGEST_FILE \
+      --digest-file /kaniko/${DIGEST_FILE} \
       --dockerfile $CI_PROJECT_DIR/Dockerfile \
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
@@ -34,6 +34,7 @@ Docker Build:
   <<: *docker_build
   variables:
     KANIKO_OPTS: ""
+    DIGEST_FILE: "chaosengine-docker-digest.txt"
   only:
     - tags
 
