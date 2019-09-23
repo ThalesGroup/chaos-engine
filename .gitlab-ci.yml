@@ -22,6 +22,10 @@ install:
 
 sonar_scan:
   stage: test
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-maven
+    paths:
+      - ".m2/"
   only:
     refs:
       - develop
