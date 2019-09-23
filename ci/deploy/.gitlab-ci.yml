@@ -2,7 +2,6 @@
   stage: deploy
   variables:
     KANIKO_OPTS: "--no-push"
-    DIGEST_FILE: "chaosengine-docker-digest.txt"
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -12,7 +11,7 @@
     when: on_success
     expire_in: 5 days
     paths:
-      - /kaniko/$DIGEST_FILE
+      - /kaniko/chaos-engine-digest.txt
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
@@ -22,7 +21,7 @@
     - |
       /kaniko/executor $KANIKO_OPTS \
       --context $CI_PROJECT_DIR \
-      --digest-file /kaniko/${DIGEST_FILE} \
+      --digest-file /kaniko/chaos-engine-digest.txt \
       --dockerfile $CI_PROJECT_DIR/Dockerfile \
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
