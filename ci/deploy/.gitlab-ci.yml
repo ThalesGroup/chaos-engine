@@ -17,7 +17,7 @@
     - DOCKER_IMAGE_TAG=$(cat version)
     - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
     - if [ "${CI_COMMIT_REF_SLUG}" != "master" ] ; then DOCKER_LATEST_TAG=${CI_COMMIT_REF_SLUG}-latest ; else DOCKER_LATEST_TAG=latest ; fi
-    - rm -rf /workspace && cp -r $CI_PROJECT_DIR /workspace
+    - rm -rf /workspace && cp -r $CI_PROJECT_DIR /workspace # Move the repository data into /workspace, since the CI_PROJECT_DIR folder gets destroyed by Kaniko and we need it for artifacts
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
