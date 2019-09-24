@@ -21,7 +21,7 @@
     - |
       /kaniko/executor $KANIKO_OPTS \
       --context $CI_PROJECT_DIR \
-      --digest-file /kaniko/chaos-engine-digest.txt \
+      --digest-file /dev/stdout \
       --dockerfile $CI_PROJECT_DIR/Dockerfile \
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
