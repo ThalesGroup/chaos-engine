@@ -11,7 +11,7 @@
     when: on_success
     expire_in: 5 days
     paths:
-      - ${CI_PROJECT_DIR}/chaos-engine-digest.txt
+      - chaos-engine-digest.txt
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
