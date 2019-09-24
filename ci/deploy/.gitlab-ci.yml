@@ -11,18 +11,18 @@
     when: on_success
     expire_in: 5 days
     paths:
-      - /kaniko/chaos-engine-digest.txt
+      - ${CI_PROJECT_DIR}/chaos-engine-digest.txt
   before_script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
     - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
     - if [ "${CI_COMMIT_REF_SLUG}" != "master" ] ; then DOCKER_LATEST_TAG=${CI_COMMIT_REF_SLUG}-latest ; else DOCKER_LATEST_TAG=latest ; fi
+    - rm -rf /workspace && cp -r $CI_PROJECT_DIR /workspace
   script:
     - |
       /kaniko/executor $KANIKO_OPTS \
-      --context $CI_PROJECT_DIR \
-      --digest-file /dev/stdout \
-      --dockerfile $CI_PROJECT_DIR/Dockerfile \
+      --context /workspace \
+      --digest-file ${CI_PROJECT_DIR}/chaos-engine-digest.txt \
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
       --single-snapshot \
@@ -33,7 +33,6 @@ Docker Build:
   <<: *docker_build
   variables:
     KANIKO_OPTS: ""
-    DIGEST_FILE: "chaosengine-docker-digest.txt"
   only:
     - tags
 
