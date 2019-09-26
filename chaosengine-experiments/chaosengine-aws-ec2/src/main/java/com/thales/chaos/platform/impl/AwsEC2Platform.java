@@ -49,6 +49,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -508,5 +509,16 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .map(InstanceState::getCode)
                         .map(i -> AWS_RUNNING_CODE == i)
                         .orElse(false);
+    }
+
+    public Map<String, Set<String>> getNetworkInterfaceToSecurityGroupsMap (String instanceId) {
+        return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("instanceId", List
+                .of(instanceId))))
+                        .getNetworkInterfaces()
+                        .stream()
+                        .collect(Collectors.groupingBy(NetworkInterface::getNetworkInterfaceId, Collectors.flatMapping((Function<? super NetworkInterface, ? extends Stream<String>>) networkInterface -> networkInterface
+                                .getGroups()
+                                .stream()
+                                .map(GroupIdentifier::getGroupId), Collectors.toSet())));
     }
 }
