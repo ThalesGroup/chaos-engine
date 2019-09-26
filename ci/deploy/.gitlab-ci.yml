@@ -44,3 +44,11 @@ Docker Build Test:
     - merge_requests
   except:
     - tags
+
+Docker Build:Manual:
+  <<: *docker_build
+  variables:
+    KANIKO_OPTS: ""
+  when: manual
+  except:
+    - tags
