@@ -627,6 +627,29 @@ public class AwsEC2PlatformTest {
         verify(awsEC2Platform, never()).createContainerFromInstance(secondIncompleteInstance);
     }
 
+    @Test
+    public void getNetworkInterfaceToSecurityGroupMap () {
+        String instanceId = "this is my instance id string";
+        NetworkInterface networkInterface1, networkInterface2;
+        GroupIdentifier group1a, group1b, group2a, group2b;
+        group1a = new GroupIdentifier().withGroupId("group-1-a");
+        group1b = new GroupIdentifier().withGroupId("group-1-b");
+        group2a = new GroupIdentifier().withGroupId("group-2-a");
+        group2b = new GroupIdentifier().withGroupId("group-2-b");
+        networkInterface1 = new NetworkInterface().withNetworkInterfaceId("network-interface-a")
+                                                  .withGroups(group1a, group1b);
+        networkInterface2 = new NetworkInterface().withNetworkInterfaceId("network-interface-b")
+                                                  .withGroups(group2a, group2b);
+        ArgumentCaptor<DescribeNetworkInterfacesRequest> captor = ArgumentCaptor.forClass(DescribeNetworkInterfacesRequest.class);
+        doReturn(new DescribeNetworkInterfacesResult().withNetworkInterfaces(networkInterface1, networkInterface2)).when(amazonEC2)
+                                                                                                                   .describeNetworkInterfaces(captor
+                                                                                                                           .capture());
+        Map<String, Set<String>> networkInterfaceToSecurityGroupsMap = awsEC2Platform.getNetworkInterfaceToSecurityGroupsMap(instanceId);
+        assertThat(captor.getValue().getFilters(), containsInAnyOrder(new Filter("instanceId", List.of(instanceId))));
+        Map expected = Map.of("network-interface-a", Set.of("group-1-a", "group-1-b"), "network-interface-b", Set.of("group-2-a", "group-2-b"));
+        assertEquals(expected, networkInterfaceToSecurityGroupsMap);
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired
