@@ -645,7 +645,8 @@ public class AwsEC2PlatformTest {
                                                                                                                    .describeNetworkInterfaces(captor
                                                                                                                            .capture());
         Map<String, Set<String>> networkInterfaceToSecurityGroupsMap = awsEC2Platform.getNetworkInterfaceToSecurityGroupsMap(instanceId);
-        assertThat(captor.getValue().getFilters(), containsInAnyOrder(new Filter("instanceId", List.of(instanceId))));
+        assertThat(captor.getValue()
+                         .getFilters(), containsInAnyOrder(new Filter("attachment.instance-id", List.of(instanceId))));
         Map expected = Map.of("network-interface-a", Set.of("group-1-a", "group-1-b"), "network-interface-b", Set.of("group-2-a", "group-2-b"));
         assertEquals(expected, networkInterfaceToSecurityGroupsMap);
     }

@@ -512,7 +512,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     public Map<String, Set<String>> getNetworkInterfaceToSecurityGroupsMap (String instanceId) {
-        return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("instanceId", List
+        return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("attachment.instance-id", List
                 .of(instanceId))))
                         .getNetworkInterfaces()
                         .stream()
