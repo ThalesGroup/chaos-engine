@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -63,13 +62,13 @@ public class AwsEC2ContainerTest {
 
     @Before
     public void setUp () {
-        awsEC2Container = Mockito.spy(AwsEC2Container.builder()
-                                                     .keyName(KEY_NAME)
-                                                     .instanceId(INSTANCE_ID)
-                                                     .awsEC2Platform(awsEC2Platform)
-                                                     .name(NAME)
-                                                     .groupIdentifier(GROUP_IDENTIFIER)
-                                                     .build());
+        awsEC2Container = spy(AwsEC2Container.builder()
+                                             .keyName(KEY_NAME)
+                                             .instanceId(INSTANCE_ID)
+                                             .awsEC2Platform(awsEC2Platform)
+                                             .name(NAME)
+                                             .groupIdentifier(GROUP_IDENTIFIER)
+                                             .build());
         doAnswer(invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             doReturn(args[0]).when(experiment).getCheckContainerHealth();
@@ -132,13 +131,13 @@ public class AwsEC2ContainerTest {
         awsEC2Container.stopContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
         experiment.getSelfHealingMethod().run();
-        Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
         experiment.getCheckContainerHealth().call();
-        Mockito.verify(awsEC2Platform, times(1)).checkHealth(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).checkHealth(INSTANCE_ID);
     }
 
     @Test
@@ -146,10 +145,10 @@ public class AwsEC2ContainerTest {
         awsEC2Container.restartContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
         experiment.getSelfHealingMethod().run();
-        Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
         await().atMost(4, TimeUnit.MINUTES).until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
         experiment.getCheckContainerHealth().call();
     }
@@ -197,24 +196,39 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    public void removeSecurityGroups () throws Exception {
-        String chaosSecurityGroupId = UUID.randomUUID().toString();
-        List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        doReturn(configuredSecurityGroupId).when(awsEC2Platform).getSecurityGroupIds(INSTANCE_ID);
+    public void removeSecurityGroupsSingleNetworkInterface () throws Exception {
+        String chaosSecurityGroupId = "sg-ch@0$";
+        Map<String, Set<String>> map = Map.of("eni-123456", Set.of("sg-123456"));
+        doReturn(map).when(awsEC2Platform).getNetworkInterfaceToSecurityGroupsMap(INSTANCE_ID);
         doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
-        verify(experiment, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(0)).setSelfHealingMethod(ArgumentMatchers.any());
+        // Test main experiment
         awsEC2Container.removeSecurityGroups(experiment);
-        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
-        Mockito.verify(awsEC2Platform, times(0)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        experiment.getCheckContainerHealth().call();
-        Mockito.verify(awsEC2Platform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of(chaosSecurityGroupId));
+        // Test self healing
         experiment.getSelfHealingMethod().run();
-        Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of("sg-123456"));
+        // Test health check method
+        experiment.getCheckContainerHealth().call();
+        verify(awsEC2Platform, times(1)).verifySecurityGroupIdsOfNetworkInterfaceMap(INSTANCE_ID, map);
+    }
+
+    @Test
+    public void removeSecurityGroupsMultipleNetworkInterfaces () throws Exception {
+        String chaosSecurityGroupId = "sg-ch@0$";
+        Map<String, Set<String>> map = Map.of("eni-123456", Set.of("sg-123456"), "eni-987654", Set.of("sg-987654", "sg-314159"));
+        doReturn(map).when(awsEC2Platform).getNetworkInterfaceToSecurityGroupsMap(INSTANCE_ID);
+        doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
+        // Test main experiment
+        awsEC2Container.removeSecurityGroups(experiment);
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of(chaosSecurityGroupId));
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-987654", Set.of(chaosSecurityGroupId));
+        // Test self healing
+        experiment.getSelfHealingMethod().run();
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of("sg-123456"));
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-987654", Set.of("sg-987654", "sg-314159"));
+        // Test health check method
+        experiment.getCheckContainerHealth().call();
+        verify(awsEC2Platform, times(1)).verifySecurityGroupIdsOfNetworkInterfaceMap(INSTANCE_ID, map);
     }
 
     @Test
@@ -275,10 +289,9 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void autoscalingSelfHealingWrapper () throws Exception {
+    public void autoscalingSelfHealingWrapper () {
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
-        Runnable baseMethod = Mockito.spy(Runnable.class);
+        Runnable baseMethod = spy(Runnable.class);
         Runnable callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
         callable.run();
         /*

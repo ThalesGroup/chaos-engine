@@ -213,7 +213,7 @@ public class AwsEC2PlatformTest {
         String instanceId = UUID.randomUUID().toString();
         String groupId = UUID.randomUUID().toString();
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
-        verify(amazonEC2, times(1)).modifyInstanceAttribute(any());
+        verify(amazonEC2, times(1)).modifyNetworkInterfaceAttribute(any());
     }
 
     @Test
@@ -462,12 +462,12 @@ public class AwsEC2PlatformTest {
     @Test
     public void setInvalidSecurityGroup () {
         ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
-        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
+        ArgumentCaptor<ModifyNetworkInterfaceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyNetworkInterfaceAttributeRequest.class);
         List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String instanceId = randomUUID().toString();
         AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
         exception.setErrorCode(AwsEC2Constants.SECURITY_GROUP_NOT_FOUND);
-        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        doThrow(exception).when(amazonEC2).modifyNetworkInterfaceAttribute(modifyRequestCaptor.capture());
         doNothing().when(awsEC2Platform).processInvalidGroups(groupListCaptor.capture());
         try {
             awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
@@ -476,19 +476,19 @@ public class AwsEC2PlatformTest {
             // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
         }
         Collection<String> groupsToRemove = groupListCaptor.getValue();
-        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
-        assertEquals(instanceId, modifyRequest.getInstanceId());
+        ModifyNetworkInterfaceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getNetworkInterfaceId());
         assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
         assertThat(groupsToRemove, IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
     }
 
     @Test
     public void setInvalidSecurityGroupWithDifferentError () {
-        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
+        ArgumentCaptor<ModifyNetworkInterfaceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyNetworkInterfaceAttributeRequest.class);
         List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String instanceId = randomUUID().toString();
         AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
-        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        doThrow(exception).when(amazonEC2).modifyNetworkInterfaceAttribute(modifyRequestCaptor.capture());
         try {
             awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
             fail("Expected a ChaosException");
@@ -496,8 +496,8 @@ public class AwsEC2PlatformTest {
             // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
         }
         verify(awsEC2Platform, never()).processInvalidGroups(any());
-        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
-        assertEquals(instanceId, modifyRequest.getInstanceId());
+        ModifyNetworkInterfaceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getNetworkInterfaceId());
         assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
     }
 

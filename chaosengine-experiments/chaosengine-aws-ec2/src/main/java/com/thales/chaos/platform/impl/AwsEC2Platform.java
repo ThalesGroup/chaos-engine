@@ -365,9 +365,10 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
     }
 
-    public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
+    public void setSecurityGroupIds (String networkInterfaceId, Collection<String> securityGroupIds) {
         try {
-            amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId).withGroups(securityGroupIds));
+            amazonEC2.modifyNetworkInterfaceAttribute(new ModifyNetworkInterfaceAttributeRequest().withNetworkInterfaceId(networkInterfaceId)
+                                                                                                  .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
             if (SECURITY_GROUP_NOT_FOUND.equals(e.getErrorCode())) {
                 log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
@@ -520,5 +521,9 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                 .getGroups()
                                 .stream()
                                 .map(GroupIdentifier::getGroupId), Collectors.toSet())));
+    }
+
+    public boolean verifySecurityGroupIdsOfNetworkInterfaceMap (String instanceId, Map<String, Set<String>> originalSecurityGroups) {
+        return getNetworkInterfaceToSecurityGroupsMap(instanceId).equals(originalSecurityGroups);
     }
 }
