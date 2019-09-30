@@ -9,7 +9,7 @@ install:
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
   cache:
-    key: ${CI_COMMIT_REF_SLUG}
+    key: ${CI_COMMIT_REF_SLUG}-maven
     paths:
       - ".m2/"
   artifacts:
@@ -22,6 +22,10 @@ install:
 
 sonar_scan:
   stage: test
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-maven
+    paths:
+      - ".m2/"
   only:
     refs:
       - develop
