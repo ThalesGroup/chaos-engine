@@ -367,6 +367,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
 
     public void setSecurityGroupIds (String networkInterfaceId, Collection<String> securityGroupIds) {
         try {
+            log.debug("Setting security groups for interface {} to {}", networkInterfaceId, securityGroupIds);
             amazonEC2.modifyNetworkInterfaceAttribute(new ModifyNetworkInterfaceAttributeRequest().withNetworkInterfaceId(networkInterfaceId)
                                                                                                   .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
@@ -421,20 +422,6 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                                                                   .withGroupId(groupId));
         log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
-    }
-
-    public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
-        List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
-        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    public List<String> getSecurityGroupIds (String instanceId) {
-        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
-                        .getInstanceAttribute()
-                        .getGroups()
-                        .stream()
-                        .map(GroupIdentifier::getGroupId)
-                        .collect(Collectors.toList());
     }
 
     public boolean isContainerTerminated (String instanceId) {
@@ -513,6 +500,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     public Map<String, Set<String>> getNetworkInterfaceToSecurityGroupsMap (String instanceId) {
+        log.debug("Looking up security groups for instance {}", instanceId);
         return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("attachment.instance-id", List
                 .of(instanceId))))
                         .getNetworkInterfaces()

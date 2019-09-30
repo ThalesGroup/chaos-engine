@@ -199,16 +199,6 @@ public class AwsEC2PlatformTest {
     }
 
     @Test
-    public void getSecurityGroupIds () {
-        String groupId = UUID.randomUUID().toString();
-        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
-        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
-                .withGroups(groupIdentifier));
-        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(Collections.singletonList(groupId), awsEC2Platform.getSecurityGroupIds("123"));
-    }
-
-    @Test
     public void setSecurityGroupIds () {
         String instanceId = UUID.randomUUID().toString();
         String groupId = UUID.randomUUID().toString();
@@ -216,26 +206,6 @@ public class AwsEC2PlatformTest {
         verify(amazonEC2, times(1)).modifyNetworkInterfaceAttribute(any());
     }
 
-    @Test
-    public void verifySecurityGroupIds () {
-        String instanceId = UUID.randomUUID().toString();
-        String groupId = UUID.randomUUID().toString();
-        String groupId2 = UUID.randomUUID().toString();
-        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
-        GroupIdentifier groupIdentifier2 = new GroupIdentifier().withGroupName("Test Group 2").withGroupId(groupId2);
-        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
-                .withGroups(groupIdentifier));
-        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(ContainerHealth.NORMAL, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
-        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier, groupIdentifier2)))
-                .when(amazonEC2)
-                .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
-        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
-                .when(amazonEC2)
-                .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, asList(groupId, groupId2)));
-    }
 
     @Test
     public void createContainerFromInstance () {
