@@ -1,11 +1,24 @@
 image: "maven"
 
+stages:
+  - version
+  - build
+  - test
+  - deploy
+
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
 
+before_script:
+  - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
+
 install:
   stage: build
+  only:
+    - branches
+    - tags
+    - merge_requests
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
   cache:
@@ -33,8 +46,6 @@ sonar_scan:
       - $SONAR_URL
       - $SONAR_TOKEN
       - $SONAR_PROJECT_KEY
-  dependencies:
-    - install
   script:
     - ./ci/test/sonar_scan.sh
 
@@ -47,10 +58,15 @@ clamav_scan:
     - install
   image:
     name: alpine
+  only:
+    - branches
+    - tags
+    - merge_requests
   cache:
     key: clamav-definitions
     paths:
       - ${DEFINITIONS_PATH}
+  before_script: []
   script:
     - ./ci/test/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
   artifacts:
@@ -59,3 +75,5 @@ clamav_scan:
 
 include:
   - local: /ci/test/blackduck/.gitlab-ci.yml
+  - local: /ci/deploy/.gitlab-ci.yml
+  - local: /ci/version/.gitlab-ci.yml
