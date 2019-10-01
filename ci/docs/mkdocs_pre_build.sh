@@ -4,7 +4,7 @@
 
 set -euxo pipefail
 
-pip install -r ./ci/docs/mkdocs_requirements.txt
+pip --cache-dir .pip install -r ./ci/docs/mkdocs_requirements.txt
 
 VERSION=$(cat version)
 

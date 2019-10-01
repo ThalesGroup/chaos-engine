@@ -3,6 +3,10 @@ Documentation: &documentation
   stage: build
   variables:
     BUILD_PATH: '.public'
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-pip
+    paths:
+      - .pip
   before_script:
     - ./ci/docs/mkdocs_pre_build.sh
   script:
