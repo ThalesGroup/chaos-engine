@@ -31,3 +31,7 @@ extra:
   social:
     - type: tags
       link: 'https://jira.gemalto.com/secure/RapidBoard.jspa?rapidView=17823&useStoredSettings=true'
+
+copyright: |
+  &copy; 2019 Thales Group<br />
+  <!-- version -->
