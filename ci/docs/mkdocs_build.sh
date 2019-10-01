@@ -7,4 +7,4 @@
 
 set -euxo pipefail
 
-mkdocs build --site-dir ${1-public}
+mkdocs build --config-file docs/mkdocs.yml --site-dir ${1-public}
