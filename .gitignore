@@ -29,6 +29,7 @@ ci/secret-vars.yml
 !/.idea/codeStyles/
 !/.idea/runConfigurations/
 !/.idea/copyright
+!/.idea/scopes/
 
 *.iml
 *.iws
