@@ -2,11 +2,13 @@ site_name: Chaos Engine
 site_description: 'A tool for automated Chaos Experimentation'
 repo_url: https://gitlab.gemaltocloud.com/chaos/chaos-engine
 repo_name: chaos/chaos-engine @ GitLab
+docs_dir: markdown
 
 strict: true
 
 theme:
   name: 'material'
+  custom_dir: 'theme'
   palette:
     primary: 'blue grey'
     accent: 'deep orange'
