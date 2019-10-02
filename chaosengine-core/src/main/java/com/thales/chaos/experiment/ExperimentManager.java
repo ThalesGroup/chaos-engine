@@ -271,6 +271,7 @@ public class ExperimentManager {
             Collection<Experiment> createdExperiments = experimentSuite.getExperimentCriteria()
                                                                        .stream()
                                                                        .flatMap(experimentCriteria -> createSpecificExperiments(experimentPlatform, experimentCriteria, minimumNumberOfSurvivors))
+                                                                       .filter(Objects::nonNull)
                                                                        .collect(Collectors.toUnmodifiableSet());
             createdExperiments.forEach(autowireCapableBeanFactory::autowireBean);
             addExperimentSuiteToHistory(experimentSuite);
@@ -306,10 +307,12 @@ public class ExperimentManager {
     }
 
     Experiment createSingleExperiment (Platform platform, String containerIdentifier, String experimentMethod) {
-        return Optional.of(platform)
-                       .map(platform1 -> platform1.getContainerByIdentifier(containerIdentifier))
-                       .map(container -> container.createExperiment(experimentMethod))
-                       .orElse(null);
+        Optional<Experiment> optionalExperiment = Optional.of(platform)
+                                                          .map(platform1 -> platform1.getContainerByIdentifier(containerIdentifier))
+                                                          .map(container -> container.createExperiment(experimentMethod));
+        optionalExperiment.ifPresentOrElse(experiment -> log.debug("Created experiment {}", v("experiment", experiment)), () -> log
+                .warn("Experiment of type {} could not be created for {} ", kv("experimentMethod", experimentMethod), kv("containerIdentifier", containerIdentifier)));
+        return optionalExperiment.orElse(null);
     }
 
     static class AutoCloseableMDCCollection implements AutoCloseable {

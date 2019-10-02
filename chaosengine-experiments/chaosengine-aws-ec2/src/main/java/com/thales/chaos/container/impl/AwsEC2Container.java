@@ -222,10 +222,17 @@ public class AwsEC2Container extends AwsContainer {
 
     @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void removeSecurityGroups (Experiment experiment) {
-        List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
-        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId)));
-        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds)));
-        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds)));
+        Map<String, Set<String>> originalSecurityGroups = awsEC2Platform.getNetworkInterfaceToSecurityGroupsMap(instanceId);
+        Set<String> networkInterfaceIds = originalSecurityGroups.keySet();
+        Collection<String> chaosSecurityGroupId = Set.of(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
+        // Set Health Check method
+        Callable<ContainerHealth> baseMethod = () -> awsEC2Platform.verifySecurityGroupIdsOfNetworkInterfaceMap(instanceId, originalSecurityGroups) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(baseMethod));
+        // Set self healing method
+        Runnable selfHealingBaseMethod = () -> originalSecurityGroups.forEach((key, value) -> awsEC2Platform.setSecurityGroupIds(key, value));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(selfHealingBaseMethod));
+        // Do Experiment
+        networkInterfaceIds.forEach(networkInterfaceId -> awsEC2Platform.setSecurityGroupIds(networkInterfaceId, chaosSecurityGroupId));
     }
 
     public String getRoutableAddress () {

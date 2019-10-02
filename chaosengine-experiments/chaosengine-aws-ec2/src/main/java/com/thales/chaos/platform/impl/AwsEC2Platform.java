@@ -49,6 +49,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -364,9 +365,11 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
     }
 
-    public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
+    public void setSecurityGroupIds (String networkInterfaceId, Collection<String> securityGroupIds) {
         try {
-            amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId).withGroups(securityGroupIds));
+            log.debug("Setting security groups for interface {} to {}", networkInterfaceId, securityGroupIds);
+            amazonEC2.modifyNetworkInterfaceAttribute(new ModifyNetworkInterfaceAttributeRequest().withNetworkInterfaceId(networkInterfaceId)
+                                                                                                  .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
             if (SECURITY_GROUP_NOT_FOUND.equals(e.getErrorCode())) {
                 log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
@@ -419,20 +422,6 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                                                                                   .withGroupId(groupId));
         log.info("Created Security Group {} in VPC {} for use in Chaos", v("Security Group", groupId), v("VPC", vpcId));
         return groupId;
-    }
-
-    public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
-        List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
-        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    public List<String> getSecurityGroupIds (String instanceId) {
-        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
-                        .getInstanceAttribute()
-                        .getGroups()
-                        .stream()
-                        .map(GroupIdentifier::getGroupId)
-                        .collect(Collectors.toList());
     }
 
     public boolean isContainerTerminated (String instanceId) {
@@ -508,5 +497,21 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .map(InstanceState::getCode)
                         .map(i -> AWS_RUNNING_CODE == i)
                         .orElse(false);
+    }
+
+    public Map<String, Set<String>> getNetworkInterfaceToSecurityGroupsMap (String instanceId) {
+        log.debug("Looking up security groups for instance {}", instanceId);
+        return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("attachment.instance-id", List
+                .of(instanceId))))
+                        .getNetworkInterfaces()
+                        .stream()
+                        .collect(Collectors.groupingBy(NetworkInterface::getNetworkInterfaceId, Collectors.flatMapping((Function<? super NetworkInterface, ? extends Stream<String>>) networkInterface -> networkInterface
+                                .getGroups()
+                                .stream()
+                                .map(GroupIdentifier::getGroupId), Collectors.toSet())));
+    }
+
+    public boolean verifySecurityGroupIdsOfNetworkInterfaceMap (String instanceId, Map<String, Set<String>> originalSecurityGroups) {
+        return getNetworkInterfaceToSecurityGroupsMap(instanceId).equals(originalSecurityGroups);
     }
 }
