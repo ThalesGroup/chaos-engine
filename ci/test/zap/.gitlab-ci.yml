@@ -1,8 +1,11 @@
 zap_scan:
   stage: test
   image: owasp/zap2docker-weekly
+  before_script:
+    - cat version
+    - VERSION=$(cat version)
   services:
-    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:develop-latest
+    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:$VERSION
       alias: chaos-engine
 
   variables:
