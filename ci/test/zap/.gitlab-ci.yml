@@ -1,0 +1,18 @@
+zap_scan:
+  stage: test
+  image: owasp/zap2docker-weekly
+  services:
+    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:develop-latest
+      alias: chaos-engine
+
+  variables:
+    # do not change
+    ZAP_WORK_DIR: "/zap/wrk/"
+    ZAP_REPORT_FILE: "zap_report.html"
+    CHAOS_ENGINE_API_URL: "http://localhost:8080/v2/api-docs"
+    CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
+  artifacts:
+    paths:
+      - $ZAP_REPORT_FILE
+  script:
+    - ./ci/test/zap/zap_scan.sh
