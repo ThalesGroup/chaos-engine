@@ -3,6 +3,8 @@ Documentation: &documentation
   stage: build
   variables:
     BUILD_PATH: '.public'
+  dependencies:
+    - version
   cache:
     key: ${CI_COMMIT_REF_SLUG}-pip
     paths:
