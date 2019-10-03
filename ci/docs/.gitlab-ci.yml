@@ -21,6 +21,4 @@ pages:
   variables:
     BUILD_PATH: 'public'
   stage: deploy
-  only:
-    refs:
-      - 'master'
+  when: manual
