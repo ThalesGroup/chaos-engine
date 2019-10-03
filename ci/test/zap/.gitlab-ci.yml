@@ -1,11 +1,8 @@
 zap_scan:
   stage: test
   image: owasp/zap2docker-weekly
-  before_script:
-    - cat version
-    - VERSION=$(cat version)
   services:
-    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:$VERSION
+    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:$CI_COMMIT_SHA
       alias: chaos-engine
   only:
     refs:
