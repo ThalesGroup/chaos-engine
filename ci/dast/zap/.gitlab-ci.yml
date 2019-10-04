@@ -20,4 +20,4 @@ zap_scan:
     paths:
       - $ZAP_REPORT_FILE
   script:
-    - ./ci/test/zap/zap_scan.sh
+    - ./ci/dast/zap/zap_scan.sh
