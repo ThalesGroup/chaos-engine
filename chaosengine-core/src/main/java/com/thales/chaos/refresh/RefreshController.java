@@ -18,7 +18,6 @@
 package com.thales.chaos.refresh;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.endpoint.RefreshEndpoint;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,10 +26,10 @@ import java.util.Collection;
 @RestController("/refresh")
 public class RefreshController {
     @Autowired
-    private RefreshEndpoint refreshEndpoint;
+    private RefreshManager refreshManager;
 
     @PatchMapping
     public Collection<String> doRefresh () {
-        return refreshEndpoint.refresh();
+        return refreshManager.doRefresh();
     }
 }

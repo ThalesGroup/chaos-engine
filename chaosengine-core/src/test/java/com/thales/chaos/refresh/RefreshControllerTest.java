@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.endpoint.RefreshEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,13 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = RefreshController.class)
 public class RefreshControllerTest {
     @MockBean
-    private RefreshEndpoint refreshEndpoint;
+    private RefreshManager refreshManager;
     @Autowired
     private MockMvc mvc;
 
     @Test
     public void doRefresh () throws Exception {
-        doReturn(List.of("passwords", "keys")).when(refreshEndpoint).refresh();
+        doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(content().string("[\"passwords\",\"keys\"]"));
@@ -53,7 +52,7 @@ public class RefreshControllerTest {
 
     @Test
     public void doRefreshFailure () throws Exception {
-        doThrow(new RuntimeException()).when(refreshEndpoint).refresh();
+        doThrow(new RuntimeException()).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
     }
 }
