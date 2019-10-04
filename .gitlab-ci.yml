@@ -77,3 +77,4 @@ include:
   - local: /ci/test/blackduck/.gitlab-ci.yml
   - local: /ci/deploy/.gitlab-ci.yml
   - local: /ci/version/.gitlab-ci.yml
+  - local: /ci/docs/.gitlab-ci.yml

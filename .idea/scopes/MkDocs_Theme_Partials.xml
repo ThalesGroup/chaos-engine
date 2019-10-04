@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="MkDocs Theme Partials" pattern="file[chaos-engine]:docs/theme/partials//*" />
+</component>

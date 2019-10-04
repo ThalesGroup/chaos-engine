@@ -1,0 +1,28 @@
+Documentation: &documentation
+  image: python:3-alpine
+  stage: build
+  variables:
+    BUILD_PATH: '.public'
+  dependencies:
+    - version
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-pip
+    paths:
+      - .pip
+  before_script:
+    - ./ci/docs/mkdocs_pre_build.sh
+  script:
+    - ./ci/docs/mkdocs_build.sh ${BUILD_PATH-public}
+  artifacts:
+    paths:
+      - ${BUILD_PATH}
+    expire_in: 5 days
+
+pages:
+  <<: *documentation
+  variables:
+    BUILD_PATH: 'public'
+  stage: deploy
+  only:
+    refs:
+      - 'master'
