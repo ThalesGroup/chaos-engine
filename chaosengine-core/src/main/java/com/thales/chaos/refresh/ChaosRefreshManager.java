@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 
 @Component
-public class RefreshManager {
+public class ChaosRefreshManager {
     @Autowired
     private RefreshEndpoint refreshEndpoint;
 

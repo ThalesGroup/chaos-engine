@@ -37,16 +37,16 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class RefreshManagerTest {
+public class ChaosRefreshManagerTest {
     @MockBean
     private RefreshEndpoint refreshEndpoint;
     @Autowired
-    private RefreshManager refreshManager;
+    private ChaosRefreshManager chaosRefreshManager;
 
     @Test
     public void doRefresh () {
         doReturn(Set.of("beans", "more beans")).when(refreshEndpoint).refresh();
-        Collection<String> strings = refreshManager.doRefresh();
+        Collection<String> strings = chaosRefreshManager.doRefresh();
         assertThat(strings, containsInAnyOrder("beans", "more beans"));
         verify(refreshEndpoint, atLeastOnce()).refresh();
     }
@@ -57,8 +57,8 @@ public class RefreshManagerTest {
         private RefreshEndpoint refreshEndpoint;
 
         @Bean
-        public RefreshManager refreshManager () {
-            return Mockito.spy(new RefreshManager());
+        public ChaosRefreshManager refreshManager () {
+            return Mockito.spy(new ChaosRefreshManager());
         }
     }
 }

@@ -26,10 +26,10 @@ import java.util.Collection;
 @RestController("/refresh")
 public class RefreshController {
     @Autowired
-    private RefreshManager refreshManager;
+    private ChaosRefreshManager chaosRefreshManager;
 
     @PatchMapping
     public Collection<String> doRefresh () {
-        return refreshManager.doRefresh();
+        return chaosRefreshManager.doRefresh();
     }
 }
