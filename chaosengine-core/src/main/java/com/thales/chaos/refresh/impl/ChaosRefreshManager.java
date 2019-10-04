@@ -15,21 +15,22 @@
  *
  */
 
-package com.thales.chaos.refresh;
+package com.thales.chaos.refresh.impl;
 
+import com.thales.chaos.refresh.RefreshManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.cloud.endpoint.RefreshEndpoint;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
-@RestController("/refresh")
-public class RefreshController {
+@Component
+public class ChaosRefreshManager implements RefreshManager {
     @Autowired
-    private RefreshManager refreshManager;
+    private RefreshEndpoint refreshEndpoint;
 
-    @PatchMapping
+    @Override
     public Collection<String> doRefresh () {
-        return refreshManager.doRefresh();
+        return refreshEndpoint.refresh();
     }
 }

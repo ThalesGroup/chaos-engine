@@ -17,18 +17,8 @@
 
 package com.thales.chaos.refresh;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.endpoint.RefreshEndpoint;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 
-@Component
-public class ChaosRefreshManager {
-    @Autowired
-    private RefreshEndpoint refreshEndpoint;
-
-    Collection<String> doRefresh () {
-        return refreshEndpoint.refresh();
-    }
+public interface RefreshManager {
+    Collection<String> doRefresh ();
 }

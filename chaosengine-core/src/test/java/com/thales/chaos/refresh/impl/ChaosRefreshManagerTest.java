@@ -15,8 +15,9 @@
  *
  */
 
-package com.thales.chaos.refresh;
+package com.thales.chaos.refresh.impl;
 
+import com.thales.chaos.refresh.RefreshManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -41,12 +42,12 @@ public class ChaosRefreshManagerTest {
     @MockBean
     private RefreshEndpoint refreshEndpoint;
     @Autowired
-    private ChaosRefreshManager chaosRefreshManager;
+    private RefreshManager refreshManager;
 
     @Test
     public void doRefresh () {
         doReturn(Set.of("beans", "more beans")).when(refreshEndpoint).refresh();
-        Collection<String> strings = chaosRefreshManager.doRefresh();
+        Collection<String> strings = refreshManager.doRefresh();
         assertThat(strings, containsInAnyOrder("beans", "more beans"));
         verify(refreshEndpoint, atLeastOnce()).refresh();
     }
@@ -57,7 +58,7 @@ public class ChaosRefreshManagerTest {
         private RefreshEndpoint refreshEndpoint;
 
         @Bean
-        public ChaosRefreshManager refreshManager () {
+        public RefreshManager refreshManager () {
             return Mockito.spy(new ChaosRefreshManager());
         }
     }

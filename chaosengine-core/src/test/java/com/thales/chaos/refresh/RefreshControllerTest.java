@@ -38,13 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = RefreshController.class)
 public class RefreshControllerTest {
     @MockBean
-    private ChaosRefreshManager chaosRefreshManager;
+    private RefreshManager refreshManager;
     @Autowired
     private MockMvc mvc;
 
     @Test
     public void doRefresh () throws Exception {
-        doReturn(List.of("passwords", "keys")).when(chaosRefreshManager).doRefresh();
+        doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(content().string("[\"passwords\",\"keys\"]"));
@@ -52,7 +52,7 @@ public class RefreshControllerTest {
 
     @Test
     public void doRefreshFailure () throws Exception {
-        doThrow(new RuntimeException()).when(chaosRefreshManager).doRefresh();
+        doThrow(new RuntimeException()).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
     }
 }
