@@ -5,6 +5,7 @@ stages:
   - build
   - test
   - deploy
+  - dast
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"

@@ -1,5 +1,5 @@
 zap_scan:
-  stage: test
+  stage: dast
   image: owasp/zap2docker-weekly
   services:
     - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:$CI_COMMIT_SHA
