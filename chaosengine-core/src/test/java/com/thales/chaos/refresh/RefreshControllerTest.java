@@ -31,6 +31,7 @@ import java.util.List;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,7 +46,7 @@ public class RefreshControllerTest {
     @Test
     public void doRefresh () throws Exception {
         doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
-        mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON))
+        mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(content().string("[\"passwords\",\"keys\"]"));
     }
