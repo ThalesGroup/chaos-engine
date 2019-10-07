@@ -238,6 +238,26 @@ public class ContainerTest {
         }
     }
 
+    @Test
+    public void hashCodeTest () {
+        Container container = new EqualityTestContainer("Inigo Montoya", 42);
+        assertEquals(1504454735, container.hashCode());
+    }
+
+    @Test
+    public void hashCodeTestWithNullField () {
+        Container container = new EqualityTestContainer(null, 42);
+        assertEquals(42, container.hashCode());
+    }
+
+    @Test
+    public void hashCodeConsistencyTest () {
+        Container container1 = new EqualityTestContainer("Inigo Montoya", 0);
+        Container container2 = new EqualityTestContainer(null, 42);
+        Container container3 = new EqualityTestContainer("Inigo Montoya", 42);
+        assertEquals(container3.hashCode(), container1.hashCode() + container2.hashCode());
+    }
+
     private class EqualityTestContainer extends MostlyAbstractContainer {
         @Identifier(order = 0)
         private String name;

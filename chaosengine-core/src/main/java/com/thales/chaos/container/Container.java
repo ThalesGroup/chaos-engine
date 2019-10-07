@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
@@ -95,6 +96,24 @@ public abstract class Container implements ExperimentalObject {
         }
         Container other = (Container) o;
         return this.getIdentity() == other.getIdentity();
+    }
+
+    @Override
+    public int hashCode () {
+        List<Field> identifyingFields = getIdentifyingFields();
+        AtomicInteger result = new AtomicInteger(0);
+        identifyingFields.stream()
+                         .map(field -> {
+                             try {
+                                 return field.get(this);
+                             } catch (IllegalAccessException e) {
+                                 log.error("Caught IllegalAccessException while evaluating hashcode", e);
+                                 return null;
+                             }
+                         })
+                         .mapToInt(o -> Optional.ofNullable(o).map(Object::hashCode).orElse(0))
+                         .forEachOrdered(i -> result.set(result.get() * 31 + i));
+        return result.get();
     }
 
     /**
