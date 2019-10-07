@@ -19,11 +19,13 @@ package com.thales.chaos.refresh;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
 
-@RestController("/refresh")
+@RestController
+@RequestMapping("/refresh")
 public class RefreshController {
     @Autowired
     private RefreshManager refreshManager;
