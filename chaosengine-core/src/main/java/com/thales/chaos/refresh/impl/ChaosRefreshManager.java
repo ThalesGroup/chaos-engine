@@ -18,6 +18,8 @@
 package com.thales.chaos.refresh.impl;
 
 import com.thales.chaos.refresh.RefreshManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.endpoint.RefreshEndpoint;
 import org.springframework.stereotype.Component;
@@ -26,11 +28,14 @@ import java.util.Collection;
 
 @Component
 public class ChaosRefreshManager implements RefreshManager {
+    private static final Logger log = LoggerFactory.getLogger(ChaosRefreshManager.class);
+
     @Autowired
     private RefreshEndpoint refreshEndpoint;
 
     @Override
     public Collection<String> doRefresh () {
+        log.debug("Refresh of Spring Properties initiated");
         return refreshEndpoint.refresh();
     }
 }
