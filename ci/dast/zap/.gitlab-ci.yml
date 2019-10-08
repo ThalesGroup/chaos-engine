@@ -2,7 +2,7 @@ zap_scan:
   stage: dast
   image: owasp/zap2docker-weekly
   services:
-    - name: gitlab-docker-registry.gemaltocloud.com/chaos/chaos-engine:$CI_COMMIT_SHA
+    - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
       alias: chaos-engine
   only:
     refs:
