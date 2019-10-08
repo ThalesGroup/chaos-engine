@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function run_scan() {
-    /zap/zap-api-scan.py -t $CHAOS_ENGINE_API_URL -f openapi -r $ZAP_REPORT_FILE
+    /zap/zap-api-scan.py -t $CHAOS_ENGINE_OPEN_API_URL -f openapi -r $ZAP_REPORT_FILE
     SCAN_STATUS=$?
     echo "Scan exited with status:" $SCAN_STATUS
     if [ $SCAN_STATUS -eq 0 ]; then
@@ -19,7 +19,7 @@ function run_scan() {
 }
 
 function wait_for_engine() {
-     while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' $CHAOS_ENGINE_API_URL )" != "200" ]]; do
+     while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' $CHAOS_ENGINE_OPEN_API_URL )" != "200" ]]; do
       sleep 15;
       echo $(date) "Chaos Engine is not yet ready";
     done
