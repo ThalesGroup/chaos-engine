@@ -32,24 +32,10 @@
 
 Docker Build:
   <<: *docker_build
+  allow_failure: false
   variables:
     KANIKO_OPTS: ""
-  only:
-    - tags
-
-Docker Build Test:
-  <<: *docker_build
-  stage: test
   only:
     - branches
+    - tags
     - merge_requests
-  except:
-    - tags
-
-Docker Build:Manual:
-  <<: *docker_build
-  variables:
-    KANIKO_OPTS: ""
-  when: manual
-  except:
-    - tags

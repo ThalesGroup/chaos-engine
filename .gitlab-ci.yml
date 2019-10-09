@@ -5,6 +5,7 @@ stages:
   - build
   - test
   - deploy
+  - dast
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
@@ -75,6 +76,7 @@ clamav_scan:
 
 include:
   - local: /ci/test/blackduck/.gitlab-ci.yml
+  - local: /ci/dast/zap/.gitlab-ci.yml
   - local: /ci/deploy/.gitlab-ci.yml
   - local: /ci/version/.gitlab-ci.yml
   - local: /ci/docs/.gitlab-ci.yml
