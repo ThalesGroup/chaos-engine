@@ -19,6 +19,7 @@ package com.thales.chaos.notification;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
@@ -60,6 +61,9 @@ public class ChaosExperimentEventTest {
     @Before
     public void setUp () {
         exampleContainer = new Container() {
+            @Identifier
+            private String name = "exampleContainer";
+
             @Override
             public Platform getPlatform () {
                 return null;
