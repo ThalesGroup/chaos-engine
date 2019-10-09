@@ -18,6 +18,7 @@
 package com.thales.chaos.experiment;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,6 +31,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @JsonPropertyOrder({ ExperimentSuite.PLATFORM_TYPE_KEY, ExperimentSuite.EXPERIMENT_CRITERIA })
+@JsonIgnoreProperties({/* Leaving this blank to declare that we intentionally have no ignored properties,
+                            as all non-static properties are necessary */ })
 public class ExperimentSuite {
     public static final String PLATFORM_TYPE_KEY = "platformType";
     public static final String EXPERIMENT_CRITERIA = "experimentCriteria";
