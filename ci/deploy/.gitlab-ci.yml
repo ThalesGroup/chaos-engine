@@ -27,8 +27,7 @@
       --target $DOCKER_BUILD_TARGET \
       --single-snapshot \
       --destination $CI_REGISTRY_IMAGE:$DOCKER_LATEST_TAG \
-      --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG \
-      --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG
 
 Docker Build:
   <<: *docker_build
