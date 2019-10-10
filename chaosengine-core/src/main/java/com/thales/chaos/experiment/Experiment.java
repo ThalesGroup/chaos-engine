@@ -57,7 +57,7 @@ public abstract class Experiment {
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private final String id = randomUUID().toString();
     private final AtomicReference<ExperimentState> experimentState = new AtomicReference<>(ExperimentState.CREATED);
-    protected Container container;
+    protected final Container container;
     protected ExperimentType experimentType;
     protected Duration minimumDuration = Duration.ofSeconds(ExperimentConstants.DEFAULT_EXPERIMENT_MINIMUM_DURATION_SECONDS);
     protected Duration maximumDuration = Duration.ofMinutes(ExperimentConstants.DEFAULT_EXPERIMENT_DURATION_MINUTES);
@@ -508,6 +508,7 @@ public abstract class Experiment {
 
     @Override
     public String toString () {
+        if (experimentMethod == null) return String.format("Experiment against %s", container.getSimpleName());
         return String.format("Experiment of %s against %s", experimentMethod.getExperimentName(), container.getSimpleName());
     }
 }
