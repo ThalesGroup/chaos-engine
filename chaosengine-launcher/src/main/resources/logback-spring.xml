@@ -17,7 +17,12 @@
   -->
 
 <configuration>
-    <logger name="com.thales" level="DEBUG"/>
+    <springProfile name="DEVELOPMENT">
+        <logger name="com.thales" level="DEBUG"/>
+    </springProfile>
+    <springProfile name="PRODUCTION">
+        <logger name="com.thales" level="INFO"/>
+    </springProfile>
     <logger name="org.springframework" level="WARN"/>
 
     <define name="chaosIdentity" class="com.thales.chaos.logging.ChaosHostIdentityProvider"/>
