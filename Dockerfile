@@ -27,6 +27,7 @@ COPY --from=build-env /chaosengine/*/target/*-assembler/*.jar /chaosengine/*/*/t
 COPY --from=build-env /chaosengine/*/target/entrypoint/*.jar ./chaosengine.jar
 RUN rm ./lib/chaosengine-launcher*.jar
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
+ENV SPRING_PROFILES_ACTIVE=DEVELOPMENT
 LABEL com.datadoghq.ad.logs="[ { \"source\":\"java\", \"service\": \"chaosengine\" } ]"
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib", "-jar", "chaosengine.jar"]
 
@@ -36,3 +37,4 @@ EXPOSE 5005
 
 FROM develop AS master
 ENV DEPLOYMENT_ENVIRONMENT=PROD
+ENV SPRING_PROFILES_ACTIVE=PRODUCTION
