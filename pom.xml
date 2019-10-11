@@ -60,6 +60,20 @@
         </developer>
     </developers>
 
+    <contributors>
+        <contributor>
+            <name>Eric MUELLENBACH</name>
+            <email>eric.muellenbach@thalesgroup.com></email>
+            <url>https://github.com/3r1co</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Paris</timezone>
+        </contributor>
+    </contributors>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
