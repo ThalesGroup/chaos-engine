@@ -31,6 +31,35 @@
         <url>https://www.thalesgroup.com</url>
     </organization>
 
+    <developers>
+        <developer>
+            <id>lpetr</id>
+            <name>Lubor PETR</name>
+            <email>lubor.petr@thalesgroup.com</email>
+            <url>https://github.com/luborpetr</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>project owner</role>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Prague</timezone>
+        </developer>
+        <developer>
+            <id>10056952</id>
+            <name>Andrew MANTHA</name>
+            <email>andrew.mantha@thalesgroup.com</email>
+            <url>https://github.com/a-mantha</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/Toronto</timezone>
+        </developer>
+    </developers>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
