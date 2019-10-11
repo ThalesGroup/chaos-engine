@@ -56,6 +56,8 @@ import static com.thales.chaos.container.enums.ContainerHealth.*;
 import static com.thales.chaos.experiment.enums.ExperimentState.*;
 import static com.thales.chaos.experiment.enums.ExperimentType.*;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -549,6 +551,16 @@ public class ExperimentTest {
         doReturn(false).when(experiment).isBelowMinimumDuration();
         doThrow(new RuntimeException()).when(container).getContainerHealth(experimentType);
         assertEquals(RUNNING_EXPERIMENT, experiment.checkContainerHealth());
+    }
+
+    @Test
+    public void toStringOfUninitializedExperiment () {
+        Experiment newExperiment = new Experiment(experiment.getContainer()) {
+        };
+        String experimentToString = newExperiment.toString();
+        assertNotNull(experimentToString);
+        assertThat(experimentToString, not(isEmptyString()));
+        assertNull(newExperiment.getExperimentMethod());
     }
 
     private static abstract class MostlyAbstractContainer extends Container {
