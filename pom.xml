@@ -74,6 +74,11 @@
         </contributor>
     </contributors>
 
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/gemalto/chaos-engine/issues</url>
+    </issueManagement>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
