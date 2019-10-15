@@ -8,6 +8,7 @@ zap_scan:
     - branches
     - tags
     - merge_requests
+  dependencies: []
   variables:
     # Do not change, ZAP tool is expecting this directory. If not present file options are skipped.
     ZAP_WORK_DIR: "/zap/wrk/"
