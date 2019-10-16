@@ -129,7 +129,7 @@
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>sshj</artifactId>
-            <version>0.24.0</version>
+            <version>0.27.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
