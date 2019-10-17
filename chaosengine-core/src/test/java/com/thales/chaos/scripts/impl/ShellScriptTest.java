@@ -18,7 +18,9 @@
 package com.thales.chaos.scripts.impl;
 
 import com.thales.chaos.exception.ChaosException;
+import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsEmptyCollection;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -43,8 +45,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 
 @RunWith(Enclosed.class)
 public class ShellScriptTest {
@@ -63,9 +64,10 @@ public class ShellScriptTest {
         private String dependencyComment = "# Dependencies: " + dependencies;
         private String scriptBody = "ps aux | \\\nsort | \\\n kill -9";
         private String scriptContents = String.join("\n", shebang, dependencyComment, descriptionComment, scriptBody);
-        private InputStream formattedSampleFile = new ByteArrayInputStream(scriptContents.getBytes());
-        private InputStream basicSampleFile = new ByteArrayInputStream(scriptBody.getBytes());
-        private InputStream semiBasicSampleFile = new ByteArrayInputStream(("#Starts with a comment\n" + scriptBody).getBytes());
+        private InputStream formattedSampleFile = spy(new ByteArrayInputStream(scriptContents.getBytes()));
+        private InputStream basicSampleFile = spy(new ByteArrayInputStream(scriptBody.getBytes()));
+        private InputStream semiBasicSampleFile = spy(new ByteArrayInputStream(("#Starts with a comment\n" + scriptBody)
+                .getBytes()));
 
         @Before
         public void fromResource () throws Exception {
@@ -74,6 +76,26 @@ public class ShellScriptTest {
             formattedShellScript = ShellScript.fromResource(resource);
             basicShellScript = ShellScript.fromResource(resource);
             semiBasicShellScript = ShellScript.fromResource(resource);
+        }
+
+        @After
+        public void tearDown () throws Exception {
+            verify(formattedSampleFile, times(1)).close();
+            verify(basicSampleFile, times(1)).close();
+            verify(semiBasicSampleFile, times(1)).close();
+        }
+
+        @Test
+        public void inputStreamClosesEvenOnException () throws Exception {
+            InputStream inputStream = mock(InputStream.class);
+            doReturn(inputStream).when(resource).getInputStream();
+            doThrow(new IOException()).when(inputStream).close();
+            try {
+                ShellScript.fromResource(resource);
+            } catch (ChaosException e) {
+                assertThat(e.getMessage(), Matchers.startsWith("15901"));
+            }
+            verify(inputStream, times(1)).close();
         }
 
         @Test(expected = ChaosException.class)
