@@ -1,0 +1,9 @@
+hadolint_scan:
+  stage: test
+  image: hadolint/hadolint:latest-debian
+  only:
+    changes:
+      - Dockerfile
+  dependencies: []
+  script:
+    - hadolint Dockerfile
