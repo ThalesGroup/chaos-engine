@@ -1,0 +1,10 @@
+hadolint_scan:
+  stage: test
+  image: hadolint/hadolint:latest-debian
+  only:
+    - branches
+    - tags
+    - merge_requests
+  dependencies: []
+  script:
+    - hadolint Dockerfile

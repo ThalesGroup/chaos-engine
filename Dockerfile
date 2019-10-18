@@ -3,8 +3,8 @@ WORKDIR /chaosengine
 COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
 COPY chaosengine-test-utilities ./chaosengine-test-utilities/
-RUN cd chaosengine-test-utilities  && mvn dependency:go-offline -Dsilent install
-RUN cd chaosengine-launcher && mvn dependency:go-offline -Dsilent install
+RUN mvn -f ./chaosengine-test-utilities/pom.xml dependency:go-offline -Dsilent install
+RUN mvn -f ./chaosengine-launcher/pom.xml dependency:go-offline -Dsilent install
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-schedule ./chaosengine-schedule/
 COPY chaosengine-notifications ./chaosengine-notifications/
@@ -15,7 +15,7 @@ COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
 COPY chaosengine-core/src/ ./chaosengine-core/src/
 
 ARG BUILD_VERSION
-RUN if [ ! -z "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
+RUN if [ -n "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
 
 RUN mvn install && rm -rf chaosengine-test*
 
@@ -28,7 +28,7 @@ COPY --from=build-env /chaosengine/*/target/entrypoint/*.jar ./chaosengine.jar
 RUN rm ./lib/chaosengine-launcher*.jar
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 ENV SPRING_PROFILES_ACTIVE=DEVELOPMENT
-LABEL com.datadoghq.ad.logs="[ { \"source\":\"java\", \"service\": \"chaosengine\" } ]"
+LABEL com.datadoghq.ad.logs='[ { "source":"java", "service": "chaosengine" } ]'
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib", "-jar", "chaosengine.jar"]
 
 FROM develop AS debug
