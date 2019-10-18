@@ -29,6 +29,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.Arrays;
@@ -59,13 +60,23 @@ public class ShellScript implements Script {
     private Duration minimumDuration;
 
     public static ShellScript fromResource (Resource resource) {
+        InputStream inputStream = null;
         ShellScript script = new ShellScript();
         script.scriptName = resource.getFilename();
         script.scriptResource = resource;
         try {
-            script.scriptContents = StreamUtils.copyToString(resource.getInputStream(), Charset.defaultCharset());
+            inputStream = resource.getInputStream();
+            script.scriptContents = StreamUtils.copyToString(inputStream, Charset.defaultCharset());
         } catch (IOException e) {
             throw new ChaosException(SHELL_SCRIPT_READ_FAILURE, e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error("Error closing input stream", e);
+                }
+            }
         }
         script.buildFields();
         log.debug("Created script {}", v("ShellScript", script));
