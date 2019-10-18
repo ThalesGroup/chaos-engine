@@ -3,8 +3,8 @@ WORKDIR /chaosengine
 COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
 COPY chaosengine-test-utilities ./chaosengine-test-utilities/
-RUN cd chaosengine-test-utilities  && mvn dependency:go-offline -Dsilent install
-RUN cd chaosengine-launcher && mvn dependency:go-offline -Dsilent install
+RUN mvn -f ./chaosengine-test-utilities/pom.xml dependency:go-offline -Dsilent install
+RUN mvn -f ./chaosengine-launcher/pom.xml dependency:go-offline -Dsilent install
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-schedule ./chaosengine-schedule/
 COPY chaosengine-notifications ./chaosengine-notifications/
