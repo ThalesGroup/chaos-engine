@@ -15,7 +15,7 @@ COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
 COPY chaosengine-core/src/ ./chaosengine-core/src/
 
 ARG BUILD_VERSION
-RUN if [ ! -z "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
+RUN if [ -n "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
 
 RUN mvn install && rm -rf chaosengine-test*
 
