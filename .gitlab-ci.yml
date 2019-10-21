@@ -33,6 +33,10 @@ install:
       - "*/target"
       - "*/*/target"
       - "*/*/*/target"
+    reports:
+      junit:
+        - "**/target/surefire-reports/TEST-*.xml"
+        - "**/target/failsafe-reports/TEST-*.xml"
 
 sonar_scan:
   stage: test
