@@ -35,3 +35,15 @@ Docker Build:
     - branches
     - tags
     - merge_requests
+
+Docker:Repackage:
+  extends: .docker build
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  script:
+    - |
+      echo "FROM $DOCKER_IMAGE_NAME" | \
+      /kaniko/executor --dockerfile /dev/stdin \
+      --digest-file ${CI_PROJECT_DIR}/chaos-engine-digest.txt \
+      --destination ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}
