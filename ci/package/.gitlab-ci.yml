@@ -50,14 +50,14 @@ Docker Build:
       --destination $FINAL_DOCKER_IMAGE
 
 Docker:Repackage:branches:
-  extends: docker:repackage
+  extends: .docker:repackage
   variables:
     FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}
   only:
     - branches
 
 Docker:Repackage:tags:
-  extends: docker:repackage
+  extends: .docker:repackage
   variables:
     FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
   only:
