@@ -1,6 +1,9 @@
 zap_scan:
   stage: dast
   image: owasp/zap2docker-weekly
+  retry:
+    max: 2
+    when: runner_system_failure
   services:
     - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
       alias: chaos-engine
