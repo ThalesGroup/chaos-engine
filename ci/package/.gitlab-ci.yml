@@ -36,7 +36,7 @@ Docker Build:
     - tags
     - merge_requests
 
-Docker:Repackage:
+.docker:repackage:
   extends: .docker build
   stage: repackage
   variables:
@@ -47,4 +47,18 @@ Docker:Repackage:
       echo "FROM $DOCKER_IMAGE_NAME" | \
       /kaniko/executor --dockerfile /dev/stdin \
       --digest-file ${CI_PROJECT_DIR}/chaos-engine-digest.txt \
-      --destination ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}
+      --destination $FINAL_DOCKER_IMAGE
+
+Docker:Repackage:branches:
+  extends: docker:repackage
+  variables:
+    FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}
+  only:
+    - branches
+
+Docker:Repackage:tags:
+  extends: docker:repackage
+  variables:
+    FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+  only:
+    - tags
