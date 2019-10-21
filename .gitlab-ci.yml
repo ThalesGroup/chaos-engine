@@ -10,6 +10,7 @@ stages:
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
+  DOCKER_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
 
 before_script:
   - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
