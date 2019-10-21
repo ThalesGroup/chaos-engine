@@ -43,6 +43,7 @@ Docker Build:
     GIT_STRATEGY: none
   when: manual
   script:
+    - echo $FINAL_DOCKER_IMAGE
     - |
       echo "FROM $DOCKER_IMAGE_NAME" | \
       /kaniko/executor --dockerfile /dev/stdin \
