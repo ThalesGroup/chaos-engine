@@ -28,7 +28,6 @@
 
 Docker Build:
   extends: .docker build
-  stage: repackage
   allow_failure: false
   variables:
     KANIKO_OPTS: ""
@@ -39,6 +38,7 @@ Docker Build:
 
 Docker:Repackage:
   extends: .docker build
+  stage: repackage
   variables:
     GIT_STRATEGY: none
   when: manual
