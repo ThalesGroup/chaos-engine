@@ -35,10 +35,8 @@ install:
       - "*/*/*/target"
     reports:
       junit:
-        - "/target/surefire-reports/TEST-*.xml"
-        - "/target/failsafe-reports/TEST-*.xml"
-        - "/target/target/surefire-reports/TEST-*.xml"
-        - "/target/target/failsave-reports/TEST-*.xml"
+        - "**/target/surefire-reports/TEST-*.xml"
+        - "**/target/failsafe-reports/TEST-*.xml"
 
 sonar_scan:
   stage: test
