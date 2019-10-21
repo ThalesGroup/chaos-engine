@@ -52,13 +52,13 @@ Docker Build:
 Docker:Repackage:branches:
   extends: .docker:repackage
   variables:
-    FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}
+    FINAL_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}"
   only:
     - branches
 
 Docker:Repackage:tags:
   extends: .docker:repackage
   variables:
-    FINAL_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    FINAL_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
   only:
     - tags
