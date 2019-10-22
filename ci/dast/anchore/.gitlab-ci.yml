@@ -21,3 +21,7 @@ anchore_scan:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}
     paths:
       - anchore-reports/*
+  only:
+    - branches
+    - tags
+    - merge_requests
