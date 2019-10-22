@@ -7,7 +7,6 @@ anchore_scan:
     ANCHORE_CLI_URL: "http://localhost:8228/v1"
     ANCHORE_TIMEOUT: "500"
     ANCHORE_SCAN_TYPE: "os"
-    IMAGE_NAME: $DOCKER_IMAGE_NAME
   dependencies: []
   image: docker.io/anchore/inline-scan:latest
   services:
