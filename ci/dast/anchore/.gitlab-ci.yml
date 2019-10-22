@@ -8,6 +8,7 @@ anchore_scan:
     ANCHORE_TIMEOUT: "500"
     ANCHORE_SCAN_TYPE: "os"
     IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  dependencies: []
   image: docker.io/anchore/inline-scan:latest
   services:
     - name: docker.io/anchore/inline-scan:latest
