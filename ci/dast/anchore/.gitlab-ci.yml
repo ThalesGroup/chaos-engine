@@ -15,7 +15,7 @@ anchore_scan:
       command: ["start"]
 
   script:
-    - ./ci/test/anchore/anchore_scan.sh
+    - ./ci/dast/anchore/anchore_scan.sh
 
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}
