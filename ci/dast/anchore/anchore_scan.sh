@@ -1,7 +1,7 @@
 #!/bin/bash
 
 anchore-cli system wait
-anchore-cli registry add "$CI_REGISTRY" gitlab-ci-token "$CI_JOB_TOKEN" --skip-validate
+anchore-cli registry add "$CI_REGISTRY" $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD --skip-validate
 /opt/rh/rh-python36/root/usr/bin/python3 /usr/local/bin/anchore_ci_tools.py -a -r --type vuln --vuln $ANCHORE_SCAN_TYPE --image $IMAGE_NAME --timeout $ANCHORE_TIMEOUT
 
 for f in anchore-reports/*; do
