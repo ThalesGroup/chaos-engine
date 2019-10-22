@@ -1,5 +1,8 @@
 anchore_scan:
   stage: test
+  retry:
+    max: 2
+    when: runner_system_failure
   variables:
     ANCHORE_CLI_URL: "http://localhost:8228/v1"
     ANCHORE_TIMEOUT: "500"
