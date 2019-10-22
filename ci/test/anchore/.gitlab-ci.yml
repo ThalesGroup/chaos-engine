@@ -1,5 +1,5 @@
 anchore_scan:
-  stage: scan
+  stage: test
   variables:
     ANCHORE_CLI_URL: "http://localhost:8228/v1"
     ANCHORE_TIMEOUT: "500"
