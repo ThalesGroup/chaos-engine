@@ -1,0 +1,23 @@
+anchore_scan:
+  stage: dast
+  retry:
+    max: 2
+    when: runner_system_failure
+  variables:
+    ANCHORE_CLI_URL: "http://localhost:8228/v1"
+    ANCHORE_TIMEOUT: "500"
+    ANCHORE_SCAN_TYPE: "os"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  dependencies: []
+  image: docker.io/anchore/inline-scan:latest
+  services:
+    - name: docker.io/anchore/inline-scan:latest
+      command: ["start"]
+
+  script:
+    - ./ci/dast/anchore/anchore_scan.sh
+
+  artifacts:
+    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}
+    paths:
+      - anchore-reports/*
