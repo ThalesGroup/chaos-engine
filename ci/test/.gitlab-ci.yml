@@ -1,0 +1,3 @@
+include:
+  - local: /ci/test/blackduck/.gitlab-ci.yml
+  - local: /ci/test/hadolint/.gitlab-ci.yml
