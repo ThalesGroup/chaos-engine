@@ -269,14 +269,9 @@ public abstract class Container implements ExperimentalObject {
     }
 
     private ShellBasedExperiment getScriptPlatform () {
-        return getScriptPlatform(this.getClass());
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends Container> ShellBasedExperiment getScriptPlatform (Class<T> ignored) {
         Platform platform = getPlatform();
         try {
-            if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment<T>) platform;
+            if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment) platform;
         } catch (ClassCastException e) {
             throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL, e);
         }
