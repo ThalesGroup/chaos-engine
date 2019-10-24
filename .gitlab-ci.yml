@@ -38,22 +38,6 @@ install:
         - "**/target/surefire-reports/TEST-*.xml"
         - "**/target/failsafe-reports/TEST-*.xml"
 
-sonar_scan:
-  stage: test
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-maven
-    paths:
-      - ".m2/"
-  only:
-    refs:
-      - develop
-    variables:
-      - $SONAR_URL
-      - $SONAR_TOKEN
-      - $SONAR_PROJECT_KEY
-  script:
-    - ./ci/test/sonar_scan.sh
-
 clamav_scan:
   variables:
     SCAN_LOG: "av.log"
@@ -81,6 +65,7 @@ clamav_scan:
 include:
   - local: /ci/test/blackduck/.gitlab-ci.yml
   - local: /ci/test/hadolint/.gitlab-ci.yml
+  - local: /ci/test/sonar/.gitlab-ci.yml
   - local: /ci/dast/anchore/.gitlab-ci.yml
   - local: /ci/dast/zap/.gitlab-ci.yml
   - local: /ci/deploy/.gitlab-ci.yml
