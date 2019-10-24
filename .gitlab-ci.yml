@@ -14,31 +14,9 @@ variables:
 before_script:
   - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
 
-install:
-  stage: build
-  only:
-    - branches
-    - tags
-    - merge_requests
-  script:
-    - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-maven
-    paths:
-      - ".m2/"
-  artifacts:
-    when: on_success
-    expire_in: 5 days
-    paths:
-      - "*/target"
-      - "*/*/target"
-      - "*/*/*/target"
-    reports:
-      junit:
-        - "**/target/surefire-reports/TEST-*.xml"
-        - "**/target/failsafe-reports/TEST-*.xml"
 
 include:
+  - local: /ci/build/build/.gitlab-ci.yml
   - local: /ci/test/blackduck/.gitlab-ci.yml
   - local: /ci/test/hadolint/.gitlab-ci.yml
   - local: /ci/test/sonar/.gitlab-ci.yml
