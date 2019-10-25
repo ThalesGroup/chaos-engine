@@ -14,6 +14,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Autowired
     private AuthenticationEntryPoint authenticationEntryPoint;
+    @Autowired
+    private ChaosAuthenticationSuccessHandler chaosAuthenticationSuccessHandler;
 
     @Override
     protected void configure (HttpSecurity http) throws Exception {
@@ -22,7 +24,7 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
             .exceptionHandling()
             .authenticationEntryPoint(authenticationEntryPoint)
             .and()
-            .formLogin()
+            .formLogin().successHandler(chaosAuthenticationSuccessHandler)
             .and()
             .logout();
     }
