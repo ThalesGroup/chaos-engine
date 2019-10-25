@@ -17,73 +17,15 @@ variables:
 before_script:
   - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
 
-install:
-  stage: build
-  only:
-    - branches
-    - tags
-    - merge_requests
-  script:
-    - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-maven
-    paths:
-      - ".m2/"
-  artifacts:
-    when: on_success
-    expire_in: 5 days
-    paths:
-      - "*/target"
-      - "*/*/target"
-      - "*/*/*/target"
-    reports:
-      junit:
-        - "**/target/surefire-reports/TEST-*.xml"
-        - "**/target/failsafe-reports/TEST-*.xml"
-
-sonar_scan:
-  stage: test
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-maven
-    paths:
-      - ".m2/"
-  only:
-    refs:
-      - develop
-    variables:
-      - $SONAR_URL
-      - $SONAR_TOKEN
-      - $SONAR_PROJECT_KEY
-  script:
-    - ./ci/test/sonar_scan.sh
-
-clamav_scan:
-  variables:
-    SCAN_LOG: "av.log"
-    DEFINITIONS_PATH: ".clamav/"
-  stage: test
-  dependencies:
-    - install
-  image:
-    name: alpine
-  only:
-    - branches
-    - tags
-    - merge_requests
-  cache:
-    key: clamav-definitions
-    paths:
-      - ${DEFINITIONS_PATH}
-  before_script: []
-  script:
-    - ./ci/test/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
-  artifacts:
-    paths:
-      - ${SCAN_LOG}
 
 include:
   - local: /ci/test/.gitlab-ci.yml
   - local: /ci/dast/.gitlab-ci.yml
+  - local: /ci/build/install/.gitlab-ci.yml
+  - local: /ci/test/blackduck/.gitlab-ci.yml
+  - local: /ci/test/hadolint/.gitlab-ci.yml
+  - local: /ci/dast/anchore/.gitlab-ci.yml
+  - local: /ci/dast/zap/.gitlab-ci.yml
   - local: /ci/package/.gitlab-ci.yml
   - local: /ci/version/.gitlab-ci.yml
   - local: /ci/docs/.gitlab-ci.yml
