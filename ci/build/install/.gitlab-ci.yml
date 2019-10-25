@@ -16,7 +16,6 @@ install:
     paths:
       - "*/target"
       - "*/*/target"
-      - "*/*/*/target"
     reports:
       junit:
         - "**/target/surefire-reports/TEST-*.xml"
