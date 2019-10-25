@@ -22,7 +22,7 @@ pages:
   <<: *documentation
   variables:
     BUILD_PATH: 'public'
-  stage: deploy
+  stage: repackage
   only:
     refs:
       - 'master'

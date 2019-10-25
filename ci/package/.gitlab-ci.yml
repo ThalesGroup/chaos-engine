@@ -1,7 +1,5 @@
-.docker build: &docker_build
-  stage: deploy
-  variables:
-    KANIKO_OPTS: "--no-push"
+.docker build:
+  stage: package
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -16,7 +14,6 @@
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - DOCKER_IMAGE_TAG=$(cat version)
     - if [ -z "${CI_COMMIT_TAG}" ] ; then DOCKER_BUILD_TARGET=develop ; else DOCKER_BUILD_TARGET=master ; fi
-    - if [ "${CI_COMMIT_REF_SLUG}" != "master" ] ; then DOCKER_LATEST_TAG=${CI_COMMIT_REF_SLUG}-latest ; else DOCKER_LATEST_TAG=latest ; fi
     - rm -rf /workspace && cp -r $CI_PROJECT_DIR /workspace # Move the repository data into /workspace, since the CI_PROJECT_DIR folder gets destroyed by Kaniko and we need it for artifacts
   script:
     - |
@@ -26,12 +23,11 @@
       --build-arg BUILD_VERSION=$DOCKER_IMAGE_TAG \
       --target $DOCKER_BUILD_TARGET \
       --single-snapshot \
-      --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA \
-      --destination $CI_REGISTRY_IMAGE:$DOCKER_LATEST_TAG \
-      --destination $CI_REGISTRY_IMAGE:$DOCKER_IMAGE_TAG
+      --destination $DOCKER_IMAGE_NAME \
+      --destination $DOCKER_IMAGE_LATEST
 
 Docker Build:
-  <<: *docker_build
+  extends: .docker build
   allow_failure: false
   variables:
     KANIKO_OPTS: ""
@@ -39,3 +35,33 @@ Docker Build:
     - branches
     - tags
     - merge_requests
+
+.docker:repackage:
+  extends: .docker build
+  stage: repackage
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+
+Docker:Repackage:branches:
+  extends: .docker:repackage
+  only:
+    - branches
+  script:
+    - |
+      echo "FROM $DOCKER_IMAGE_NAME" | \
+      /kaniko/executor --dockerfile /dev/stdin \
+      --digest-file ${CI_PROJECT_DIR}/chaos-engine-digest.txt \
+      --destination "${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${DOCKER_IMAGE_TAG}"
+
+
+Docker:Repackage:tags:
+  extends: .docker:repackage
+  only:
+    - tags
+  script:
+    - |
+      echo "FROM $DOCKER_IMAGE_NAME" | \
+      /kaniko/executor --dockerfile /dev/stdin \
+      --digest-file ${CI_PROJECT_DIR}/chaos-engine-digest.txt \
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
