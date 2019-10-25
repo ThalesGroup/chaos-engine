@@ -14,9 +14,7 @@ install:
     when: on_success
     expire_in: 5 days
     paths:
-      - "*/target"
-      - "*/*/target"
-      - "*/*/*/target"
+      - "**/target"
     reports:
       junit:
         - "**/target/surefire-reports/TEST-*.xml"
