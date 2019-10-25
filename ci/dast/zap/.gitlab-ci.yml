@@ -5,7 +5,7 @@ zap_scan:
     max: 2
     when: runner_system_failure
   services:
-    - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - name: $DOCKER_IMAGE_NAME
       alias: chaos-engine
   only:
     - branches

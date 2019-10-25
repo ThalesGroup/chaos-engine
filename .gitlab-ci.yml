@@ -4,12 +4,15 @@ stages:
   - version
   - build
   - test
-  - deploy
+  - package
   - dast
+  - repackage
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
+  DOCKER_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
+  DOCKER_IMAGE_LATEST: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:latest
 
 before_script:
   - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
@@ -83,6 +86,6 @@ include:
   - local: /ci/test/hadolint/.gitlab-ci.yml
   - local: /ci/dast/anchore/.gitlab-ci.yml
   - local: /ci/dast/zap/.gitlab-ci.yml
-  - local: /ci/deploy/.gitlab-ci.yml
+  - local: /ci/package/.gitlab-ci.yml
   - local: /ci/version/.gitlab-ci.yml
   - local: /ci/docs/.gitlab-ci.yml
