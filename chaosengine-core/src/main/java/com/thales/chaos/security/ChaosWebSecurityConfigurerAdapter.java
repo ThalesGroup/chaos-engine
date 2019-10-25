@@ -23,8 +23,7 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
             .disable()
             .exceptionHandling()
             .authenticationEntryPoint(authenticationEntryPoint)
-            .and()
-            .formLogin().successHandler(chaosAuthenticationSuccessHandler)
+            .and().formLogin().successHandler(chaosAuthenticationSuccessHandler)
             .and()
             .logout();
     }
