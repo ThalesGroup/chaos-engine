@@ -24,11 +24,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
+import static com.thales.chaos.security.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -46,7 +51,8 @@ public class RefreshControllerTest {
     private MockMvc mvc;
 
     @Test
-    public void doRefresh () throws Exception {
+    @WithAdmin
+    public void doRefreshAsAdmin () throws Exception {
         doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
         mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().isOk())
@@ -54,8 +60,33 @@ public class RefreshControllerTest {
     }
 
     @Test
+    @WithGenericUser
+    public void doRefreshAsUser () throws Exception {
+        doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
+        mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void doRefreshAnonymous () throws Exception {
+        doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
+        mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAdmin
     public void doRefreshFailure () throws Exception {
         doThrow(new RuntimeException()).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @WithMockUser(roles = ADMIN_ROLE)
+    private @interface WithAdmin {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @WithMockUser
+    private @interface WithGenericUser {
     }
 }

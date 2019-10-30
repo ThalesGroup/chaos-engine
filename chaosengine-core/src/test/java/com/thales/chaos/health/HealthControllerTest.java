@@ -25,9 +25,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.lang.annotation.Retention;
+
+import static com.thales.chaos.security.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,7 +47,8 @@ public class HealthControllerTest {
     private HealthManager healthManager;
 
     @Test
-    public void getHealth () throws Exception {
+    @WithAnonymousUser
+    public void getHealthAsAnonymous () throws Exception {
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.OK);
         mvc.perform(get("/health")).andExpect(status().isOk());
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.UNKNOWN);
@@ -49,4 +56,22 @@ public class HealthControllerTest {
         Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.ERROR);
         mvc.perform(get("/health")).andExpect(status().is5xxServerError());
     }
+
+    @Test
+    @WithAdmin
+    public void getHealthAsAdmin () throws Exception {
+        Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.OK);
+        mvc.perform(get("/health")).andExpect(status().isOk());
+        Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.UNKNOWN);
+        mvc.perform(get("/health")).andExpect(status().is5xxServerError());
+        Mockito.when(healthManager.getHealth()).thenReturn(SystemHealthState.ERROR);
+        mvc.perform(get("/health")).andExpect(status().is5xxServerError());
+    }
+
+    @Retention(RUNTIME)
+    @WithMockUser(roles = ADMIN_ROLE)
+    private @interface WithAdmin {
+    }
+
+
 }
