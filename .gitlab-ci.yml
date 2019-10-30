@@ -19,13 +19,9 @@ before_script:
 
 
 include:
-  - local: /ci/build/install/.gitlab-ci.yml
-  - local: /ci/test/blackduck/.gitlab-ci.yml
-  - local: /ci/test/hadolint/.gitlab-ci.yml
-  - local: /ci/test/sonar/.gitlab-ci.yml
-  - local: /ci/test/clamav/.gitlab-ci.yml
-  - local: /ci/dast/anchore/.gitlab-ci.yml
-  - local: /ci/dast/zap/.gitlab-ci.yml
+  - local: /ci/test/.gitlab-ci.yml
+  - local: /ci/dast/.gitlab-ci.yml
+  - local: /ci/build/.gitlab-ci.yml
   - local: /ci/package/.gitlab-ci.yml
   - local: /ci/version/.gitlab-ci.yml
   - local: /ci/docs/.gitlab-ci.yml
