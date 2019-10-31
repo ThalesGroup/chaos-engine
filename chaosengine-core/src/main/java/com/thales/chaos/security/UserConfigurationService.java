@@ -21,6 +21,7 @@ public interface UserConfigurationService {
             this.username = username;
         }
 
+        @JsonIgnore
         public String getPassword () {
             String tempPassword = password;
             password = null;
