@@ -22,7 +22,9 @@ public interface UserConfigurationService {
         }
 
         public String getPassword () {
-            return password;
+            String tempPassword = password;
+            password = null;
+            return tempPassword;
         }
 
         public void setPassword (String password) {
