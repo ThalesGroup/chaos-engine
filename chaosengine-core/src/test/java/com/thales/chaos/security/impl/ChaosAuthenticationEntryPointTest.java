@@ -1,4 +1,4 @@
-package com.thales.chaos.security;
+package com.thales.chaos.security.impl;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

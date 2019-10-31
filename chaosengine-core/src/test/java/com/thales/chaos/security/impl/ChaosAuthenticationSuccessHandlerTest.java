@@ -1,4 +1,4 @@
-package com.thales.chaos.security;
+package com.thales.chaos.security.impl;
 
 import org.junit.After;
 import org.junit.Before;

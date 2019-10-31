@@ -33,20 +33,27 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import javax.validation.constraints.NotNull;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Duration;
 import java.util.*;
 
 import static com.thales.chaos.experiment.ExperimentSuite.fromMap;
+import static com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -128,7 +135,8 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void getExperiments () throws Exception {
+    @WithAdmin
+    public void getExperimentsAsAdmin () throws Exception {
         doReturn(List.of(experiment1)).when(experimentManager).getAllExperiments();
         mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
            .andExpect(status().isOk())
@@ -142,7 +150,29 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void getExperimentById () throws Exception {
+    @WithGenericUser
+    public void getExperimentsAsUser () throws Exception {
+        doReturn(List.of(experiment1)).when(experimentManager).getAllExperiments();
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$[0].id", is(experiment1.getId())))
+           .andExpect(jsonPath("$[0].experimentMethodName", Is.is("restart")));
+        doReturn(List.of(experiment2)).when(experimentManager).getAllExperiments();
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$[0].id", is(experiment2.getId())))
+           .andExpect(jsonPath("$[0].experimentMethodName", Is.is("latency")));
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void getExperimentsAsAnonymousUser () throws Exception {
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAdmin
+    public void getExperimentByIdAsAdmin () throws Exception {
         String UUID1 = randomUUID().toString();
         String UUID2 = randomUUID().toString();
         when(experimentManager.getExperimentByUUID(UUID1)).thenReturn(experiment1);
@@ -158,53 +188,213 @@ public class ExperimentControllerTest {
     }
 
     @Test
-    public void startExperiments () throws Exception {
-        mvc.perform(post("/experiment/start").contentType(APPLICATION_JSON)).andExpect(status().isOk());
-        verify(experimentManager, times(1)).scheduleExperiments(true);
+    @WithGenericUser
+    public void getExperimentByIdAsUser () throws Exception {
+        String UUID1 = randomUUID().toString();
+        String UUID2 = randomUUID().toString();
+        when(experimentManager.getExperimentByUUID(UUID1)).thenReturn(experiment1);
+        when(experimentManager.getExperimentByUUID(UUID2)).thenReturn(experiment2);
+        mvc.perform(get("/experiment/" + UUID1).contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.experimentType", is("STATE")))
+           .andExpect(jsonPath("$.startTime", is(experiment1.getStartTime().toString())));
+        mvc.perform(get("/experiment/" + UUID2).contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.experimentType", is("NETWORK")))
+           .andExpect(jsonPath("$.startTime", is(experiment2.getStartTime().toString())));
     }
 
     @Test
-    public void experimentContainerWithId () throws Exception {
+    @WithAnonymousUser
+    public void getExperimentByIdAsAnonymousUser () throws Exception {
+        mvc.perform(get("/experiment/" + randomUUID().toString()).contentType(APPLICATION_JSON))
+           .andExpect(status().isUnauthorized());
+        verify(experimentManager, never()).getExperimentByUUID(any());
+    }
+
+    @Test
+    @WithAdmin
+    public void startExperimentsAsAdmin () throws Exception {
+        startExperimentsTestInner(status().isOk(), times(1));
+    }
+
+    private void startExperimentsTestInner (ResultMatcher result, VerificationMode verification) throws Exception {
+        mvc.perform(post("/experiment/start").contentType(APPLICATION_JSON)).andExpect(result);
+        verify(experimentManager, verification).scheduleExperiments(true);
+    }
+
+    @Test
+    @WithGenericUser
+    public void startExperimentsAsUser () throws Exception {
+        startExperimentsTestInner(status().isForbidden(), never());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void startExperimentsAsAnonymous () throws Exception {
+        startExperimentsTestInner(status().isUnauthorized(), never());
+    }
+
+    @Test
+    @WithAdmin
+    public void experimentContainerWithIdAsAdmin () throws Exception {
+        experimentContainerWithIdTestInner(status().isOk(), times(1));
+    }
+
+    private void experimentContainerWithIdTestInner (ResultMatcher result, VerificationMode verification) throws Exception {
         Long containerId = new Random().nextLong();
-        mvc.perform(post("/experiment/start/" + containerId)).andExpect(status().isOk());
-        verify(experimentManager, times(1)).experimentContainerId(containerId);
+        mvc.perform(post("/experiment/start/" + containerId)).andExpect(result);
+        verify(experimentManager, verification).experimentContainerId(containerId);
     }
 
     @Test
-    public void startExperimentSuite () throws Exception {
+    @WithGenericUser
+    public void experimentContainerWithIdAsUser () throws Exception {
+        experimentContainerWithIdTestInner(status().isForbidden(), never());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void experimentContainerWithIdAsAnonymous () throws Exception {
+        experimentContainerWithIdTestInner(status().isUnauthorized(), never());
+    }
+
+    @Test
+    @WithAdmin
+    public void startExperimentSuiteAsAdmin () throws Exception {
         Collection<Experiment> experiments = Collections.emptySet();
         ArgumentCaptor<ExperimentSuite> experimentSuiteCaptor = ArgumentCaptor.forClass(ExperimentSuite.class);
         doReturn(experiments).when(experimentManager).scheduleExperimentSuite(experimentSuiteCaptor.capture());
         ExperimentSuite expectedExperimentSuite = new ExperimentSuite("firstPlatform", fromMap(Map.of("application", List
                 .of("method1", "method2"))));
         mvc.perform(post("/experiment/build").contentType(APPLICATION_JSON_UTF8).content(expectedExperimentSuite.toString())).andExpect(status().isOk());
+        startExperimentSuiteTestInner(status().isOk(), expectedExperimentSuite);
         assertEquals(expectedExperimentSuite, experimentSuiteCaptor.getValue());
     }
 
+    private void startExperimentSuiteTestInner (ResultMatcher result, ExperimentSuite expectedExperimentSuite) throws Exception {
+        mvc.perform(post("/experiment/build").contentType(APPLICATION_JSON_UTF8)
+                                             .content(expectedExperimentSuite.toString())).andExpect(result);
+    }
+
     @Test
-    public void isAutomatedMode () throws Exception {
+    @WithGenericUser
+    public void startExperimentSuiteAsUser () throws Exception {
+        startExperimentSuiteTestInner(status().isForbidden());
+    }
+
+    private void startExperimentSuiteTestInner (ResultMatcher result) throws Exception {
+        startExperimentSuiteTestInner(result, new ExperimentSuite("firstPlatform", fromMap(Map.of("application", List.of("method1", "method2")))));
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void startExperimentSuiteAsAnonymous () throws Exception {
+        startExperimentSuiteTestInner(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAdmin
+    public void isAutomatedModeAsAdmin () throws Exception {
         mvc.perform(get("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
-    public void enableAutomatedMode () throws Exception {
-        mvc.perform(post("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
-        verify(experimentManager, times(1)).setAutomatedMode(true);
+    @WithGenericUser
+    public void isAutomatedModeAsUser () throws Exception {
+        mvc.perform(get("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
-    public void disableAutomatedMode () throws Exception {
-        mvc.perform(delete("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(status().isOk());
-        verify(experimentManager, times(1)).setAutomatedMode(false);
+    @WithAnonymousUser
+    public void isAutomatedModeAsAnonymous () throws Exception {
+        isAutomatedModeTestInner(status().isUnauthorized());
+    }
+
+    private void isAutomatedModeTestInner (ResultMatcher result) throws Exception {
+        mvc.perform(get("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(result);
     }
 
     @Test
-    public void setBackoffPeriod () throws Exception {
+    @WithAdmin
+    public void enableAutomatedModeAsAdmin () throws Exception {
+        enableAutomatedModeTestInner(status().isOk(), times(1));
+    }
+
+    private void enableAutomatedModeTestInner (ResultMatcher ok, VerificationMode times) throws Exception {
+        mvc.perform(post("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(ok);
+        verify(experimentManager, times).setAutomatedMode(true);
+    }
+
+    @Test
+    @WithGenericUser
+    public void enableAutomatedModeAsUser () throws Exception {
+        enableAutomatedModeTestInner(status().isForbidden(), never());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void enableAutomatedModeAsAnonymous () throws Exception {
+        enableAutomatedModeTestInner(status().isUnauthorized(), never());
+    }
+
+    @Test
+    @WithAdmin
+    public void disableAutomatedModeAsAdmin () throws Exception {
+        disableAutomatedModeTestInner(status().isOk(), times(1));
+    }
+
+    private void disableAutomatedModeTestInner (ResultMatcher forbidden, VerificationMode never) throws Exception {
+        mvc.perform(delete("/experiment/automated").contentType(APPLICATION_JSON)).andExpect(forbidden);
+        verify(experimentManager, never).setAutomatedMode(false);
+    }
+
+    @Test
+    @WithGenericUser
+    public void disableAutomatedModeAsUser () throws Exception {
+        disableAutomatedModeTestInner(status().isForbidden(), never());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void disableAutomatedModeAsAnonymous () throws Exception {
+        disableAutomatedModeTestInner(status().isUnauthorized(), never());
+    }
+
+    @Test
+    @WithAdmin
+    public void setBackoffPeriodAsAdmin () throws Exception {
+        setBackoffPeriodTestInner(status().isOk(), times(1));
+    }
+
+    private void setBackoffPeriodTestInner (ResultMatcher result, VerificationMode verification) throws Exception {
         for (int i = 100; i < 1000; i = i + 100) {
             Duration duration = Duration.ofSeconds(i);
-            mvc.perform(patch("/experiment/backoff").contentType(APPLICATION_JSON_UTF8).param("backoffDuration", duration.toString()))
-               .andExpect(status().isOk());
-            verify(experimentManager, times(1)).setExperimentBackoffPeriod(duration);
+            mvc.perform(patch("/experiment/backoff").contentType(APPLICATION_JSON_UTF8)
+                                                    .param("backoffDuration", duration.toString())).andExpect(result);
+            verify(experimentManager, verification).setExperimentBackoffPeriod(duration);
         }
+    }
+
+    @Test
+    @WithGenericUser
+    public void setBackoffPeriodAsUser () throws Exception {
+        setBackoffPeriodTestInner(status().isForbidden(), never());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void setBackoffPeriodWithUser () throws Exception {
+        setBackoffPeriodTestInner(status().isUnauthorized(), never());
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @WithMockUser(roles = ADMIN_ROLE)
+    private @interface WithAdmin {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @WithMockUser
+    private @interface WithGenericUser {
     }
 }
