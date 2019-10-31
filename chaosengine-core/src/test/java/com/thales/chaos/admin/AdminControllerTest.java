@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.thales.chaos.security.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
+import static com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

@@ -17,7 +17,7 @@
 
 package com.thales.chaos.logging;
 
-import com.thales.chaos.security.ChaosWebSecurityConfigurerAdapter;
+import com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

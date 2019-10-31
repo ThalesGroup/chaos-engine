@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.lang.annotation.Retention;
 
-import static com.thales.chaos.security.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
+import static com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

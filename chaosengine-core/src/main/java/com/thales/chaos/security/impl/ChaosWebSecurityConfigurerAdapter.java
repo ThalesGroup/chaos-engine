@@ -1,16 +1,24 @@
-package com.thales.chaos.security;
+package com.thales.chaos.security.impl;
 
+import com.thales.chaos.security.UserConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import java.util.Collection;
+import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
@@ -21,10 +29,28 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
     private AuthenticationEntryPoint authenticationEntryPoint;
     @Autowired
     private AuthenticationSuccessHandler successHandler;
+    @Autowired
+    private UserConfigurationService userConfigurationService;
 
     @Override
     protected void configure (AuthenticationManagerBuilder auth) throws Exception {
-        super.configure(auth);
+        Collection<UserConfigurationService.User> users = userConfigurationService.getUsers();
+        if (users == null || users.isEmpty()) {
+            super.configure(auth);
+        } else {
+            InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryAuth = auth.inMemoryAuthentication();
+            users.forEach(user -> inMemoryAuth.withUser(user.getUsername())
+                                              .password(encoder().encode(user.getPassword()))
+                                              .roles(Optional.of(user)
+                                                             .map(UserConfigurationService.User::getRoles)
+                                                             .map(s -> s.toArray(new String[]{}))
+                                                             .orElse(new String[]{})));
+        }
+    }
+
+    @Bean
+    public PasswordEncoder encoder () {
+        return new BCryptPasswordEncoder();
     }
 
     @Override

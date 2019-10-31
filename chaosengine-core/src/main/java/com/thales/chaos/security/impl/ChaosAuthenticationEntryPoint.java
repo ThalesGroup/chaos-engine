@@ -1,4 +1,4 @@
-package com.thales.chaos.security;
+package com.thales.chaos.security.impl;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
