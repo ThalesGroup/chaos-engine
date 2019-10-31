@@ -3,6 +3,8 @@
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
+  tags:
+    - kaniko-support
   dependencies:
     - version
   artifacts:
