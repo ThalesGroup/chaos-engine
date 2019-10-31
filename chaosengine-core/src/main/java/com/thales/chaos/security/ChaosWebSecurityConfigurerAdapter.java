@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -21,6 +22,11 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
     private AuthenticationEntryPoint authenticationEntryPoint;
     @Autowired
     private AuthenticationSuccessHandler successHandler;
+
+    @Override
+    protected void configure (AuthenticationManagerBuilder auth) throws Exception {
+        super.configure(auth);
+    }
 
     @Override
     protected void configure (AuthenticationManagerBuilder auth) throws Exception {
