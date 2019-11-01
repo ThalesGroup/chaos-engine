@@ -2,6 +2,9 @@
 # The script executes Sonar scan using Maven and then waits for Sonar Quality gate results
 # It will fail the GitLab job if the gate is read or new bugs or vulnerabilities were detected
 
+#Exit script immediately on any error in it
+set -eo pipefail
+
 apt update
 apt install -y jq curl
 
