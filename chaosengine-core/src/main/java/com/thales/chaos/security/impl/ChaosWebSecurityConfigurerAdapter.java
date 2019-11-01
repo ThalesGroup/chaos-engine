@@ -58,7 +58,7 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
         http.csrf()
             .disable()
             .exceptionHandling()
-            .authenticationEntryPoint(authenticationEntryPoint)
+            .authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement().maximumSessions(1).and()
             .and()
             .formLogin()
             .successHandler(successHandler)
