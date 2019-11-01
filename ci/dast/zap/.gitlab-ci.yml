@@ -19,7 +19,7 @@ zap_scan:
     # Containers in the runner pod are unable to resolve hostnames of neighbour containers, the Engine instance must be referenced thru localhost
     CHAOS_ENGINE_HOST: "localhost"
     CHAOS_ENGINE_PORT: "8080"
-    CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v2/api-docs"
+    CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v3/api-docs"
     # With current GL setup it ussualy takes 13 minutes until the Engine API is rechable
     CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
   artifacts:
