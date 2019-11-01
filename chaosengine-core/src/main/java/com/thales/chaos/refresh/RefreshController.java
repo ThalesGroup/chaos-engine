@@ -17,7 +17,7 @@
 
 package com.thales.chaos.refresh;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +31,7 @@ public class RefreshController {
     @Autowired
     private RefreshManager refreshManager;
 
-    @ApiOperation(value = "Trigger Spring Property refresh", notes = "Triggers the Spring Framework backend to refresh all properties loaded from external sources (i.e., vault), and reload any Refreshable Beans that depend on them, such as Platform services")
+    @Operation(summary = "Trigger Spring Property refresh", description = "Triggers the Spring Framework backend to refresh all properties loaded from external sources (i.e., vault), and reload any Refreshable Beans that depend on them, such as Platform services")
     @PostMapping
     public Collection<String> doRefresh () {
         return refreshManager.doRefresh();

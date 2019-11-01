@@ -17,8 +17,8 @@
 
 package com.thales.chaos.experiment;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,65 +39,65 @@ public class ExperimentController {
         this.experimentManager = experimentManager;
     }
 
-    @ApiOperation(value = "Get Experiments", notes = "Returns a list of all active experiments.")
+    @Operation(summary = "Get Experiments", description = "Returns a list of all active experiments.")
     @GetMapping
     public Collection<Experiment> getExperiments () {
         return experimentManager.getAllExperiments();
     }
 
-    @ApiOperation(value = "Get Specific Experiment", notes = "Returns metadata of a specific experiment.")
+    @Operation(summary = "Get Specific Experiment", description = "Returns metadata of a specific experiment.")
     @GetMapping("/{uuid}")
-    public Experiment getExperimentById (@ApiParam(value = "The UUID of the specific experiment to retrieve metadata off.", required = true) @PathVariable String uuid) {
+    public Experiment getExperimentById (@Parameter(description = "The UUID of the specific experiment to retrieve metadata off.", required = true) @PathVariable String uuid) {
         return experimentManager.getExperimentByUUID(uuid);
     }
 
-    @ApiOperation(value = "Start Random Experiment", notes = "Starts a new experiment immediately. This ignores scheduling, and ensures at least one container in the chosen platform is used for experimentation.")
+    @Operation(summary = "Start Random Experiment", description = "Starts a new experiment immediately. This ignores scheduling, and ensures at least one container in the chosen platform is used for experimentation.")
     @PostMapping("/start")
     public Set<Experiment> startExperiments () {
         return experimentManager.scheduleExperiments(true);
     }
 
-    @ApiOperation(value = "Start Experiment on Specific Container", notes = "Creates an experiment for a specific container.")
+    @Operation(summary = "Start Experiment on Specific Container", description = "Creates an experiment for a specific container.")
     @PostMapping("/start/{id}")
-    public Set<Experiment> experimentContainerWithId (@ApiParam(value = "The identity value of the container to perform an experiment on.", required = true) @PathVariable long id) {
+    public Set<Experiment> experimentContainerWithId (@Parameter(description = "The identity value of the container to perform an experiment on.", required = true) @PathVariable long id) {
         return experimentManager.experimentContainerId(id);
     }
 
-    @ApiOperation(value = "Start a pre-planned experiment", notes = "Starts an experiment against a specific platform, with specific types of containers running specific experiment methods")
+    @Operation(summary = "Start a pre-planned experiment", description = "Starts an experiment against a specific platform, with specific types of containers running specific experiment methods")
     @PostMapping("/build")
-    public Collection<Experiment> startExperimentSuite (@ApiParam(required = true, value = "The Experiment Suite object of Platform, Container Aggregation ID, and Experiment Methods") @RequestBody ExperimentSuite experimentSuite) {
+    public Collection<Experiment> startExperimentSuite (@Parameter(required = true, description = "The Experiment Suite object of Platform, Container Aggregation ID, and Experiment Methods") @RequestBody ExperimentSuite experimentSuite) {
         return experimentManager.scheduleExperimentSuite(experimentSuite);
     }
 
-    @ApiOperation(value = "Get parameters for previously run experiments", notes = "Get historical experiments, in the exact JSON format needed to use the /build endpoint")
+    @Operation(summary = "Get parameters for previously run experiments", description = "Get historical experiments, in the exact JSON format needed to use the /build endpoint")
     @GetMapping("/history")
     public Map<Instant, ExperimentSuite> getHistoricalExperiments () {
         return experimentManager.getHistoricalExperimentSuites();
     }
 
-    @ApiOperation(value = "Enable Automated Mode", notes = "Enable automated scheduling of experiments ")
+    @Operation(summary = "Enable Automated Mode", description = "Enable automated scheduling of experiments ")
     @PostMapping(MODE_PATH)
     public String enableAutomatedMode () {
         experimentManager.setAutomatedMode(true);
         return "ok";
     }
 
-    @ApiOperation(value = "Disable Automated Mode", notes = "Disable automated scheduling of experiments ")
+    @Operation(summary = "Disable Automated Mode", description = "Disable automated scheduling of experiments ")
     @DeleteMapping(MODE_PATH)
     public String disableAutomatedMode () {
         experimentManager.setAutomatedMode(false);
         return "ok";
     }
 
-    @ApiOperation(value = "Get Automated Mode Status", notes = "Returns true if automated mode is enabled")
+    @Operation(summary = "Get Automated Mode Status", description = "Returns true if automated mode is enabled")
     @GetMapping(MODE_PATH)
     public Boolean isAutomatedMode () {
         return experimentManager.isAutomatedMode();
     }
 
-    @ApiOperation(value = "Change ExperimentBackoff duration", notes = "Controls the minimum amount of time between experiments")
+    @Operation(summary = "Change ExperimentBackoff duration", description = "Controls the minimum amount of time between experiments")
     @PatchMapping("/backoff")
-    public void setBackoffDuration (@ApiParam(required = true, value = "New minimum backoff period between experiments. Formatted as \"PT[nH][nM][nS]\".", example = "PT1H15M45S") @RequestParam Duration backoffDuration) {
+    public void setBackoffDuration (@Parameter(required = true, description = "New minimum backoff period between experiments. Formatted as \"PT[nH][nM][nS]\".", example = "PT1H15M45S") @RequestParam Duration backoffDuration) {
         experimentManager.setExperimentBackoffPeriod(backoffDuration);
     }
 }
