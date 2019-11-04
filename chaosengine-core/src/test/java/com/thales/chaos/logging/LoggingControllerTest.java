@@ -73,7 +73,7 @@ public class LoggingControllerTest {
     @Test
     @WithAnonymousUser
     public void setDebugModeDefaultParametersUnauthenticated () throws Exception {
-        setDebugModeDefaultParameters(status().isUnauthorized(), never());
+        setDebugModeDefaultParameters(status().isNotFound(), never());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class LoggingControllerTest {
     @Test
     @WithAnonymousUser
     public void setDebugModeForFiveMinutesUnauthenticated () throws Exception {
-        setDebugModeForFiveMinutes(status().isUnauthorized(), never());
+        setDebugModeForFiveMinutes(status().isNotFound(), never());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class LoggingControllerTest {
     @Test
     @WithAnonymousUser
     public void clearDebugModeUnauthenticated () throws Exception {
-        clearDebugMode(status().isUnauthorized(), never());
+        clearDebugMode(status().isNotFound(), never());
     }
 
     @Test

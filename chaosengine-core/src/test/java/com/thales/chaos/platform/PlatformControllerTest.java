@@ -88,7 +88,7 @@ public class PlatformControllerTest {
     @Test
     @WithAnonymousUser
     public void getPlatformHealthAsAnonymous () throws Exception {
-        mvc.perform(get("/platform/health")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/platform/health")).andExpect(status().isNotFound());
         verify(platformManager, never()).getOverallHealth();
     }
 
@@ -112,7 +112,7 @@ public class PlatformControllerTest {
     @Test
     @WithAnonymousUser
     public void getPlatformsAsAnonymous () throws Exception {
-        getPlatforms(status().isUnauthorized(), never());
+        getPlatforms(status().isNotFound(), never());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class PlatformControllerTest {
     @Test
     @WithAnonymousUser
     public void expirePlatformRosterCacheAsAnonymous () throws Exception {
-        expirePlatformRosterCacheTestInner(status().isUnauthorized(), never());
+        expirePlatformRosterCacheTestInner(status().isNotFound(), never());
     }
 
     @Retention(RetentionPolicy.RUNTIME)

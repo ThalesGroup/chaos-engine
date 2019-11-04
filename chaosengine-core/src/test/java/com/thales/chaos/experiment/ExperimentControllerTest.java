@@ -167,7 +167,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void getExperimentsAsAnonymousUser () throws Exception {
-        mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/experiment").contentType(APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -208,7 +208,7 @@ public class ExperimentControllerTest {
     @WithAnonymousUser
     public void getExperimentByIdAsAnonymousUser () throws Exception {
         mvc.perform(get("/experiment/" + randomUUID().toString()).contentType(APPLICATION_JSON))
-           .andExpect(status().isUnauthorized());
+           .andExpect(status().isNotFound());
         verify(experimentManager, never()).getExperimentByUUID(any());
     }
 
@@ -232,7 +232,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void startExperimentsAsAnonymous () throws Exception {
-        startExperimentsTestInner(status().isUnauthorized(), never());
+        startExperimentsTestInner(status().isNotFound(), never());
     }
 
     @Test
@@ -256,7 +256,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void experimentContainerWithIdAsAnonymous () throws Exception {
-        experimentContainerWithIdTestInner(status().isUnauthorized(), never());
+        experimentContainerWithIdTestInner(status().isNotFound(), never());
     }
 
     @Test
@@ -290,7 +290,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void startExperimentSuiteAsAnonymous () throws Exception {
-        startExperimentSuiteTestInner(status().isUnauthorized());
+        startExperimentSuiteTestInner(status().isNotFound());
     }
 
     @Test
@@ -308,7 +308,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void isAutomatedModeAsAnonymous () throws Exception {
-        isAutomatedModeTestInner(status().isUnauthorized());
+        isAutomatedModeTestInner(status().isNotFound());
     }
 
     private void isAutomatedModeTestInner (ResultMatcher result) throws Exception {
@@ -335,7 +335,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void enableAutomatedModeAsAnonymous () throws Exception {
-        enableAutomatedModeTestInner(status().isUnauthorized(), never());
+        enableAutomatedModeTestInner(status().isNotFound(), never());
     }
 
     @Test
@@ -358,7 +358,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void disableAutomatedModeAsAnonymous () throws Exception {
-        disableAutomatedModeTestInner(status().isUnauthorized(), never());
+        disableAutomatedModeTestInner(status().isNotFound(), never());
     }
 
     @Test
@@ -385,7 +385,7 @@ public class ExperimentControllerTest {
     @Test
     @WithAnonymousUser
     public void setBackoffPeriodWithUser () throws Exception {
-        setBackoffPeriodTestInner(status().isUnauthorized(), never());
+        setBackoffPeriodTestInner(status().isNotFound(), never());
     }
 
     @Retention(RetentionPolicy.RUNTIME)

@@ -75,7 +75,7 @@ public class AdminControllerTest {
     @Test
     @WithAnonymousUser
     public void getAdminStateWithoutAuthentication () throws Exception {
-        mvc.perform(get("/admin" + "/state").contentType(APPLICATION_JSON)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin" + "/state").contentType(APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -98,9 +98,9 @@ public class AdminControllerTest {
     @WithAnonymousUser
     public void setAdminStateWithoutAuthentication () throws Exception {
         mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "BOGUS STATE"))
-           .andExpect(status().isUnauthorized());
+           .andExpect(status().isNotFound());
         mvc.perform(post("/admin" + "/state").contentType(APPLICATION_JSON).param("state", "PAUSED"))
-           .andExpect(status().isUnauthorized());
+           .andExpect(status().isNotFound());
     }
 
     @Retention(RetentionPolicy.RUNTIME)

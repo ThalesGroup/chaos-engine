@@ -70,7 +70,7 @@ public class RefreshControllerTest {
     @WithAnonymousUser
     public void doRefreshAnonymous () throws Exception {
         doReturn(List.of("passwords", "keys")).when(refreshManager).doRefresh();
-        mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
