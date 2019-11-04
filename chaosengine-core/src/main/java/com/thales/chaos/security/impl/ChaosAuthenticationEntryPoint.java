@@ -1,5 +1,6 @@
 package com.thales.chaos.security.impl;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,6 @@ import java.io.IOException;
 public class ChaosAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AuthenticationException e) throws IOException {
-        httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+        httpServletResponse.sendError(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase());
     }
 }
