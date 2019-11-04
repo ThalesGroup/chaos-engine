@@ -1,0 +1,23 @@
+clamav_scan:
+  variables:
+    SCAN_LOG: "av.log"
+    DEFINITIONS_PATH: ".clamav/"
+  stage: test
+  dependencies:
+    - install
+  image:
+    name: alpine
+  only:
+    - branches
+    - tags
+    - merge_requests
+  cache:
+    key: clamav-definitions
+    paths:
+      - ${DEFINITIONS_PATH}
+  before_script: []
+  script:
+    - ./ci/test/clamav/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
+  artifacts:
+    paths:
+      - ${SCAN_LOG}

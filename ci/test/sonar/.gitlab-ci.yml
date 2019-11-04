@@ -1,0 +1,15 @@
+sonar_scan:
+  stage: test
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-maven
+    paths:
+      - ".m2/"
+  only:
+    refs:
+      - develop
+    variables:
+      - $SONAR_URL
+      - $SONAR_TOKEN
+      - $SONAR_PROJECT_KEY
+  script:
+    - ./ci/test/sonar/sonar_scan.sh
