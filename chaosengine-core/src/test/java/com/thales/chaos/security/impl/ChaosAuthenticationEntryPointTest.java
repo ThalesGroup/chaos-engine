@@ -31,7 +31,7 @@ public class ChaosAuthenticationEntryPointTest {
     @Test
     public void commence () throws Exception {
         chaosAuthenticationEntryPoint.commence(request, response, exception);
-        verify(response).sendError(404);
+        verify(response).sendError(404, "Not Found");
     }
 
     @Configuration
