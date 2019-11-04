@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = { "holidays=DUM", "chaos.security.users[0].username=" + ChaosUserConfigurationServiceTest.username, "chaos.security.users[0].password=" + ChaosUserConfigurationServiceTest.password, "chaos.security.users[0].authorities=ADMIN" })
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ChaosUserConfigurationServiceTest {
     public static final String username = "admin";
     public static final String password = "password";
