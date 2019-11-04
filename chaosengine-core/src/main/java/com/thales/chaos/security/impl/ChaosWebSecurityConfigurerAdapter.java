@@ -1,6 +1,8 @@
 package com.thales.chaos.security.impl;
 
 import com.thales.chaos.security.UserConfigurationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +27,7 @@ import java.util.Optional;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(ChaosWebSecurityConfigurerAdapter.class);
     public static final String ADMIN_ROLE = "ADMIN";
     @Autowired
     private AuthenticationEntryPoint authenticationEntryPoint;
@@ -39,6 +42,7 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
     protected void configure (AuthenticationManagerBuilder auth) throws Exception {
         Collection<UserConfigurationService.User> users = userConfigurationService.getUsers();
         if (users == null || users.isEmpty()) {
+            log.warn("System does not have any users configured for REST access. REST API will be unavailable.");
             super.configure(auth);
         } else {
             InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryAuth = auth.inMemoryAuthentication();
