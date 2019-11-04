@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import java.util.Collection;
@@ -29,6 +30,8 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
     private AuthenticationEntryPoint authenticationEntryPoint;
     @Autowired
     private AuthenticationSuccessHandler successHandler;
+    @Autowired
+    private AuthenticationFailureHandler failureHandler;
     @Autowired
     private UserConfigurationService userConfigurationService;
 
@@ -59,9 +62,7 @@ public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
             .disable()
             .exceptionHandling()
             .authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement().maximumSessions(1).and()
-            .and()
-            .formLogin()
-            .successHandler(successHandler)
+            .and().formLogin().successHandler(successHandler).failureHandler(failureHandler)
             .loginPage("/login")
             .and()
             .authorizeRequests()

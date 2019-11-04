@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
@@ -43,8 +42,7 @@ public class ChaosUserConfigurationServiceTest {
     public void testFailedLogin () throws Exception {
         mvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON)
                                   .param("username", username)
-                                  .param("password", password + " "))
-           .andExpect(request().sessionAttribute("SPRING_SECURITY_LAST_EXCEPTION", instanceOf(BadCredentialsException.class)));
+                                  .param("password", password + " ")).andExpect(status().isNotFound());
     }
 
     @Test
