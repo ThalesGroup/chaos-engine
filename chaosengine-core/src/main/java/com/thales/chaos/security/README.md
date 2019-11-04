@@ -95,7 +95,3 @@ Authenticated users with no specific roles can access any `GET` based endpoint.
 ### Admin Authentication
 
 Users with the `ADMIN` role can access all endpoints. 
-
-## Disabling HTTP Security
-
-HTTP Security can be disabled by adding the configuration property `chaos.security.enabled` with a value of `false`.

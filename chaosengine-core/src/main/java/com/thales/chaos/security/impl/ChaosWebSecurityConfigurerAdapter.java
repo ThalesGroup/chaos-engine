@@ -2,7 +2,6 @@ package com.thales.chaos.security.impl;
 
 import com.thales.chaos.security.UserConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,7 +22,6 @@ import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
-@ConditionalOnProperty(prefix = "chaos.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class ChaosWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     public static final String ADMIN_ROLE = "ADMIN";
