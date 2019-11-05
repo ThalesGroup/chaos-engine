@@ -5,10 +5,6 @@ install:
     - tags
     - merge_requests
   variables:
-    CHAOS_ENGINE_HOST: "localhost"
-    CHAOS_ENGINE_PORT: "8080"
-    CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v2/api-docs"
-    CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
     OPEN_API_SPEC_FILE_NAME: "api-docs.json"
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install

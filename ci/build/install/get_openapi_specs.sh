@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 function start_engine(){
   ROOT_DIR=/tmp/chaosengine

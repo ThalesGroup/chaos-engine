@@ -13,6 +13,10 @@ variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/"
   DOCKER_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_SHA}
   DOCKER_IMAGE_LATEST: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}:latest
+  CHAOS_ENGINE_HOST: "localhost"
+  CHAOS_ENGINE_PORT: "8080"
+  CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v2/api-docs"
+  CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
 
 before_script:
   - if [ $(command -v mvn)  ] && [ -f "version" ] ; then mvn -B versions:set -DnewVersion=$(cat version) -DprocessAllModules ; fi
