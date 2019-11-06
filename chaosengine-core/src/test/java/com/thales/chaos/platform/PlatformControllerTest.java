@@ -37,7 +37,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 
-import static com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
+import static com.thales.chaos.security.impl.ChaosWebSecurity.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
