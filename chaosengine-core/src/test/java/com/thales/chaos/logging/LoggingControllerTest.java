@@ -17,7 +17,6 @@
 
 package com.thales.chaos.logging;
 
-import com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +35,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.time.Duration;
 
+import static com.thales.chaos.security.impl.ChaosWebSecurity.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -129,7 +129,7 @@ public class LoggingControllerTest {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @WithMockUser(roles = ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE)
+    @WithMockUser(roles = ADMIN_ROLE)
     private @interface WithAdmin {
     }
 

@@ -53,7 +53,7 @@ import java.time.Duration;
 import java.util.*;
 
 import static com.thales.chaos.experiment.ExperimentSuite.fromMap;
-import static com.thales.chaos.security.impl.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
+import static com.thales.chaos.security.impl.ChaosWebSecurity.ChaosWebSecurityConfigurerAdapter.ADMIN_ROLE;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;

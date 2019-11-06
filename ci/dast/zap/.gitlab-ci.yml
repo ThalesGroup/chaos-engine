@@ -22,6 +22,7 @@ zap_scan:
     CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v2/api-docs"
     # With current GL setup it ussualy takes 13 minutes until the Engine API is rechable
     CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
+    CHAOS_SECURITY_ENABLED: "false"
   artifacts:
     paths:
       - $ZAP_REPORT_FILE
