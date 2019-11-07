@@ -95,3 +95,7 @@ Authenticated users with no specific roles can access any `GET` based endpoint.
 ### Admin Authentication
 
 Users with the `ADMIN` role can access all endpoints. 
+
+## Disabling Security Requirements
+
+It is possible that in some environments, you may want to disable the security layer (for example, in a CICD Pipeline). This can be accomplished by setting the property `chaos.security.enabled` with a value of `false`.
