@@ -6,7 +6,6 @@ install:
     - merge_requests
   variables:
     OPEN_API_SPEC_FILE_NAME: "api-docs.json"
-    CHAOS_SECURITY_ENABLED: "false"
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
     - ./ci/build/install/get_openapi_specs.sh
