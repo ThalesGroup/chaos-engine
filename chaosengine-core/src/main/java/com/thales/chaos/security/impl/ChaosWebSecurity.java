@@ -22,13 +22,17 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Optional;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class ChaosWebSecurity {
+    private static final Logger log = LoggerFactory.getLogger(ChaosWebSecurity.class);
     @Configuration
     @ConditionalOnMissingBean(WebSecurityConfigurerAdapter.class)
     public static class ChaosWebSecurityDisabled extends WebSecurityConfigurerAdapter {
@@ -117,5 +121,15 @@ public class ChaosWebSecurity {
                 .and()
                 .logout();
         }
+    }
+
+    static void logUnsuccessfulRequest (String message, HttpServletRequest request) {
+        log.error(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
+                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")));
+    }
+
+    static void logSuccessfulRequest (String message, HttpServletRequest request) {
+        log.info(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
+                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")));
     }
 }

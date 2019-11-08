@@ -13,6 +13,7 @@ import java.io.IOException;
 public class ChaosAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure (HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
+        ChaosWebSecurity.logUnsuccessfulRequest("Authentication failed", request);
         response.sendError(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase());
     }
 }

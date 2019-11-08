@@ -13,6 +13,7 @@ import java.io.IOException;
 public class ChaosAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AuthenticationException e) throws IOException {
+        ChaosWebSecurity.logUnsuccessfulRequest("Unauthorized request", httpServletRequest);
         httpServletResponse.sendError(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase());
     }
 }
