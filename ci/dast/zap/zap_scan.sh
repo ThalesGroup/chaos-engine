@@ -32,8 +32,7 @@ function engine_startup_timeout(){
 
 mkdir $ZAP_WORK_DIR
 export -f wait_for_engine
-export -f engine_startup_timeout
-timeout $CHAOS_ENGINE_STARTUP_TIMEOUT bash -c wait_for_engine || bash -c engine_startup_timeout
+timeout $CHAOS_ENGINE_STARTUP_TIMEOUT bash -c wait_for_engine || engine_startup_timeout
 run_scan
 STATUS_CODE=$?
 cp $ZAP_WORK_DIR$ZAP_REPORT_FILE .

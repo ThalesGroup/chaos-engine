@@ -29,9 +29,8 @@ function engine_startup_timeout(){
 }
 
 export -f wait_for_engine
-export -f engine_startup_timeout
 
 start_engine
-timeout $CHAOS_ENGINE_STARTUP_TIMEOUT bash -c wait_for_engine || bash -c engine_startup_timeout
+timeout $CHAOS_ENGINE_STARTUP_TIMEOUT bash -c wait_for_engine || engine_startup_timeout
 curl -s -o $OPEN_API_SPEC_FILE_NAME $CHAOS_ENGINE_OPEN_API_URL
 kill $(pgrep java)
