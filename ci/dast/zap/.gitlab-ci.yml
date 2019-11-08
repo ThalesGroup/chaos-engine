@@ -16,12 +16,6 @@ zap_scan:
     # Do not change, ZAP tool is expecting this directory. If not present file options are skipped.
     ZAP_WORK_DIR: "/zap/wrk/"
     ZAP_REPORT_FILE: "zap_report.html"
-    # Containers in the runner pod are unable to resolve hostnames of neighbour containers, the Engine instance must be referenced thru localhost
-    CHAOS_ENGINE_HOST: "localhost"
-    CHAOS_ENGINE_PORT: "8080"
-    CHAOS_ENGINE_OPEN_API_URL: "http://$CHAOS_ENGINE_HOST:$CHAOS_ENGINE_PORT/v3/api-docs"
-    # With current GL setup it ussualy takes 13 minutes until the Engine API is rechable
-    CHAOS_ENGINE_STARTUP_TIMEOUT: "900"
   artifacts:
     paths:
       - $ZAP_REPORT_FILE

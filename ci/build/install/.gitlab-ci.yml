@@ -4,8 +4,11 @@ install:
     - branches
     - tags
     - merge_requests
+  variables:
+    OPEN_API_SPEC_FILE_NAME: "api-docs.json"
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install
+    - ./ci/build/install/get_openapi_specs.sh
   cache:
     key: ${CI_COMMIT_REF_SLUG}-maven
     paths:
@@ -16,6 +19,7 @@ install:
     paths:
       - "*/target"
       - "*/*/target"
+      - $OPEN_API_SPEC_FILE_NAME
     reports:
       junit:
         - "*/target/surefire-reports/TEST-*.xml"
