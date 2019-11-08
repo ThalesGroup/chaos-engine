@@ -1,6 +1,7 @@
 package com.thales.chaos.security.impl;
 
 import com.thales.chaos.security.UserConfigurationService;
+import net.logstash.logback.argument.StructuredArgument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Optional;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Configuration
 @EnableWebSecurity
@@ -124,12 +125,15 @@ public class ChaosWebSecurity {
     }
 
     static void logUnsuccessfulRequest (String message, HttpServletRequest request) {
-        log.error(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
-                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")), kv("http.user", request.getParameter("username")));
+        log.error(message, retrieveRequestDetails(request));
+    }
+
+    private static StructuredArgument[] retrieveRequestDetails (HttpServletRequest request) {
+        return new StructuredArgument[]{ v("http.origin", request.getRemoteHost()), v("http.method", request.getMethod()), v("http.url", request
+                .getRequestURL()), v("http.useragent", request.getHeader("User-Agent")), v("http.user", request.getParameter("username")) };
     }
 
     static void logSuccessfulRequest (String message, HttpServletRequest request) {
-        log.info(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
-                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")), kv("http.user", request.getParameter("username")));
+        log.info(message, retrieveRequestDetails(request));
     }
 }
