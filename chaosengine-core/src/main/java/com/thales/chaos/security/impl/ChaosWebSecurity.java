@@ -125,11 +125,11 @@ public class ChaosWebSecurity {
 
     static void logUnsuccessfulRequest (String message, HttpServletRequest request) {
         log.error(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
-                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")));
+                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")), kv("http.user", request.getParameter("username")));
     }
 
     static void logSuccessfulRequest (String message, HttpServletRequest request) {
         log.info(message, kv("http.origin", request.getRemoteHost()), kv("http.method", request.getMethod()), kv("http.url", request
-                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")));
+                .getRequestURL()), kv("http.useragent", request.getHeader("User-Agent")), kv("http.user", request.getParameter("username")));
     }
 }
