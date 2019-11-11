@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class ChaosWebConfigurer implements WebMvcConfigurer {
     @Override
     public void addViewControllers (ViewControllerRegistry registry) {
-        registry.addViewController("/help").setViewName("forward:/help/");
+        registry.addViewController("/help").setViewName("redirect:/help/");
         registry.addViewController("/help/").setViewName("forward:index.html");
         registry.addViewController("/help/**/{[path:[^\\.]*}").setViewName("forward:index.html");
     }
