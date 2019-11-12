@@ -1,6 +1,7 @@
 site_name: Chaos Engine
 site_description: 'A tool for automated Chaos Experimentation'
 repo_url: https://github.com/gemalto/chaos-engine
+repo_name: chaos-engine @ GitHub
 docs_dir: markdown
 
 strict: true
