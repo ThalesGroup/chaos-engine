@@ -1,6 +1,7 @@
 package com.thales.chaos.security.impl;
 
 import com.thales.chaos.security.UserConfigurationService;
+import net.logstash.logback.argument.StructuredArgument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,17 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Optional;
+
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class ChaosWebSecurity {
+    private static final Logger log = LoggerFactory.getLogger(ChaosWebSecurity.class);
     @Configuration
     @ConditionalOnMissingBean(WebSecurityConfigurerAdapter.class)
     public static class ChaosWebSecurityDisabled extends WebSecurityConfigurerAdapter {
@@ -117,5 +122,18 @@ public class ChaosWebSecurity {
                 .and()
                 .logout();
         }
+    }
+
+    static void logUnsuccessfulRequest (String message, HttpServletRequest request) {
+        log.error(message, retrieveRequestDetails(request));
+    }
+
+    private static StructuredArgument[] retrieveRequestDetails (HttpServletRequest request) {
+        return new StructuredArgument[]{ v("http.origin", request.getRemoteHost()), v("http.method", request.getMethod()), v("http.url", request
+                .getRequestURL()), v("http.useragent", request.getHeader("User-Agent")), v("http.user", request.getParameter("username")) };
+    }
+
+    static void logSuccessfulRequest (String message, HttpServletRequest request) {
+        log.info(message, retrieveRequestDetails(request));
     }
 }

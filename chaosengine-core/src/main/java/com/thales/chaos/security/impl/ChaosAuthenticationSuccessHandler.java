@@ -26,6 +26,7 @@ public class ChaosAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
 
     @Override
     public void onAuthenticationSuccess (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
+        ChaosWebSecurity.logSuccessfulRequest("Authentication success", httpServletRequest);
         SavedRequest request = requestCache.getRequest(httpServletRequest, httpServletResponse);
         if (request == null) {
             clearAuthenticationAttributes(httpServletRequest);
