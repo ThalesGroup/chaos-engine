@@ -3,8 +3,8 @@ WORKDIR /chaosengine
 COPY pom.xml ./
 COPY chaosengine-launcher/pom.xml ./chaosengine-launcher/
 COPY chaosengine-test-utilities ./chaosengine-test-utilities/
-RUN mvn -f ./chaosengine-test-utilities/pom.xml dependency:go-offline -Dsilent install
-RUN mvn -f ./chaosengine-launcher/pom.xml dependency:go-offline -Dsilent install
+RUN mvn -B -f ./chaosengine-test-utilities/pom.xml dependency:go-offline -Dsilent install
+RUN mvn -B -f ./chaosengine-launcher/pom.xml dependency:go-offline -Dsilent install
 COPY chaosengine-core/pom.xml ./chaosengine-core/
 COPY chaosengine-schedule ./chaosengine-schedule/
 COPY chaosengine-notifications ./chaosengine-notifications/
@@ -17,7 +17,7 @@ COPY chaosengine-core/src/ ./chaosengine-core/src/
 ARG BUILD_VERSION
 RUN if [ -n "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
 
-RUN mvn install && rm -rf chaosengine-test*
+RUN mvn -B install && rm -rf chaosengine-test*
 
 FROM openjdk:11-jre-slim AS develop
 EXPOSE 8080
