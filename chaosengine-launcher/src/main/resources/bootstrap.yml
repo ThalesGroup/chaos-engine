@@ -12,6 +12,10 @@ spring:
       port: ${VAULT_PORT:8200}
 
 server:
+  servlet.session:
+    timeout: 15m
+    cookie:
+      max-age: 15m
   port: ${PORT:8080}
 
 aws:
