@@ -13,7 +13,7 @@ function start_engine(){
   rm $LIB/chaosengine-launcher*.jar
   rm $LIB/chaosengine-test-utilities-*.jar
 
-  java -Djava.security.egd=file:/dev/./urandom -classpath $ROOT_DIR:$LIB/* -Dloader.path=$LIB -jar $ROOT_DIR/chaosengine.jar &
+  java -Djava.security.egd=file:/dev/./urandom -classpath $ROOT_DIR:$LIB/* -Dloader.path=$LIB -Dchaos.security.enabled=false -jar $ROOT_DIR/chaosengine.jar &
 }
 
 function wait_for_engine() {

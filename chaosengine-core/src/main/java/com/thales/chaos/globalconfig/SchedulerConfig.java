@@ -18,12 +18,16 @@
 package com.thales.chaos.globalconfig;
 
 import com.thales.chaos.util.ErrorUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @Configuration
+@EnableScheduling
+@ConditionalOnProperty(name = "scheduling", havingValue = "true", matchIfMissing = true)
 public class SchedulerConfig implements SchedulingConfigurer {
     private static final int POOL_SIZE = 10;
 
