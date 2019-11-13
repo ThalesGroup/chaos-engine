@@ -18,8 +18,8 @@
 package com.thales.chaos.admin;
 
 import com.thales.chaos.admin.enums.AdminState;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +32,15 @@ public class AdminController {
     @Autowired
     private AdminManager adminManager;
 
-    @ApiOperation(value = "Get Running State", notes = "Get the current administrative state of the Chaos Engine")
+    @Operation(summary = "Get Running State", description = "Get the current administrative state of the Chaos Engine")
     @GetMapping("/state")
     public AdminState getAdminState () {
         return adminManager.getAdminState();
     }
 
-    @ApiOperation(value = "Set Running State", notes = "Controls whether or not the Chaos Engine will take any action on endpoints. " + "In a STARTED state, all actions can be performed. In a DRAIN state, no new experiments can be created, but existing experiments can still self-heal and finalize. " + "In a PAUSED state, no activity is done.")
+    @Operation(summary = "Set Running State", description = "Controls whether or not the Chaos Engine will take any action on endpoints. " + "In a STARTED state, all actions can be performed. In a DRAIN state, no new experiments can be created, but existing experiments can still self-heal and finalize. " + "In a PAUSED state, no activity is done.")
     @PostMapping("/state")
-    public void setAdminState (@ApiParam(value = "The New Admin State.", required = true) @RequestParam("state") AdminState newAdminState) {
+    public void setAdminState (@Parameter(description = "The New Admin State.", required = true) @RequestParam("state") AdminState newAdminState) {
         log.info("Setting admin state to {}", newAdminState);
         adminManager.setAdminState(newAdminState);
     }
