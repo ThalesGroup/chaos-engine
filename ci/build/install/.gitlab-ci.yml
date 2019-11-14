@@ -18,7 +18,6 @@ install:
     paths:
       - "*/target"
       - "*/*/target"
-      - $OPEN_API_SPEC_FILE_NAME
     reports:
       junit:
         - "*/target/surefire-reports/TEST-*.xml"
