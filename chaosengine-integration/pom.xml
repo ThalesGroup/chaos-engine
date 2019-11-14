@@ -42,6 +42,7 @@
                                 <chaos.security.enabled>false</chaos.security.enabled>
                                 <spring.application.admin.enabled>true</spring.application.admin.enabled>
                                 <scheduling>false</scheduling>
+                                <spring.cloud.vault.generic.enabled>false</spring.cloud.vault.generic.enabled>
                             </environmentVariables>
                         </configuration>
                         <executions>
