@@ -37,7 +37,6 @@
                         <artifactId>spring-boot-maven-plugin</artifactId>
                         <configuration>
                             <mainClass>com.thales.chaos.ChaosEngine</mainClass>
-                            <skip>false</skip>
                             <environmentVariables>
                                 <holidays>DUM</holidays>
                                 <chaos.security.enabled>false</chaos.security.enabled>
@@ -51,12 +50,18 @@
                                 <goals>
                                     <goal>start</goal>
                                 </goals>
+                                <configuration>
+                                    <skip>false</skip>
+                                </configuration>
                             </execution>
                             <execution>
                                 <id>post-integration-test</id>
                                 <goals>
                                     <goal>stop</goal>
                                 </goals>
+                                <configuration>
+                                    <skip>false</skip>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
