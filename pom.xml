@@ -12,6 +12,7 @@
         <module>chaosengine-notifications</module>
         <module>chaosengine-schedule</module>
         <module>chaosengine-test-utilities</module>
+        <module>chaosengine-integration</module>
     </modules>
     <packaging>pom</packaging>
 
