@@ -17,18 +17,14 @@
             <groupId>com.thales.chaos</groupId>
             <artifactId>chaosengine-launcher</artifactId>
             <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.thales.chaos</groupId>
             <artifactId>chaosengine-core</artifactId>
             <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>de.codecentric</groupId>
-            <artifactId>spring-boot-admin-starter-server</artifactId>
-            <version>2.1.6</version>
-        </dependency>
-
     </dependencies>
 
     <profiles>
