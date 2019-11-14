@@ -4,8 +4,6 @@ install:
     - branches
     - tags
     - merge_requests
-  variables:
-    OPEN_API_SPEC_FILE_NAME: "api-docs.json"
   script:
     - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent install -P openapi
   cache:
