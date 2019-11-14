@@ -5,6 +5,14 @@
     <groupId>com.thales.chaos</groupId>
     <artifactId>chaosengine</artifactId>
     <version>1.2.0-SNAPSHOT</version>
+    <profiles>
+        <profile>
+            <id>openapi</id>
+            <modules>
+                <module>chaosengine-integration</module>
+            </modules>
+        </profile>
+    </profiles>
     <modules>
         <module>chaosengine-experiments</module>
         <module>chaosengine-core</module>
@@ -12,7 +20,6 @@
         <module>chaosengine-notifications</module>
         <module>chaosengine-schedule</module>
         <module>chaosengine-test-utilities</module>
-        <module>chaosengine-integration</module>
     </modules>
     <packaging>pom</packaging>
 
