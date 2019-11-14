@@ -46,6 +46,7 @@
                                 <holidays>DUM</holidays>
                                 <chaos.security.enabled>false</chaos.security.enabled>
                                 <spring.application.admin.enabled>true</spring.application.admin.enabled>
+                                <scheduling>false</scheduling>
                             </environmentVariables>
                         </configuration>
                         <executions>
