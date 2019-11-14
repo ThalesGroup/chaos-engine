@@ -35,7 +35,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class ChaosWebSecurity {
     private static final Logger log = LoggerFactory.getLogger(ChaosWebSecurity.class);
     @Configuration
-    @ConditionalOnMissingBean(WebSecurityConfigurerAdapter.class)
+    @ConditionalOnMissingBean(ChaosWebSecurityConfigurerAdapter.class)
     public static class ChaosWebSecurityDisabled extends WebSecurityConfigurerAdapter {
         @Autowired
         private AuthenticationSuccessHandler successHandler;
