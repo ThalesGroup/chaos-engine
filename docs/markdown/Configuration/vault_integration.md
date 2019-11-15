@@ -1,8 +1,13 @@
 # Vault Integration
 
-## Description
-
 Chaos Engine makes use of Vault, both to securely store information. This information can be rotated in Vault and automatically refresh in runtime in Chaos Engine.
+
+## Secret Location
+
+Secrets should be configured under the path **/secrets/chaosengine**. If using Spring Profiles, it will first try to look under **secrets/chaosengine/{profile-name}**.
+
+!!! tip
+    If overriding the value for `spring.application.name`, then that application name will be used for the secrets path instead of **chaosengine**.
 
 ## SDK
 
