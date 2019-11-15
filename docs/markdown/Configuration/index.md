@@ -2,6 +2,8 @@
 
 Chaos Engine can be configured from multiple sources. In addition, the naming conventions take advantage of Spring Relaxed Bindings, meaning a property can be identified with multiple naming conventions.
 
+Each modules own documentation will indicate what specific configuration it requires.
+
 ## Configuration Sources
 
 ### **application.properties** File
