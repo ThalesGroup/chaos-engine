@@ -20,7 +20,7 @@ Several environment variables control how AWS EC2 is instantiated. ** The presen
 | `aws.rds` | The presence of this key controls if this module is loaded. | N/A |
 | `aws.rds.filter.<tag_name>` | Each key will be used for filtering nodes. See Node Discovery for more information. e.g. *aws.rds.filter.ChaosVictim*=*true* | N/A |
 
-# Node Discovery
+## Node Discovery
 
 The AWS RDS Module discovers two sets of Containers. The first set represents AWS DB Clusters, and the second represents AWS DB Instances not part of the original clusters.
 
@@ -42,53 +42,53 @@ The sub-properties of **aws.rds.filter** are used for creating required tag filt
 
 Because RDS is treated as a SAAS solution, and a certain amount of redundancy is expected to be handled by the platform, we intentionally do not experiment on all replicas of given containers, as it is unlikely for such a scenario to occur without a complete region outage. To keep our experiments fair with what real world scenarios we can reasonably expect, when an experiment is ran against RDS, a single Availability Zone that is in use is selected, and experiments are isolated to that AZ.
 
-# Cluster Experiments
+## Cluster Experiments
 
-## Instance Rebooted
+### Instance Rebooted
 
 Rebooting a number of instances in an RDS Cluster should be completely seemless, as there are still a number of instances available to handle requests. This may cause some delays in processing a larger amount of requests, which may cause issues upstream from the request (i.e., low CPU usage on application servers as they wait for DB response triggering autoscaling). Because of the nature of clusters, the experiment will choose a random number of instances in a cluster to reboot, such that at least 1 will be rebooted, but at most N-1 will be rebooted.
 
-### Mechanism
+#### Mechanism
 
 API: [API RebootDBInstance]
 
 The RebootDBInstance API is called once for every DB Instance to be rebooted in the cluster.
 
-#### Health Check
+##### Health Check
 
 API: [API DescribeDBInstances]
 
 The results of DescribeDBInstances are parsed for all instances in the experiment. If all instance statuses are "available", the experiment is finished.
 
-#### Self Healing
+##### Self Healing
 
 The system is completely capable of self healing from the AWS Perspective. This experiment only tests stability of systems that rely on the databases, and not the database system itself.
 
-## Failover Initiated
+### Failover Initiated
 
 A failover may occur in an RDS Cluster at any time. That failover may be part of a larger system failure. By initiating the failover independently, we can be sure that the failover reconciliation does not cause an issue downstream if and when it occurs naturally.
 
-### Mechanism
+#### Mechanism
 
 API:[API FailoverDBCluster]
 
 The FailoverDBCluster API is called for the DB Cluster Identifier of the container.
 
-#### Health Check
+##### Health Check
 
 API: [API DescribeDBInstances]
 
 The results of DescribeDBInstances are parsed for all instances in the cluster. If all instance statuses are "available", the experiment is finished.
 
-#### Self Healing
+##### Self Healing
 
 The system is completely capable of self healing from the AWS Perspective. This experiment only tests stability of systems that rely on the databases, and not the database system itself.
 
-## Backup In Progress
+### Backup In Progress
 
 Initiating a backup of a database may cause extra latency, database locks, or other odd behaviour. Normally backups should be scheduled to occur during a low usage maintenance period, but there are several scenarios where they may occur during normal operations. This includes manually initiated backups prior to a Change Request being fulfilled, or services that don't actually have periods of complete downtime.
 
-### Mechanism
+#### Mechanism
 
 API: [API CreateDBClusterSnapshot]
 
@@ -96,79 +96,79 @@ The CreateDBClusterSnapshot API is called for the specific DB Cluster. A snapsho
 
 In the event that a snapshot is failed to create due to Snapshot Quota being exceeded, the DeleteDBClusterSnapshot and DeleteDBSnapshot API's are called for any old Chaos snapshots that were not automatically cleaned up after their experiment. The experiment will be retried once.
 
-#### Health Check
+##### Health Check
 
 API: [API DescribeDBClusters]
 
 A DescribeDBClusters request is run against the Cluster ID being experimented on. If the state is "backing-up", then the experiment is still in progress.
 
-#### Self Healing
+##### Self Healing
 
 API: [API DeleteDBClusterSnapshot]
 
 If the experiment takes too long, the DeleteDBClusterSnapshot API is called. Deleting a snapshot in progress causes the backup to be cancelled.
 
-#### Finalization
+##### Finalization
 
 API: [API DeleteDBClusterSnapshot]
 
 Once the experiment is over, the DeleteDBClusterSnapshot API is called to delete the snapshot.
 
-# Instance Experiments
+## Instance Experiments
 
-## Instance Rebooted
+### Instance Rebooted
 
 Rebooting an instance outside of a cluster tests a random failure of the instance. AWS is expected to bring the resource back up, but we need to ensure that applications dependent on the database are not negatively impacted during the downtime.
 
-### Mechanism
+#### Mechanism
 
 API: [API RebootDBInstance]
 
 The Reboot DB Instance API is called for the individual instance Identifier.
 
-#### Health Check
+##### Health Check
 
 API: [API DescribeDBInstances]
 
 The Describe DB Instance API is called for the individual instance identifier. If the instance status is "available", the experiment is finished.
 
-#### Self Healing
+##### Self Healing
 
 The system is completely capable of self healing from the AWS Perspective. This experiment only tests stability of systems that rely on the databases, and not the database system itself.
 
-## Security Groups Changed
+### Security Groups Changed
 
 Changing the Security Groups on a database tests what happens in applications that depend on the database when a network failure occurs while connecting. Unlike the Instance Rebooted test, this does not necessarily have a graceful disconnect from all existing resources. In addition, triggers in the database may still occur, and transactions may be held open.
 
-### Mechanism
+#### Mechanism
 
 API: [API DescribeDBInstances], [API ModifyDBInstance]
 
 The DescribeDBInstances API is called to pull an existing list of Security Groups associated to a database instance. After looking up (and creating, if necessary) a security group to move the database into, the change is done using the modifyDBInstance API Call.
 
-#### Health Check
+##### Health Check
 
 API: [API DescribeDBInstances]
 
 The DescribeDBInstances API call is used to get the list of actual Security Groups applied to instances. This list is compared to the list recorded at the start of the experiment, and if they are exactly equal, the experiment is finished.
 
-#### Self Healing
+##### Self Healing
 
 API: [API ModifyDBInstance]
 
 The ModifyDBInstance API call is used to revert the Security Groups of the DB Instance back to the original values.
 
-### Automatic Security Group Creation Mechanism
+#### Automatic Security Group Creation Mechanism
 
 API: [API DescribeSecurityGroups], [API CreateSecurityGroup], [API DescribeVpcs]
 
 The Chaos Security Group creation requires the AWS EC2 module to load. The Default VPC is looked up using the DescribeVpcs API, and cached. The Security Groups are looked up using the DescribeSecurityGroup API, and parsed for a security group named *ChaosEngine Security Group*. If one is found, it is cached and used. If it is not found, it is created using the CreateSecurityGroup API, and cached for use.
 
-## Backup In Progress
+### Backup In Progress
 
 Initiating a backup of a database may cause extra latency, database locks, or other odd behaviour. Normally backups should be scheduled to occur during a low usage maintenance period, but there are several scenarios where they may occur during normal operations. This includes manually initiated backups prior to a Change Request being fulfilled, or services that don't actually have periods of complete downtime.
 
-### Mechanism
+#### Mechanism
 
 API: [API CreateDBSnapshot]
 
@@ -176,29 +176,29 @@ The CreateDBSnapshot API is called for the specific DB Instance. A snapshot iden
 
 In the event that a snapshot is failed to create due to Snapshot Quota being exceeded, the DeleteDBClusterSnapshot and DeleteDBSnapshot API's are called for any old Chaos snapshots that were not automatically cleaned up after their experiment.
 
-#### Health Check
+##### Health Check
 
 API:[API DescribeDBInstances]
 
 A DescribeDBInstances request is run against the instance ID being experimented on. If the state is "backing-up", then the experiment is still in progress.
 
-#### Self Healing
+##### Self Healing
 
 API: [API DeleteDBSnapshot]
 
 If the experiment takes too long, the DeleteDBSnapshot API is called. Deleting a snapshot in progress causes the backup to be cancelled.
 
-#### Finalization
+##### Finalization
 
 API: [API DeleteDBSnapshot]
 
 Once the experiment is over, the DeleteDBSnapshot API is called to delete the snapshot.
 
-# Health Check
+## Health Check
 
 When the Health Check endpoint of the Chaos Engine is polled, it will test if the AWS RDS API is returning without errors. It does so by running a DescribeDBInstances API and DescribeDBClusters, and discarding the results. If any exceptions are thrown, the API Status returns as failed, allowing any Health Check mechanisms for the Chaos Engine to run.
 
-# Snapshot Cleanup
+## Snapshot Cleanup
 
 API: [API DescribeDBSnapshots], [API DeleteDBSnapshot], [API DescribeDBClusterSnapshots], [API DeleteDBClusterSnapshot]
 
