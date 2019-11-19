@@ -5,6 +5,10 @@ Documentation: &documentation
     BUILD_PATH: '.public'
   dependencies:
     - version
+  only:
+    - branches
+    - tags
+    - merge_requests
   cache:
     key: ${CI_COMMIT_REF_SLUG}-pip
     paths:
