@@ -23,4 +23,6 @@ pages:
   variables:
     BUILD_PATH: 'public'
   stage: repackage
-  when: manual
+  only:
+    refs:
+      - 'master'
