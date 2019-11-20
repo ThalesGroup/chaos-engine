@@ -1,7 +1,7 @@
 site_name: Chaos Engine
 site_description: 'A tool for automated Chaos Experimentation'
-repo_url: https://gitlab.gemaltocloud.com/chaos/chaos-engine
-repo_name: chaos/chaos-engine @ GitLab
+repo_url: https://github.com/gemalto/chaos-engine
+repo_name: chaos-engine @ GitHub
 docs_dir: markdown
 
 strict: true
@@ -27,10 +27,9 @@ markdown_extensions:
   - pymdownx.superfences
 
 extra:
-  repo_icon: gitlab
   social:
     - type: tags
-      link: 'https://jira.gemalto.com/secure/RapidBoard.jspa?rapidView=17823&useStoredSettings=true'
+      link: 'https://github.com/gemalto/chaos-engine/issues'
 
 copyright: |
   &copy; 2019 Thales Group<br />

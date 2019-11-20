@@ -67,7 +67,7 @@ API: <https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAutoS
 
 EC2 instances managed by AWS Autoscaling Groups will use an alternative method for their FIRST execution of self healing. Instead of using whatever self healing mechanism there is, the engine will use the AWS Autoscaling Group API and mark the instance as Unhealthy. The Autoscaling Group should pick this up and recreate the instance.
 
-API: <https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_SetInstanceHealth.html>
+API: [API SetInstanceHealth]
 
 ## SSH Experiment Support
 
@@ -190,6 +190,7 @@ As a terminated instance cannot be restored, no self healing mechanism has been 
 [API DescribeVpcs]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html
 [API TerminateInstances]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TerminateInstances.html
 [API DescribeAutoScalingGroups]: https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAutoScalingGroups.html
+[API SetInstanceHealth]: https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_SetInstanceHealth.html
 
 [AWS SDK for Java]: https://aws.amazon.com/sdk-for-java/
 [AWS CLI]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html#options

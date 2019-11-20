@@ -1,3 +1,10 @@
+FROM python:3-alpine AS build-docs
+WORKDIR /mkdocs
+COPY ci/docs/mkdocs_requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+COPY docs/ docs/
+RUN mkdocs build --config-file docs/mkdocs.yml --site-dir help/
+
 FROM maven:3.6-jdk-11-slim AS build-env
 WORKDIR /chaosengine
 COPY pom.xml ./
@@ -13,6 +20,7 @@ COPY chaosengine-experiments ./chaosengine-experiments/
 #RUN mvn dependency:go-offline -Dsilent=true
 COPY chaosengine-launcher/src/ ./chaosengine-launcher/src/
 COPY chaosengine-core/src/ ./chaosengine-core/src/
+COPY --from=build-docs /mkdocs/docs/help ./chaosengine-launcher/src/main/resources/static/help/
 
 ARG BUILD_VERSION
 RUN if [ -n "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi

@@ -13,5 +13,5 @@ The Administrative State of Chaos Engine controls the workflow of Experiments. T
 
 For more information on Experiment Lifecycles, see the [Experiment Manager] documentation. 
 
-[Experiment Manager]: ../Experiment_Modules/index.md
+[Experiment Manager]: ../Core_Modules/experiment_manager.md
 [REST API]: /rest
