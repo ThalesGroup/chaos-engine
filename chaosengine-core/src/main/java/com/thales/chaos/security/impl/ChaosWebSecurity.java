@@ -95,7 +95,7 @@ public class ChaosWebSecurity {
 
         @Override
         public void configure (WebSecurity web) {
-            web.ignoring().antMatchers("/health");
+            web.ignoring().antMatchers("/health", "/help", "/help/**");
         }
 
         @Override
