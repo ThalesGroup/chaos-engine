@@ -1,23 +1,18 @@
 clamav_scan:
   variables:
     SCAN_LOG: "av.log"
-    DEFINITIONS_PATH: ".clamav/"
   stage: test
   dependencies:
     - install
   image:
-    name: alpine
+    name: thalesgroup/clamav4pipeline:latest
   only:
     - branches
     - tags
     - merge_requests
-  cache:
-    key: clamav-definitions
-    paths:
-      - ${DEFINITIONS_PATH}
   before_script: []
   script:
-    - ./ci/test/clamav/clamav_scan.sh ${SCAN_LOG} ${DEFINITIONS_PATH}
+    - scan.sh -d . -l ${SCAN_LOG}
   artifacts:
     paths:
       - ${SCAN_LOG}
