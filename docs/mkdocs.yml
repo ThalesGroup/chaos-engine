@@ -17,8 +17,8 @@ theme:
     code: Fira Code
   feature:
     tabs: true
-  logo:
-    icon: 'cloud_off'
+  favicon: './images/favicon.ico'
+  logo: './images/icon.png'
 
 markdown_extensions:
   - admonition
