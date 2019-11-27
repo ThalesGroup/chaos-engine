@@ -27,6 +27,9 @@ Activate production profile, make sure that following environment variables are 
 
 Verify that the HTTPS scheme is used for communication with Vault. Environment variable *VAULT\_SCHEME* must be set to *HTTPS* or left empty.
 
+## Secure Chaos Engine REST API
+[Follow REST Security documentation](Configuration/security.md)
+
 ## Vault
 
 Apply following rules:
