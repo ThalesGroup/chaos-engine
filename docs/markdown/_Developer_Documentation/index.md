@@ -16,11 +16,11 @@ This documentation is provided to help ensure that new contributions to the Chao
 
 ### Git
 
-Chaos Engine is managed in the Cloud Services Platform Team Gitlab.
+Chaos Engine is managed in the [Gemalto GitHub](https://github.com/gemalto/chaos-engine) repository.
 
 #### Protected Branches
 
-The **master** and **develop** branches should not have direct pushes. All work should be done in sub-branches and managed through Merge Requests. Merge requests should be reviewed by another person in the Chaos Engine team.
+The **master** and **develop** branches should not have direct pushes. All work should be done in sub-branches and managed through Pull Requests. Pull requests should be reviewed by a person in the Thales Chaos Engine team.
 
 ## IDE
 
