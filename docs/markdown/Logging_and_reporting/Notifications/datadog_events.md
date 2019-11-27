@@ -12,7 +12,7 @@ There are two types of events which differs event title:
 - Chaos Message - general notifications 
 
 Every Event consists of title (Chaos Event prefix + experiment method or Chaos Message depending on type), message (detailed description of an event, see Chaos Event Types) and set of tags.
-Follwing tags are assinged to each event:
+Following tags are assigned to each event:
 
 #### Chaos Experiment Event Structure
 
