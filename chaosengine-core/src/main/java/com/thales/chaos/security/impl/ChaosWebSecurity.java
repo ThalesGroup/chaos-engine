@@ -95,7 +95,8 @@ public class ChaosWebSecurity {
 
         @Override
         public void configure (WebSecurity web) {
-            web.ignoring().antMatchers("/health", "/help", "/help/**");
+            web.ignoring()
+               .antMatchers("/health", "/help", "/help/**", "/v3/api-docs", "/swagger-ui.html", "/swagger-ui/**");
         }
 
         @Override
@@ -105,6 +106,8 @@ public class ChaosWebSecurity {
                 .exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
+                .anonymous()
+                .disable()
                 .sessionManagement()
                 .maximumSessions(1)
                 .and()

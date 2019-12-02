@@ -18,6 +18,7 @@
 package com.thales.chaos.health;
 
 import com.thales.chaos.health.enums.SystemHealthState;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,10 @@ public class HealthController {
     HealthController () {
     }
 
-    @Operation(summary = "Health Check Endpoint", description = "Returns HTTP 200 if the system believes it is healthy, or HTTP 5xx errors otherwise.")
+    @Operation(summary = "Health Check Endpoint",
+               description = "Returns HTTP 200 if the system believes it is healthy, or HTTP 5xx errors otherwise.")
     @GetMapping
+    @Hidden
     public SystemHealthState getHealth () {
         switch (healthManager.getHealth()) {
             case OK:
