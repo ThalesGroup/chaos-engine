@@ -10,8 +10,8 @@ theme:
   name: 'material'
   custom_dir: 'theme'
   palette:
-    primary: 'blue grey'
-    accent: 'deep orange'
+    primary: 'light blue'
+    accent: 'light blue'
   font:
     text: Fira Sans Condensed
     code: Fira Code
