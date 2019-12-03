@@ -1,27 +1,7 @@
 # Quick Start Guide
 
 ## Step 1: Install Docker
-### Ubuntu
-```bash
-sudo apt-get update
-sudo apt-get --yes  install \
-       apt-transport-https \
-       ca-certificates \
-       curl \
-       gnupg-agent \
-       software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) \
-      stable" 
-sudo apt-get update
-sudo apt-get --yes  install docker-ce docker-ce-cli containerd.io
-sudo usermod -aG docker $USER
-```
-
-### Other Distributions
-[Install manual for other distributions](https://docs.docker.com/install/linux/docker-ce/binaries/)
+Follow the docker instalation [instructions here](https://docs.docker.com/install/)
 
 ### Verify Docker Installation
 To verify Docker installation run `docker ps`.
@@ -38,12 +18,10 @@ Got permission denied while trying to connect to the Docker daemon socket at uni
 ```
 
 ## Step 2: Install Docker Compose
-### Linux
-```bash
-sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-```
-#### Verify Docker Compose Installation
+
+For detailed instructions on how to install docker compose [see.](https://docs.docker.com/compose/install/)
+
+### Verify Docker Compose Installation
 ```bash
 ubuntu@host:~$ docker-compose -v
 docker-compose version 1.25.0, build 0a186604
