@@ -36,46 +36,19 @@ Cloning into 'chaos-engine'...
 ...
 Checking connectivity... done.
 ```
-## Step 4: Build Chaos Engine
-Run `docker-compose build` to create new a Chaos Engine image
+## Step 4: Pull Chaos Engine Image
+
+Pull latest Chaos Engine image from DockerHub.
+
 ```bash
 ubuntu@host:~$ cd chaos-engine/
-ubuntu@host:~/chaos-engine$ docker-compose build
-
+ubuntu@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 ```
-If all goes fine you should see similar output
-```bash
-[INFO] Reactor Summary for chaos-engine 1.2.0-SNAPSHOT:
-[INFO] 
-[INFO] chaosengine-test-utilities ......................... SUCCESS [  0.927 s]
-[INFO] chaos-engine ....................................... SUCCESS [  1.133 s]
-[INFO] chaosengine-launcher ............................... SUCCESS [  2.004 s]
-[INFO] chaosengine-core ................................... SUCCESS [ 42.156 s]
-[INFO] chaosengine-experiments ............................ SUCCESS [  0.100 s]
-[INFO] chaosengine-kubernetes ............................. SUCCESS [02:19 min]
-[INFO] chaosengine-aws-ec2 ................................ SUCCESS [ 24.819 s]
-[INFO] chaosengine-aws-rds ................................ SUCCESS [  8.912 s]
-[INFO] chaosengine-pcf .................................... SUCCESS [ 33.116 s]
-[INFO] chaosengine-notifications .......................... SUCCESS [  0.027 s]
-[INFO] chaosengine-notif-slack ............................ SUCCESS [  3.918 s]
-[INFO] chaosengine-notif-datadog .......................... SUCCESS [ 17.193 s]
-[INFO] chaosengine-schedule ............................... SUCCESS [  0.023 s]
-[INFO] chaosengine-schedule-canada ........................ SUCCESS [  1.274 s]
-[INFO] chaosengine-schedule-czech-republic ................ SUCCESS [  1.339 s]
-[INFO] chaosengine-schedule-france ........................ SUCCESS [  1.342 s]
-[INFO] chaosengine-schedule-usa ........................... SUCCESS [  3.775 s]
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  04:42 min
-[INFO] Finished at: 2019-11-28T17:04:36Z
-[INFO] ------------------------------------------------------------------------
 
-Successfully built 0cf450320fc1
-Successfully tagged chaos-engine_chaosengine:latest
-```
 ## Step 5: Configure
+
 ### Basic Framework Setup
+
 ```bash
 ubuntu@host:~/chaos-engine$ echo "holidays=DUM
 VAULT_TOKEN=00000000-0000-0000-0000-000000000000

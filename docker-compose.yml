@@ -1,6 +1,7 @@
 version: '3.4'
 services:
   chaosengine:
+    image: thalesgroup/chaos-engine:latest
     build:
       context: .
       target: develop
