@@ -1,4 +1,4 @@
-#Quick Start Guide
+# Quick Start Guide
 
 ## Step 1: Install Docker
 ### Ubuntu
