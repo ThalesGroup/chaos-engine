@@ -1,19 +1,19 @@
 # Quick Start Guide
 
 ## Step 1: Install Docker
-Follow the docker instalation [instructions here](https://docs.docker.com/install/)
+Follow the Docker instalation [instructions here](https://docs.docker.com/install/)
 
 ### Verify Docker Installation
 To verify Docker installation run `docker ps`.
 
 Expected output is:
 ```bash
-ubuntu@host:~$ docker ps
+user@host:~$ docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ```
 If the output looks similar to following example open new terminal session or simply logout and login again.
 ```bash
-ubuntu@host:~$ docker ps
+user@host:~$ docker ps
 Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/containers/json: dial unix /var/run/docker.sock: connect: permission denied
 ```
 
@@ -23,7 +23,7 @@ For detailed instructions on how to install docker compose [see.](https://docs.d
 
 ### Verify Docker Compose Installation
 ```bash
-ubuntu@host:~$ docker-compose -v
+user@host:~$ docker-compose -v
 docker-compose version 1.25.0, build 0a186604
 ```
 
@@ -31,7 +31,7 @@ If the command `docker-compose` fails after installation, check your path. You c
 
 ## Step 3: Download Latest Chaos Engine Sources
 ```bash
-ubuntu@host:~$ git clone https://github.com/gemalto/chaos-engine
+user@host:~$ git clone https://github.com/gemalto/chaos-engine
 Cloning into 'chaos-engine'...
 ...
 Checking connectivity... done.
@@ -41,8 +41,8 @@ Checking connectivity... done.
 Pull latest Chaos Engine image from DockerHub.
 
 ```bash
-ubuntu@host:~$ cd chaos-engine/
-ubuntu@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
+user@host:~$ cd chaos-engine/
+user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 ```
 
 ## Step 5: Configure
@@ -50,7 +50,7 @@ ubuntu@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 ### Basic Framework Setup
 
 ```bash
-ubuntu@host:~/chaos-engine$ echo "holidays=DUM
+user@host:~/chaos-engine$ echo "holidays=DUM
 VAULT_TOKEN=00000000-0000-0000-0000-000000000000
 VAULT_SCHEME=http
 VAULT_HOST=vault
@@ -81,18 +81,18 @@ Example content of `vault-secrets.json `
 If you are going to ship data to DataDog run following command where `$YOUR_API_KEY` will be replaced by your real DataDog API key.
 
 ```bash
-ubuntu@host:~/chaos-engine$ echo "DD_API_KEY=$YOUR_API_KEY" > .datadog_api_key 
+user@host:~/chaos-engine$ echo "DD_API_KEY=$YOUR_API_KEY" > .datadog_api_key 
 ```
 #### Disable DataDog
 If you don't need DataDog integration keep `.datadog_api_key` empty 
 ```bash
-ubuntu@host:~/chaos-engine$ touch .datadog_api_key 
+user@host:~/chaos-engine$ touch .datadog_api_key 
 ```
 
 ## Step 6: Run
 Start the Engine by running `docker-compose up`
 ```bash
-ubuntu@host:~/chaos-engine$ docker-compose up
+user@host:~/chaos-engine$ docker-compose up
 ```
 When you see `Experiments total count: 0` your Chaos Engine instance is up and ready
 ```JSON
@@ -102,5 +102,5 @@ chaosengine_1   | {"@timestamp":"2019-11-28T18:07:36.491Z","@version":"1","messa
 ## Step 7: Enjoy
 Manualy trigger experiment execution by running
 ```bash
-ubuntu@host:~/chaos-engine$ curl -X POST "http://localhost:8080/experiment/start" -H  "accept: */*"
+user@host:~/chaos-engine$ curl -X POST "http://localhost:8080/experiment/start" -H  "accept: */*"
 ```
