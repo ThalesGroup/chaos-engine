@@ -19,7 +19,7 @@ Got permission denied while trying to connect to the Docker daemon socket at uni
 
 ## Step 2: Install Docker Compose
 
-For detailed instructions on how to install docker compose [see.](https://docs.docker.com/compose/install/)
+For detailed instructions on how to install docker compose [see official Docker documentation.](https://docs.docker.com/compose/install/)
 
 ### Verify Docker Compose Installation
 ```bash
