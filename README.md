@@ -18,6 +18,10 @@ The Chaos Engine instance runs in a Docker image, and will need network access t
 
 See the [documentation] for more information.
 
+## Getting Started
+
+Please see our [documentation] for configuration instructions.
+
 ## Contributing
 
 Chaos Engine is being actively developed, but we welcome public participation. Please note that we have internal processes that may slow down or require alterations to any pull requests. We may also have internal development on similar features. You can contact us for more information.
