@@ -1,7 +1,14 @@
 # 
 ![Chaos Engine Full Logo](./images/chaos-engine-full.png)
 
-Chaos Engine is a tool designed to create, watch, and complete Chaos Engineering experiments in Cloud Platforms. These experiments are designed to find faults in the combined application stack in a semi-controlled manner.
+Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the [Principles of Chaos](http://principlesofchaos.org/) to create random faults (*experiments*) that could reasonably occur in a real application deployment.
+
+Chaos Engine makes intelligent decisions in how and when to create experiments. When properly configured, experiments can be restricted to occur only **during** normal business hours (i.e., no pager alerts).
+
+Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.
+
+!!! danger
+    Running chaos experiments in a non-resilient system can result in significant faults. We highly recommend you use a graduated approach to chaos implementation, and build confidence in your development and staging environments before attempting the same in your production environment.
 
 ## Supported Experiments
 
