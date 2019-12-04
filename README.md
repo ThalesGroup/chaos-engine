@@ -24,8 +24,9 @@ Chaos Engine is being actively developed, but we welcome public participation. P
 
 ## Contact
 
-WIP
-
+You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
 [documentation]: http://gemalto.github.com/chaos-engine/
+[E-mail us]: mailto:dl_chaos_engine@thalesgroup.com
+[Slack]: https://thaleschaosengine.slack.com/
