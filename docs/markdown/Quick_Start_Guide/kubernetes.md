@@ -10,7 +10,7 @@ The script will deploy:
 
 + Chaos Engine, Vault containers   
 + Vault Service
-+ Vault and Chaos Engine load balancer
++ Chaos Engine load balancer
     
 
 ## Step 1: Vault deployment
@@ -93,38 +93,25 @@ spec:
 EOF
 ```
 
-### Create Load Balancer
+### Provision Vault
 
-Make the Vault UI accessible from outside the cluster.
-```yaml
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Service
-metadata:
-  name: vault-lb
-  labels:
-    app: vault-lb
-spec:
-  ports:
-    - port: 8200
-      targetPort: 8200
-  selector:
-    app: vault
-  type: LoadBalancer
-EOF
+#### Create a config file
+Create a config file called `vault-secrets.json` and add your required variables. Expected input format is JSON. You can find config files examples in [Configuration Examples](./config_examples.md).
+
+#### Feeding Vault with data
+
+Run folowing sequence of commands to feed data to Vault
+``` bash
+CONTAINER=$(kubectl get pods | grep vault | awk '{print $1}')
+kubectl cp vault-secrets.json $CONTAINER:/tmp/ 
+kubectl exec -it $CONTAINER /bin/sh
+export VAULT_ADDR='http://127.0.0.1:8200';
+vault login 00000000-0000-0000-0000-000000000000;
+vault kv put secret/chaosengine - < /tmp/vault-secrets.json
+rm /tmp/vault-secrets.json
+exit
+
 ```
-
-### Add Configuration Properties to Vault
-
-* First of get the IP of the `vault-lb`. To do so run following command.
-```bash
-kubectl describe services vault-lb | grep 'LoadBalancer\ Ingress' | awk '{print $3}'
-```
-* Go to `http://$VAULT_LB_IP:8200` and authenticate using `vault-token` you set while creating secrets.
-* Click on `Create secrets` and set your required configuration properties. 
-
-!!! Note
-    All properties must be created under `chaosengine` path.
 
 
 

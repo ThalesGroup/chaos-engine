@@ -62,20 +62,6 @@ spec:
               value: "false"
             - name: automatedMode
               value: "false"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: vault-lb
-  labels:
-    app: vault-lb
-spec:
-  ports:
-    - port: 8200
-      targetPort: 8200
-  selector:
-    app: vault
-  type: LoadBalancer
 
 ---
 apiVersion: v1
