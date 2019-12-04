@@ -56,7 +56,8 @@ public class AdminController {
                                     content = @Content(schema = @Schema()))
                })
     @PostMapping("/state")
-    public void setAdminState (@Parameter(description = "The New Admin State.", required = true) @RequestParam("state") AdminState newAdminState) {
+    public void setAdminState (@Parameter(description = "The New Admin State.", required = true) @RequestParam("state")
+                                       AdminState newAdminState) {
         log.info("Setting admin state to {}", newAdminState);
         adminManager.setAdminState(newAdminState);
     }
