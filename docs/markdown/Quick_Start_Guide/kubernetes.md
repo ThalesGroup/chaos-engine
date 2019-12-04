@@ -102,15 +102,14 @@ Create a config file called `vault-secrets.json` and add your required variables
 
 Run folowing sequence of commands to feed data to Vault
 ``` bash
-CONTAINER=$(kubectl get pods | grep vault | awk '{print $1}')
-kubectl cp vault-secrets.json $CONTAINER:/tmp/ 
-kubectl exec -it $CONTAINER /bin/sh
+CONTAINER=$(kubectl get pods -o json | jq -r  ' .items[] | select(.kind == "Pod") | select(.metadata.name|startswith("vault")) | .metadata.name')
+kubectl cp vault-secrets.json $CONTAINER:/tmp/
+cat <<EOF | kubectl exec -it $CONTAINER /bin/sh -
 export VAULT_ADDR='http://127.0.0.1:8200';
-vault login 00000000-0000-0000-0000-000000000000;
+vault login 00000000-0000-0000-0000-000000000000 ;
 vault kv put secret/chaosengine - < /tmp/vault-secrets.json
-rm /tmp/vault-secrets.json
-exit
-
+rm /tmp/vault-secrets.json 
+EOF
 ```
 
 
