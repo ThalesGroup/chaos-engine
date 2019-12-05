@@ -7,7 +7,7 @@ Chaos Engine makes intelligent decisions in how and when to create experiments. 
 
 Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.
 
-!!! danger
+!!! warning
     Running chaos experiments in a non-resilient system can result in significant faults. We highly recommend you use a graduated approach to chaos implementation, and build confidence in your development and staging environments before attempting the same in your production environment.
 
 ## Supported Experiments
