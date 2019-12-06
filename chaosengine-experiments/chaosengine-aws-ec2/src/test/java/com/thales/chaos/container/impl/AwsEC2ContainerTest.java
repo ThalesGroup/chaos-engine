@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.AwsEC2Constants;
@@ -13,8 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.Mock;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,19 +57,33 @@ public class AwsEC2ContainerTest {
     private AwsEC2Container awsEC2Container;
     @MockBean
     private AwsEC2Platform awsEC2Platform;
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    @Mock
+    private Experiment experiment;
 
     @Before
     public void setUp () {
-        awsEC2Container = Mockito.spy(AwsEC2Container.builder()
-                                                     .keyName(KEY_NAME)
-                                                     .instanceId(INSTANCE_ID)
-                                                     .awsEC2Platform(awsEC2Platform)
-                                                     .name(NAME)
-                                                     .groupIdentifier(GROUP_IDENTIFIER)
-                                                     .build());
+        awsEC2Container = spy(AwsEC2Container.builder()
+                                             .keyName(KEY_NAME)
+                                             .instanceId(INSTANCE_ID)
+                                             .awsEC2Platform(awsEC2Platform)
+                                             .name(NAME)
+                                             .groupIdentifier(GROUP_IDENTIFIER)
+                                             .build());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
     }
 
     @Test
@@ -101,13 +131,13 @@ public class AwsEC2ContainerTest {
         awsEC2Container.stopContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
-        Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).stopInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
+        experiment.getSelfHealingMethod().run();
+        verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).checkHealth(INSTANCE_ID);
         experiment.getCheckContainerHealth().call();
-        Mockito.verify(awsEC2Platform, times(1)).checkHealth(INSTANCE_ID);
+        verify(awsEC2Platform, times(1)).checkHealth(INSTANCE_ID);
     }
 
     @Test
@@ -115,18 +145,16 @@ public class AwsEC2ContainerTest {
         awsEC2Container.restartContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
-        Mockito.verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
-        await().atMost(4, TimeUnit.MINUTES)
-               .until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
+        verify(awsEC2Platform, times(1)).restartInstance(INSTANCE_ID);
+        verify(awsEC2Platform, times(0)).startInstance(INSTANCE_ID);
+        experiment.getSelfHealingMethod().run();
+        verify(awsEC2Platform, times(1)).startInstance(INSTANCE_ID);
+        await().atMost(4, TimeUnit.MINUTES).until(() -> ContainerHealth.RUNNING_EXPERIMENT == experiment.getCheckContainerHealth().call());
         experiment.getCheckContainerHealth().call();
     }
 
     @Test
     public void terminateASGContainer () throws Exception {
-
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         awsEC2Container.terminateASGContainer(experiment);
@@ -137,12 +165,10 @@ public class AwsEC2ContainerTest {
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
         // Case 3 - Verify self healing method calls Trigger Autoscaling Unhealthy
         verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsEC2Platform, times(1)).triggerAutoscalingUnhealthy(INSTANCE_ID);
-
-
         //Healthcheck is triggered by triggerAutoscalingUnhealthy method
         doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
         verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
@@ -170,34 +196,44 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    public void removeSecurityGroups () throws Exception {
-        String chaosSecurityGroupId = UUID.randomUUID().toString();
-        List<String> configuredSecurityGroupId = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID()
-                                                                                                 .toString());
-        doReturn(configuredSecurityGroupId).when(awsEC2Platform).getSecurityGroupIds(INSTANCE_ID);
+    public void removeSecurityGroupsSingleNetworkInterface () throws Exception {
+        String chaosSecurityGroupId = "sg-ch@0$";
+        Map<String, Set<String>> map = Map.of("eni-123456", Set.of("sg-123456"));
+        doReturn(map).when(awsEC2Platform).getNetworkInterfaceToSecurityGroupsMap(INSTANCE_ID);
         doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
-        Mockito.verify(awsEC2Platform, times(0))
-               .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
-        verify(experiment, times(0)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(0)).setSelfHealingMethod(ArgumentMatchers.any());
+        // Test main experiment
         awsEC2Container.removeSecurityGroups(experiment);
-        verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
-        verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(awsEC2Platform, times(1))
-               .setSecurityGroupIds(INSTANCE_ID, Collections.singletonList(chaosSecurityGroupId));
-        Mockito.verify(awsEC2Platform, times(0)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of(chaosSecurityGroupId));
+        // Test self healing
+        experiment.getSelfHealingMethod().run();
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of("sg-123456"));
+        // Test health check method
         experiment.getCheckContainerHealth().call();
-        Mockito.verify(awsEC2Platform, times(1)).verifySecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        Mockito.verify(awsEC2Platform, times(0)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
-        experiment.getSelfHealingMethod().call();
-        Mockito.verify(awsEC2Platform, times(1)).setSecurityGroupIds(INSTANCE_ID, configuredSecurityGroupId);
+        verify(awsEC2Platform, times(1)).verifySecurityGroupIdsOfNetworkInterfaceMap(INSTANCE_ID, map);
+    }
+
+    @Test
+    public void removeSecurityGroupsMultipleNetworkInterfaces () throws Exception {
+        String chaosSecurityGroupId = "sg-ch@0$";
+        Map<String, Set<String>> map = Map.of("eni-123456", Set.of("sg-123456"), "eni-987654", Set.of("sg-987654", "sg-314159"));
+        doReturn(map).when(awsEC2Platform).getNetworkInterfaceToSecurityGroupsMap(INSTANCE_ID);
+        doReturn(chaosSecurityGroupId).when(awsEC2Platform).getChaosSecurityGroupForInstance(INSTANCE_ID);
+        // Test main experiment
+        awsEC2Container.removeSecurityGroups(experiment);
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of(chaosSecurityGroupId));
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-987654", Set.of(chaosSecurityGroupId));
+        // Test self healing
+        experiment.getSelfHealingMethod().run();
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-123456", Set.of("sg-123456"));
+        verify(awsEC2Platform, times(1)).setSecurityGroupIds("eni-987654", Set.of("sg-987654", "sg-314159"));
+        // Test health check method
+        experiment.getCheckContainerHealth().call();
+        verify(awsEC2Platform, times(1)).verifySecurityGroupIdsOfNetworkInterfaceMap(INSTANCE_ID, map);
     }
 
     @Test
     public void getDataDogIdentifier () {
-        TestCase.assertEquals(DataDogIdentifier.dataDogIdentifier()
-                                               .withValue(INSTANCE_ID)
-                                               .withKey("host"), awsEC2Container.getDataDogIdentifier());
+        TestCase.assertEquals(DataDogIdentifier.dataDogIdentifier().withValue(INSTANCE_ID).withKey("host"), awsEC2Container.getDataDogIdentifier());
     }
 
     @Test
@@ -229,8 +265,7 @@ public class AwsEC2ContainerTest {
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(true).when(awsEC2Container).isMemberOfScaledGroup();
         doReturn(false).when(awsEC2Platform).isContainerTerminated(INSTANCE_ID);
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
-                                                                        .call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
         verify(awsEC2Platform, times(1)).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
@@ -241,8 +276,7 @@ public class AwsEC2ContainerTest {
         Callable<ContainerHealth> callable = mock(Callable.class);
         doReturn(ContainerHealth.RUNNING_EXPERIMENT).when(callable).call();
         doReturn(false).when(awsEC2Container).isMemberOfScaledGroup();
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable)
-                                                                        .call());
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Container.autoscalingHealthcheckWrapper(callable).call());
         verify(awsEC2Platform, never()).isContainerTerminated(INSTANCE_ID);
         verify(callable, atLeastOnce()).call();
     }
@@ -255,24 +289,23 @@ public class AwsEC2ContainerTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void autoscalingSelfHealingWrapper () throws Exception {
+    public void autoscalingSelfHealingWrapper () {
         doReturn(true).when(awsEC2Container).isNativeAwsAutoscaling();
-        Callable<Void> baseMethod = Mockito.spy(Callable.class);
-        Callable<Void> callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
-        callable.call();
+        Runnable baseMethod = spy(Runnable.class);
+        Runnable callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
+        callable.run();
         /*
         On the first call, it should use the Autoscaling method, and not touch the base method.
          */
         verify(awsEC2Platform, atLeastOnce()).triggerAutoscalingUnhealthy(anyString());
-        verify(baseMethod, never()).call();
+        verify(baseMethod, never()).run();
         reset(baseMethod, awsEC2Platform);
-        callable.call();
+        callable.run();
         /*
         On the second call, it should not use the Autoscaling method, and use the base method.
          */
         verify(awsEC2Platform, never()).triggerAutoscalingUnhealthy(anyString());
-        verify(baseMethod, atLeastOnce()).call();
+        verify(baseMethod, atLeastOnce()).run();
         reset(baseMethod, awsEC2Platform);
         /*
         If a Runtime exception occurs with the autoscaling method, it should use the base method on subsequent calls.
@@ -280,18 +313,19 @@ public class AwsEC2ContainerTest {
         callable = awsEC2Container.autoscalingSelfHealingWrapper(baseMethod);
         doThrow(new RuntimeException()).when(awsEC2Platform).triggerAutoscalingUnhealthy(anyString());
         try {
-            callable.call();
+            callable.run();
             fail("We expect an exception to be thrown for this test.");
         } catch (RuntimeException expected) {
         }
-        callable.call();
-        verify(baseMethod, times(1)).call();
+        callable.run();
+        verify(baseMethod, times(1)).run();
     }
 
     @Test
     public void autoscalingSelfHealingWrapperOnNativeInstance () {
         doReturn(false).when(awsEC2Container).isNativeAwsAutoscaling();
-        Callable<Void> baseMethod = () -> null;
+        Runnable baseMethod = () -> {
+        };
         assertSame(baseMethod, awsEC2Container.autoscalingSelfHealingWrapper(baseMethod));
     }
 

@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.scripts.impl;
 
 import com.thales.chaos.exception.ChaosException;
@@ -12,7 +29,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -37,15 +56,27 @@ public class ShellScript implements Script {
     private boolean requiresCattle;
     private String finalizeCommand;
     private ExperimentType experimentType;
+    private Duration maximumDuration;
+    private Duration minimumDuration;
 
     public static ShellScript fromResource (Resource resource) {
+        InputStream inputStream = null;
         ShellScript script = new ShellScript();
         script.scriptName = resource.getFilename();
         script.scriptResource = resource;
         try {
-            script.scriptContents = StreamUtils.copyToString(resource.getInputStream(), Charset.defaultCharset());
+            inputStream = resource.getInputStream();
+            script.scriptContents = StreamUtils.copyToString(inputStream, Charset.defaultCharset());
         } catch (IOException e) {
             throw new ChaosException(SHELL_SCRIPT_READ_FAILURE, e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error("Error closing input stream", e);
+                }
+            }
         }
         script.buildFields();
         log.debug("Created script {}", v("ShellScript", script));
@@ -62,6 +93,8 @@ public class ShellScript implements Script {
             buildSelfHealingCommand();
             buildRequiresCattle();
             buildFinalizeCommand();
+            buildMinimumDuration();
+            buildMaximumDuration();
             buildExperimentType();
         }
     }
@@ -105,9 +138,7 @@ public class ShellScript implements Script {
     }
 
     private void buildDependencies () {
-        Optional<String> dependencyComment = commentBlock.stream()
-                                                         .filter(s -> s.startsWith("# Dependencies"))
-                                                         .findFirst();
+        Optional<String> dependencyComment = commentBlock.stream().filter(s -> s.startsWith("# Dependencies")).findFirst();
         dependencies = dependencyComment.map(s -> Arrays.stream(s.substring("# Dependencies".length()).split(","))
                                                         .map(ShellScript::stripNonAlphasFromEnd)
                                                         .filter(not(String::isEmpty))
@@ -130,6 +161,16 @@ public class ShellScript implements Script {
         log.debug("Description evaluated to be {}", description);
     }
 
+    private void buildMinimumDuration () {
+        minimumDuration = Duration.ofSeconds(Long.valueOf(getOptionalFieldFromCommentBlock("Minimum Duration").orElse("30")));
+        log.debug("Minimum Duration evaluated to be {}", minimumDuration);
+    }
+
+    private void buildMaximumDuration () {
+        maximumDuration = Duration.ofSeconds(Long.valueOf(getOptionalFieldFromCommentBlock("Maximum Duration").orElse("300")));
+        log.debug("Maximum Duration evaluated to be {}", maximumDuration);
+    }
+
     public String getShebang () {
         return shebang;
     }
@@ -143,7 +184,7 @@ public class ShellScript implements Script {
     }
 
     private void buildFinalizeCommand () {
-        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse("No finalization command provided");
+        finalizeCommand = getOptionalFieldFromCommentBlock("Finalize command").orElse(null);
         log.debug("Finalize Command evaluated to be {}", finalizeCommand);
     }
 
@@ -202,6 +243,16 @@ public class ShellScript implements Script {
     @Override
     public Collection<String> getDependencies () {
         return dependencies;
+    }
+
+    @Override
+    public Duration getMaximumDuration () {
+        return maximumDuration;
+    }
+
+    @Override
+    public Duration getMinimumDuration () {
+        return minimumDuration;
     }
 
     public String getDescription () {

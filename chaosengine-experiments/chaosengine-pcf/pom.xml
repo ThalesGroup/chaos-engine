@@ -3,11 +3,17 @@
     <parent>
         <artifactId>chaosengine-experiments</artifactId>
         <groupId>com.thales.chaos</groupId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>chaosengine-pcf</artifactId>
+
+    <properties>
+        <pcf.sdk.version>4.0.1.RELEASE</pcf.sdk.version>
+        <reactor.core>3.2.12.RELEASE</reactor.core>
+        <reactor.netty>0.7.15.RELEASE</reactor.netty>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -31,12 +37,12 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-            <version>3.1.8.RELEASE</version>
+            <version>${reactor.core}</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.ipc</groupId>
             <artifactId>reactor-netty</artifactId>
-            <version>0.7.8.RELEASE</version>
+            <version>${reactor.netty}</version>
         </dependency>
 
     </dependencies>

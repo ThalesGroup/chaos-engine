@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
@@ -32,6 +49,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -119,10 +137,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
 
     public void setRoutableCidrBlocks (Collection<String> routableCidrBlocks) {
         try {
-            this.routableCidrBlocks = routableCidrBlocks.stream()
-                                                        .map(SubnetUtils::new)
-                                                        .map(SubnetUtils::getInfo)
-                                                        .collect(Collectors.toSet());
+            this.routableCidrBlocks = routableCidrBlocks.stream().map(SubnetUtils::new).map(SubnetUtils::getInfo).collect(Collectors.toSet());
         } catch (RuntimeException e) {
             ChaosException exception = new ChaosException(INVALID_CIDR_BLOCK, e);
             log.error("Invalid CIDR Blocks provided", exception);
@@ -149,9 +164,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     public PlatformHealth getPlatformHealth () {
         Stream<Instance> instances = getInstanceStream();
         Set<InstanceState> instanceStates = instances.map(Instance::getState).collect(Collectors.toSet());
-        Set<Integer> instanceStateCodes = instanceStates.stream()
-                                                        .map(InstanceState::getCode)
-                                                        .collect(Collectors.toSet());
+        Set<Integer> instanceStateCodes = instanceStates.stream().map(InstanceState::getCode).collect(Collectors.toSet());
         for (int state : AwsEC2Constants.getAwsUnhealthyCodes()) {
             if (instanceStateCodes.contains(state)) return PlatformHealth.DEGRADED;
         }
@@ -197,9 +210,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     @Override
     public List<Container> generateExperimentRoster () {
         List<Container> roster = getRoster();
-        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream()
-                                                                 .map(AwsEC2Container.class::cast)
-                                                                 .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream().map(AwsEC2Container.class::cast).collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
         List<Container> eligibleExperimentTargets = new ArrayList<>();
         groupedRoster.forEach((k, v) -> {
             // Anything that isn't in a managed group is eligible for experiments
@@ -228,8 +239,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         if (!(container instanceof AwsEC2Container)) return false;
         awsEC2Container = (AwsEC2Container) container;
         String instanceId = awsEC2Container.getInstanceId();
-        return getInstanceStream().filter(not(instance -> instance.getState().getCode().equals(AWS_TERMINATED_CODE)))
-                                  .noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
+        return getInstanceStream().filter(not(instance -> instance.getState().getCode().equals(AWS_TERMINATED_CODE))).noneMatch(instance -> instanceId.equals(instance.getInstanceId()));
     }
 
     /**
@@ -282,8 +292,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                               .name(name)
                               .groupIdentifier(Optional.ofNullable(groupIdentifier).orElse(NO_GROUPING_IDENTIFIER))
                               .nativeAwsAutoscaling(Optional.ofNullable(nativeAwsAutoscaling).orElse(false))
-                              .availabilityZone(Optional.ofNullable(availabilityZone)
-                                                        .orElse(AwsConstants.NO_AZ_INFORMATION))
+                              .availabilityZone(Optional.ofNullable(availabilityZone).orElse(AwsConstants.NO_AZ_INFORMATION))
                               .publicAddress(instance.getPublicIpAddress()).imageId(instance.getImageId())
                               .privateAddress(instance.getPrivateIpAddress())
                               .build();
@@ -337,29 +346,30 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     public void stopInstance (String... instanceIds) {
-        log.info("Requesting a stop of instances {}", (Object[]) instanceIds);
+        log.info("Requesting a stop of instances {}", instanceIds);
         amazonEC2.stopInstances(new StopInstancesRequest().withForce(true).withInstanceIds(instanceIds));
     }
 
     public void terminateInstance (String... instanceIds) {
-        log.info("Requesting a Terminate of instances {}", (Object[]) instanceIds);
+        log.info("Requesting a Terminate of instances {}", instanceIds);
         amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(instanceIds));
     }
 
     public void startInstance (String... instanceIds) {
-        log.info("Requesting a start of instances {}", (Object[]) instanceIds);
+        log.info("Requesting a start of instances {}", instanceIds);
         amazonEC2.startInstances(new StartInstancesRequest().withInstanceIds(instanceIds));
     }
 
     public void restartInstance (String... instanceIds) {
-        log.info("Requesting a reboot of instances {}", (Object[]) instanceIds);
+        log.info("Requesting a reboot of instances {}", instanceIds);
         amazonEC2.rebootInstances(new RebootInstancesRequest().withInstanceIds(instanceIds));
     }
 
-    public void setSecurityGroupIds (String instanceId, List<String> securityGroupIds) {
+    public void setSecurityGroupIds (String networkInterfaceId, Collection<String> securityGroupIds) {
         try {
-            amazonEC2.modifyInstanceAttribute(new ModifyInstanceAttributeRequest().withInstanceId(instanceId)
-                                                                                  .withGroups(securityGroupIds));
+            log.debug("Setting security groups for interface {} to {}", networkInterfaceId, securityGroupIds);
+            amazonEC2.modifyNetworkInterfaceAttribute(new ModifyNetworkInterfaceAttributeRequest().withNetworkInterfaceId(networkInterfaceId)
+                                                                                                  .withGroups(securityGroupIds));
         } catch (AmazonEC2Exception e) {
             if (SECURITY_GROUP_NOT_FOUND.equals(e.getErrorCode())) {
                 log.warn("Tried to set invalid security groups. Pruning out Chaos Security Group Map");
@@ -396,8 +406,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .getSecurityGroups()
                         .stream()
                         .filter(securityGroup -> securityGroup.getVpcId().equals(vpcId))
-                        .filter(securityGroup -> securityGroup.getGroupName()
-                                                              .equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId))
+                        .filter(securityGroup -> securityGroup.getGroupName().equals(EC2_DEFAULT_CHAOS_SECURITY_GROUP_NAME + "-" + vpcId))
                         .map(SecurityGroup::getGroupId)
                         .findFirst()
                         .orElseGet(() -> createChaosSecurityGroup(vpcId));
@@ -415,20 +424,6 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
         return groupId;
     }
 
-    public ContainerHealth verifySecurityGroupIds (String instanceId, List<String> originalSecurityGroupIds) {
-        List<String> appliedSecurityGroups = getSecurityGroupIds(instanceId);
-        return (originalSecurityGroupIds.containsAll(appliedSecurityGroups) && appliedSecurityGroups.containsAll(originalSecurityGroupIds)) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    public List<String> getSecurityGroupIds (String instanceId) {
-        return amazonEC2.describeInstanceAttribute(new DescribeInstanceAttributeRequest(instanceId, InstanceAttributeName.GroupSet))
-                        .getInstanceAttribute()
-                        .getGroups()
-                        .stream()
-                        .map(GroupIdentifier::getGroupId)
-                        .collect(Collectors.toList());
-    }
-
     public boolean isContainerTerminated (String instanceId) {
         return amazonEC2.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
                         .getReservations()
@@ -441,10 +436,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     public boolean isAutoscalingGroupAtDesiredInstances (String autoScalingGroupName) {
         List<AutoScalingGroup> autoScalingGroups = amazonAutoScaling.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest()
                 .withAutoScalingGroupNames(autoScalingGroupName)).getAutoScalingGroups();
-        int desiredCapacity = autoScalingGroups.stream()
-                                               .findFirst()
-                                               .map(AutoScalingGroup::getDesiredCapacity)
-                                               .orElse(1);
+        int desiredCapacity = autoScalingGroups.stream().findFirst().map(AutoScalingGroup::getDesiredCapacity).orElse(1);
         int actualCapacity = (int) autoScalingGroups.stream()
                                                     .map(AutoScalingGroup::getInstances)
                                                     .flatMap(Collection::stream)
@@ -454,7 +446,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     public boolean hasKey (String keyName) {
-        return sshPrivateKeys.keySet().contains(keyName);
+        return sshPrivateKeys.containsKey(keyName);
     }
 
     @Override
@@ -476,8 +468,7 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
 
     @Override
     public SSHCredentials getSshCredentials (AwsEC2Container container) {
-        return new ChaosSSHCredentials().withUsername(getUsernameForContainer(container))
-                                        .withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
+        return new ChaosSSHCredentials().withUsername(getUsernameForContainer(container)).withKeyPair(sshPrivateKeys.get(container.getKeyName()), null);
     }
 
     String getUsernameForContainer (AwsEC2Container container) {
@@ -506,5 +497,21 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
                         .map(InstanceState::getCode)
                         .map(i -> AWS_RUNNING_CODE == i)
                         .orElse(false);
+    }
+
+    public Map<String, Set<String>> getNetworkInterfaceToSecurityGroupsMap (String instanceId) {
+        log.debug("Looking up security groups for instance {}", instanceId);
+        return amazonEC2.describeNetworkInterfaces(new DescribeNetworkInterfacesRequest().withFilters(new Filter("attachment.instance-id", List
+                .of(instanceId))))
+                        .getNetworkInterfaces()
+                        .stream()
+                        .collect(Collectors.groupingBy(NetworkInterface::getNetworkInterfaceId, Collectors.flatMapping((Function<? super NetworkInterface, ? extends Stream<String>>) networkInterface -> networkInterface
+                                .getGroups()
+                                .stream()
+                                .map(GroupIdentifier::getGroupId), Collectors.toSet())));
+    }
+
+    public boolean verifySecurityGroupIdsOfNetworkInterfaceMap (String instanceId, Map<String, Set<String>> originalSecurityGroups) {
+        return getNetworkInterfaceToSecurityGroupsMap(instanceId).equals(originalSecurityGroups);
     }
 }

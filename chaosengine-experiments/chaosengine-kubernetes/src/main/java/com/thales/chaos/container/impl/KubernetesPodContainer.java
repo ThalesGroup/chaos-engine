@@ -1,10 +1,28 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -19,17 +37,22 @@ import static com.thales.chaos.exception.enums.KubernetesChaosErrorCode.POD_HAS_
 import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public class KubernetesPodContainer extends Container {
-    private String UUID;
+    @Identifier(order = 0)
+    private String uuid;
+    @Identifier(order = 1)
     private String podName;
+    @Identifier(order = 2)
     private String namespace;
     private Map<String, String> labels = new HashMap<>();
     private boolean isBackedByController = false;
-    private transient KubernetesPlatform kubernetesPlatform;
+    private KubernetesPlatform kubernetesPlatform;
+    @Identifier(order = 3)
     private ControllerKind ownerKind;
+    @Identifier(order = 4)
     private String ownerName;
     private Collection<String> subcontainers = new HashSet<>();
-    private transient String targetedSubcontainer;
-    private transient Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
+    private String targetedSubcontainer;
+    private Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
 
     private KubernetesPodContainer () {
         super();
@@ -39,8 +62,8 @@ public class KubernetesPodContainer extends Container {
         return KubernetesPodContainerBuilder.aKubernetesPodContainer();
     }
 
-    public String getUUID () {
-        return UUID;
+    public String getUuid () {
+        return uuid;
     }
 
     public String getPodName () {
@@ -113,14 +136,14 @@ public class KubernetesPodContainer extends Container {
         return uniqueIdentifier.equals(podName);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void deletePod (Experiment experiment) {
         experiment.setCheckContainerHealth(replicaSetRecovered);
         kubernetesPlatform.deletePod(this);
     }
 
     public static final class KubernetesPodContainerBuilder {
-        private String UUID;
+        private String uuid;
         private final Map<String, String> labels = new HashMap<>();
         private final Map<String, String> dataDogTags = new HashMap<>();
         private String podName;
@@ -183,14 +206,14 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
-        public KubernetesPodContainerBuilder withUUID (String UUID) {
-            this.UUID = UUID;
+        public KubernetesPodContainerBuilder withUUID (String uuid) {
+            this.uuid = uuid;
             return this;
         }
 
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
-            kubernetesPodContainer.UUID = this.UUID;
+            kubernetesPodContainer.uuid = this.uuid;
             kubernetesPodContainer.podName = this.podName;
             kubernetesPodContainer.namespace = this.namespace;
             kubernetesPodContainer.isBackedByController = this.isBackedByController;

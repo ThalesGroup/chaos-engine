@@ -1,36 +1,38 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.calendar.impl;
 
-import com.thales.chaos.calendar.HolidayCalendar;
+import com.thales.chaos.calendar.ChaosCalendar;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static java.util.Calendar.*;
 
 @Component("USA")
-public class USA implements HolidayCalendar {
-    private static final String TZ = "America/New_York";
-    private static final ZoneId TIME_ZONE_ID = ZoneId.of(TZ);
-    private static final int START_OF_DAY = 9;
-    private static final int END_OF_DAY = 17;
-    private final Map<Integer, Collection<Integer>> holidayMap = new HashMap<>();
+public class USA extends ChaosCalendar {
+    USA () {
+        super("America/New_York", 9, 17);
+    }
 
     @Override
-    public boolean isHoliday (Calendar day) {
-        int year = day.get(YEAR);
-        return holidayMap.computeIfAbsent(year, this::computeHolidays).contains(day.get(DAY_OF_YEAR));
-    }
-
-    private Collection<Integer> computeHolidays (int year) {
-        Set<Integer> holidays = new TreeSet<>();
-        holidays.addAll(getStaticHolidays(year));
-        holidays.addAll(getMovingHolidays(year));
-        holidays.addAll(getLinkedDays(holidays, year));
-        return holidays;
-    }
-
-    private Set<Integer> getStaticHolidays (int year) {
+    protected Set<Integer> getStaticHolidays (int year) {
         Set<Integer> staticHolidays = new TreeSet<>();
         // New Years
         staticHolidays.add(getDate(year, JANUARY, 1));
@@ -50,7 +52,8 @@ public class USA implements HolidayCalendar {
         return staticHolidays;
     }
 
-    private Set<Integer> getMovingHolidays (int year) {
+    @Override
+    protected Set<Integer> getMovingHolidays (int year) {
         Set<Integer> movingHolidays = new TreeSet<>();
         // Martin Luther King Day, third Monday of January
         movingHolidays.add(getDate(year, JANUARY, 3, MONDAY));
@@ -65,25 +68,5 @@ public class USA implements HolidayCalendar {
         // Thanksgiving, fourth Thursday of November
         movingHolidays.add(getDate(year, NOVEMBER, 4, THURSDAY));
         return movingHolidays;
-    }
-
-    @Override
-    public ZoneId getTimeZoneId () {
-        return TIME_ZONE_ID;
-    }
-
-    @Override
-    public int getStartOfDay () {
-        return START_OF_DAY;
-    }
-
-    @Override
-    public int getEndOfDay () {
-        return END_OF_DAY;
-    }
-
-    @Override
-    public TimeZone getTimeZone () {
-        return TimeZone.getTimeZone(TZ);
     }
 }

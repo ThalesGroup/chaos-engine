@@ -1,15 +1,33 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.thales.chaos.constants.CloudFoundryConstants;
+import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
+import com.thales.chaos.container.enums.CloudFoundryApplicationRouteType;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.CloudFoundryApplication;
 import com.thales.chaos.container.impl.CloudFoundryApplicationRoute;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.platform.enums.CloudFoundryIgnoredClientExceptions;
-import com.thales.chaos.constants.DataDogConstants;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.client.v2.ClientV2Exception;
 import org.cloudfoundry.client.v2.applications.ApplicationInstanceInfo;
@@ -38,6 +56,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.CloudFoundryConstants.CLOUDFOUNDRY_APPLICATION_STARTED;
+import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.UNKNOWN;
+import static com.thales.chaos.container.enums.CloudFoundryApplicationRouteType.mapFromString;
 import static com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode.EMPTY_RESPONSE;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -61,8 +81,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     public ContainerHealth checkPlatformHealth () {
         Iterable<ApplicationSummary> apps = cloudFoundryOperations.applications()
                                                                   .list()
-                                                                  .filter(app -> app.getRequestedState()
-                                                                                    .equals(CLOUDFOUNDRY_APPLICATION_STARTED))
+                                                                  .filter(app -> app.getRequestedState().equals(CLOUDFOUNDRY_APPLICATION_STARTED))
                                                                   .filter(app -> app.getInstances() > 0)
                                                                   .toIterable();
         for (ApplicationSummary app : apps) {
@@ -174,16 +193,23 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         if (routeResources != null) {
             for (RouteResource route : routeResources) {
                 RouteEntity routeEntity = route.getEntity();
-                CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute.builder()
-                                                                                                        .applicationName(applicationName)
-                                                                                                        .route(routeEntity)
-                                                                                                        .domain(getAppRouteDomain(routeEntity
-                                                                                                                .getDomainId()))
-                                                                                                        .build();
-                routes.add(cloudFoundryApplicationRoute);
+                Domain domain = getAppRouteDomain(routeEntity.getDomainId());
+                if (domain != null) {
+                    CloudFoundryApplicationRouteType cloudFoundryApplicationRouteType = mapFromString(domain.getType());
+                    if (cloudFoundryApplicationRouteType != UNKNOWN) {
+                        CloudFoundryApplicationRoute cloudFoundryApplicationRoute = CloudFoundryApplicationRoute.builder()
+                                                                                                                .applicationName(applicationName)
+                                                                                                                .route(routeEntity)
+                                                                                                                .domain(domain)
+                                                                                                                .build();
+                        routes.add(cloudFoundryApplicationRoute);
+                    } else {
+                        log.warn("Application route {} will be skipped because it has unsupported type {}", domain.getName(), domain
+                                .getType());
+                    }
+                }
             }
         }
-
         log.debug("Application {} routes: {}", applicationName, routes);
         return routes;
     }
@@ -197,6 +223,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
         }
         return null;
     }
+
     public void rescaleApplication (String applicationName, int instances) {
         ScaleApplicationRequest scaleApplicationRequest = ScaleApplicationRequest.builder()
                                                                                  .name(applicationName)
@@ -206,9 +233,7 @@ public class CloudFoundryApplicationPlatform extends CloudFoundryPlatform {
     }
 
     public void restartApplication (String applicationName) {
-        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder()
-                                                                                       .name(applicationName)
-                                                                                       .build();
+        RestartApplicationRequest restartApplicationRequest = RestartApplicationRequest.builder().name(applicationName).build();
         cloudFoundryOperations.applications().restart(restartApplicationRequest).block();
     }
 

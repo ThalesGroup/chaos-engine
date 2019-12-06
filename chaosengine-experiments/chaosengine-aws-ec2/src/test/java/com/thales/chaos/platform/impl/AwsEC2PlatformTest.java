@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
@@ -182,43 +199,13 @@ public class AwsEC2PlatformTest {
     }
 
     @Test
-    public void getSecurityGroupIds () {
-        String groupId = UUID.randomUUID().toString();
-        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
-        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
-                .withGroups(groupIdentifier));
-        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(Collections.singletonList(groupId), awsEC2Platform.getSecurityGroupIds("123"));
-    }
-
-    @Test
     public void setSecurityGroupIds () {
         String instanceId = UUID.randomUUID().toString();
         String groupId = UUID.randomUUID().toString();
         awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(groupId));
-        verify(amazonEC2, times(1)).modifyInstanceAttribute(any());
+        verify(amazonEC2, times(1)).modifyNetworkInterfaceAttribute(any());
     }
 
-    @Test
-    public void verifySecurityGroupIds () {
-        String instanceId = UUID.randomUUID().toString();
-        String groupId = UUID.randomUUID().toString();
-        String groupId2 = UUID.randomUUID().toString();
-        GroupIdentifier groupIdentifier = new GroupIdentifier().withGroupName("Test Group").withGroupId(groupId);
-        GroupIdentifier groupIdentifier2 = new GroupIdentifier().withGroupName("Test Group 2").withGroupId(groupId2);
-        DescribeInstanceAttributeResult result = new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute()
-                .withGroups(groupIdentifier));
-        doReturn(result).when(amazonEC2).describeInstanceAttribute(any(DescribeInstanceAttributeRequest.class));
-        assertEquals(ContainerHealth.NORMAL, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
-        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier, groupIdentifier2)))
-                .when(amazonEC2)
-                .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, Collections.singletonList(groupId)));
-        doReturn(new DescribeInstanceAttributeResult().withInstanceAttribute(new InstanceAttribute().withGroups(groupIdentifier)))
-                .when(amazonEC2)
-                .describeInstanceAttribute(any());
-        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsEC2Platform.verifySecurityGroupIds(instanceId, asList(groupId, groupId2)));
-    }
 
     @Test
     public void createContainerFromInstance () {
@@ -230,8 +217,7 @@ public class AwsEC2PlatformTest {
         verify(containerManager, times(0)).getMatchingContainer(any(), any());
         reset(awsEC2Platform, containerManager);
         // Container that hasn't been created before
-        instance = Mockito.spy(new Instance().withState(new InstanceState().withCode(0)
-                                                                           .withName(InstanceStateName.Running))
+        instance = Mockito.spy(new Instance().withState(new InstanceState().withCode(0).withName(InstanceStateName.Running))
                                              .withInstanceId(instanceId));
         AwsEC2Container container = Mockito.spy(AwsEC2Container.builder().instanceId(instanceId).build());
         doReturn(container).when(awsEC2Platform).buildContainerFromInstance(instance);
@@ -256,10 +242,7 @@ public class AwsEC2PlatformTest {
         Instance instance;
         AwsEC2Container container;
         // With Name
-        instance = new Instance().withInstanceId(instanceId)
-                                 .withTags(new Tag("Name", name))
-                                 .withKeyName(keyName)
-                                 .withPlacement(placement);
+        instance = new Instance().withInstanceId(instanceId).withTags(new Tag("Name", name)).withKeyName(keyName).withPlacement(placement);
         container = AwsEC2Container.builder().instanceId(instanceId).keyName(keyName).name(name).build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
         // With no name
@@ -268,9 +251,7 @@ public class AwsEC2PlatformTest {
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
         // With Grouping Tag
         ReflectionTestUtils.setField(awsEC2Platform, "groupingTags", asList("asg", "bosh", "somethingelse"));
-        instance = new Instance().withInstanceId(instanceId)
-                                 .withKeyName(keyName)
-                                 .withTags(new Tag("Name", name), new Tag("asg", "scalegroup"));
+        instance = new Instance().withInstanceId(instanceId).withKeyName(keyName).withTags(new Tag("Name", name), new Tag("asg", "scalegroup"));
         container = AwsEC2Container.builder()
                                    .instanceId(instanceId)
                                    .keyName(keyName)
@@ -279,9 +260,7 @@ public class AwsEC2PlatformTest {
                                    .build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
         // With multiple grouping tags
-        instance = new Instance().withInstanceId(instanceId)
-                                 .withKeyName(keyName)
-                                 .withTags(new Tag("Name", name), new Tag("bosh", "boshgroup"), new Tag("asg", "scalegroup"));
+        instance = new Instance().withInstanceId(instanceId).withKeyName(keyName).withTags(new Tag("Name", name), new Tag("bosh", "boshgroup"), new Tag("asg", "scalegroup"));
         container = AwsEC2Container.builder()
                                    .instanceId(instanceId)
                                    .keyName(keyName)
@@ -289,14 +268,11 @@ public class AwsEC2PlatformTest {
                                    .groupIdentifier("scalegroup")
                                    .build();
         assertEquals(container, awsEC2Platform.buildContainerFromInstance(instance));
-
     }
 
     @Test
     public void generateExperimentRoster () {
-        List<String> groupIdentifiers = IntStream.range(0, 4)
-                                                 .mapToObj(i -> randomUUID().toString())
-                                                 .collect(Collectors.toList());
+        List<String> groupIdentifiers = IntStream.range(0, 4).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         List<Container> containers = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             containers.add(AwsEC2Container.builder()
@@ -319,9 +295,7 @@ public class AwsEC2PlatformTest {
                                                                .build();
         containers.add(lonelyScaledContainer);
         doReturn(containers).when(awsEC2Platform).getRoster();
-        Map<String, List<AwsEC2Container>> groupedContainers = containers.stream()
-                                                                         .map(AwsEC2Container.class::cast)
-                                                                         .collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
+        Map<String, List<AwsEC2Container>> groupedContainers = containers.stream().map(AwsEC2Container.class::cast).collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
         List<Container> experimentRoster = awsEC2Platform.generateExperimentRoster();
         assertThat(experimentRoster, IsIterableWithSize.iterableWithSize(8));
         assertTrue("Should always contain container that is not grouped.", experimentRoster.contains(independentContainer));
@@ -341,16 +315,13 @@ public class AwsEC2PlatformTest {
     public void isContainerTerminatedTrue () {
         String instanceId = randomUUID().toString();
         DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(new Reservation()
-                .withInstances(new Instance().withInstanceId(instanceId)
-                                             .withState(new InstanceState().withCode(AwsEC2Constants.AWS_TERMINATED_CODE))));
-        doReturn(describeInstancesResult).when(amazonEC2)
-                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+                .withInstances(new Instance().withInstanceId(instanceId).withState(new InstanceState().withCode(AwsEC2Constants.AWS_TERMINATED_CODE))));
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
         assertTrue("One instance returned in terminated state should return true", awsEC2Platform.isContainerTerminated(instanceId));
         describeInstancesResult = new DescribeInstancesResult().withReservations(new Reservation().withInstances(new Instance()
                 .withInstanceId(instanceId)
                 .withState(new InstanceState().withCode(AwsEC2Constants.AWS_RUNNING_CODE))));
-        doReturn(describeInstancesResult).when(amazonEC2)
-                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
         assertFalse("One instance returned in running state should return false", awsEC2Platform.isContainerTerminated(instanceId));
     }
 
@@ -362,12 +333,10 @@ public class AwsEC2PlatformTest {
                                                                                      .mapToObj(i -> new com.amazonaws.services.autoscaling.model.Instance()
                                                                                              .withHealthStatus("Healthy"))
                                                                                      .collect(Collectors.toList());
-        AutoScalingGroup autoScalingGroup = new AutoScalingGroup().withInstances(instances)
-                                                                  .withDesiredCapacity(DESIRED_CAPACITY);
+        AutoScalingGroup autoScalingGroup = new AutoScalingGroup().withInstances(instances).withDesiredCapacity(DESIRED_CAPACITY);
         DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(Collections
                 .singletonList(autoScalingGroup));
-        doReturn(describeAutoScalingGroupsResult).when(amazonAutoScaling)
-                                                 .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(groupId));
+        doReturn(describeAutoScalingGroupsResult).when(amazonAutoScaling).describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(groupId));
         assertTrue("An equal size set of healthy instances should be true", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
         autoScalingGroup.getInstances().get(0).setHealthStatus("Unhealthy");
         assertFalse("An unhealthy instance should not be counted", awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupId));
@@ -399,16 +368,14 @@ public class AwsEC2PlatformTest {
         Instance instance = new Instance().withInstanceId(instanceId).withVpcId(vpcId);
         Reservation reservation = new Reservation().withInstances(instance);
         ArgumentCaptor<DescribeInstancesRequest> captor = ArgumentCaptor.forClass(DescribeInstancesRequest.class);
-        doReturn(new DescribeInstancesResult().withReservations(reservation)).when(amazonEC2)
-                                                                             .describeInstances(captor.capture());
+        doReturn(new DescribeInstancesResult().withReservations(reservation)).when(amazonEC2).describeInstances(captor.capture());
         assertEquals(vpcId, awsEC2Platform.getVpcIdOfContainer(instanceId));
         assertEquals(Collections.singletonList(instanceId), captor.getValue().getInstanceIds());
     }
 
     @Test(expected = ChaosException.class)
     public void getVpcIdOfContainerException () {
-        doReturn(new DescribeInstancesResult().withReservations(new Reservation())).when(amazonEC2)
-                                                                                   .describeInstances(any());
+        doReturn(new DescribeInstancesResult().withReservations(new Reservation())).when(amazonEC2).describeInstances(any());
         awsEC2Platform.getVpcIdOfContainer(randomUUID().toString());
     }
 
@@ -458,23 +425,19 @@ public class AwsEC2PlatformTest {
         doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups(captor.capture());
         assertEquals(groupId, awsEC2Platform.lookupChaosSecurityGroup(vpcId));
         verify(awsEC2Platform, times(1)).createChaosSecurityGroup(vpcId);
-        assertThat(captor.getValue()
-                         .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id").withValues(vpcId)));
-
+        assertThat(captor.getValue().getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id").withValues(vpcId)));
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void setInvalidSecurityGroup () {
         ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
-        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
-        List<String> securityGroups = IntStream.range(0, 10)
-                                               .mapToObj(i -> randomUUID().toString())
-                                               .collect(Collectors.toList());
+        ArgumentCaptor<ModifyNetworkInterfaceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyNetworkInterfaceAttributeRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String instanceId = randomUUID().toString();
         AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
         exception.setErrorCode(AwsEC2Constants.SECURITY_GROUP_NOT_FOUND);
-        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        doThrow(exception).when(amazonEC2).modifyNetworkInterfaceAttribute(modifyRequestCaptor.capture());
         doNothing().when(awsEC2Platform).processInvalidGroups(groupListCaptor.capture());
         try {
             awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
@@ -483,21 +446,19 @@ public class AwsEC2PlatformTest {
             // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
         }
         Collection<String> groupsToRemove = groupListCaptor.getValue();
-        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
-        assertEquals(instanceId, modifyRequest.getInstanceId());
+        ModifyNetworkInterfaceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getNetworkInterfaceId());
         assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
         assertThat(groupsToRemove, IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
     }
 
     @Test
     public void setInvalidSecurityGroupWithDifferentError () {
-        ArgumentCaptor<ModifyInstanceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyInstanceAttributeRequest.class);
-        List<String> securityGroups = IntStream.range(0, 10)
-                                               .mapToObj(i -> randomUUID().toString())
-                                               .collect(Collectors.toList());
+        ArgumentCaptor<ModifyNetworkInterfaceAttributeRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyNetworkInterfaceAttributeRequest.class);
+        List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String instanceId = randomUUID().toString();
         AmazonEC2Exception exception = new AmazonEC2Exception("Test Exception");
-        doThrow(exception).when(amazonEC2).modifyInstanceAttribute(modifyRequestCaptor.capture());
+        doThrow(exception).when(amazonEC2).modifyNetworkInterfaceAttribute(modifyRequestCaptor.capture());
         try {
             awsEC2Platform.setSecurityGroupIds(instanceId, securityGroups);
             fail("Expected a ChaosException");
@@ -505,17 +466,15 @@ public class AwsEC2PlatformTest {
             // Catching the exception so it doesn't throw up, and the above Fail doesn't trigger either.
         }
         verify(awsEC2Platform, never()).processInvalidGroups(any());
-        ModifyInstanceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
-        assertEquals(instanceId, modifyRequest.getInstanceId());
+        ModifyNetworkInterfaceAttributeRequest modifyRequest = modifyRequestCaptor.getValue();
+        assertEquals(instanceId, modifyRequest.getNetworkInterfaceId());
         assertThat(modifyRequest.getGroups(), IsIterableContainingInAnyOrder.containsInAnyOrder(securityGroups.toArray(new String[0])));
     }
 
     @Test
     public void processInvalidGroups () {
         Map<String, String> vpcToSecurityGroupMap;
-        Collection<String> validSecurityGroups = IntStream.range(0, 10)
-                                                          .mapToObj(i -> randomUUID().toString())
-                                                          .collect(Collectors.toList());
+        Collection<String> validSecurityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String invalidSecurityGroup = randomUUID().toString();
         String invalidVpc = randomUUID().toString();
         validSecurityGroups.forEach(s -> {
@@ -557,7 +516,7 @@ public class AwsEC2PlatformTest {
         assertEquals("ec2-user", awsEC2Platform.getUsernameForImageId("centos"));
     }
 
-    @Test
+    @Test(expected = Test.None.class /* No exception expected */)
     public void routableCidrBlockNoException () {
         Collection<String> cidrBlocks = Set.of("192.168.1.0/24", "172.16.0.0/16", "10.0.0.0/8");
         awsEC2Platform.setRoutableCidrBlocks(cidrBlocks);
@@ -596,8 +555,7 @@ public class AwsEC2PlatformTest {
         Instance instance = new Instance().withInstanceId(instanceId).withState(new InstanceState().withCode(16));
         Reservation reservation = new Reservation().withInstances(instance);
         DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(reservation);
-        doReturn(describeInstancesResult).when(amazonEC2)
-                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
         assertTrue("Container is running, should be true", awsEC2Platform.isStarted(awsEC2Container));
     }
 
@@ -620,8 +578,7 @@ public class AwsEC2PlatformTest {
         doReturn(instanceId).when(awsEC2Container).getInstanceId();
         Reservation reservation = new Reservation();
         DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult().withReservations(reservation);
-        doReturn(describeInstancesResult).when(amazonEC2)
-                                         .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
+        doReturn(describeInstancesResult).when(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId));
         assertFalse("No container returned, should be false", awsEC2Platform.isStarted(awsEC2Container));
     }
 
@@ -640,6 +597,30 @@ public class AwsEC2PlatformTest {
         verify(awsEC2Platform, never()).createContainerFromInstance(secondIncompleteInstance);
     }
 
+    @Test
+    public void getNetworkInterfaceToSecurityGroupMap () {
+        String instanceId = "this is my instance id string";
+        NetworkInterface networkInterface1, networkInterface2;
+        GroupIdentifier group1a, group1b, group2a, group2b;
+        group1a = new GroupIdentifier().withGroupId("group-1-a");
+        group1b = new GroupIdentifier().withGroupId("group-1-b");
+        group2a = new GroupIdentifier().withGroupId("group-2-a");
+        group2b = new GroupIdentifier().withGroupId("group-2-b");
+        networkInterface1 = new NetworkInterface().withNetworkInterfaceId("network-interface-a")
+                                                  .withGroups(group1a, group1b);
+        networkInterface2 = new NetworkInterface().withNetworkInterfaceId("network-interface-b")
+                                                  .withGroups(group2a, group2b);
+        ArgumentCaptor<DescribeNetworkInterfacesRequest> captor = ArgumentCaptor.forClass(DescribeNetworkInterfacesRequest.class);
+        doReturn(new DescribeNetworkInterfacesResult().withNetworkInterfaces(networkInterface1, networkInterface2)).when(amazonEC2)
+                                                                                                                   .describeNetworkInterfaces(captor
+                                                                                                                           .capture());
+        Map<String, Set<String>> networkInterfaceToSecurityGroupsMap = awsEC2Platform.getNetworkInterfaceToSecurityGroupsMap(instanceId);
+        assertThat(captor.getValue()
+                         .getFilters(), containsInAnyOrder(new Filter("attachment.instance-id", List.of(instanceId))));
+        Map expected = Map.of("network-interface-a", Set.of("group-1-a", "group-1-b"), "network-interface-b", Set.of("group-2-a", "group-2-b"));
+        assertEquals(expected, networkInterfaceToSecurityGroupsMap);
+    }
+
     @Configuration
     static class ContextConfiguration {
         @Autowired
@@ -648,6 +629,7 @@ public class AwsEC2PlatformTest {
         private ContainerManager containerManager;
         @Autowired
         private AwsEC2SelfAwareness awsEC2SelfAwareness;
+
         @Bean
         AwsEC2Platform awsEC2Platform () {
             return Mockito.spy(new AwsEC2Platform(amazonEC2, containerManager, awsEC2SelfAwareness));

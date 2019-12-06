@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -86,10 +103,8 @@ public class AwsRDSPlatformTest {
 
     @Test
     public void getPlatformHealth () {
-        DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE)
-                                                      .withAvailabilityZone("us-east-1b");
-        DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER)
-                                                      .withAvailabilityZone("us-east-1c");
+        DBInstance normalDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_AVAILABLE).withAvailabilityZone("us-east-1b");
+        DBInstance failedDbInstance = new DBInstance().withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER).withAvailabilityZone("us-east-1c");
         DescribeDBInstancesResult describeDBInstancesResult;
         doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
         doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
@@ -141,15 +156,11 @@ public class AwsRDSPlatformTest {
         String marker1 = randomUUID().toString();
         String marker2 = randomUUID().toString();
         doReturn(new DescribeDBInstancesResult().withDBInstances(dbInstance1, dbInstance2, clusterInstance)
-                                                .withMarker(marker1)).when(amazonRDS)
-                                                                     .describeDBInstances(new DescribeDBInstancesRequest());
+                                                .withMarker(marker1)).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest());
         doReturn(new DescribeDBClustersResult().withDBClusters(dbCluster1, dbCluster2)
-                                               .withMarker(marker2)).when(amazonRDS)
-                                                                    .describeDBClusters(new DescribeDBClustersRequest());
-        doReturn(new DescribeDBInstancesResult()).when(amazonRDS)
-                                                 .describeDBInstances(new DescribeDBInstancesRequest().withMarker(marker1));
-        doReturn(new DescribeDBClustersResult()).when(amazonRDS)
-                                                .describeDBClusters(new DescribeDBClustersRequest().withMarker(marker2));
+                                               .withMarker(marker2)).when(amazonRDS).describeDBClusters(new DescribeDBClustersRequest());
+        doReturn(new DescribeDBInstancesResult()).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withMarker(marker1));
+        doReturn(new DescribeDBClustersResult()).when(amazonRDS).describeDBClusters(new DescribeDBClustersRequest().withMarker(marker2));
         doReturn(true).when(awsRDSPlatform).filterDBInstance(any());
         doReturn(true).when(awsRDSPlatform).filterDBCluster(any());
         assertThat(awsRDSPlatform.generateRoster(), IsIterableContainingInAnyOrder.containsInAnyOrder(AwsRDSClusterContainer
@@ -173,8 +184,7 @@ public class AwsRDSPlatformTest {
     @Test
     public void getDBInstanceHealth () {
         AwsRDSInstanceContainer awsRDSInstanceContainer = mock(AwsRDSInstanceContainer.class);
-        doReturn(new DescribeDBInstancesResult().withDBInstances()).when(amazonRDS)
-                                                                   .describeDBInstances(any(DescribeDBInstancesRequest.class));
+        doReturn(new DescribeDBInstancesResult().withDBInstances()).when(amazonRDS).describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
         doReturn(new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceStatus("Bogus"))).when(amazonRDS)
                                                                                                                  .describeDBInstances(any(DescribeDBInstancesRequest.class));
@@ -183,10 +193,6 @@ public class AwsRDSPlatformTest {
                 .when(amazonRDS)
                 .describeDBInstances(any(DescribeDBInstancesRequest.class));
         assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.getDBInstanceHealth(awsRDSInstanceContainer));
-
-
-
-
     }
 
     @Test
@@ -194,8 +200,7 @@ public class AwsRDSPlatformTest {
         String memberId1 = randomUUID().toString();
         String memberId2 = randomUUID().toString();
         AwsRDSClusterContainer awsRDSClusterContainer = mock(AwsRDSClusterContainer.class);
-        doReturn(new DescribeDBClustersResult().withDBClusters()).when(amazonRDS)
-                                                                 .describeDBClusters(any(DescribeDBClustersRequest.class));
+        doReturn(new DescribeDBClustersResult().withDBClusters()).when(amazonRDS).describeDBClusters(any(DescribeDBClustersRequest.class));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getDBClusterHealth(awsRDSClusterContainer));
         doReturn(new DescribeDBClustersResult().withDBClusters(new DBCluster().withStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER)))
                 .when(amazonRDS)
@@ -243,8 +248,7 @@ public class AwsRDSPlatformTest {
         String clusterId = randomUUID().toString();
         DescribeDBClustersResult dbClustersResult = new DescribeDBClustersResult().withDBClusters(new DBCluster().withDBClusterMembers(new DBClusterMember()
                 .withDBInstanceIdentifier(instanceId1), new DBClusterMember().withDBInstanceIdentifier(instanceId2)));
-        doReturn(dbClustersResult).when(amazonRDS)
-                                  .describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(clusterId));
+        doReturn(dbClustersResult).when(amazonRDS).describeDBClusters(new DescribeDBClustersRequest().withDBClusterIdentifier(clusterId));
         assertThat(awsRDSPlatform.getClusterInstances(clusterId), IsIterableContainingInAnyOrder.containsInAnyOrder(instanceId1, instanceId2));
     }
 
@@ -261,26 +265,19 @@ public class AwsRDSPlatformTest {
         DescribeDBInstancesResult abnormalInstance2 = new DescribeDBInstancesResult().withDBInstances(new DBInstance().withDBInstanceIdentifier(instanceId2)
                                                                                                                       .withDBInstanceStatus(AwsRDSConstants.AWS_RDS_FAILING_OVER));
         DescribeDBInstancesResult emptyDBInstanceresult = new DescribeDBInstancesResult();
-        doReturn(emptyDBInstanceresult).when(amazonRDS)
-                                       .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(emptyDBInstanceresult).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
         assertEquals(ContainerHealth.DOES_NOT_EXIST, awsRDSPlatform.getInstanceStatus(instanceId1));
         reset(amazonRDS);
-        doReturn(normalInstance1).when(amazonRDS)
-                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
-        doReturn(normalInstance2).when(amazonRDS)
-                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        doReturn(normalInstance1).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(normalInstance2).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
         assertEquals(ContainerHealth.NORMAL, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
         reset(amazonRDS);
-        doReturn(normalInstance1).when(amazonRDS)
-                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
-        doReturn(abnormalInstance2).when(amazonRDS)
-                                   .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        doReturn(normalInstance1).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(abnormalInstance2).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
         reset(amazonRDS);
-        doReturn(abnormalInstance1).when(amazonRDS)
-                                   .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
-        doReturn(normalInstance2).when(amazonRDS)
-                                 .describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
+        doReturn(abnormalInstance1).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId1));
+        doReturn(normalInstance2).when(amazonRDS).describeDBInstances(new DescribeDBInstancesRequest().withDBInstanceIdentifier(instanceId2));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, awsRDSPlatform.getInstanceStatus(instanceId1, instanceId2));
     }
 
@@ -440,9 +437,7 @@ public class AwsRDSPlatformTest {
                                            .withDbInstanceIdentifier(dbInstanceIdentifier)
                                            .withEngine(engine)
                                            .build();
-        dbInstance = new DBInstance().withEngine(engine)
-                                     .withAvailabilityZone(availabilityZone)
-                                     .withDBInstanceIdentifier(dbInstanceIdentifier);
+        dbInstance = new DBInstance().withEngine(engine).withAvailabilityZone(availabilityZone).withDBInstanceIdentifier(dbInstanceIdentifier);
         AwsRDSInstanceContainer actualContainer = awsRDSPlatform.createContainerFromDBInstance(dbInstance);
         assertEquals(container, actualContainer);
         verify(containerManager, times(1)).offer(any());
@@ -459,10 +454,7 @@ public class AwsRDSPlatformTest {
         AwsRDSClusterContainer container;
         String engine = randomUUID().toString();
         String dbClusterIdentifier = randomUUID().toString();
-        container = AwsRDSClusterContainer.builder()
-                                          .withDbClusterIdentifier(dbClusterIdentifier)
-                                          .withEngine(engine)
-                                          .build();
+        container = AwsRDSClusterContainer.builder().withDbClusterIdentifier(dbClusterIdentifier).withEngine(engine).build();
         dbCluster = new DBCluster().withEngine(engine).withDBClusterIdentifier(dbClusterIdentifier);
         AwsRDSClusterContainer actualContainer = awsRDSPlatform.createContainerFromDBCluster(dbCluster);
         assertEquals(container, actualContainer);
@@ -492,8 +484,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new DBSnapshotAlreadyExistsException("Test")).when(amazonRDS)
-                                                             .createDBSnapshot(new CreateDBSnapshotRequest()
-                                                                                                            .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                             .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                             .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
@@ -504,8 +495,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new InvalidDBInstanceStateException("Test")).when(amazonRDS)
-                                                            .createDBSnapshot(new CreateDBSnapshotRequest()
-                                                                                                           .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                            .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                            .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
@@ -515,9 +505,8 @@ public class AwsRDSPlatformTest {
         String snapshotName = UUID.randomUUID().toString();
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
-        doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS).createDBSnapshot(new CreateDBSnapshotRequest()
-                                                                                                       .withDBInstanceIdentifier(dbInstanceIdentifier)
-                                                                                                       .withDBSnapshotIdentifier(snapshotName));
+        doThrow(new DBInstanceNotFoundException("Test")).when(amazonRDS).createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                                                                                       .withDBSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
     }
 
@@ -527,8 +516,7 @@ public class AwsRDSPlatformTest {
         String dbInstanceIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbInstanceIdentifier);
         doThrow(new SnapshotQuotaExceededException("Test")).when(amazonRDS)
-                                                           .createDBSnapshot(new CreateDBSnapshotRequest()
-                                                                                                          .withDBInstanceIdentifier(dbInstanceIdentifier)
+                                                           .createDBSnapshot(new CreateDBSnapshotRequest().withDBInstanceIdentifier(dbInstanceIdentifier)
                                                                                                           .withDBSnapshotIdentifier(snapshotName));
         doNothing().when(awsRDSPlatform).cleanupOldSnapshots();
         awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -612,8 +600,7 @@ public class AwsRDSPlatformTest {
         String dbClusterIdentifier = UUID.randomUUID().toString();
         doReturn(snapshotName).when(awsRDSPlatform).getDBSnapshotIdentifier(dbClusterIdentifier);
         doThrow(new DBClusterNotFoundException("Test")).when(amazonRDS)
-                                                       .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest()
-                                                                                                                    .withDBClusterIdentifier(dbClusterIdentifier)
+                                                       .createDBClusterSnapshot(new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(dbClusterIdentifier)
                                                                                                                     .withDBClusterSnapshotIdentifier(snapshotName));
         awsRDSPlatform.snapshotDBCluster(dbClusterIdentifier);
     }
@@ -688,7 +675,6 @@ public class AwsRDSPlatformTest {
         Instant after = Instant.now().plus(Duration.ofSeconds(1));
         Matcher m = CalendarUtils.datePattern.matcher(actual);
         assertTrue("Could not extract date-time from snapshot identifier", m.find());
-
         String dateSection = m.group(1);
         Instant i = AwsRDSUtils.getInstantFromNameSegment(dateSection);
         assertEquals(actual, String.format("ChaosSnapshot-%s-%s", dbInstanceIdentifier, dateSection));
@@ -809,16 +795,14 @@ public class AwsRDSPlatformTest {
     @Test
     public void isInstanceSnapshotRunning () {
         String dbInstanceIdentifier = randomUUID().toString();
-        DBInstance backingUpInstance = new DBInstance().withDBInstanceStatus(AWS_RDS_BACKING_UP)
-                                                       .withDBInstanceIdentifier(dbInstanceIdentifier);
+        DBInstance backingUpInstance = new DBInstance().withDBInstanceStatus(AWS_RDS_BACKING_UP).withDBInstanceIdentifier(dbInstanceIdentifier);
         DBInstance normalInstance = new DBInstance().withDBInstanceStatus(AWS_RDS_AVAILABLE);
         DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest().withDBInstanceIdentifier(dbInstanceIdentifier);
         DescribeDBInstancesResult describeDBInstancesResult1 = new DescribeDBInstancesResult().withDBInstances(backingUpInstance);
         DescribeDBInstancesResult describeDBInstancesResult2 = new DescribeDBInstancesResult().withDBInstances(backingUpInstance, normalInstance);
         DescribeDBInstancesResult describeDBInstancesResult3 = new DescribeDBInstancesResult().withDBInstances(normalInstance
                 .withDBInstanceIdentifier(dbInstanceIdentifier));
-        doReturn(describeDBInstancesResult1, describeDBInstancesResult2, describeDBInstancesResult3).when(amazonRDS)
-                                                                                                    .describeDBInstances(describeDBInstancesRequest);
+        doReturn(describeDBInstancesResult1, describeDBInstancesResult2, describeDBInstancesResult3).when(amazonRDS).describeDBInstances(describeDBInstancesRequest);
         assertTrue("Exactly one instance backing up should return true", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
         assertTrue("Any instance backing up should return true", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
         assertFalse("No instances backing up should return false", awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier));
@@ -827,16 +811,14 @@ public class AwsRDSPlatformTest {
     @Test
     public void isClusterSnapshotRunning () {
         String dbClusterIdentifier = randomUUID().toString();
-        DBCluster backingUpCluster = new DBCluster().withStatus(AWS_RDS_BACKING_UP)
-                                                    .withDBClusterIdentifier(dbClusterIdentifier);
+        DBCluster backingUpCluster = new DBCluster().withStatus(AWS_RDS_BACKING_UP).withDBClusterIdentifier(dbClusterIdentifier);
         DBCluster normalCluster = new DBCluster().withStatus(AWS_RDS_AVAILABLE);
         DescribeDBClustersResult describeDBClustersResult1 = new DescribeDBClustersResult().withDBClusters(backingUpCluster);
         DescribeDBClustersResult describeDBClustersResult2 = new DescribeDBClustersResult().withDBClusters(backingUpCluster, normalCluster);
         DescribeDBClustersResult describeDBClustersResult3 = new DescribeDBClustersResult().withDBClusters(normalCluster
                 .withDBClusterIdentifier(dbClusterIdentifier));
         DescribeDBClustersRequest describeDBClustersRequest = new DescribeDBClustersRequest().withDBClusterIdentifier(dbClusterIdentifier);
-        doReturn(describeDBClustersResult1, describeDBClustersResult2, describeDBClustersResult3).when(amazonRDS)
-                                                                                                 .describeDBClusters(describeDBClustersRequest);
+        doReturn(describeDBClustersResult1, describeDBClustersResult2, describeDBClustersResult3).when(amazonRDS).describeDBClusters(describeDBClustersRequest);
         assertTrue("Exactly one instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
         assertTrue("Any instance backing up should return true", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
         assertFalse("No instances backing up should return false", awsRDSPlatform.isClusterSnapshotRunning(dbClusterIdentifier));
@@ -912,28 +894,22 @@ public class AwsRDSPlatformTest {
         ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
         DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
                 .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
-        doReturn(describeDBInstancesResult).when(amazonRDS)
-                                           .describeDBInstances(describeDBInstancesRequestCaptor.capture());
+        doReturn(describeDBInstancesResult).when(amazonRDS).describeDBInstances(describeDBInstancesRequestCaptor.capture());
         doReturn(new CreateSecurityGroupResult().withGroupId(securityGroupId)).when(amazonEC2)
                                                                               .createSecurityGroup(createSecurityGroupRequestCaptor
                                                                                       .capture());
-        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2)
-                                                    .describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor.capture());
+        doReturn(new DescribeSecurityGroupsResult()).when(amazonEC2).describeSecurityGroups(describeSecurityGroupsRequestArgumentCaptor.capture());
         assertEquals(securityGroupId, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
         assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
-        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION, createSecurityGroupRequestCaptor.getValue()
-                                                                                               .getDescription());
+        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION, createSecurityGroupRequestCaptor.getValue().getDescription());
         assertEquals(vpcId, createSecurityGroupRequestCaptor.getValue().getVpcId());
-        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId, createSecurityGroupRequestCaptor.getValue()
-                                                                                                 .getGroupName());
+        assertEquals(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId, createSecurityGroupRequestCaptor.getValue().getGroupName());
         verify(amazonEC2, times(1)).createSecurityGroup(any());
         ArgumentCaptor<RevokeSecurityGroupEgressRequest> revokeEgressCaptor = ArgumentCaptor.forClass(RevokeSecurityGroupEgressRequest.class);
         verify(amazonEC2, times(1)).revokeSecurityGroupEgress(revokeEgressCaptor.capture());
-        assertEquals(Collections.singletonList(AwsRDSConstants.DEFAULT_IP_PERMISSION), revokeEgressCaptor.getValue()
-                                                                                                         .getIpPermissions());
+        assertEquals(Collections.singletonList(AwsRDSConstants.DEFAULT_IP_PERMISSION), revokeEgressCaptor.getValue().getIpPermissions());
         assertEquals(securityGroupId, revokeEgressCaptor.getValue().getGroupId());
-        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
-                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue().getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
                 .withValues(vpcId)));
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
@@ -950,8 +926,7 @@ public class AwsRDSPlatformTest {
         ArgumentCaptor<DescribeSecurityGroupsRequest> describeSecurityGroupsRequestArgumentCaptor = ArgumentCaptor.forClass(DescribeSecurityGroupsRequest.class);
         DescribeDBInstancesResult describeDBInstancesResult = new DescribeDBInstancesResult().withDBInstances(new DBInstance()
                 .withDBSubnetGroup(new DBSubnetGroup().withVpcId(vpcId)));
-        doReturn(describeDBInstancesResult).when(amazonRDS)
-                                           .describeDBInstances(describeDBInstancesRequestCaptor.capture());
+        doReturn(describeDBInstancesResult).when(amazonRDS).describeDBInstances(describeDBInstancesRequestCaptor.capture());
         doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(new SecurityGroup().withGroupId(securityGroupId)
                                                                                           .withGroupName(AWS_RDS_CHAOS_SECURITY_GROUP + " " + vpcId)
                                                                                           .withDescription(AWS_RDS_CHAOS_SECURITY_GROUP_DESCRIPTION)
@@ -962,8 +937,7 @@ public class AwsRDSPlatformTest {
         assertEquals(dbInstanceIdentifier, describeDBInstancesRequestCaptor.getValue().getDBInstanceIdentifier());
         verify(amazonEC2, never()).createSecurityGroup(any());
         verify(amazonEC2, never()).revokeSecurityGroupEgress(any());
-        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue()
-                                                              .getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
+        assertThat(describeSecurityGroupsRequestArgumentCaptor.getValue().getFilters(), IsIterableContainingInAnyOrder.containsInAnyOrder(new Filter("vpc-id")
                 .withValues(vpcId)));
         // Verify it's in the cache afterwards
         verify(awsRDSPlatform, times(1).description("Expected to call from cache this time")).getChaosSecurityGroupOfVpc(any());
@@ -976,9 +950,7 @@ public class AwsRDSPlatformTest {
     public void handleInvalidSecurityGroup () {
         ArgumentCaptor<Collection<String>> groupListCaptor = ArgumentCaptor.forClass(Collection.class);
         ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
-        List<String> securityGroups = IntStream.range(0, 10)
-                                               .mapToObj(i -> randomUUID().toString())
-                                               .collect(Collectors.toList());
+        List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String dbInstanceIdentifier = randomUUID().toString();
         AmazonRDSException exception = new AmazonRDSException("Test Exception");
         exception.setErrorCode(INVALID_PARAMETER_VALUE);
@@ -1001,9 +973,7 @@ public class AwsRDSPlatformTest {
     @Test
     public void handleInvalidSecurityGroupWithDifferentError () {
         ArgumentCaptor<ModifyDBInstanceRequest> modifyRequestCaptor = ArgumentCaptor.forClass(ModifyDBInstanceRequest.class);
-        List<String> securityGroups = IntStream.range(0, 10)
-                                               .mapToObj(i -> randomUUID().toString())
-                                               .collect(Collectors.toList());
+        List<String> securityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String dbInstanceIdentifier = randomUUID().toString();
         AmazonRDSException exception = new AmazonRDSException("Test Exception");
         exception.setErrorCode("This is a test of the emergency broadcast system");
@@ -1024,9 +994,7 @@ public class AwsRDSPlatformTest {
     @Test
     public void processInvalidSecurityGroupId () {
         Map<String, String> vpcToSecurityGroupMap;
-        Collection<String> validSecurityGroups = IntStream.range(0, 10)
-                                                          .mapToObj(i -> randomUUID().toString())
-                                                          .collect(Collectors.toList());
+        Collection<String> validSecurityGroups = IntStream.range(0, 10).mapToObj(i -> randomUUID().toString()).collect(Collectors.toList());
         String invalidSecurityGroup = randomUUID().toString();
         String invalidVpc = randomUUID().toString();
         validSecurityGroups.forEach(s -> {
@@ -1062,11 +1030,9 @@ public class AwsRDSPlatformTest {
     @Test
     public void getInstancesWithNoAvailabityZoneYet () {
         String inProgressIdentifier = randomUUID().toString();
-        DBInstance inProgressInstance = new DBInstance().withAvailabilityZone(null)
-                                                        .withDBInstanceIdentifier(inProgressIdentifier);
+        DBInstance inProgressInstance = new DBInstance().withAvailabilityZone(null).withDBInstanceIdentifier(inProgressIdentifier);
         String completedIdentifier = randomUUID().toString();
-        DBInstance completedInstance = new DBInstance().withAvailabilityZone("us-east-1b")
-                                                       .withDBInstanceIdentifier(completedIdentifier);
+        DBInstance completedInstance = new DBInstance().withAvailabilityZone("us-east-1b").withDBInstanceIdentifier(completedIdentifier);
         AwsRDSInstanceContainer completedInstanceContainer = new AwsRDSInstanceContainer();
         doReturn(new DescribeDBInstancesResult().withDBInstances(inProgressInstance, completedInstance)).when(amazonRDS)
                                                                                                         .describeDBInstances(any());

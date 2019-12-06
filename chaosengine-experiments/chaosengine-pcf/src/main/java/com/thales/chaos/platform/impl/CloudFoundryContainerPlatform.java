@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform.impl;
 
 import com.thales.chaos.constants.CloudFoundryConstants;
@@ -77,16 +94,15 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         String instanceIndex = container.getInstance().toString();
         final ApplicationInstanceInfo applicationInstanceInfo = cloudFoundryClient.applicationsV2()
                                                                                   .instances(ApplicationInstancesRequest
-                                                                                                    .builder()
-                                                                                                    .applicationId(applicationId)
-                                                                                                    .build())
+                                                                                          .builder()
+                                                                                          .applicationId(applicationId)
+                                                                                          .build())
                                                                                   .blockOptional()
                                                                                   .orElseThrow(EMPTY_RESPONSE.asChaosException())
                                                                                   .getInstances()
                                                                                   .get(instanceIndex);
         log.debug("Time in state from Application Instance Info: {}", v("applicationInstanceInfo", applicationInstanceInfo));
-        Double since = applicationInstanceInfo
-                                         .getSince();
+        Double since = applicationInstanceInfo.getSince();
         return since == null ? null : Instant.ofEpochSecond(since.longValue());
     }
 
@@ -180,17 +196,12 @@ public class CloudFoundryContainerPlatform extends CloudFoundryPlatform implemen
         log.debug("Retrieving SSH Credentials for {}", v(DataDogConstants.DATADOG_CONTAINER_KEY, container));
         String username = "cf:" + container.getApplicationId() + '/' + container.getInstance();
         Callable<String> passwordGenerator = this::getSSHOneTimePassword;
-        return new ChaosSSHCredentials().withUsername(username)
-                                        .withPasswordGenerator(passwordGenerator)
-                                        .withSupportSudo(false);
+        return new ChaosSSHCredentials().withUsername(username).withPasswordGenerator(passwordGenerator).withSupportSudo(false);
     }
 
     String getSSHOneTimePassword () {
         log.debug("Requesting a one-time SSH password for {}", v(DataDogConstants.DATADOG_PLATFORM_KEY, this));
-        return cloudFoundryOperations.advanced()
-                                     .sshCode()
-                                     .blockOptional()
-                                     .orElseThrow(EMPTY_RESPONSE.asChaosException());
+        return cloudFoundryOperations.advanced().sshCode().blockOptional().orElseThrow(EMPTY_RESPONSE.asChaosException());
     }
 
     @Override

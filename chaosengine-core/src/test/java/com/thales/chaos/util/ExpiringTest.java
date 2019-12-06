@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.util;
 
 import org.junit.Before;
@@ -33,9 +50,7 @@ public class ExpiringTest {
     @Test
     public void isExpired () {
         expiringObject = new Expiring<>(object, Duration.ofMillis(50));
-        await().atLeast(100, TimeUnit.MILLISECONDS)
-               .atMost(200, TimeUnit.MILLISECONDS)
-               .until(() -> expiringObject.getExpiryTime().isBefore(Instant.now()));
+        await().atLeast(100, TimeUnit.MILLISECONDS).atMost(200, TimeUnit.MILLISECONDS).until(() -> expiringObject.getExpiryTime().isBefore(Instant.now()));
         assertTrue(expiringObject.isExpired());
         assertNull(expiringObject.value());
     }
@@ -88,5 +103,4 @@ public class ExpiringTest {
         Expiring<Object> t = new Expiring<>(to, expiryTime);
         assertTrue(t.toString().contains(String.format("%s", to)));
     }
-
 }

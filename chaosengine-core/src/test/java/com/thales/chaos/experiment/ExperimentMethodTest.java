@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.container.Container;
@@ -30,7 +47,8 @@ public class ExperimentMethodTest {
     private final Container container = mock(Container.class);
     private ExperimentMethod<Container> experimentMethod;
     private Script script;
-    private Experiment experiment = spy(Experiment.class);
+    private Experiment experiment = spy(new Experiment(container) {
+    });
 
     public ExperimentMethodTest (String resourceName) {
         this.script = ShellScript.fromResource(new ClassPathResource("com/thales/chaos/experiment/experimentMethodTest/" + resourceName));
@@ -39,10 +57,7 @@ public class ExperimentMethodTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> parameters () throws Exception {
         Resource[] resources = new PathMatchingResourcePatternResolver().getResources("com/thales/chaos/experiment/experimentMethodTest/*");
-        return Arrays.stream(resources)
-                     .map(Resource::getFilename)
-                     .map(o -> new Object[]{ o })
-                     .collect(Collectors.toList());
+        return Arrays.stream(resources).map(Resource::getFilename).map(o -> new Object[]{ o }).collect(Collectors.toList());
     }
 
     @Before
@@ -50,6 +65,7 @@ public class ExperimentMethodTest {
     public void setUp () {
         doReturn(true).when(container).supportsShellBasedExperiments();
         doReturn(false).when(container).isCattle();
+        doNothing().when(experiment).sendNotification(any(), any());
         experimentMethod = ExperimentMethod.fromScript(container, script);
         experimentMethod.accept(container, experiment);
     }
@@ -72,14 +88,16 @@ public class ExperimentMethodTest {
     @Test
     public void callSelfHealing () {
         assumeThat(script.getSelfHealingCommand(), is(SELF_HEALING_COMMAND));
+        doReturn(true).when(experiment).canRunSelfHealing();
+        doNothing().when(experiment).evaluateRunningExperiment();
         experiment.callSelfHealing();
         verify(container, times(1)).runCommand(SELF_HEALING_COMMAND);
     }
 
     @Test
-    public void callFinalizeCommand () throws Exception {
+    public void callFinalizeCommand () {
         assumeThat(script.getFinalizeCommand(), is(FINALIZE_COMMAND));
-        experiment.getFinalizeMethod().call();
+        experiment.getFinalizeMethod().run();
         verify(container, times(1)).runCommand(FINALIZE_COMMAND);
     }
 }

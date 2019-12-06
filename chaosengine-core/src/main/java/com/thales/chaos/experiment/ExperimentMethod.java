@@ -1,18 +1,34 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.experiment;
 
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
-import com.thales.chaos.experiment.annotations.CattleExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.shellclient.ShellOutput;
+import org.springframework.core.annotation.AnnotationUtils;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Optional;
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 
@@ -32,22 +48,20 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         } catch (ClassCastException e) {
             throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
         }
+        final ChaosExperiment experimentConfiguration = AnnotationUtils.getAnnotation(method, ChaosExperiment.class);
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.actualBiconsumer = (container, experiment) -> {
             try {
+                ((Experiment) experiment).setMinimumDuration(Duration.ofSeconds(experimentConfiguration.minimumDurationInSeconds()));
+                ((Experiment) experiment).setMaximumDuration(Duration.ofSeconds(experimentConfiguration.maximumDurationInSeconds()));
                 method.invoke(container, experiment);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new ChaosException(ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA, e);
             }
         };
         experimentMethod.experimentName = method.getName();
-        Optional<Annotation> experimentTypeAnnotation = Arrays.stream(method.getAnnotations())
-                                                              .filter(ExperimentType::isExperiment)
-                                                              .findFirst();
-        experimentTypeAnnotation.ifPresent(annotation -> experimentMethod.experimentType = ExperimentType.valueOf(annotation));
-        experimentMethod.cattleOnly = Arrays.stream(method.getAnnotations())
-                                            .map(Annotation::annotationType)
-                                            .anyMatch(c -> c.equals(CattleExperiment.class));
+        experimentMethod.experimentType = experimentConfiguration.experimentType();
+        experimentMethod.cattleOnly = experimentConfiguration.cattleOnly();
         return experimentMethod;
     }
 
@@ -56,10 +70,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
             throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL_EXPERIMENTS);
         }
         final boolean cattle = script.isRequiresCattle();
-        final Callable<Void> selfHealingMethod = cattle ? container.recycleCattle() : () -> {
-            container.runCommand(script.getSelfHealingCommand());
-            return null;
-        };
+        final Runnable selfHealingMethod = cattle ? container.recycleCattle() : () -> container.runCommand(script.getSelfHealingCommand());
         Callable<ContainerHealth> checkContainerHealthMethod = () -> {
             if (cattle) {
                 return container.isContainerRecycled() ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
@@ -71,15 +82,16 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
                 return ContainerHealth.RUNNING_EXPERIMENT;
             }
         };
-        Callable<Void> finalizeMethod = () -> {
-            container.runCommand(script.getFinalizeCommand());
-            return null;
-        };
+        Runnable finalizeMethod;
+        String finalizeCommand = script.getFinalizeCommand();
+        finalizeMethod = (finalizeCommand == null || finalizeCommand.isBlank()) ? null : () -> container.runCommand(finalizeCommand);
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.experimentType = script.getExperimentType();
         experimentMethod.cattleOnly = cattle;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {
+            experiment.setMaximumDuration(script.getMaximumDuration());
+            experiment.setMinimumDuration(script.getMinimumDuration());
             experiment.setSelfHealingMethod(selfHealingMethod);
             experiment.setCheckContainerHealth(checkContainerHealthMethod);
             experiment.setFinalizeMethod(finalizeMethod);

@@ -1,46 +1,68 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.logging;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import com.thales.chaos.logging.enums.LoggingLevel;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/logging")
+@Tag(name = LoggingController.LOGGING)
 public class LoggingController {
-    private static final String THALES_PACKAGE = "com.thales";
-    private static final Marker ALWAYS = MarkerFactory.getMarker("ALWAYS");
+    public static final String LOGGING = "Logging";
+    @Autowired
+    private LoggingManager loggingManager;
 
-    @ApiOperation(value = "Set Base Logging Level", notes = "Sets the logging level for the com.thales class.")
-    @PostMapping
-    public String setLogLevel (@ApiParam(value = "The new logging level to use", required = true) @RequestParam LoggingLevel loggingLevel) {
-        setLogLevel(loggingLevel, THALES_PACKAGE);
+    @Operation(summary = "Enable Debug Mode",
+               description = "Increases the log level for Chaos Engine internal classes to DEBUG",
+               responses = {
+                       @ApiResponse(content = @Content(mediaType = "text/plain",
+                                                       schema = @Schema(implementation = String.class)))
+               })
+    @PostMapping({ "", "/{timeout}" })
+    public String setDebugMode (@PathVariable(required = false)
+                                @Parameter(description = "Duration before automatically reverting logs. Formatted as \"PT[nH][nM][nS]\".",
+                                           example = "PT1H15M45S") Duration timeout) {
+        if (timeout == null) {
+            loggingManager.setDebugMode();
+        } else {
+            loggingManager.setDebugMode(timeout);
+        }
         return "ok";
     }
 
-    @ApiOperation(value = "Set Class Logging Level", notes = "Sets the logging level for a specific Java Class Path.")
-    @PostMapping("/{loggingClass}")
-    public String setLogLevel (@ApiParam(value = "The new logging level to use") @RequestParam LoggingLevel loggingLevel, @ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.thales, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
-        Logger logger = (Logger) LoggerFactory.getLogger(loggingClass);
-        logger.setLevel(Level.valueOf(loggingLevel.toString()));
-        logger.info(ALWAYS, "Logging level changed to {}", loggingLevel);
+    @Operation(summary = "Disable Debug Mode",
+               description = "Removes DEBUG log level from Chaos Engine internal classes.",
+               responses = {
+                       @ApiResponse(content = @Content(mediaType = "text/plain",
+                                                       schema = @Schema(implementation = String.class)))
+               })
+    @DeleteMapping
+    public String clearDebugMode () {
+        loggingManager.clearDebugMode();
         return "ok";
-    }
-
-    @ApiOperation(value = "Get Base Logging Level", notes = "Gets the logging level for the com.thales class.")
-    @GetMapping
-    public String getLogLevel () {
-        return getLogLevel(THALES_PACKAGE);
-    }
-
-    @ApiOperation(value = "Get Class Logging Level", notes = "Gets the logging level for a specific Java Class Path.")
-    @GetMapping("/{loggingClass}")
-    public String getLogLevel (@ApiParam(value = "The Java Class Path to get the logging level of (i.e., com.thales, com.thales.chaos.platform, org.springframework)") @PathVariable String loggingClass) {
-        return ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggingClass)).getLevel().toString();
     }
 }

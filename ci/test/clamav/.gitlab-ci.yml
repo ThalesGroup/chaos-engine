@@ -1,0 +1,18 @@
+clamav_scan:
+  variables:
+    SCAN_LOG: "av.log"
+  stage: test
+  dependencies:
+    - install
+  image:
+    name: thalesgroup/clamav4pipeline:latest
+  only:
+    - branches
+    - tags
+    - merge_requests
+  before_script: []
+  script:
+    - scan.sh -d . -l ${SCAN_LOG}
+  artifacts:
+    paths:
+      - ${SCAN_LOG}

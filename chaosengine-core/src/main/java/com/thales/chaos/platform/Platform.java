@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.platform;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -5,7 +22,6 @@ import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.experiment.ExperimentalObject;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
@@ -20,10 +36,7 @@ import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
@@ -36,7 +49,6 @@ public abstract class Platform implements ExperimentalObject {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private long averageMillisPerExperiment = 14400000L;
     private Scheduler scheduler;
-    private List<ExperimentType> supportedExperimentTypes;
     private Expiring<List<Container>> roster;
     private Set<Instant> experimentTimes = new HashSet<>();
     @Autowired
@@ -44,13 +56,13 @@ public abstract class Platform implements ExperimentalObject {
     private HolidayManager holidayManager;
 
     public void setAverageMillisPerExperiment (long averageMillisPerExperiment) {
-
         if (averageMillisPerExperiment == this.averageMillisPerExperiment) return;
         log.info("Setting average time between failure for {} to {} ms", this, averageMillisPerExperiment);
         this.averageMillisPerExperiment = averageMillisPerExperiment;
         this.scheduler = null;
     }
-    void expireCachedRoster () {
+
+    public void expireCachedRoster () {
         if (roster != null) roster.expire();
     }
 
@@ -68,17 +80,6 @@ public abstract class Platform implements ExperimentalObject {
         return this.getClass().getSimpleName();
     }
 
-    List<ExperimentType> getSupportedExperimentTypes () {
-        if (supportedExperimentTypes == null) {
-            supportedExperimentTypes = getRoster().stream()
-                                                  .map(Container::getSupportedExperimentTypes)
-                                                  .flatMap(List::stream)
-                                                  .distinct()
-                                                  .collect(Collectors.toList());
-        }
-        return supportedExperimentTypes;
-    }
-
     public synchronized List<Container> getRoster () {
         try (MDC.MDCCloseable ignored = MDC.putCloseable(DataDogConstants.DATADOG_PLATFORM_KEY, this.getPlatformType())) {
             if (roster == null) {
@@ -89,6 +90,10 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     protected abstract List<Container> generateRoster ();
+
+    public Collection<Container> getRosterByAggregationId (String aggregationId) {
+        return getRoster().stream().filter(container -> container.getAggregationIdentifier().equals(aggregationId)).collect(Collectors.toUnmodifiableSet());
+    }
 
     @Override
     public synchronized boolean canExperiment () {
@@ -137,5 +142,12 @@ public abstract class Platform implements ExperimentalObject {
 
     public boolean hasEligibleContainersForExperiments () {
         return getRoster().stream().anyMatch(Container::eligibleForExperiments);
+    }
+
+    public Container getContainerByIdentifier (String containerIdentifier) {
+        return getRoster().stream()
+                          .filter(container -> container.compareUniqueIdentifier(containerIdentifier))
+                          .findFirst()
+                          .orElse(null);
     }
 }

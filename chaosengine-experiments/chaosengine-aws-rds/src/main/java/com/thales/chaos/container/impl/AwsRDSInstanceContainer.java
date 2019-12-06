@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBSnapshot;
@@ -5,10 +22,10 @@ import com.amazonaws.services.rds.model.DBSnapshotNotFoundException;
 import com.thales.chaos.constants.AwsRDSConstants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -24,9 +41,11 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 public class AwsRDSInstanceContainer extends AwsContainer {
+    @Identifier(order = 0)
     private String dbInstanceIdentifier;
+    @Identifier(order = 1)
     private String engine;
-    private transient AwsRDSPlatform awsRDSPlatform;
+    private AwsRDSPlatform awsRDSPlatform;
 
     public String getDbInstanceIdentifier () {
         return dbInstanceIdentifier;
@@ -52,7 +71,7 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return dbInstanceIdentifier;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartInstance (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.getInstanceStatus(dbInstanceIdentifier));
         awsRDSPlatform.restartInstance(dbInstanceIdentifier);
@@ -68,19 +87,18 @@ public class AwsRDSInstanceContainer extends AwsContainer {
         return uniqueIdentifier.equals(dbInstanceIdentifier);
     }
 
-    @NetworkExperiment
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void removeSecurityGroups (Experiment experiment) {
         Collection<String> existingSecurityGroups = awsRDSPlatform.getVpcSecurityGroupIds(dbInstanceIdentifier);
         log.info("Existing security groups for {} are {}", value(getDataDogIdentifier().getKey(), getDataDogIdentifier().getValue()), value("securityGroups", existingSecurityGroups));
         experiment.setSelfHealingMethod(() -> {
             awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups);
-            return null;
         });
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.checkVpcSecurityGroupIds(dbInstanceIdentifier, existingSecurityGroups));
         awsRDSPlatform.setVpcSecurityGroupIds(dbInstanceIdentifier, awsRDSPlatform.getChaosSecurityGroup(dbInstanceIdentifier));
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void startSnapshot (Experiment experiment) {
         experiment.setCheckContainerHealth(() -> awsRDSPlatform.isInstanceSnapshotRunning(dbInstanceIdentifier) ? ContainerHealth.RUNNING_EXPERIMENT : ContainerHealth.NORMAL);
         final DBSnapshot dbSnapshot = awsRDSPlatform.snapshotDBInstance(dbInstanceIdentifier);
@@ -90,7 +108,6 @@ public class AwsRDSInstanceContainer extends AwsContainer {
             } catch (DBSnapshotNotFoundException e) {
                 log.warn("Attempted to delete snapshot, but it was already deleted", v(DataDogConstants.RDS_INSTANCE_SNAPSHOT, dbSnapshot), e);
             }
-            return null;
         });
         experiment.setFinalizeMethod(experiment.getSelfHealingMethod());
     }

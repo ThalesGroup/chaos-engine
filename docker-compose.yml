@@ -1,12 +1,12 @@
 version: '3.4'
 services:
   chaosengine:
+    image: thalesgroup/chaos-engine:latest
     build:
       context: .
       target: develop
     ports:
     - "8080:8080"
-    - "8081:8081"
     env_file: .env
     environment:
       VAULT_10: "true"

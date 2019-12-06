@@ -1,7 +1,24 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.globalconfig;
 
-import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.util.ErrorUtils;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -9,9 +26,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ControllerConfig {
-    @ExceptionHandler(ChaosException.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public void handleChaosException (ChaosException ex) {
-        ErrorUtils.logStacktraceUsingLastValidLogger(ex, "Unhandled ChaosException in HTTP Request");
+    @ApiResponse(responseCode = "404", description = "User is not authorized")
+    @ApiResponse(responseCode = "500", description = "An unexpected server error has occurred")
+    public String handleChaosException (Exception ex) {
+        ErrorUtils.logStacktraceUsingLastValidLogger(ex, "Unhandled Exception in HTTP Request");
+        return ex.getMessage();
     }
 }

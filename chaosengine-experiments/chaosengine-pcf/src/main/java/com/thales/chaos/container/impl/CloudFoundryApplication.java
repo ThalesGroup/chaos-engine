@@ -1,13 +1,29 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.CloudFoundryChaosErrorCode;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.ResourceExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -22,41 +38,44 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class CloudFoundryApplication extends Container {
-    private transient static final Integer MAX_INSTANCES = 5;
-    private transient static final Integer MIN_INSTANCES = 1;
+    private static final Random RANDOM = new Random();
+    private static final Integer MAX_INSTANCES = 5;
+    private static final Integer MIN_INSTANCES = 1;
+    @Identifier(order = 0)
     private String name;
+    @Identifier(order = 1)
     private Integer originalContainerInstances;
+    @Identifier(order = 2)
     private Integer actualContainerInstances;
-    private transient String applicationID;
-    private transient CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
-    private transient List<CloudFoundryApplicationRoute> applicationRoutes;
-    private transient CloudFoundryApplicationRoute routeUnderExperiment;
-    private transient Callable<Void> rescaleApplicationToDefault = () -> {
+    private String applicationID;
+    private CloudFoundryApplicationPlatform cloudFoundryApplicationPlatform;
+    private List<CloudFoundryApplicationRoute> applicationRoutes;
+    private CloudFoundryApplicationRoute routeUnderExperiment;
+    private Runnable rescaleApplicationToDefault = () -> {
         cloudFoundryApplicationPlatform.rescaleApplication(name, originalContainerInstances);
         actualContainerInstances = originalContainerInstances;
-        return null;
     };
-    private transient Callable<Void> restageApplication = () -> {
-        cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
-        return null;
-    };
-    private transient Callable<Void> mapApplicationRoute = () -> {
+    private Runnable restageApplication = () -> cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
+    private Runnable mapApplicationRoute = () -> {
         if (routeUnderExperiment != null) {
             log.debug("Mapping application route: {}", routeUnderExperiment);
             cloudFoundryApplicationPlatform.mapRoute(routeUnderExperiment.getMapRouteRequest());
         }
-        return null;
     };
+    private Runnable noRecovery = () -> log.warn("There is no recovery method for this kind of experiment.");
 
-    @Override
-    public DataDogIdentifier getDataDogIdentifier () {
-        return DataDogIdentifier.dataDogIdentifier().withKey("application")
-                .withValue(name);
+    public List<CloudFoundryApplicationRoute> getApplicationRoutes () {
+        return applicationRoutes;
     }
 
-    @Override
-    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
-        return uniqueIdentifier.equals(name);
+    private Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
+
+    public CloudFoundryApplication () {
+        super();
+    }
+
+    public static CloudFoundryApplicationBuilder builder () {
+        return CloudFoundryApplicationBuilder.builder();
     }
 
     public Integer getOriginalContainerInstances () {
@@ -65,20 +84,6 @@ public class CloudFoundryApplication extends Container {
 
     public Integer getActualContainerInstances () {
         return actualContainerInstances;
-    }
-
-    private transient Callable<Void> noRecovery = () -> {
-        log.warn("There is no recovery method for this kind of experiment.");
-        return null;
-    };
-    private transient Callable<ContainerHealth> isAppHealthy = () -> cloudFoundryApplicationPlatform.checkPlatformHealth();
-
-    public CloudFoundryApplication () {
-        super();
-    }
-
-    public static CloudFoundryApplicationBuilder builder () {
-        return CloudFoundryApplicationBuilder.builder();
     }
 
     public String getApplicationID () {
@@ -97,7 +102,7 @@ public class CloudFoundryApplication extends Container {
 
     @Override
     public String getSimpleName () {
-        return name;
+        return getAggregationIdentifier();
     }
 
     @Override
@@ -105,41 +110,55 @@ public class CloudFoundryApplication extends Container {
         return name;
     }
 
-    @ResourceExperiment
+    @Override
+    public DataDogIdentifier getDataDogIdentifier () {
+        return DataDogIdentifier.dataDogIdentifier().withKey("application").withValue(name);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(name);
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.RESOURCE)
     public void scaleApplication (Experiment experiment) {
         experiment.setSelfHealingMethod(rescaleApplicationToDefault);
         experiment.setCheckContainerHealth(isAppHealthy);
         experiment.setFinalizeMethod(rescaleApplicationToDefault);
-        Random rand = new Random();
         int newScale;
         do {
-            newScale = rand.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
+            newScale = RANDOM.nextInt(MAX_INSTANCES - MIN_INSTANCES) + MIN_INSTANCES;
         } while (newScale == actualContainerInstances);
         actualContainerInstances = newScale;
         log.debug("Scaling {} to {} instances", name, actualContainerInstances);
         cloudFoundryApplicationPlatform.rescaleApplication(name, actualContainerInstances);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartApplication (Experiment experiment) {
         experiment.setSelfHealingMethod(restageApplication);
         experiment.setCheckContainerHealth(isAppHealthy);
         cloudFoundryApplicationPlatform.restartApplication(name);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restageApplication (Experiment experiment) {
         experiment.setCheckContainerHealth(isAppHealthy);
         experiment.setSelfHealingMethod(noRecovery);
         cloudFoundryApplicationPlatform.restageApplication(getRestageApplicationRequest());
     }
 
-    @NetworkExperiment
+    private RestageApplicationRequest getRestageApplicationRequest () {
+        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
+        log.info("{}", restageApplicationRequest);
+        return restageApplicationRequest;
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void unmapRoute (Experiment experiment) {
         experiment.setCheckContainerHealth(isAppHealthy);
         if (!applicationRoutes.isEmpty()) {
-            Random rand = new Random();
-            int routeIndex = rand.nextInt(applicationRoutes.size());
+            int routeIndex = RANDOM.nextInt(applicationRoutes.size());
             this.routeUnderExperiment = applicationRoutes.get(routeIndex);
             experiment.setSelfHealingMethod(mapApplicationRoute);
             experiment.setFinalizeMethod(mapApplicationRoute);
@@ -149,13 +168,6 @@ public class CloudFoundryApplication extends Container {
             log.warn("Application {} has no routes set, stopping the experiment {}", name, experiment.getId());
             throw new ChaosException(CloudFoundryChaosErrorCode.NO_ROUTES);
         }
-    }
-
-
-    private RestageApplicationRequest getRestageApplicationRequest () {
-        RestageApplicationRequest restageApplicationRequest = RestageApplicationRequest.builder().name(name).build();
-        log.info("{}", restageApplicationRequest);
-        return restageApplicationRequest;
     }
 
     public static final class CloudFoundryApplicationBuilder {

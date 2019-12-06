@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.notification.impl;
 
 import com.thales.chaos.container.Container;
@@ -37,7 +54,6 @@ public class DataDogNotificationTest {
     @Mock
     private Platform platform;
     private DataDogNotification.DataDogEvent dataDogEvent ;
-
     private String experimentId=UUID.randomUUID().toString();
     private String experimentMethod=UUID.randomUUID().toString();
     private String message = StringUtils.generateRandomString(50);
@@ -47,8 +63,6 @@ public class DataDogNotificationTest {
     private String conatainerType = "Container";
     private String aggregationIdentifier = conatainerType;
     private Date chaosTime = Date.from(Instant.now());
-
-
     private NotificationLevel level = NotificationLevel.WARN;
     private List<String> expectedTagsEvent = new ArrayList<>();
     private List<String> expectedTagsMessage = new ArrayList<>();
@@ -57,6 +71,7 @@ public class DataDogNotificationTest {
         public String getContainerType () {
             return conatainerType;
         }
+
         @Override
         public Platform getPlatform () {
             return platform;
@@ -98,6 +113,7 @@ public class DataDogNotificationTest {
             return List.of("/path/to/some/binary");
         }
     };
+
     @Before
     public void setUp () {
         chaosExperimentEvent = ChaosExperimentEvent.builder()
@@ -110,8 +126,7 @@ public class DataDogNotificationTest {
                                                    .build();
         when(platform.getPlatformType()).thenReturn(platformType);
         dataDogEvent = new DataDogNotification().new DataDogEvent();
-        container.getShellCapabilities()
-                 .forEach((key, value) -> expectedTagsEvent.add("container.shellCapabilities." + key + ":" + value));
+        container.getShellCapabilities().forEach((key, value) -> expectedTagsEvent.add("container.shellCapabilities." + key + ":" + value));
         expectedTagsEvent.add("container.containerType:" + container.getContainerType());
         expectedTagsEvent.add("container.aggregationIdentifier:" + aggregationIdentifier);
         expectedTagsEvent.add("container.simpleName:" + target);
@@ -124,13 +139,10 @@ public class DataDogNotificationTest {
         expectedTagsEvent.add("experimentMethod:" + experimentMethod);
         expectedTagsEvent.add("notificationLevel:" + level.name());
         expectedTagsEvent.sort(Comparator.naturalOrder());
-        chaosMessage = ChaosMessage.builder()
-                                   .withMessage(message)
-                                   .withTitle(title)
-                                   .withNotificationLevel(level)
-                                   .build();
+        chaosMessage = ChaosMessage.builder().withMessage(message).withTitle(title).withNotificationLevel(level).build();
         expectedTagsMessage.add("notificationLevel:" + level);
     }
+
     @Test
     public void logEvent () {
         StatsDClient client = Mockito.mock(StatsDClient.class);
@@ -185,8 +197,9 @@ public class DataDogNotificationTest {
     public void logEventFailure(){
         StatsDClient client = Mockito.mock(StatsDClient.class);
         doThrow(StatsDClientException.class).when(client).recordEvent(ArgumentMatchers.any(), ArgumentMatchers.any());
-        DataDogNotification notif = new DataDogNotification(client);
+        DataDogNotification notif = Mockito.spy(new DataDogNotification(client));
         notif.logNotification(chaosExperimentEvent);
+        verify(notif, times(1)).send(any(), any());
     }
 
     @Test

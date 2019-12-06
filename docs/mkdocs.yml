@@ -1,0 +1,36 @@
+site_name: Chaos Engine
+site_description: 'A tool for automated Chaos Experimentation'
+repo_url: https://github.com/gemalto/chaos-engine
+repo_name: chaos-engine @ GitHub
+docs_dir: markdown
+
+strict: true
+
+theme:
+  name: 'material'
+  custom_dir: 'theme'
+  palette:
+    primary: 'light blue'
+    accent: 'light blue'
+  font:
+    text: Fira Sans Condensed
+    code: Fira Code
+  feature:
+    tabs: true
+  favicon: './images/favicon.ico'
+  logo: './images/icon.png'
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.details
+  - pymdownx.superfences
+
+extra:
+  social:
+    - type: tags
+      link: 'https://github.com/gemalto/chaos-engine/issues'
+
+copyright: |
+  &copy; 2019 Thales Group<br />
+  <!-- version -->

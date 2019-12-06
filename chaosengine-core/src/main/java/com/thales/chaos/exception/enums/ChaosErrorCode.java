@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.exception.enums;
 
 import com.thales.chaos.exception.ErrorCode;
@@ -13,10 +30,15 @@ public enum ChaosErrorCode implements ErrorCode {
     EXPERIMENT_START_FAILURE(12001),
     RECYCLING_UNSUPPORTED(12002),
     PLATFORM_DOES_NOT_SUPPORT_SHELL(12003),
+    PLATFORM_DOES_NOT_EXIST(12004),
     SELF_HEALING_CALL_ERROR(13001),
     ERROR_CREATING_EXPERIMENT_METHOD_FROM_JAVA(13002),
     PLATFORM_DOES_NOT_SUPPORT_SHELL_EXPERIMENTS(13003),
+    NOT_ENOUGH_CONTAINERS_FOR_PLANNED_EXPERIMENT(13004),
+    EXPERIMENT_DOES_NOT_EXIST_FOR_CONTAINER(13005),
+    ANOTHER_EXPERIMENT_IN_PROGRESS(13006),
     INVALID_STATE(19001),
+    OBJECT_SERIALIZATION_ERROR(19002),
     NOTIFICATION_SEND_ERROR(18001),
     NOTIFICATION_BUFFER_ERROR(18201),
     NOTIFICATION_BUFFER_RETRY_EXCEEDED(18202),

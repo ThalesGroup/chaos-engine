@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.notification.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +41,8 @@ public class ChaosExperimentEvent implements ChaosNotification {
     @JsonProperty
     private String experimentMethod;
     private NotificationLevel notificationLevel;
-    public static final transient String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
+    public static final String CHAOS_EXPERIMENT_EVENT_PREFIX = "Chaos Experiment Event";
+
     public static ChaosEventBuilder builder () {
         return ChaosEventBuilder.builder();
     }
@@ -37,6 +55,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
     public Container getTargetContainer () {
         return targetContainer;
     }
+
     @Override
     public String getTitle () {
         return title;
@@ -47,7 +66,6 @@ public class ChaosExperimentEvent implements ChaosNotification {
         return notificationLevel;
     }
 
-
     @Override
     public int hashCode () {
         int result = targetContainer != null ? targetContainer.hashCode() : 0;
@@ -57,6 +75,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
         result = 31 * result + (experimentType != null ? experimentType.hashCode() : 0);
         result = 31 * result + (experimentMethod != null ? experimentMethod.hashCode() : 0);
         result = 31 * result + (notificationLevel != null ? notificationLevel.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
         return result;
     }
 
@@ -73,6 +92,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
         if (experimentType != that.experimentType) return false;
         if (experimentMethod != null ? !experimentMethod.equals(that.experimentMethod) : that.experimentMethod != null)
             return false;
+        if (!title.equals(that.title)) return false;
         return notificationLevel == that.notificationLevel;
     }
 
@@ -85,6 +105,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
         private ExperimentType experimentType;
         private String experimentMethod;
         private NotificationLevel notificationLevel;
+
         private ChaosEventBuilder () {
         }
 
@@ -97,8 +118,7 @@ public class ChaosExperimentEvent implements ChaosNotification {
             this.targetContainer = experiment.getContainer();
             this.experimentType = experiment.getExperimentType();
             this.experimentId = experiment.getId();
-            this.experimentMethod = experiment.getExperimentMethod() != null ? experiment.getExperimentMethod()
-                                                                                         .getExperimentName() : "";
+            this.experimentMethod = experiment.getExperimentMethod() != null ? experiment.getExperimentMethod().getExperimentName() : "";
             return this;
         }
 

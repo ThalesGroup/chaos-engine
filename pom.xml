@@ -4,7 +4,15 @@
 
     <groupId>com.thales.chaos</groupId>
     <artifactId>chaosengine</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
+    <profiles>
+        <profile>
+            <id>openapi</id>
+            <modules>
+                <module>chaosengine-integration</module>
+            </modules>
+        </profile>
+    </profiles>
     <modules>
         <module>chaosengine-experiments</module>
         <module>chaosengine-core</module>
@@ -18,6 +26,73 @@
     <name>chaos-engine</name>
     <description>Implement Chaos in various environments</description>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Thales</name>
+        <url>https://www.thalesgroup.com</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>lpetr</id>
+            <name>Lubor PETR</name>
+            <email>lubor.petr@thalesgroup.com</email>
+            <url>https://github.com/luborpetr</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>project owner</role>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Prague</timezone>
+        </developer>
+        <developer>
+            <id>10056952</id>
+            <name>Andrew MANTHA</name>
+            <email>andrew.mantha@thalesgroup.com</email>
+            <url>https://github.com/a-mantha</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/Toronto</timezone>
+        </developer>
+    </developers>
+
+    <contributors>
+        <contributor>
+            <name>Eric MUELLENBACH</name>
+            <email>eric.muellenbach@thalesgroup.com></email>
+            <url>https://github.com/3r1co</url>
+            <organization>Thales DIS</organization>
+            <organizationUrl>https://www.thalesgroup.com/en/markets/digital-identity-and-security</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Paris</timezone>
+        </contributor>
+    </contributors>
+
+    <scm>
+        <connection>scm:git:git://github.com/gemalto/chaos-engine.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/gemalto/chaos-engine.git</developerConnection>
+        <url>https://github.com/gemalto/chaos-engine.git</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/gemalto/chaos-engine/issues</url>
+    </issueManagement>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -30,8 +105,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <aws.sdk.version>1.11.357</aws.sdk.version>
-        <pcf.sdk.version>3.13.0.RELEASE</pcf.sdk.version>
-        <spring-cloud.version>2.1.1.RELEASE</spring-cloud.version>
+        <spring-cloud.version>2.1.3.RELEASE</spring-cloud.version>
     </properties>
 
     <dependencies>
@@ -48,6 +122,10 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
         </dependency>
@@ -62,7 +140,7 @@
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>sshj</artifactId>
-            <version>0.24.0</version>
+            <version>0.27.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
@@ -73,20 +151,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-
-        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>5.2</version>
+            <version>6.2</version>
         </dependency>
 
         <dependency>
@@ -117,8 +184,17 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.2.0</version>
+        </dependency>
 
-
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
     <dependencyManagement>

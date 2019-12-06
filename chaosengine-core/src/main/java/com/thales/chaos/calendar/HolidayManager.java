@@ -1,14 +1,29 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -23,17 +38,10 @@ public class HolidayManager {
     @Resource(name = "${holidays:CAN}")
     private HolidayCalendar holidayCalendar;
 
-    @Autowired
-    HolidayManager () {
-    }
-
-    HolidayManager (HolidayCalendar holidayCalendar) {
-        this.holidayCalendar = holidayCalendar;
-    }
-
     @EventListener(ApplicationReadyEvent.class)
     private void logCreation () {
-        log.info("Holiday Manager is using holidays from {}", holidayCalendar.getClass().getSimpleName());
+        if (log.isInfoEnabled())
+            log.info("Holiday Manager is using holidays from {}", holidayCalendar.getClass().getSimpleName());
     }
 
     public Instant getPreviousWorkingDay () {
@@ -48,8 +56,7 @@ public class HolidayManager {
     private void shiftBackToLastWorkingDay (Calendar day) {
         do {
             day.add(Calendar.DATE, -1);
-        }
-        while (isHoliday(day) || day.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || day.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY);
+        } while (isHoliday(day) || day.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || day.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY);
     }
 
     public boolean isHoliday () {
@@ -108,47 +115,6 @@ public class HolidayManager {
 
     private boolean isWorkingHours (Instant now) {
         return holidayCalendar.isWorkingHours(now);
-    }
-
-    public long getOvernightMillis () {
-        Instant startOfDay = getStartOfDay();
-        Calendar lastWorkingDay = holidayCalendar.getToday();
-        shiftBackToLastWorkingDay(lastWorkingDay);
-        lastWorkingDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
-        lastWorkingDay.set(Calendar.MINUTE, 0);
-        return Duration.between(startOfDay, lastWorkingDay.toInstant()).toMillis();
-    }
-
-    public long getWorkingMillisInDuration (Duration duration) {
-        Instant startTime = Instant.now().minus(duration);
-        return getWorkingMillisSinceInstant(startTime);
-    }
-
-    private long getWorkingMillisSinceInstant (Instant startTime) {
-        Calendar startDay = GregorianCalendar.from(ZonedDateTime.ofInstant(startTime, holidayCalendar.getTimeZoneId()));
-        long millis = 0;
-        while (startDay.before(getStartOfDay())) {
-            millis += isHoliday(startDay) ? getTotalMillisInDay() : 0;
-            startDay.add(Calendar.DATE, 1);
-        }
-        return millis;
-    }
-
-    private Instant getStartOfDay () {
-        Calendar startOfDay = holidayCalendar.getToday();
-        startOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getStartOfDay());
-        return startOfDay.toInstant().truncatedTo(ChronoUnit.HOURS);
-    }
-
-    private long getTotalMillisInDay () {
-        if (isHoliday()) {
-            return 0;
-        }
-        long startOfDayEpoch = getStartOfDay().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
-        Calendar endOfDay = holidayCalendar.getToday();
-        endOfDay.set(Calendar.HOUR_OF_DAY, holidayCalendar.getEndOfDay());
-        long endOfDayEpoch = endOfDay.toInstant().truncatedTo(ChronoUnit.HOURS).toEpochMilli();
-        return endOfDayEpoch - startOfDayEpoch;
     }
 
     private boolean isBeforeStartOfWork (Calendar from) {

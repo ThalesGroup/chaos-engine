@@ -14,7 +14,7 @@
       <title>Scheduled experiments</title>
       <single>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
                 | search ChaosExperimentEvent.message="Starting new experiment" | stats count
             </query>
           <earliest>$field1.earliest$</earliest>
@@ -41,7 +41,7 @@
       </single>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
                 | search ChaosExperimentEvent.message="Starting new experiment" | stats count by ChaosExperimentEvent.experimentMethod
             </query>
           <earliest>$field1.earliest$</earliest>
@@ -83,12 +83,12 @@
       </chart>
     </panel>
     <panel>
-      <title>Running experiments</title>
+      <title>Active experiments</title>
       <single>
         <search>
-          <query>sourcetype="container:log" "Active experiments" | rex "Active experiments\: (?&lt;count&gt;\d+)" | head 1 | table count</query>
-          <earliest>-4h@m</earliest>
-          <latest>now</latest>
+          <query>sourcetype="container:log" "Experiments total count\:" | spath input=log | head 1 | table count</query>
+            <earliest>rt-1m</earliest>
+            <latest>rtnow</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -97,6 +97,7 @@
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
@@ -108,12 +109,64 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
+      <chart>
+        <search>
+            <query>sourcetype="container:log" "Experiments count by state" | head 1 | spath input=log
+                |rename experimentState.CREATED as CREATED,
+                experimentState.FAILED as FAILED,
+                experimentState.FINALIZING as FINALIZING,
+                experimentState.FINISHED as FINISHED,
+                experimentState.SELF_HEALING as SELF_HEALING,
+                experimentState.STARTED as STARTED,
+                experimentState.STARTING as STARTING
+
+                | table CREATED, FAILED,FINALIZING,FINISHED, SELF_HEALING, STARTED,STARTING
+                |transpose
+          </query>
+            <earliest>rt-1m</earliest>
+            <latest>rtnow</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">small</option>
+        <option name="trellis.splitBy">_aggregation</option>
+      </chart>
     </panel>
     <panel>
       <title>Failed to start experiments</title>
       <single>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
                 | search ChaosExperimentEvent.message="Failed to start experiment"
                 | stats count
             </query>
@@ -141,7 +194,7 @@
       </single>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
                 | search ChaosExperimentEvent.message="Failed to start experiment"
                 | stats count by ChaosExperimentEvent.experimentMethod
             </query>
@@ -187,7 +240,7 @@
       <title>Finished experiments</title>
       <single>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count</query>
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -212,7 +265,7 @@
       </single>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Experiment finished.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -255,7 +308,7 @@
       <title>Self-healing required</title>
       <single>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Running self healing for the*" | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -280,7 +333,7 @@
       </single>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="The experiment has gone on too long, invoking self-healing.*" | stats count by ChaosExperimentEvent.experimentMethod</query>
+            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | search ChaosExperimentEvent.message="Running self healing for the*" | stats count by ChaosExperimentEvent.experimentMethod</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -395,7 +448,7 @@
       <title>Chaos Events Timeline</title>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent| spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent| spath input=log
                 | rex field=ChaosExperimentEvent.message mode=sed "s/Experiment finished.*/Experiment finished/g"
                 | rex field=ChaosExperimentEvent.message mode=sed "s/The experiment has gone on to.*/The experiment has gone on to long, invoking self healing/g"
                 | timechart count by ChaosExperimentEvent.message
@@ -460,10 +513,10 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
-          <format type="color" field="ChaosExperimentEvent.targetContainer.containerType">
+        <format type="color" field="ChaosExperimentEvent.targetContainer.containerType">
           <colorPalette type="map">{"CloudFoundryApplication":#708794,"CloudFoundryContainer":#4FA484,"AwsEC2Container":#3FE4ED,"AwsRDSClusterContainer":#ED3FCA,"AwsRDSInstanceContainer":#ED3E9E,"KubernetesPodContainer":#3E89ED}</colorPalette>
         </format>
-          <format type="color" field="ChaosExperimentEvent.notificationLevel">
+        <format type="color" field="ChaosExperimentEvent.notificationLevel">
           <colorPalette type="map">{"ERROR":#DC4E41,"WARN":#F8BE34,"GOOD":#53A051}</colorPalette>
         </format>
       </table>
@@ -507,7 +560,7 @@
       <title>Experiment Recovery Duration Per Container And Method</title>
       <table>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | eval startTime=_time
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log | eval startTime=_time
                 | search ChaosExperimentEvent.message="Starting new experiment"
 
 
@@ -559,7 +612,7 @@
       <title>Experiment Distribution Per Platform Layer</title>
       <chart>
         <search>
-            <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
+          <query>sourcetype="container:log" ChaosExperimentEvent | spath input=log
                 | search ChaosExperimentEvent.message="Starting new experiment" | stats count by ChaosExperimentEvent.experimentMethod ChaosExperimentEvent.targetContainer.containerType
             </query>
           <earliest>$field1.earliest$</earliest>
@@ -598,7 +651,7 @@
         <option name="trellis.enabled">1</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
-          <option name="trellis.splitBy">ChaosExperimentEvent.targetContainer.containerType</option>
+        <option name="trellis.splitBy">ChaosExperimentEvent.targetContainer.containerType</option>
       </chart>
     </panel>
     <panel>

@@ -1,14 +1,30 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.constants.AwsEC2Constants;
 import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.container.AwsContainer;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.CattleExperiment;
-import com.thales.chaos.experiment.annotations.NetworkExperiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -29,21 +45,24 @@ import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class AwsEC2Container extends AwsContainer {
+    @Identifier(order = 0)
     private String instanceId;
+    @Identifier(order = 1)
     private String keyName;
+    @Identifier(order = 2)
     private String name;
+    @Identifier(order = 3)
     private String publicAddress;
+    @Identifier(order = 4)
     private String privateAddress;
+    @Identifier(order = 5)
     private String imageId;
-
+    @Identifier(order = 6)
     private String groupIdentifier = AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     private boolean nativeAwsAutoscaling = false;
-    private transient AwsEC2Platform awsEC2Platform;
-    private final transient Callable<Void> startContainerMethod = () -> {
-        awsEC2Platform.startInstance(instanceId);
-        return null;
-    };
-    private final transient Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
+    private AwsEC2Platform awsEC2Platform;
+    private final Runnable startContainerMethod = () -> awsEC2Platform.startInstance(instanceId);
+    private final Callable<ContainerHealth> checkContainerStartedMethod = () -> awsEC2Platform.checkHealth(instanceId);
 
     private AwsEC2Container () {
         super();
@@ -141,32 +160,18 @@ public class AwsEC2Container extends AwsContainer {
         return !AwsEC2Constants.NO_GROUPING_IDENTIFIER.equals(groupIdentifier);
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void stopContainer (Experiment experiment) {
         awsEC2Platform.stopInstance(instanceId);
         experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(startContainerMethod));
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(checkContainerStartedMethod));
     }
 
-    Callable<Void> autoscalingSelfHealingWrapper (@NotNull Callable<Void> baseMethod) {
-        final AtomicBoolean asgSelfHealingRun = new AtomicBoolean(false);
-        return isNativeAwsAutoscaling() ? () -> {
-            if (asgSelfHealingRun.compareAndSet(false, true)) {
-                log.debug("First self healing attempt will use Autoscaling to recreate");
-                awsEC2Platform.triggerAutoscalingUnhealthy(instanceId);
-                return null;
-            }
-            baseMethod.call();
-            return null;
-        } : baseMethod;
-    }
-
     Callable<ContainerHealth> autoscalingHealthcheckWrapper (@NotNull Callable<ContainerHealth> baseMethod) {
         return isMemberOfScaledGroup() ? () -> {
             if (awsEC2Platform.isContainerTerminated(instanceId)) {
                 if (isNativeAwsAutoscaling()) {
-                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier))
-                        return ContainerHealth.NORMAL;
+                    if (awsEC2Platform.isAutoscalingGroupAtDesiredInstances(groupIdentifier)) return ContainerHealth.NORMAL;
                     else {
                         log.info("Instance is terminated but scaling group is not at desired capacity");
                         return ContainerHealth.RUNNING_EXPERIMENT;
@@ -182,7 +187,7 @@ public class AwsEC2Container extends AwsContainer {
         return nativeAwsAutoscaling;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartContainer (Experiment experiment) {
         final Instant hardRebootTimer = Instant.now().plus(Duration.ofMinutes(AWS_EC2_HARD_REBOOT_TIMER_MINUTES));
         awsEC2Platform.restartInstance(instanceId);
@@ -192,8 +197,7 @@ public class AwsEC2Container extends AwsContainer {
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
-    @StateExperiment
-    @CattleExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE, cattleOnly = true)
     public void terminateASGContainer (Experiment experiment) {
         if (!isNativeAwsAutoscaling()) {
             log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));
@@ -201,18 +205,34 @@ public class AwsEC2Container extends AwsContainer {
         }
         awsEC2Platform.terminateInstance(instanceId);
         experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> ContainerHealth.RUNNING_EXPERIMENT));
-        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> null));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {}));
     }
 
-    @NetworkExperiment
+    Runnable autoscalingSelfHealingWrapper (@NotNull Runnable baseMethod) {
+        final AtomicBoolean asgSelfHealingRun = new AtomicBoolean(false);
+        return isNativeAwsAutoscaling() ? () -> {
+            if (asgSelfHealingRun.compareAndSet(false, true)) {
+                log.debug("First self healing attempt will use Autoscaling to recreate");
+                awsEC2Platform.triggerAutoscalingUnhealthy(instanceId);
+                return;
+            }
+            baseMethod.run();
+        } : baseMethod;
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK)
     public void removeSecurityGroups (Experiment experiment) {
-        List<String> originalSecurityGroupIds = awsEC2Platform.getSecurityGroupIds(instanceId);
-        awsEC2Platform.setSecurityGroupIds(instanceId, Collections.singletonList(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId)));
-        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(() -> awsEC2Platform.verifySecurityGroupIds(instanceId, originalSecurityGroupIds)));
-        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(() -> {
-            awsEC2Platform.setSecurityGroupIds(instanceId, originalSecurityGroupIds);
-            return null;
-        }));
+        Map<String, Set<String>> originalSecurityGroups = awsEC2Platform.getNetworkInterfaceToSecurityGroupsMap(instanceId);
+        Set<String> networkInterfaceIds = originalSecurityGroups.keySet();
+        Collection<String> chaosSecurityGroupId = Set.of(awsEC2Platform.getChaosSecurityGroupForInstance(instanceId));
+        // Set Health Check method
+        Callable<ContainerHealth> baseMethod = () -> awsEC2Platform.verifySecurityGroupIdsOfNetworkInterfaceMap(instanceId, originalSecurityGroups) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        experiment.setCheckContainerHealth(autoscalingHealthcheckWrapper(baseMethod));
+        // Set self healing method
+        Runnable selfHealingBaseMethod = () -> originalSecurityGroups.forEach((key, value) -> awsEC2Platform.setSecurityGroupIds(key, value));
+        experiment.setSelfHealingMethod(autoscalingSelfHealingWrapper(selfHealingBaseMethod));
+        // Do Experiment
+        networkInterfaceIds.forEach(networkInterfaceId -> awsEC2Platform.setSecurityGroupIds(networkInterfaceId, chaosSecurityGroupId));
     }
 
     public String getRoutableAddress () {

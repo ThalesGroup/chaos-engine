@@ -1,10 +1,27 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.shellclient.impl;
 
 import com.thales.chaos.constants.SSHConstants;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.ShellOutput;
-import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
 import org.apache.logging.log4j.util.Strings;
@@ -71,7 +88,6 @@ public class KubernetesShellClient implements ShellClient {
             Thread.currentThread().interrupt();
             return ShellOutput.EMPTY_SHELL_OUTPUT;
         } catch (IOException | ApiException e) {
-            log.error("Received exception while processing command", e);
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_CLIENT_ERROR, e);
         } finally {
             if (proc != null) proc.destroy();
@@ -90,8 +106,6 @@ public class KubernetesShellClient implements ShellClient {
         long contentLength = resource.contentLength();
         String finalPath = path + (path.endsWith("/") ? Strings.EMPTY : "/") + resource.getFilename();
         String[] command = new String[]{ "dd", "if=/dev/stdin", "of=" + finalPath, "bs=" + contentLength, "count=1" };
-
-
         log.debug("Transferring {} to {}/{} in path {}", resource, namespace, podName, path);
         Process proc = null;
         try {
@@ -112,7 +126,6 @@ public class KubernetesShellClient implements ShellClient {
             }
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_TRANSFER_FAIL);
         } catch (ApiException e) {
-            log.error("Received exception while processing command", e);
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_TRANSFER_FAIL, e);
         } catch (InterruptedException e) {
             log.error("Interrupted while processing, throwing Interrupt up thread", e);

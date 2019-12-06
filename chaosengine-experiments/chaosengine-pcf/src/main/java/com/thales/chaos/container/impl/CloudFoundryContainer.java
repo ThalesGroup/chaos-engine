@@ -1,9 +1,27 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.StateExperiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -19,15 +37,15 @@ import java.util.concurrent.Callable;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class CloudFoundryContainer extends Container {
+    @Identifier(order = 0)
     private String applicationId;
+    @Identifier(order = 1)
     private String name;
+    @Identifier(order = 2)
     private Integer instance;
-    private transient CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
-    private transient Callable<Void> restageApplication = () -> {
-        cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
-        return null;
-    };
-    private transient Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
+    private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
+    private Runnable restageApplication = () -> cloudFoundryContainerPlatform.restageApplication(getRestageApplicationRequest());
+    private Callable<ContainerHealth> isInstanceRunning = () -> cloudFoundryContainerPlatform.checkHealth(applicationId, instance);
 
     private CloudFoundryContainer () {
         super();
@@ -59,9 +77,8 @@ public class CloudFoundryContainer extends Container {
         return name + " - (" + instance + ")";
     }
 
-    @Override
-    public String getAggregationIdentifier () {
-        return name;
+    public String getName () {
+        return getAggregationIdentifier();
     }
 
     @Override
@@ -79,7 +96,7 @@ public class CloudFoundryContainer extends Container {
         return true;
     }
 
-    @StateExperiment
+    @ChaosExperiment(experimentType = ExperimentType.STATE)
     public void restartContainer (Experiment experiment) {
         experiment.setSelfHealingMethod(restageApplication);
         experiment.setCheckContainerHealth(isInstanceRunning);
@@ -105,7 +122,8 @@ public class CloudFoundryContainer extends Container {
         return applicationId;
     }
 
-    public String getName () {
+    @Override
+    public String getAggregationIdentifier () {
         return name;
     }
 

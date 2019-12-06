@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.amazonaws.services.rds.model.DBClusterSnapshot;
@@ -11,6 +28,7 @@ import com.thales.chaos.platform.impl.AwsRDSPlatform;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.slf4j.MDC;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.Repeat;
@@ -29,6 +47,8 @@ public class AwsRDSClusterContainerTest {
     private AwsRDSClusterContainer awsRDSClusterContainer;
     @MockBean
     private AwsRDSPlatform awsRDSPlatform;
+    @Mock
+    private Experiment experiment;
     private String dbClusterIdentifier = UUID.randomUUID().toString();
     private String engine = UUID.randomUUID().toString();
 
@@ -40,6 +60,21 @@ public class AwsRDSClusterContainerTest {
                                                            .withEngine(engine)
                                                            .withDBClusterResourceId(DB_CLUSTER_RESOURCE_ID)
                                                            .build());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
     }
 
     @Test
@@ -128,14 +163,11 @@ public class AwsRDSClusterContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        assertEquals(DataDogIdentifier.dataDogIdentifier()
-                                      .withKey("dbclusteridentifier")
-                                      .withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
+        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("dbclusteridentifier").withValue(dbClusterIdentifier), awsRDSClusterContainer.getDataDogIdentifier());
     }
 
     @Test
     public void snapshotCluster () throws Exception {
-        Experiment experiment = spy(Experiment.class);
         DBClusterSnapshot dbClusterSnapshot = mock(DBClusterSnapshot.class);
         doReturn(dbClusterSnapshot).when(awsRDSPlatform).snapshotDBCluster(dbClusterIdentifier);
         awsRDSClusterContainer.startSnapshot(experiment);
@@ -143,10 +175,10 @@ public class AwsRDSClusterContainerTest {
         verify(experiment, times(1)).setFinalizeMethod(any());
         verify(experiment, times(1)).setSelfHealingMethod(any());
         verify(experiment, times(1)).setCheckContainerHealth(any());
-        experiment.getSelfHealingMethod().call();
+        experiment.getSelfHealingMethod().run();
         verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
         reset(awsRDSPlatform);
-        experiment.getFinalizeMethod().call();
+        experiment.getFinalizeMethod().run();
         verify(awsRDSPlatform, times(1)).deleteClusterSnapshot(dbClusterSnapshot);
         reset(awsRDSPlatform);
         doReturn(true, false).when(awsRDSPlatform).isClusterSnapshotRunning(dbClusterIdentifier);
@@ -168,5 +200,4 @@ public class AwsRDSClusterContainerTest {
         assertEquals(baseContextMap, finalContextMap);
         assertEquals(expectedTags, modifiedContextMap);
     }
-
 }

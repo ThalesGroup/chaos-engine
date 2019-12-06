@@ -1,12 +1,31 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thales.chaos.constants.DataDogConstants;
+import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.ExperimentalObject;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
@@ -19,46 +38,39 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.validation.constraints.NotNull;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
 import static com.thales.chaos.exception.enums.ChaosErrorCode.*;
 import static com.thales.chaos.util.MethodUtils.getMethodsWithAnnotation;
-import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Container implements ExperimentalObject {
-    protected final transient Logger log = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final Map<String, String> dataDogTags = new HashMap<>();
-    private final List<ExperimentType> supportedExperimentTypes = new ArrayList<>();
     private final Map<String, Boolean> shellCapabilities = new HashMap<>();
     private ContainerHealth containerHealth;
     private Experiment currentExperiment;
-
-    protected Container () {
-        for (ExperimentType experimentType : ExperimentType.values()) {
-            if (!getMethodsWithAnnotation(this.getClass(), experimentType.getAnnotation()).isEmpty()) {
-                supportedExperimentTypes.add(experimentType);
-            }
-        }
-    }
 
     public Map<String, Boolean> getShellCapabilities () {
         return shellCapabilities;
     }
 
+    @JsonIgnore
+    public Map<String, String> getDataDogTags () {
+        return dataDogTags;
+    }
+
     @Override
     public boolean canExperiment () {
-        if (!supportedExperimentTypes.isEmpty() && new Random().nextDouble() < getPlatform().getDestructionProbability()) {
+        if (new Random().nextDouble() < getPlatform().getDestructionProbability()) {
             return eligibleForExperiments();
         }
         log.debug("Cannot experiment on the container right now", v(DataDogConstants.DATADOG_CONTAINER_KEY, this));
@@ -68,9 +80,13 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract Platform getPlatform ();
 
-    @JsonIgnore
-    public List<ExperimentType> getSupportedExperimentTypes () {
-        return supportedExperimentTypes;
+    public boolean eligibleForExperiments () {
+        return true;
+    }
+
+    public Experiment createExperiment () {
+        currentExperiment = GenericContainerExperiment.builder().withContainer(this).build();
+        return currentExperiment;
     }
 
     @Override
@@ -82,6 +98,24 @@ public abstract class Container implements ExperimentalObject {
         return this.getIdentity() == other.getIdentity();
     }
 
+    @Override
+    public int hashCode () {
+        List<Field> identifyingFields = getIdentifyingFields();
+        AtomicInteger result = new AtomicInteger(0);
+        identifyingFields.stream()
+                         .map(field -> {
+                             try {
+                                 return field.get(this);
+                             } catch (IllegalAccessException e) {
+                                 log.error("Caught IllegalAccessException while evaluating hashcode", e);
+                                 return null;
+                             }
+                         })
+                         .mapToInt(o -> Optional.ofNullable(o).map(Object::hashCode).orElse(0))
+                         .forEachOrdered(i -> result.set(result.get() * 31 + i));
+        return result.get();
+    }
+
     /**
      * Uses all the fields in the container implementation (but not the Container parent class)
      * to create a checksum of the container. This checksum should be immutable and can be used
@@ -91,52 +125,54 @@ public abstract class Container implements ExperimentalObject {
      * @return A checksum (format long) of the class based on the implementation specific fields
      */
     public long getIdentity () {
-        StringBuilder identity = new StringBuilder();
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers())) continue;
-            if (field.isSynthetic()) continue;
-            field.setAccessible(true);
+        final List<Field> identifyingFields = getIdentifyingFields();
+        final List<String> identifyingFieldValues = identifyingFields.stream().map(field -> {
             try {
-                if (field.get(this) != null) {
-                    if (identity.length() > 1) {
-                        identity.append("$$$$$");
-                    }
-                    identity.append(field.get(this).toString());
-                }
+                return field.get(this);
             } catch (IllegalAccessException e) {
                 log.error("Caught IllegalAccessException ", e);
+                return null;
             }
-        }
-        byte[] primitiveByteArray = identity.toString().getBytes();
+        }).filter(Objects::nonNull).map(Object::toString).filter(s -> s.length() > 0).collect(Collectors.toUnmodifiableList());
+        String identity = String.join("$$$$$", identifyingFieldValues);
+        byte[] primitiveByteArray = identity.getBytes();
         CRC32 checksum = new CRC32();
         checksum.update(primitiveByteArray);
         return checksum.getValue();
     }
 
-    @Override
-    public String toString () {
-        StringBuilder output = new StringBuilder();
-        output.append("Container type: ");
-        output.append(this.getClass().getSimpleName());
-        Arrays.stream(this.getClass().getDeclaredFields())
-              .filter(not(field -> Modifier.isTransient(field.getModifiers())))
-              .filter(not(Field::isSynthetic))
-              .forEachOrdered(field -> {
-                  field.setAccessible(true);
-                  try {
-                      output.append("\n\t");
-                      output.append(field.getName());
-                      output.append(":\t");
-                      output.append(field.get(this));
-                  } catch (IllegalAccessException e) {
-                      log.error("Could not read from field {}", field.getName(), e);
-                  }
-              });
-        return output.toString();
+    private static boolean isIdentifyingField (Field field) {
+        return field.getAnnotation(Identifier.class) != null;
     }
 
-    public boolean supportsExperimentType (ExperimentType experimentType) {
-        return supportedExperimentTypes.contains(experimentType);
+    private static int getFieldOrder (Field value) {
+        return Optional.of(value).map(field -> field.getAnnotation(Identifier.class)).map(Identifier::order).orElse(Integer.MIN_VALUE + value.getName().hashCode());
+    }
+
+    private List<Field> getIdentifyingFields () {
+        List<Field> identifyingFields = Arrays.stream(getClass().getDeclaredFields())
+                                              .filter(Container::isIdentifyingField)
+                                              .sorted(Comparator.comparingInt(field -> field.getName().hashCode()))
+                                              .sorted(Comparator.comparingInt(Container::getFieldOrder))
+                                              .collect(Collectors.toUnmodifiableList());
+        identifyingFields.forEach(f -> f.setAccessible(true));
+        return identifyingFields;
+    }
+
+    @Override
+    public String toString () {
+        final List<Field> identifyingFields = getIdentifyingFields();
+        List<String> fieldValues = Stream.concat(Stream.of("Container type: " + getClass().getSimpleName()), identifyingFields
+                .stream()
+                .map(field -> {
+                    try {
+                        return field.getName() + ":\t" + field.get(this);
+                    } catch (IllegalAccessException e) {
+                        log.error("Caught IllegalAccessException ", e);
+                        return "";
+                    }
+                })).collect(Collectors.toUnmodifiableList());
+        return String.join("\n\t", fieldValues);
     }
 
     public ContainerHealth getContainerHealth (ExperimentType experimentType) {
@@ -150,13 +186,12 @@ public abstract class Container implements ExperimentalObject {
 
     protected abstract ContainerHealth updateContainerHealthImpl (ExperimentType experimentType);
 
-    public Experiment createExperiment () {
-        currentExperiment = createExperiment(supportedExperimentTypes.get(new Random().nextInt(supportedExperimentTypes.size())));
+    public Experiment createExperiment (String experimentMethod) {
+        currentExperiment = GenericContainerExperiment.builder()
+                                                      .withSpecificExperiment(experimentMethod)
+                                                      .withContainer(this)
+                                                      .build();
         return currentExperiment;
-    }
-
-    public Experiment createExperiment (ExperimentType experimentType) {
-        return GenericContainerExperiment.builder().withExperimentType(experimentType).withContainer(this).build();
     }
 
     public void startExperiment (Experiment experiment) {
@@ -193,7 +228,7 @@ public abstract class Container implements ExperimentalObject {
     @JsonIgnore
     public abstract DataDogIdentifier getDataDogIdentifier ();
 
-    boolean compareUniqueIdentifier (String uniqueIdentifier) {
+    public boolean compareUniqueIdentifier (String uniqueIdentifier) {
         return uniqueIdentifier != null && compareUniqueIdentifierInner(uniqueIdentifier);
     }
 
@@ -208,20 +243,17 @@ public abstract class Container implements ExperimentalObject {
     }
 
     @JsonIgnore
-    public Map<Class<? extends Annotation>, List<Method>> getExperimentMethods () {
-        return Arrays.stream(ExperimentType.values())
-                     .map(ExperimentType::getAnnotation)
-                     .collect(Collectors.toMap(Function.identity(), k -> getMethodsWithAnnotation(this.getClass(), k)));
+    public List<Method> getExperimentMethods () {
+        return getMethodsWithAnnotation(getClass(), ChaosExperiment.class);
     }
 
     @SuppressWarnings("unchecked")
-    public Callable<Void> recycleCattle () {
+    public Runnable recycleCattle () {
         if (!isCattle() || !supportsShellBasedExperiments()) {
             throw new ChaosException(RECYCLING_UNSUPPORTED);
         }
         return () -> {
             getScriptPlatform().recycleContainer(this);
-            return null;
         };
     }
 
@@ -237,14 +269,9 @@ public abstract class Container implements ExperimentalObject {
     }
 
     private ShellBasedExperiment getScriptPlatform () {
-        return getScriptPlatform(this.getClass());
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends Container> ShellBasedExperiment getScriptPlatform (Class<T> ignored) {
         Platform platform = getPlatform();
         try {
-            if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment<T>) platform;
+            if (platform instanceof ShellBasedExperiment) return (ShellBasedExperiment) platform;
         } catch (ClassCastException e) {
             throw new ChaosException(PLATFORM_DOES_NOT_SUPPORT_SHELL, e);
         }
@@ -281,7 +308,7 @@ public abstract class Container implements ExperimentalObject {
                                 .collect(Collectors.toSet());
     }
 
-    public boolean eligibleForExperiments () {
-        return true;
+    public void clearExperiment () {
+        currentExperiment = null;
     }
 }

@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.calendar;
 
 import java.time.*;
@@ -36,6 +53,14 @@ public interface HolidayCalendar {
         return TimeZone.getTimeZone("GMT");
     }
 
+    /**
+     * Given a year, month, and day, return an integer day-of-year
+     *
+     * @param year  Given year
+     * @param month Given month
+     * @param day   Given day-of-month
+     * @return Integer day-of-year value matching the parameters
+     */
     default int getDate (int year, int month, int day) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.YEAR, year);
@@ -44,6 +69,15 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * Given a year, month, week of month, and day of week, return the integer day-of-year
+     *
+     * @param year Given year
+     * @param month Given month
+     * @param weekOfmonth Given Week-of-Month
+     * @param dayOfWeek Given day-of-week
+     * @return Integer day-of-year value matching the parameters
+     */
     default int getDate (int year, int month, int weekOfmonth, int dayOfWeek) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.DAY_OF_WEEK, dayOfWeek);
@@ -53,6 +87,13 @@ public interface HolidayCalendar {
         return c.get(Calendar.DAY_OF_YEAR);
     }
 
+    /**
+     * Calculates days related to known holidays that are either observed days for work, or isolated days in the workweek which many people will take as a vacation day.
+     *
+     * @param holidays A set of Integers representing days of the year on which a holiday occurs
+     * @param year     The year associated with the set holidays set
+     * @return A set of Integers representing days of the year where many or all people will be out of the office due to holidays
+     */
     default Set<Integer> getLinkedDays (Set<Integer> holidays, int year) {
         Set<Integer> linkedDays = new TreeSet<>();
         for (Integer holiday : holidays) {
@@ -79,7 +120,7 @@ public interface HolidayCalendar {
 
     @SuppressWarnings("MagicConstant")
     // Easter Algorithm depends on math, and therefore, calendar is set with n-1 instead of Calendar.MARCH or Calendar.APRIL
-    default Integer getEaster (int year) {
+    default int getEaster (int year) {
         // Computus calculation from https://en.wikipedia.org/wiki/Computus
         int a = year % 19;
         int b = year / 100;

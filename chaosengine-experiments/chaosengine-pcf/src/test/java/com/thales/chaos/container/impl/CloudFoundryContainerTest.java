@@ -1,18 +1,34 @@
+/*
+ *    Copyright (c) 2019 Thales Group
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.platform.impl.CloudFoundryContainerPlatform;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
+import com.thales.chaos.platform.impl.CloudFoundryContainerPlatform;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -31,9 +47,8 @@ public class CloudFoundryContainerTest {
     private static final int instance = new Random().nextInt(100);
     private static final String name = UUID.randomUUID().toString();
     private CloudFoundryContainer cloudFoundryContainer;
-    @Spy
-    private Experiment experiment = new Experiment() {
-    };
+    @Mock
+    private Experiment experiment;
     @MockBean
     private CloudFoundryContainerPlatform cloudFoundryContainerPlatform;
 
@@ -45,6 +60,21 @@ public class CloudFoundryContainerTest {
                                                      .name(name)
                                                      .platform(cloudFoundryContainerPlatform)
                                                      .build();
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getCheckContainerHealth();
+            return null;
+        }).when(experiment).setCheckContainerHealth(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getSelfHealingMethod();
+            return null;
+        }).when(experiment).setSelfHealingMethod(any());
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            doReturn(args[0]).when(experiment).getFinalizeMethod();
+            return null;
+        }).when(experiment).setFinalizeMethod(any());
     }
 
     @Test
@@ -70,16 +100,8 @@ public class CloudFoundryContainerTest {
         cloudFoundryContainer.restartContainer(experiment);
         verify(experiment, times(1)).setCheckContainerHealth(ArgumentMatchers.any());
         verify(experiment, times(1)).setSelfHealingMethod(ArgumentMatchers.any());
-        Mockito.verify(cloudFoundryContainerPlatform, times(1))
-               .restartInstance(any(RestartApplicationInstanceRequest.class));
-        experiment.getSelfHealingMethod().call();
-    }
-
-    @Test
-    public void createExperiment () {
-        Experiment experiment = cloudFoundryContainer.createExperiment(ExperimentType.STATE);
-        assertEquals(cloudFoundryContainer, experiment.getContainer());
-        Assert.assertEquals(ExperimentType.STATE, experiment.getExperimentType());
+        Mockito.verify(cloudFoundryContainerPlatform, times(1)).restartInstance(any(RestartApplicationInstanceRequest.class));
+        experiment.getSelfHealingMethod().run();
     }
 
     @Test
@@ -106,8 +128,7 @@ public class CloudFoundryContainerTest {
 
     @Test
     public void getDataDogIdentifier () {
-        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("host")
-                                      .withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
+        assertEquals(DataDogIdentifier.dataDogIdentifier().withKey("host").withValue(name + "-" + instance), cloudFoundryContainer.getDataDogIdentifier());
     }
 
     @Test
