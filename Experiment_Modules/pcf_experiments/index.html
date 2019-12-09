@@ -1,0 +1,1789 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A tool for automated Chaos Experimentation">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+    
+    
+      
+        <title>Pcf experiments - Chaos Engine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.0284f74d.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.01803549.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300,400,400i,700|Fira+Code&display=fallback">
+        <style>body,input{font-family:"Fira Sans Condensed","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Fira Code","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="light-blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#pivotal-cloud-foundry-experiments" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Chaos Engine" class="md-header-nav__button md-logo">
+          
+            <img src="../../images/icon.png" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Chaos Engine
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Pcf experiments
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="../.." title="Home" class="md-tabs__link">
+        Home
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Configuration/" title="Configuration" class="md-tabs__link">
+          Configuration
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Core_Modules/administrative_state/" title="Core Modules" class="md-tabs__link">
+          Core Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../aws_ec2_experiments/" title="Experiment Modules" class="md-tabs__link md-tabs__link--active">
+          Experiment Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Logging and Reporting" class="md-tabs__link">
+          Logging and Reporting
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-tabs__link">
+          Quick Start Guide
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../_Developer_Documentation/" title=" Developer Documentation" class="md-tabs__link">
+           Developer Documentation
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Chaos Engine" class="md-nav__button md-logo">
+      
+        <img src="../../images/icon.png" width="48" height="48">
+      
+    </a>
+    Chaos Engine
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../architecture/" title="Architecture" class="md-nav__link">
+      Architecture
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../configuration/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../hardening/" title="Hardening Guidelines" class="md-nav__link">
+      Hardening Guidelines
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
+      Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/security/" title="REST Security" class="md-nav__link">
+      REST Security
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/vault_integration/" title="Vault Integration" class="md-nav__link">
+      Vault Integration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Core Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Core Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/administrative_state/" title="Administrative State" class="md-nav__link">
+      Administrative State
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/container_manager/" title="Container Manager" class="md-nav__link">
+      Container Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/experiment_manager/" title="Experiment Manager" class="md-nav__link">
+      Experiment Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/scheduler/" title="Scheduler" class="md-nav__link">
+      Scheduler
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" checked>
+    
+    <label class="md-nav__link" for="nav-7">
+      Experiment Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-7">
+        Experiment Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../aws_ec2_experiments/" title="AWS EC2 Experiments" class="md-nav__link">
+      AWS EC2 Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../aws_rds_experiments/" title="AWS RDS Experiments" class="md-nav__link">
+      AWS RDS Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-nav__link">
+      Cattle/Pet Distinction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_experiment_configuration/" title="Common Configuration" class="md-nav__link">
+      Common Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Pcf experiments
+      </label>
+    
+    <a href="./" title="Pcf experiments" class="md-nav__link md-nav__link--active">
+      Pcf experiments
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pivotal-cloud-foundry-experiments" title="Pivotal Cloud Foundry Experiments" class="md-nav__link">
+    Pivotal Cloud Foundry Experiments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk" title="SDK" class="md-nav__link">
+    SDK
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-discovery" title="Node Discovery" class="md-nav__link">
+    Node Discovery
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-awareness" title="Self Awareness" class="md-nav__link">
+    Self Awareness
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiments" title="Experiments" class="md-nav__link">
+    Experiments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-level-experiments" title="Container level experiments" class="md-nav__link">
+    Container level experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-instance-stopped" title="Application Instance Stopped" class="md-nav__link">
+    Application Instance Stopped
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-based-experiments" title="SSH Based Experiments" class="md-nav__link">
+    SSH Based Experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_1" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-level-experiments" title="Application level experiments" class="md-nav__link">
+    Application level experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-scaling" title="Application Scaling" class="md-nav__link">
+    Application Scaling
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_2" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-experiment-finalization" title="Self Healing &amp; Experiment Finalization" class="md-nav__link">
+    Self Healing &amp; Experiment Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-restart" title="Application Restart" class="md-nav__link">
+    Application Restart
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_4" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_3" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-restage" title="Application Restage" class="md-nav__link">
+    Application Restage
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_5" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_4" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unmap-application-route" title="Unmap Application Route" class="md-nav__link">
+    Unmap Application Route
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_6" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_5" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-experiment-finalization_1" title="Self Healing &amp; Experiment Finalization" class="md-nav__link">
+    Self Healing &amp; Experiment Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../ssh_based_experiments/" title="SSH Based Experiments" class="md-nav__link">
+      SSH Based Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+    
+    <label class="md-nav__link" for="nav-7-8">
+      Script Experiments
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-7-8">
+        Script Experiments
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../Script_Experiments/included_script_experiments/" title="Included Script Experiments" class="md-nav__link">
+      Included Script Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../Script_Experiments/script_header/" title="Script Header" class="md-nav__link">
+      Script Header
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+    <label class="md-nav__link" for="nav-8">
+      Logging and Reporting
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
+        Logging and Reporting
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+    <label class="md-nav__link" for="nav-8-1">
+      Notifications
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-1">
+        Notifications
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Datatog Events" class="md-nav__link">
+      Datatog Events
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
+      Slack Notifications
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      Quick Start Guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Quick Start Guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-nav__link">
+      Quick Start Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/config_examples/" title="Configuration Examples" class="md-nav__link">
+      Configuration Examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-nav__link">
+      Run Chaos Engine On Kubernetes
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+       Developer Documentation
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+         Developer Documentation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/" title="Developer Documentation" class="md-nav__link">
+      Developer Documentation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/API/" title="OpenAPI Specification" class="md-nav__link">
+      OpenAPI Specification
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/annotations/" title="Chaos Engine Annotations" class="md-nav__link">
+      Chaos Engine Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/coding_conventions/" title="Coding Conventions" class="md-nav__link">
+      Coding Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
+      Multi Module Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/notable_issues/" title="Notable Issues" class="md-nav__link">
+      Notable Issues
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+    
+    <label class="md-nav__link" for="nav-10-7">
+      Design Philosophy
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-7">
+        Design Philosophy
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-nav__link">
+      Pipeline Design Philosophy
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pivotal-cloud-foundry-experiments" title="Pivotal Cloud Foundry Experiments" class="md-nav__link">
+    Pivotal Cloud Foundry Experiments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk" title="SDK" class="md-nav__link">
+    SDK
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-discovery" title="Node Discovery" class="md-nav__link">
+    Node Discovery
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-awareness" title="Self Awareness" class="md-nav__link">
+    Self Awareness
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiments" title="Experiments" class="md-nav__link">
+    Experiments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-level-experiments" title="Container level experiments" class="md-nav__link">
+    Container level experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-instance-stopped" title="Application Instance Stopped" class="md-nav__link">
+    Application Instance Stopped
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-based-experiments" title="SSH Based Experiments" class="md-nav__link">
+    SSH Based Experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_1" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-level-experiments" title="Application level experiments" class="md-nav__link">
+    Application level experiments
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-scaling" title="Application Scaling" class="md-nav__link">
+    Application Scaling
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_2" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-experiment-finalization" title="Self Healing &amp; Experiment Finalization" class="md-nav__link">
+    Self Healing &amp; Experiment Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-restart" title="Application Restart" class="md-nav__link">
+    Application Restart
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_4" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_3" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-restage" title="Application Restage" class="md-nav__link">
+    Application Restage
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_5" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_4" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unmap-application-route" title="Unmap Application Route" class="md-nav__link">
+    Unmap Application Route
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_6" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism_5" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-experiment-finalization_1" title="Self Healing &amp; Experiment Finalization" class="md-nav__link">
+    Self Healing &amp; Experiment Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/Experiment_Modules/pcf_experiments.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                  <h1>Pcf experiments</h1>
+                
+                <h2 id="pivotal-cloud-foundry-experiments">Pivotal Cloud Foundry Experiments</h2>
+<p>The Chaos Engine Cloud Foundry Module is able to connect to a Cloud Foundry organization and interact Applications deployed in Cloud Foundry. It can interact with entire applications or individual application instances.</p>
+<p>The Cloud Foundry module is split into two platforms that operate independently from one another. One Platform is designed to run experiments that affect entire applications as resources, while the other interacts with individual application instances.</p>
+<h2 id="sdk">SDK</h2>
+<p>The official Pivotal Cloud Foundry Java Client is used to interact with Cloud Foundry.</p>
+<p>Resource: <a href="https://github.com/cloudfoundry/cf-java-client">https://github.com/cloudfoundry/cf-java-client</a></p>
+<p>Version: 3.13.0.RELEASE</p>
+<p>Maven Repositories:</p>
+<ul>
+<li><a href="https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-operations">https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-operations</a></li>
+<li><a href="https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-client-reactor">https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-client-reactor</a></li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<p>Several environment variables control how the Chaos Engine creates a connection to the Cloud Foundry manager.</p>
+<table>
+<thead>
+<tr>
+<th>Key Name</th>
+<th>Description</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cf.apiHost</td>
+<td>The FQDN of the API Host to connect to.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>cf.port</td>
+<td>The port used to communicate with the API Host</td>
+<td>443</td>
+</tr>
+<tr>
+<td>cf.username</td>
+<td>The username to connect to the API Host with.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>cf.password</td>
+<td>The password for the associated username.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>cf.organization</td>
+<td>The Organization within Cloud Foundry to connect to.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>cf.space</td>
+<td>The Space within the Organization to connect to.</td>
+<td>default</td>
+</tr>
+<tr>
+<td>cf.applicationChaos</td>
+<td>The presence of this key enables the application level experiments.<br /><br />Please note that at least one of <em>cf.applicationChaos</em> or <em>cf.containerChaos</em> must be set</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>cf.containerChaos</td>
+<td>The presence of this key enables the container level experiments.</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h2 id="node-discovery">Node Discovery</h2>
+<p>Node Discovery for Cloud Foundry results in two rosters. The first roster represents every application, while the second represents every instance of every application. This allows experiments to operate at multiple layers in Cloud Foundry.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>The module calls the Applications List API from Cloud Foundry via the Java SDK. Multiple Container objects are created as the result of this call. One set of Containers represents each Application. Another set of Containers is created by iterating for each of the requested number of instances per application, and represents every individual instance.</p>
+<h3 id="self-awareness">Self Awareness</h3>
+<p>The Chaos Engine is able to determine if it is running in Cloud Foundry. It does so by looking for a pair of environment variables that Cloud Foundry sets in the container where the application runs. These variables are <strong>vcap.application.name</strong> and <strong>CF_INSTANCE_ID</strong>. These values are compared to the nodes during discovery, and if there is a match, the node is dropped from the roster.</p>
+<p>Resource: <a href="https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html">https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html</a></p>
+<h2 id="experiments">Experiments</h2>
+<h2 id="container-level-experiments">Container level experiments</h2>
+<h3 id="application-instance-stopped">Application Instance Stopped</h3>
+<p>Stopping a Cloud Foundry instance validates a few things. Any chain of calls that pass through the instance should seamlessly be handled by other available instances. The instance should be able to resume operations and start taking requests once BOSH realizes a container is terminated, and software in the container should be capable of starting up without issue.</p>
+<h4 id="mechanism_1">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html">https://apidocs.cloudfoundry.org/3.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html</a></p>
+<p>The Application Instance Terminate is called through the Java SDK. This will stop the instance of an application. The BOSH manager is supposed to restart instances at this point.</p>
+<h4 id="health-check-mechanism">Health Check Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
+<p>The Application Instance Summary information queried via the Java SDK. The specific InstanceID is filtered from the results, and the State of the container is checked.</p>
+<h4 id="self-healing">Self Healing</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html</a></p>
+<p>The Application  is restaged via the Restage Application API via the Java SDK.</p>
+<h3 id="ssh-based-experiments">SSH Based Experiments</h3>
+<p>Cloud Foundry Containers support SSH Based experiments that can be used to simulate specific failure scenarios like high CPU or MEM consumption.</p>
+<p>See <a href="../Script_Experiments/included_script_experiments/">Script Experiments</a> for more details.</p>
+<h4 id="mechanism_2">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/info/get_info.html">https://apidocs.cloudfoundry.org/3.5.0/info/get_info.html</a></p>
+<p>Resource: <a href="https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html">https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html</a></p>
+<p>A combination of information is used to create an SSH Connection. The Info API provides an SSH Endpoint Address and port. A separate API call provides a one time password to be used for the SSH connection.</p>
+<p>A connection for the individual instance is created by using the application id and instance id as a username (Formatted as <strong>cf:<em>ApplicationID</em>/*InstanceID</strong>*. This connection is passed to the SSH Manager to run SSH based experiments.</p>
+<p>Entire process can be described by following manual steps:</p>
+<p>Run <em>cf app MY-AWESOME-APP --guid</em> and record the GUID of your target app.</p>
+<div class="codehilite"><pre><span></span>$ cf app MY-AWESOME-APP --guid
+abcdefab-1234-5678-abcd-1234abcd1234
+</pre></div>
+
+<p>Query the <em>/v2/info</em> endpoint of the Cloud Controller in your deployment. Record the domain name and port of the <em>app_ssh_endpoint</em> field.</p>
+<div class="codehilite"><pre><span></span>$ cf curl /v2/info
+<span class="o">{</span>
+...
+<span class="s2">&quot;app_ssh_endpoint&quot;</span>: <span class="s2">&quot;ssh.MY-DOMAIN.com:2222&quot;</span>,
+<span class="s2">&quot;app_ssh_host_key_fingerprint&quot;</span>: <span class="s2">&quot;a6:14:c0:ea:42:07:b2:f7:53:2c:0b:60:e0:00:21:6c&quot;</span>,
+...
+<span class="o">}</span>
+</pre></div>
+
+<p>Run <em>cf ssh-code</em> to obtain a one-time authorization code that substitutes for an SSH password.</p>
+<div class="codehilite"><pre><span></span>$ cf ssh-code
+E1x89n
+</pre></div>
+
+<p>Run your ssh or other command to connect to the app instance. For the username, use a string of the form <em>cf:APP-GUID/APP-INSTANCE-INDEX@SSH-ENDPOINT</em>, where <em>APP-GUID</em> and <em>SSH-ENDPOINT</em> come from the previous steps. For the port number, use the <em>SSH-PORT</em> recorded above. <em>APP-INSTANCE-INDEX</em> is the index of the instance you want to access.
+With the above example, you ssh into the container hosting the first instance of your app by running the following command:</p>
+<div class="codehilite"><pre><span></span>$ ssh -p <span class="m">2222</span> cf:abcdefab-1234-5678-abcd-1234abcd1234/0@ssh.MY-DOMAIN.com
+</pre></div>
+
+<h4 id="health-check-mechanism_1">Health Check Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
+<p>SSH base experiments use two phase health check mechanism:</p>
+<p>1) The application instance summary information queried via the Java SDK. The specific InstanceID is filtered from the results, and the State of the container is checked.</p>
+<p>2) (If defined) When step 1 confirms the container is healthy, ssh connection to the container is made and specific health check command is executed, if expected status code is return the healthy state is returned</p>
+<p>3) Container is considered healthy when both previous steps return healthy state</p>
+<h2 id="application-level-experiments">Application level experiments</h2>
+<h3 id="application-scaling">Application Scaling</h3>
+<p>Application Scaling tests verify that any autoscaling that is configured does not cause random issues as applications are scaled up or down. For instance, too many instances of one application may cause thread pool exhaustion on a dependent service.</p>
+<h4 id="mechanism_3">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html</a></p>
+<p>The Application Update API is called via the Cloud Foundry SDK Applications Scale interface. Containers are appropriately created or destroyed automatically.</p>
+<h4 id="health-check-mechanism_2">Health Check Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
+<h4 id="self-healing-experiment-finalization">Self Healing &amp; Experiment Finalization</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html</a></p>
+<p>The application is rescaled back to its original value through the same API by which the experiment was launched.</p>
+<h3 id="application-restart">Application Restart</h3>
+<p>Application Restart tests how resilient the platform is to a short downtime of an entire application. This can happen while an application is being updated with a hotfix, or if a bug in an application causes all instances to simultaneously crash.</p>
+<p>Restarting your application stops your application and restarts it with the already compiled droplet. A droplet is a tarball that includes:</p>
+<ul>
+<li>stack</li>
+<li>buildpack</li>
+<li>application source code</li>
+</ul>
+<h4 id="mechanism_4">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.2.0/apps/creating_an_app.html">https://apidocs.cloudfoundry.org/4.2.0/apps/creating_an_app.html</a></p>
+<p><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">A Restart Application request is initiated through the Cloud Foundry SDK.</a></p>
+<h4 id="health-check-mechanism_3">Health Check Mechanism</h4>
+<p><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">API:</a><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
+<h3 id="application-restage">Application Restage</h3>
+<p>Application Restage tests how resilient the platform is to a short downtime of an entire application. This can happen while an application is being updated with a hotfix, or if a bug in an application causes all instances to simultaneously crash.</p>
+<p>Restaging your application stops your application and restages it, by compiling a new droplet and starting it.</p>
+<h4 id="mechanism_5">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html</a></p>
+<p>A Restage Application request is initiated through the Cloud Foundry SDK.</p>
+<h4 id="health-check-mechanism_4">Health Check Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
+<h3 id="unmap-application-route">Unmap Application Route</h3>
+<p>Unmap application routes tests how the applications running in Cloud Foundry containers are resilient to short unavailability of resources accessible over network.</p>
+<p><a href="https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html">Routes and Domains concept description</a></p>
+<h4 id="mechanism_6">Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/mapping_an_app_and_a_route.html">https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/mapping_an_app_and_a_route.html</a></p>
+<p>A unmap route request is initiated through the Cloud Foundry SDK. When an application has multiple routes one of them is selected randomly and unmaped. When an application has no routes the experiment is skipped.</p>
+<h4 id="health-check-mechanism_5">Health Check Mechanism</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
+<h4 id="self-healing-experiment-finalization_1">Self Healing &amp; Experiment Finalization</h4>
+<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/delete_a_particular_route_mapping.html">https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/delete_a_particular_route_mapping.html</a></p>
+<p>In the end of the experiment the previously unmaped route is assigned back to the application</p>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Kubernetes Module
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../ssh_based_experiments/" title="SSH Based Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                SSH Based Experiments
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            &copy; 2019 Thales Group<br />
+<!-- version -->
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
+    
+      <a href="https://github.com/gemalto/chaos-engine/issues" class="md-footer-social__link fa fa-tags"></a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.245445c6.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1371 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A tool for automated Chaos Experimentation">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+    
+    
+      
+        <title>Chaos Engine</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/application.0284f74d.css">
+      
+        <link rel="stylesheet" href="assets/stylesheets/application-palette.01803549.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="assets/javascripts/modernizr.74668098.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300,400,400i,700|Fira+Code&display=fallback">
+        <style>body,input{font-family:"Fira Sans Condensed","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Fira Code","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="light-blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#supported-experiments" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="." title="Chaos Engine" class="md-header-nav__button md-logo">
+          
+            <img src="images/icon.png" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Chaos Engine
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Home
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+<nav class="md-tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="." title="Home" class="md-tabs__link md-tabs__link--active">
+        Home
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="Configuration/" title="Configuration" class="md-tabs__link">
+          Configuration
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="Core_Modules/administrative_state/" title="Core Modules" class="md-tabs__link">
+          Core Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="Experiment_Modules/aws_ec2_experiments/" title="Experiment Modules" class="md-tabs__link">
+          Experiment Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="Logging_and_Reporting/Notifications/datadog_events/" title="Logging and Reporting" class="md-tabs__link">
+          Logging and Reporting
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="Quick_Start_Guide/" title="Quick Start Guide" class="md-tabs__link">
+          Quick Start Guide
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="_Developer_Documentation/" title=" Developer Documentation" class="md-tabs__link">
+           Developer Documentation
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="." title="Chaos Engine" class="md-nav__button md-logo">
+      
+        <img src="images/icon.png" width="48" height="48">
+      
+    </a>
+    Chaos Engine
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Home
+      </label>
+    
+    <a href="." title="Home" class="md-nav__link md-nav__link--active">
+      Home
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#amazon-web-services" title="Amazon Web Services" class="md-nav__link">
+    Amazon Web Services
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ec2-instances" title="EC2 Instances" class="md-nav__link">
+    EC2 Instances
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rds-instances" title="RDS Instances" class="md-nav__link">
+    RDS Instances
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubernetes" title="Kubernetes" class="md-nav__link">
+    Kubernetes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pivotal-cloud-foundry" title="Pivotal Cloud Foundry" class="md-nav__link">
+    Pivotal Cloud Foundry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shell-experiments-suite" title="Shell Experiments Suite" class="md-nav__link">
+    Shell Experiments Suite
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="architecture/" title="Architecture" class="md-nav__link">
+      Architecture
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="configuration/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="hardening/" title="Hardening Guidelines" class="md-nav__link">
+      Hardening Guidelines
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
+      Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Configuration/security/" title="REST Security" class="md-nav__link">
+      REST Security
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Configuration/vault_integration/" title="Vault Integration" class="md-nav__link">
+      Vault Integration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Core Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Core Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Core_Modules/administrative_state/" title="Administrative State" class="md-nav__link">
+      Administrative State
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Core_Modules/container_manager/" title="Container Manager" class="md-nav__link">
+      Container Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Core_Modules/experiment_manager/" title="Experiment Manager" class="md-nav__link">
+      Experiment Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Core_Modules/scheduler/" title="Scheduler" class="md-nav__link">
+      Scheduler
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7">
+    
+    <label class="md-nav__link" for="nav-7">
+      Experiment Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-7">
+        Experiment Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/aws_ec2_experiments/" title="AWS EC2 Experiments" class="md-nav__link">
+      AWS EC2 Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/aws_rds_experiments/" title="AWS RDS Experiments" class="md-nav__link">
+      AWS RDS Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-nav__link">
+      Cattle/Pet Distinction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/common_experiment_configuration/" title="Common Configuration" class="md-nav__link">
+      Common Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/pcf_experiments/" title="Pcf experiments" class="md-nav__link">
+      Pcf experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/ssh_based_experiments/" title="SSH Based Experiments" class="md-nav__link">
+      SSH Based Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+    
+    <label class="md-nav__link" for="nav-7-8">
+      Script Experiments
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-7-8">
+        Script Experiments
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/Script_Experiments/included_script_experiments/" title="Included Script Experiments" class="md-nav__link">
+      Included Script Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiment_Modules/Script_Experiments/script_header/" title="Script Header" class="md-nav__link">
+      Script Header
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+    <label class="md-nav__link" for="nav-8">
+      Logging and Reporting
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
+        Logging and Reporting
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+    <label class="md-nav__link" for="nav-8-1">
+      Notifications
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-1">
+        Notifications
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Logging_and_Reporting/Notifications/datadog_events/" title="Datatog Events" class="md-nav__link">
+      Datatog Events
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
+      Slack Notifications
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      Quick Start Guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Quick Start Guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Quick_Start_Guide/" title="Quick Start Guide" class="md-nav__link">
+      Quick Start Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Quick_Start_Guide/config_examples/" title="Configuration Examples" class="md-nav__link">
+      Configuration Examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Quick_Start_Guide/kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-nav__link">
+      Run Chaos Engine On Kubernetes
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+       Developer Documentation
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+         Developer Documentation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/" title="Developer Documentation" class="md-nav__link">
+      Developer Documentation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/API/" title="OpenAPI Specification" class="md-nav__link">
+      OpenAPI Specification
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/annotations/" title="Chaos Engine Annotations" class="md-nav__link">
+      Chaos Engine Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/coding_conventions/" title="Coding Conventions" class="md-nav__link">
+      Coding Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
+      Multi Module Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/notable_issues/" title="Notable Issues" class="md-nav__link">
+      Notable Issues
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+    
+    <label class="md-nav__link" for="nav-10-7">
+      Design Philosophy
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-7">
+        Design Philosophy
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="_Developer_Documentation/Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-nav__link">
+      Pipeline Design Philosophy
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#amazon-web-services" title="Amazon Web Services" class="md-nav__link">
+    Amazon Web Services
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ec2-instances" title="EC2 Instances" class="md-nav__link">
+    EC2 Instances
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rds-instances" title="RDS Instances" class="md-nav__link">
+    RDS Instances
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubernetes" title="Kubernetes" class="md-nav__link">
+    Kubernetes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pivotal-cloud-foundry" title="Pivotal Cloud Foundry" class="md-nav__link">
+    Pivotal Cloud Foundry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shell-experiments-suite" title="Shell Experiments Suite" class="md-nav__link">
+    Shell Experiments Suite
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="_1"></h1>
+<p><img alt="Chaos Engine Full Logo" src="images/chaos-engine-full.png" /></p>
+<p>Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the <a href="http://principlesofchaos.org/">Principles of Chaos</a> to create random faults (<em>experiments</em>) that could reasonably occur in a real application deployment.</p>
+<p>Chaos Engine makes intelligent decisions in how and when to create experiments. When properly configured, experiments can be restricted to occur only <strong>during</strong> normal business hours (i.e., no pager alerts).</p>
+<p>Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Running chaos experiments in a non-resilient system can result in significant faults. We highly recommend you use a graduated approach to chaos implementation, and build confidence in your development and staging environments before attempting the same in your production environment.</p>
+</div>
+<h2 id="supported-experiments">Supported Experiments</h2>
+<h3 id="amazon-web-services">Amazon Web Services</h3>
+<h4 id="ec2-instances">EC2 Instances</h4>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop Instance</td>
+<td>All EC2 Instances</td>
+<td>Stops selected instance</td>
+</tr>
+<tr>
+<td>Restart Instance</td>
+<td>All EC2 Instances</td>
+<td>Restarts selected instance</td>
+</tr>
+<tr>
+<td>Remove Security Groups</td>
+<td>All EC2 Instances</td>
+<td>Removes all assigned security groups</td>
+</tr>
+<tr>
+<td>Instance Termination</td>
+<td>EC2 Instance in ASG only</td>
+<td>Terminates an instance when it is running in ASG</td>
+</tr>
+<tr>
+<td>Deploy Shell Experiment</td>
+<td>EC2 Instance in ASG only</td>
+<td>Deploys an experiment from shell experiment suite described below</td>
+</tr>
+</tbody>
+</table>
+<h4 id="rds-instances">RDS Instances</h4>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Restart Instance</td>
+<td>All RDS Instances</td>
+<td>Restarts selected instance</td>
+</tr>
+<tr>
+<td>Remove Security Groups</td>
+<td>All RDS Instances</td>
+<td>Removes all assigned security groups</td>
+</tr>
+<tr>
+<td>Take Snapshot</td>
+<td>All RDS Instances</td>
+<td>Takes a snapshot of the DB</td>
+</tr>
+<tr>
+<td>Restart Subset of Nodes</td>
+<td>RDS Cluster only</td>
+<td>Randomly selects set of nodes and restarts them</td>
+</tr>
+<tr>
+<td>Initiate failover</td>
+<td>RDS Cluster only</td>
+<td>Initialize failover between nodes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kubernetes">Kubernetes</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Delete POD</td>
+<td>POD</td>
+<td>Deletes randomly selected pod</td>
+</tr>
+<tr>
+<td>Deploy Shell Experiment</td>
+<td>Container</td>
+<td>Deploys an experiment from shell experiment suite described below</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pivotal-cloud-foundry">Pivotal Cloud Foundry</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rescale Application</td>
+<td>Application</td>
+<td>Rescales an application to random number of instances</td>
+</tr>
+<tr>
+<td>Restage Application</td>
+<td>Application</td>
+<td>Redeploys an application</td>
+</tr>
+<tr>
+<td>Restart Application</td>
+<td>Application</td>
+<td>Restarts all application containers</td>
+</tr>
+<tr>
+<td>Restart Instance</td>
+<td>Container</td>
+<td>Restarts selected container</td>
+</tr>
+<tr>
+<td>Deploy Shell Experiment</td>
+<td>Container</td>
+<td>Deploys an experiment from shell experiment suite described below</td>
+</tr>
+</tbody>
+</table>
+<h3 id="shell-experiments-suite">Shell Experiments Suite</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BurnIO</td>
+<td>EC2, PCF or Kubernetes resource supporting remote command execution</td>
+<td>Utilize system disk to maximum</td>
+</tr>
+<tr>
+<td>CPU Burn</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Simulates high CPU usage on all available processing units</td>
+</tr>
+<tr>
+<td>DNS Block</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Removes all DNS servers from system configuration</td>
+</tr>
+<tr>
+<td>Fill Disk</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Creates large file on the system root partition</td>
+</tr>
+<tr>
+<td>Fork Bomb</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Runs endless recursion that corrupts system memory</td>
+</tr>
+<tr>
+<td>Memory Consumer</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Consumes all free memory</td>
+</tr>
+<tr>
+<td>Null Route</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Adds an IP table rule that will forward traffic from specific subnet to black hole</td>
+</tr>
+<tr>
+<td>Random Generator Starvation</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Simulates entropy starvation</td>
+</tr>
+<tr>
+<td>Process Termination</td>
+<td>EC2, PCF or Kubernetes resource supporting RCE</td>
+<td>Terminates random process</td>
+</tr>
+</tbody>
+</table>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+        
+          <a href="architecture/" title="Architecture" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Architecture
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            &copy; 2019 Thales Group<br />
+<!-- version -->
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.css">
+    
+      <a href="https://github.com/gemalto/chaos-engine/issues" class="md-footer-social__link fa fa-tags"></a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="assets/javascripts/application.245445c6.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"."}})</script>
+      
+    
+  </body>
+</html>

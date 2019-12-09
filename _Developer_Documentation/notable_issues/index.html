@@ -1,0 +1,1248 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A tool for automated Chaos Experimentation">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+    
+    
+      
+        <title>Notable Issues - Chaos Engine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.0284f74d.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.01803549.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300,400,400i,700|Fira+Code&display=fallback">
+        <style>body,input{font-family:"Fira Sans Condensed","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Fira Code","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="light-blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#notable-issues" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Chaos Engine" class="md-header-nav__button md-logo">
+          
+            <img src="../../images/icon.png" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Chaos Engine
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Notable Issues
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="../.." title="Home" class="md-tabs__link">
+        Home
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Configuration/" title="Configuration" class="md-tabs__link">
+          Configuration
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Core_Modules/administrative_state/" title="Core Modules" class="md-tabs__link">
+          Core Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Experiment_Modules/aws_ec2_experiments/" title="Experiment Modules" class="md-tabs__link">
+          Experiment Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Logging and Reporting" class="md-tabs__link">
+          Logging and Reporting
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-tabs__link">
+          Quick Start Guide
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../" title=" Developer Documentation" class="md-tabs__link md-tabs__link--active">
+           Developer Documentation
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Chaos Engine" class="md-nav__button md-logo">
+      
+        <img src="../../images/icon.png" width="48" height="48">
+      
+    </a>
+    Chaos Engine
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../architecture/" title="Architecture" class="md-nav__link">
+      Architecture
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../configuration/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../hardening/" title="Hardening Guidelines" class="md-nav__link">
+      Hardening Guidelines
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
+      Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/security/" title="REST Security" class="md-nav__link">
+      REST Security
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/vault_integration/" title="Vault Integration" class="md-nav__link">
+      Vault Integration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Core Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Core Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/administrative_state/" title="Administrative State" class="md-nav__link">
+      Administrative State
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/container_manager/" title="Container Manager" class="md-nav__link">
+      Container Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/experiment_manager/" title="Experiment Manager" class="md-nav__link">
+      Experiment Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/scheduler/" title="Scheduler" class="md-nav__link">
+      Scheduler
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7">
+    
+    <label class="md-nav__link" for="nav-7">
+      Experiment Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-7">
+        Experiment Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/aws_ec2_experiments/" title="AWS EC2 Experiments" class="md-nav__link">
+      AWS EC2 Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/aws_rds_experiments/" title="AWS RDS Experiments" class="md-nav__link">
+      AWS RDS Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-nav__link">
+      Cattle/Pet Distinction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/common_experiment_configuration/" title="Common Configuration" class="md-nav__link">
+      Common Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/pcf_experiments/" title="Pcf experiments" class="md-nav__link">
+      Pcf experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/ssh_based_experiments/" title="SSH Based Experiments" class="md-nav__link">
+      SSH Based Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+    
+    <label class="md-nav__link" for="nav-7-8">
+      Script Experiments
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-7-8">
+        Script Experiments
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/Script_Experiments/included_script_experiments/" title="Included Script Experiments" class="md-nav__link">
+      Included Script Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/Script_Experiments/script_header/" title="Script Header" class="md-nav__link">
+      Script Header
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+    <label class="md-nav__link" for="nav-8">
+      Logging and Reporting
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
+        Logging and Reporting
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+    <label class="md-nav__link" for="nav-8-1">
+      Notifications
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-1">
+        Notifications
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Datatog Events" class="md-nav__link">
+      Datatog Events
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
+      Slack Notifications
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      Quick Start Guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Quick Start Guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-nav__link">
+      Quick Start Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/config_examples/" title="Configuration Examples" class="md-nav__link">
+      Configuration Examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-nav__link">
+      Run Chaos Engine On Kubernetes
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
+    
+    <label class="md-nav__link" for="nav-10">
+       Developer Documentation
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+         Developer Documentation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../" title="Developer Documentation" class="md-nav__link">
+      Developer Documentation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../API/" title="OpenAPI Specification" class="md-nav__link">
+      OpenAPI Specification
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../annotations/" title="Chaos Engine Annotations" class="md-nav__link">
+      Chaos Engine Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../coding_conventions/" title="Coding Conventions" class="md-nav__link">
+      Coding Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../multi_module/" title="Multi Module Structure" class="md-nav__link">
+      Multi Module Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Notable Issues
+      </label>
+    
+    <a href="./" title="Notable Issues" class="md-nav__link md-nav__link--active">
+      Notable Issues
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#springboot-illegal-state-exception-class-not-found" title="SpringBoot Illegal State Exception / Class Not Found" class="md-nav__link">
+    SpringBoot Illegal State Exception / Class Not Found
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" title="Example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-resolution" title="Common Resolution" class="md-nav__link">
+    Common Resolution
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-list" title="Check List:" class="md-nav__link">
+    Check List:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+    
+    <label class="md-nav__link" for="nav-10-7">
+      Design Philosophy
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-7">
+        Design Philosophy
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-nav__link">
+      Pipeline Design Philosophy
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#springboot-illegal-state-exception-class-not-found" title="SpringBoot Illegal State Exception / Class Not Found" class="md-nav__link">
+    SpringBoot Illegal State Exception / Class Not Found
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" title="Example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-resolution" title="Common Resolution" class="md-nav__link">
+    Common Resolution
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-list" title="Check List:" class="md-nav__link">
+    Check List:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/_Developer_Documentation/notable_issues.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="notable-issues">Notable Issues</h1>
+<p>This page is intended to be a guide to issues that we have seen while developing and running Chaos Engine, including how to identify, and how to resolve them. These may be persistent issues if not configured, or bugs that can be created from improper development/packaging.</p>
+<h2 id="springboot-illegal-state-exception-class-not-found">SpringBoot Illegal State Exception / Class Not Found</h2>
+<p>If a Bean Instantiation attempts to load a class that is not in the classpath, then a IllegalStateException is thrown, wrapping a lower ClassNotFoundException.This can happen if a dependency is not packaged in one of the built JARs, and also is not copied into the loaded classpath folders as part of the build process.</p>
+<h3 id="example">Example</h3>
+<div class="codehilite"><pre><span></span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="nl">IllegalStateException</span><span class="p">:</span> <span class="n">Error</span> <span class="n">processing</span> <span class="n">condition</span> <span class="n">on</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">PropertyPlaceholderAutoConfiguration</span><span class="p">.</span><span class="n">propertySourcesPlaceholderConfigurer</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">SpringBootCondition</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="n">SpringBootCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConditionEvaluator</span><span class="p">.</span><span class="n">shouldSkip</span><span class="p">(</span><span class="n">ConditionEvaluator</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">108</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="n">loadBeanDefinitionsForBeanMethod</span><span class="p">(</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">181</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="n">loadBeanDefinitionsForConfigurationClass</span><span class="p">(</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">141</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="n">loadBeanDefinitions</span><span class="p">(</span><span class="n">ConfigurationClassBeanDefinitionReader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">117</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConfigurationClassPostProcessor</span><span class="p">.</span><span class="n">processConfigBeanDefinitions</span><span class="p">(</span><span class="n">ConfigurationClassPostProcessor</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">327</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">annotation</span><span class="p">.</span><span class="n">ConfigurationClassPostProcessor</span><span class="p">.</span><span class="n">postProcessBeanDefinitionRegistry</span><span class="p">(</span><span class="n">ConfigurationClassPostProcessor</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">232</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">PostProcessorRegistrationDelegate</span><span class="p">.</span><span class="n">invokeBeanDefinitionRegistryPostProcessors</span><span class="p">(</span><span class="n">PostProcessorRegistrationDelegate</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">275</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">PostProcessorRegistrationDelegate</span><span class="p">.</span><span class="n">invokeBeanFactoryPostProcessors</span><span class="p">(</span><span class="n">PostProcessorRegistrationDelegate</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">95</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractApplicationContext</span><span class="p">.</span><span class="n">invokeBeanFactoryPostProcessors</span><span class="p">(</span><span class="n">AbstractApplicationContext</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">705</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractApplicationContext</span><span class="p">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">AbstractApplicationContext</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">531</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">web</span><span class="p">.</span><span class="n">servlet</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="n">ServletWebServerApplicationContext</span><span class="p">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">ServletWebServerApplicationContext</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">142</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">SpringApplication</span><span class="p">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">SpringApplication</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">775</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">SpringApplication</span><span class="p">.</span><span class="n">refreshContext</span><span class="p">(</span><span class="n">SpringApplication</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">397</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">SpringApplication</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">SpringApplication</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">316</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">com</span><span class="p">.</span><span class="n">gemalto</span><span class="p">.</span><span class="n">chaos</span><span class="p">.</span><span class="n">ChaosEngine</span><span class="p">.</span><span class="n">main</span><span class="p">(</span><span class="n">ChaosEngine</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">17</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">jdk</span><span class="p">.</span><span class="n">internal</span><span class="p">.</span><span class="n">reflect</span><span class="p">.</span><span class="n">NativeMethodAccessorImpl</span><span class="p">.</span><span class="n">invoke0</span><span class="p">(</span><span class="n">Native</span> <span class="n">Method</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">jdk</span><span class="p">.</span><span class="n">internal</span><span class="p">.</span><span class="n">reflect</span><span class="p">.</span><span class="n">NativeMethodAccessorImpl</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">NativeMethodAccessorImpl</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">62</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">jdk</span><span class="p">.</span><span class="n">internal</span><span class="p">.</span><span class="n">reflect</span><span class="p">.</span><span class="n">DelegatingMethodAccessorImpl</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">DelegatingMethodAccessorImpl</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">43</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">reflect</span><span class="p">.</span><span class="n">Method</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">Method</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">566</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">MainMethodRunner</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">MainMethodRunner</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">48</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">Launcher</span><span class="p">.</span><span class="n">launch</span><span class="p">(</span><span class="n">Launcher</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">87</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">Launcher</span><span class="p">.</span><span class="n">launch</span><span class="p">(</span><span class="n">Launcher</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">PropertiesLauncher</span><span class="p">.</span><span class="n">main</span><span class="p">(</span><span class="n">PropertiesLauncher</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">593</span><span class="p">)</span>
+    <span class="n">Caused</span> <span class="nl">by</span><span class="p">:</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="nl">IllegalStateException</span><span class="p">:</span> <span class="n">Failed</span> <span class="n">to</span> <span class="n">introspect</span> <span class="kt">Class</span> <span class="p">[</span><span class="n">com</span><span class="p">.</span><span class="n">gemalto</span><span class="p">.</span><span class="n">chaos</span><span class="p">.</span><span class="n">notification</span><span class="p">.</span><span class="n">services</span><span class="p">.</span><span class="n">DataDogNotificationService</span><span class="p">]</span> <span class="n">from</span> <span class="n">ClassLoader</span> <span class="p">[</span><span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">LaunchedURLClassLoader</span><span class="mi">@63</span><span class="n">c12fb0</span><span class="p">]</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="n">getDeclaredMethods</span><span class="p">(</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">507</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="n">doWithMethods</span><span class="p">(</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">404</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="n">doWithMethods</span><span class="p">(</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">389</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="n">getUniqueDeclaredMethods</span><span class="p">(</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">447</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">concurrent</span><span class="p">.</span><span class="n">ConcurrentHashMap</span><span class="p">.</span><span class="n">computeIfAbsent</span><span class="p">(</span><span class="n">ConcurrentHashMap</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">1705</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">beans</span><span class="p">.</span><span class="n">factory</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="n">getTypeForFactoryMethod</span><span class="p">(</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">738</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">beans</span><span class="p">.</span><span class="n">factory</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="n">determineTargetType</span><span class="p">(</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">679</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">beans</span><span class="p">.</span><span class="n">factory</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="n">predictBeanType</span><span class="p">(</span><span class="n">AbstractAutowireCapableBeanFactory</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">647</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">beans</span><span class="p">.</span><span class="n">factory</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractBeanFactory</span><span class="p">.</span><span class="n">isFactoryBean</span><span class="p">(</span><span class="n">AbstractBeanFactory</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">1518</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">beans</span><span class="p">.</span><span class="n">factory</span><span class="p">.</span><span class="n">support</span><span class="p">.</span><span class="n">AbstractBeanFactory</span><span class="p">.</span><span class="n">isFactoryBean</span><span class="p">(</span><span class="n">AbstractBeanFactory</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">1023</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">addBeanTypeForNonAliasDefinition</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">195</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">addBeanTypeForNonAliasDefinition</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">159</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">addBeanType</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">152</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">updateTypesIfNecessary</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">140</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">Iterator</span><span class="p">.</span><span class="n">forEachRemaining</span><span class="p">(</span><span class="n">Iterator</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">133</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">updateTypesIfNecessary</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">135</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="n">getNamesForType</span><span class="p">(</span><span class="n">BeanTypeRegistry</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">97</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="n">collectBeanNamesForType</span><span class="p">(</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">298</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="n">getBeanNamesForType</span><span class="p">(</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">289</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="n">getBeanNamesForType</span><span class="p">(</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">278</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="n">getMatchingBeans</span><span class="p">(</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">189</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="n">getMatchOutcome</span><span class="p">(</span><span class="n">OnBeanCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">160</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">autoconfigure</span><span class="p">.</span><span class="n">condition</span><span class="p">.</span><span class="n">SpringBootCondition</span><span class="p">.</span><span class="n">matches</span><span class="p">(</span><span class="n">SpringBootCondition</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">47</span><span class="p">)</span>
+    <span class="p">...</span> <span class="mi">23</span> <span class="n">common</span> <span class="n">frames</span> <span class="n">omitted</span>
+    <span class="n">Caused</span> <span class="nl">by</span><span class="p">:</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="nl">NoClassDefFoundError</span><span class="p">:</span> <span class="n">com</span><span class="o">/</span><span class="n">timgroup</span><span class="o">/</span><span class="n">statsd</span><span class="o">/</span><span class="n">StatsDClient</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="kt">Class</span><span class="p">.</span><span class="n">getDeclaredMethods0</span><span class="p">(</span><span class="n">Native</span> <span class="n">Method</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="kt">Class</span><span class="p">.</span><span class="n">privateGetDeclaredMethods</span><span class="p">(</span><span class="kt">Class</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">3166</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="kt">Class</span><span class="p">.</span><span class="n">getDeclaredMethods</span><span class="p">(</span><span class="kt">Class</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">2309</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="n">getDeclaredMethods</span><span class="p">(</span><span class="n">ReflectionUtils</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">489</span><span class="p">)</span>
+    <span class="p">...</span> <span class="mi">45</span> <span class="n">common</span> <span class="n">frames</span> <span class="n">omitted</span>
+    <span class="n">Caused</span> <span class="nl">by</span><span class="p">:</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="nl">ClassNotFoundException</span><span class="p">:</span> <span class="n">com</span><span class="p">.</span><span class="n">timgroup</span><span class="p">.</span><span class="n">statsd</span><span class="p">.</span><span class="n">StatsDClient</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">net</span><span class="p">.</span><span class="n">URLClassLoader</span><span class="p">.</span><span class="n">findClass</span><span class="p">(</span><span class="n">URLClassLoader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">471</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">ClassLoader</span><span class="p">.</span><span class="n">loadClass</span><span class="p">(</span><span class="n">ClassLoader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">588</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="n">springframework</span><span class="p">.</span><span class="n">boot</span><span class="p">.</span><span class="n">loader</span><span class="p">.</span><span class="n">LaunchedURLClassLoader</span><span class="p">.</span><span class="n">loadClass</span><span class="p">(</span><span class="n">LaunchedURLClassLoader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">93</span><span class="p">)</span>
+    <span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">ClassLoader</span><span class="p">.</span><span class="n">loadClass</span><span class="p">(</span><span class="n">ClassLoader</span><span class="p">.</span><span class="nl">java</span><span class="p">:</span><span class="mi">521</span><span class="p">)</span>
+    <span class="p">...</span> <span class="mi">49</span> <span class="n">common</span> <span class="n">frames</span> <span class="n">omitted</span>
+</pre></div>
+
+<h3 id="common-resolution">Common Resolution</h3>
+<p>Review the Build instructions for the class attempting to load this class. It either needs to be configured to package dependencies with itself, or to copy dependent Jar\'s in such a way that they are packaged in the final image.</p>
+<h4 id="check-list">Check List:</h4>
+<ol>
+<li>The module has build instructions to include dependencies either in itself or in a relative path.</li>
+<li>Relative path dependencies are copied into the final image</li>
+</ol>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../multi_module/" title="Multi Module Structure" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Multi Module Structure
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Pipeline Design Philosophy
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            &copy; 2019 Thales Group<br />
+<!-- version -->
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
+    
+      <a href="https://github.com/gemalto/chaos-engine/issues" class="md-footer-social__link fa fa-tags"></a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.245445c6.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+    
+  </body>
+</html>

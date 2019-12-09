@@ -1,0 +1,1803 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A tool for automated Chaos Experimentation">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+    
+    
+      
+        <title>AWS EC2 Experiments - Chaos Engine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.0284f74d.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.01803549.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300,400,400i,700|Fira+Code&display=fallback">
+        <style>body,input{font-family:"Fira Sans Condensed","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Fira Code","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="light-blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#aws-ec2-experiments" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Chaos Engine" class="md-header-nav__button md-logo">
+          
+            <img src="../../images/icon.png" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Chaos Engine
+            </span>
+            <span class="md-header-nav__topic">
+              
+                AWS EC2 Experiments
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="../.." title="Home" class="md-tabs__link">
+        Home
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Configuration/" title="Configuration" class="md-tabs__link">
+          Configuration
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Core_Modules/administrative_state/" title="Core Modules" class="md-tabs__link">
+          Core Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="./" title="Experiment Modules" class="md-tabs__link md-tabs__link--active">
+          Experiment Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Logging and Reporting" class="md-tabs__link">
+          Logging and Reporting
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-tabs__link">
+          Quick Start Guide
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../_Developer_Documentation/" title=" Developer Documentation" class="md-tabs__link">
+           Developer Documentation
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Chaos Engine" class="md-nav__button md-logo">
+      
+        <img src="../../images/icon.png" width="48" height="48">
+      
+    </a>
+    Chaos Engine
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../architecture/" title="Architecture" class="md-nav__link">
+      Architecture
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../configuration/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../hardening/" title="Hardening Guidelines" class="md-nav__link">
+      Hardening Guidelines
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
+      Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/security/" title="REST Security" class="md-nav__link">
+      REST Security
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/vault_integration/" title="Vault Integration" class="md-nav__link">
+      Vault Integration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Core Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Core Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/administrative_state/" title="Administrative State" class="md-nav__link">
+      Administrative State
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/container_manager/" title="Container Manager" class="md-nav__link">
+      Container Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/experiment_manager/" title="Experiment Manager" class="md-nav__link">
+      Experiment Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/scheduler/" title="Scheduler" class="md-nav__link">
+      Scheduler
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" checked>
+    
+    <label class="md-nav__link" for="nav-7">
+      Experiment Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-7">
+        Experiment Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        AWS EC2 Experiments
+      </label>
+    
+    <a href="./" title="AWS EC2 Experiments" class="md-nav__link md-nav__link--active">
+      AWS EC2 Experiments
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sdk" title="SDK" class="md-nav__link">
+    SDK
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version" title="Version" class="md-nav__link">
+    Version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-discovery" title="Node Discovery" class="md-nav__link">
+    Node Discovery
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering" title="Filtering" class="md-nav__link">
+    Filtering
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tags" title="Tags" class="md-nav__link">
+    Tags
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-awareness" title="Self Awareness" class="md-nav__link">
+    Self Awareness
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autoscaling-support" title="Autoscaling Support" class="md-nav__link">
+    Autoscaling Support
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#discovery-mechanism" title="Discovery Mechanism" class="md-nav__link">
+    Discovery Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-roster-generation" title="Experiment Roster Generation" class="md-nav__link">
+    Experiment Roster Generation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-mechanism" title="Self Healing Mechanism" class="md-nav__link">
+    Self Healing Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-experiment-support" title="SSH Experiment Support" class="md-nav__link">
+    SSH Experiment Support
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-methods" title="Experiment Methods" class="md-nav__link">
+    Experiment Methods
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#instance-stopped" title="Instance Stopped" class="md-nav__link">
+    Instance Stopped
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#health-check" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-rebooted" title="Instance Rebooted" class="md-nav__link">
+    Instance Rebooted
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_1" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_1" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-groups-changed" title="Security Groups Changed" class="md-nav__link">
+    Security Groups Changed
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_2" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_2" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-security-group-creation-mechanism" title="Automatic Security Group Creation Mechanism" class="md-nav__link">
+    Automatic Security Group Creation Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terminate-instance-in-auto-scaling-group" title="Terminate Instance in Auto Scaling Group" class="md-nav__link">
+    Terminate Instance in Auto Scaling Group
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_3" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_3" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../aws_rds_experiments/" title="AWS RDS Experiments" class="md-nav__link">
+      AWS RDS Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-nav__link">
+      Cattle/Pet Distinction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_experiment_configuration/" title="Common Configuration" class="md-nav__link">
+      Common Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../pcf_experiments/" title="Pcf experiments" class="md-nav__link">
+      Pcf experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../ssh_based_experiments/" title="SSH Based Experiments" class="md-nav__link">
+      SSH Based Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+    
+    <label class="md-nav__link" for="nav-7-8">
+      Script Experiments
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-7-8">
+        Script Experiments
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../Script_Experiments/included_script_experiments/" title="Included Script Experiments" class="md-nav__link">
+      Included Script Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../Script_Experiments/script_header/" title="Script Header" class="md-nav__link">
+      Script Header
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+    <label class="md-nav__link" for="nav-8">
+      Logging and Reporting
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
+        Logging and Reporting
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+    <label class="md-nav__link" for="nav-8-1">
+      Notifications
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-1">
+        Notifications
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Datatog Events" class="md-nav__link">
+      Datatog Events
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
+      Slack Notifications
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
+      Quick Start Guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Quick Start Guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/" title="Quick Start Guide" class="md-nav__link">
+      Quick Start Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/config_examples/" title="Configuration Examples" class="md-nav__link">
+      Configuration Examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-nav__link">
+      Run Chaos Engine On Kubernetes
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+       Developer Documentation
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+         Developer Documentation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/" title="Developer Documentation" class="md-nav__link">
+      Developer Documentation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/API/" title="OpenAPI Specification" class="md-nav__link">
+      OpenAPI Specification
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/annotations/" title="Chaos Engine Annotations" class="md-nav__link">
+      Chaos Engine Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/coding_conventions/" title="Coding Conventions" class="md-nav__link">
+      Coding Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
+      Multi Module Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/notable_issues/" title="Notable Issues" class="md-nav__link">
+      Notable Issues
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+    
+    <label class="md-nav__link" for="nav-10-7">
+      Design Philosophy
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-7">
+        Design Philosophy
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-nav__link">
+      Pipeline Design Philosophy
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sdk" title="SDK" class="md-nav__link">
+    SDK
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version" title="Version" class="md-nav__link">
+    Version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-discovery" title="Node Discovery" class="md-nav__link">
+    Node Discovery
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering" title="Filtering" class="md-nav__link">
+    Filtering
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tags" title="Tags" class="md-nav__link">
+    Tags
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-awareness" title="Self Awareness" class="md-nav__link">
+    Self Awareness
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autoscaling-support" title="Autoscaling Support" class="md-nav__link">
+    Autoscaling Support
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#discovery-mechanism" title="Discovery Mechanism" class="md-nav__link">
+    Discovery Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-roster-generation" title="Experiment Roster Generation" class="md-nav__link">
+    Experiment Roster Generation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check-mechanism" title="Health Check Mechanism" class="md-nav__link">
+    Health Check Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing-mechanism" title="Self Healing Mechanism" class="md-nav__link">
+    Self Healing Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-experiment-support" title="SSH Experiment Support" class="md-nav__link">
+    SSH Experiment Support
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-methods" title="Experiment Methods" class="md-nav__link">
+    Experiment Methods
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#instance-stopped" title="Instance Stopped" class="md-nav__link">
+    Instance Stopped
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#health-check" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-rebooted" title="Instance Rebooted" class="md-nav__link">
+    Instance Rebooted
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_1" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_1" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-groups-changed" title="Security Groups Changed" class="md-nav__link">
+    Security Groups Changed
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_2" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_2" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-security-group-creation-mechanism" title="Automatic Security Group Creation Mechanism" class="md-nav__link">
+    Automatic Security Group Creation Mechanism
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terminate-instance-in-auto-scaling-group" title="Terminate Instance in Auto Scaling Group" class="md-nav__link">
+    Terminate Instance in Auto Scaling Group
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_3" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_3" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/Experiment_Modules/aws_ec2_experiments.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="aws-ec2-experiments">AWS EC2 Experiments</h1>
+<h2 id="sdk">SDK</h2>
+<p>The AWS Module makes use of the Official <a href="https://aws.amazon.com/sdk-for-java/">AWS SDK for Java</a> from Amazon.</p>
+<h3 id="version">Version</h3>
+<p>The current SDK Version in use is 1.11.357.</p>
+<h2 id="configuration">Configuration</h2>
+<table>
+<thead>
+<tr>
+<th>Key Name</th>
+<th>Description</th>
+<th align="center">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws.ec2</code></td>
+<td>The presence of this key enables the EC2 Module</td>
+<td align="center">N/A</td>
+</tr>
+<tr>
+<td><code>aws.accessKeyId</code></td>
+<td>The Access Key ID for an AWS API Key</td>
+<td align="center">None</td>
+</tr>
+<tr>
+<td><code>aws.secretAccessKey</code></td>
+<td>The Access Key Secret for the given Access Key ID</td>
+<td align="center">None</td>
+</tr>
+<tr>
+<td><code>aws.region</code></td>
+<td>The AWS Region to run experiments on.</td>
+<td align="center"><strong>us-east-2</strong></td>
+</tr>
+<tr>
+<td><code>aws.ec2.groupingTags</code></td>
+<td>A comma separated list of tag names to use as a shared resource identifier. See <a href="#autoscaling-support">Autoscaling Support</a> for more information.</td>
+<td align="center">None</td>
+</tr>
+<tr>
+<td><code>aws.ec2.filter.&lt;key&gt;</code></td>
+<td>Each key/value pair will be used to restrict the scope of Experiment targets. See <a href="#filtering">Filtering</a> for more information.</td>
+<td align="center">None</td>
+</tr>
+<tr>
+<td><code>aws.ec2.sshprivatekeys.&lt;key&gt;</code></td>
+<td>Each key/value pair will be used to associate an EC2 SSH Key and confirm SSH access. See <a href="#ssh-experiment-support">SSH Based Experiments</a> for more information.</td>
+<td align="center">None</td>
+</tr>
+<tr>
+<td><code>aws.ec2.imageIdToUsernameMap.&lt;image-id&gt;</code></td>
+<td>Associate EC2 AMI Image IDs to the username used for SSH Access</td>
+<td align="center"><strong>ec2-user</strong></td>
+</tr>
+<tr>
+<td><code>aws.ec2.routableCidrBlocks</code></td>
+<td>A comma separated list of CIDR Blocks that should be considered Routable for SSH Access.</td>
+<td align="center">None</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code>aws.accessKeyId</code>, <code>aws.secretAccessKey</code>, and <code>aws.region</code> keys are shared with other AWS Modules.</p>
+</div>
+<h2 id="node-discovery">Node Discovery</h2>
+<p>The AWS EC2 Platform automatically discovers EC2 containers that the provided keys are able to access. If any filters are configured, those filter values are set. It will also filter out it's own instance if found to be running in EC2 (see <a href="#self-awareness">Self Awareness</a>).</p>
+<h3 id="filtering">Filtering</h3>
+<p>Each key/value pair under the <code>aws.ec2.filter.&lt;key&gt;</code> map will be used for filtering AWS EC2 Instances to find the scope of Chaos. The specific criteria are the same as the <a href="https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html#options">AWS CLI</a>. However, since environment variables cannot contain dashes (-), functionality was added to parse <strong>camelCaps</strong> into <strong>dash-separated-words</strong>. For example, to use the filter criteria <strong>root-device-name</strong>, set the property <strong><em>aws.ec2.filter</em>.rootDeviceName</strong>.</p>
+<h4 id="tags">Tags</h4>
+<p>To filter on a tag, use the subkey <strong>tag.tag_name</strong>. For example, to filter on instances where the tag <strong>service_name</strong> is <strong>mongo</strong>, use the property <strong><em>aws.ec2.filter</em>.tag.service_name=mongo</strong>. The same <strong>camelCaps</strong> conversion does not apply.</p>
+<h3 id="self-awareness">Self Awareness</h3>
+<p>The Chaos Engine will detect if it is running in an EC2 instance, and will avoid itself as a potential target.</p>
+<p>The mechanism calls the magic AWS EC2 URI <a href="http://169.254.169.254/latest/meta-data/instance-id">http://169.254.169.254/latest/meta-data/instance-id</a>. If running in EC2, this will return the Instance ID of the machine. If not running in EC2, this IP Address should not respond, as it is an RFC 3927 address.</p>
+<h2 id="autoscaling-support">Autoscaling Support</h2>
+<p>The EC2 Module makes use of AWS Autoscaling Groups in three capacities. 
+* As a mechanism to ensure that not all identical services are experimented on simultaneously
+* As a mechanism of determining if an EC2 instance has returned to a full healthy state, including potential replacement containers
+* As a mechanism to initiate self healing on an EC2 Instance.</p>
+<h3 id="discovery-mechanism">Discovery Mechanism</h3>
+<p>The property <strong>aws.ec2.groupingTags</strong> is used to identify which tags should be used for considering grouped instances. By default this is just <em>aws:autoscaling:groupName</em>, but if you are using other technologies that operate in a similar mechanism, you can provide a full comma separated list of all tags in the order of preferred use.</p>
+<h4 id="experiment-roster-generation">Experiment Roster Generation</h4>
+<p>At the beginning of every EC2 based experiment set, for each group, if at least 2 instances exist in that group, one will be flagged as a designated survivor. That instance will be immune from direct experimentation during this time. If a scaling group tag is not found for an instance, or if only one instance exists for a scaling group, then there is no guaranteed protection from experiments. In a real world scenario, these individual instances are just as likely to fail as any single redundant instance, and so are considered eligible for experimentation.</p>
+<h4 id="health-check-mechanism">Health Check Mechanism</h4>
+<p>Autoscaled EC2 instances also handle their experiment results differently. An EC2 instance as part of an autoscaling group can also complete any experiment by entering a Terminated state. This state indicates that the mechanism for managing these instances has recognized an issue and is recreating the instance.</p>
+<p>If the instance uses AWS Autoscaling as described above, the system also verifies that the autoscaling group has a number of healthy instances equal to its number of desired instances. The experiment is not considered finished until the autoscaling group is back until desired capacity.</p>
+<p>API: <a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAutoScalingGroups.html">https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAutoScalingGroups.html</a></p>
+<h4 id="self-healing-mechanism">Self Healing Mechanism</h4>
+<p>EC2 instances managed by AWS Autoscaling Groups will use an alternative method for their FIRST execution of self healing. Instead of using whatever self healing mechanism there is, the engine will use the AWS Autoscaling Group API and mark the instance as Unhealthy. The Autoscaling Group should pick this up and recreate the instance.</p>
+<p>API: <a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_SetInstanceHealth.html">API SetInstanceHealth</a></p>
+<h2 id="ssh-experiment-support">SSH Experiment Support</h2>
+<p>EC2 Instances will be considered for SSH Based Experiments based on two criteria. The first criteria is that the property <strong>aws.ec2.sshprivatekeys.<keyname></strong> must be set, where <strong>keyname</strong> is the name of the SSH Keypair in AWS of the instance. That value should contain the SSH Private Key used for the connection.</p>
+<p>The second criteria is that the EC2 instance must be routable. This is handled by checking if either the instance has a Public IP Address, or if its private IP Address is contained in a CIDR Block configured via the <strong>aws.ec2.routableCidrBlocks</strong> variable. When connecting, a routable private IP Address is preferred over a public IP Address.</p>
+<p>Connections are made using the username in the configurable map of <strong>aws.ec2.imageIdToUsernameMap</strong>, where each expected subkey is an ImageID, and its value is a username for that AMI. Any AMI that is not present in the map will use the username <strong>ec2-user</strong>.</p>
+<p>See <a href="../ssh_based_experiments/">SSH Based Experiments</a> for details on what experiments may be run.</p>
+<h2 id="experiment-methods">Experiment Methods</h2>
+<h3 id="instance-stopped">Instance Stopped</h3>
+<p>Stopping an EC2 instance tests both the ability of the PaaS solution to move instances over to other hosts, and also tests that the PaaS solution has not overloaded a critical amount of a microservice instances into one host.</p>
+<h4 id="mechanism">Mechanism</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StopInstances.html">API StopInstances</a></p>
+<p>The StopInstances API is called with Force = True. This overrides the setting to prevent accidental stops of EC2 instances.</p>
+<h5 id="health-check">Health Check</h5>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">API DescribeInstances</a></p>
+<p>The DescribeInstances API is called and parsed for the InstanceState of the specific InstanceID. A healthy instance is in a running state (Code 16).</p>
+<h5 id="self-healing">Self Healing</h5>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StartInstances.html">API StartInstances</a></p>
+<p>The StartInstances API is called when the experiment has reached it's conclusion. This should result in the container being in a running state, allowing the Health Check to pass.</p>
+<h3 id="instance-rebooted">Instance Rebooted</h3>
+<p>Rebooting an EC2 instance tests that the PaaS solution effectively moves instances over to other hosts, but also tests that the PaaS solution moves the instances back after the reboot has finalized, allowing it to take benefit of all available resources.</p>
+<h4 id="mechanism_1">Mechanism</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RebootInstances.html">API RebootInstances</a></p>
+<p>The RebootInstances API is called. This API causes a Ctrl+Alt+Del to be triggered in the instance.</p>
+<details class="warning"><summary>Ctrl+Alt+Del vs Hard Reboot</summary><p>Some AMI's have Ctrl+Alt+Del disabled. In these cases, a Hard Reboot is initiated by AWS 4 minutes after the Reboot Request was made.</p>
+</details>
+<h4 id="health-check_1">Health Check</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">API DescribeInstances</a></p>
+<p>An internal timer is started when the Reboot command is run. After 4 minutes, the DescribeInstances API is used to verify that the instance is running. This validates that, either a graceful reboot occurred under 4 minutes, or after 4 minutes, if a hard reboot was performed, the instance came back in a running state.</p>
+<h4 id="self-healing_1">Self Healing</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StartInstances.html">API StartInstances</a></p>
+<p>The StartInstances API is called when the experiment has reached it's conclusion. This should result in the container being in a running state, allowing the Health Check to pass.</p>
+<h3 id="security-groups-changed">Security Groups Changed</h3>
+<p>Changing the security groups of an EC2 instance will remove it from network accessibility. This tests that the PaaS system is able to properly balance work on nodes that are still connected to the network, and that the disconnected nodes do not cause consistency errors when they are able to reconnect.</p>
+<h4 id="mechanism_2">Mechanism</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceAttribute.html">API DescribeInstanceAttribute</a>, <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html">API ModifyInstanceAttribute</a></p>
+<p>The original security groups for an instance are recorded using the DescribeInstanceAttribute API. The security group is then replaced with an automatically created Chaos Security Group using the ModifyInstanceAttribute API.</p>
+<h4 id="health-check_2">Health Check</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceAttribute.html">API DescribeInstanceAttribute</a></p>
+<p>The security groups returned in the DescribeInstanceAttribute API are compared to the list preserved during the experiment initiation. If the two lists are exclusively equal, the system is deemed healthy.</p>
+<h4 id="self-healing_2">Self Healing</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html">API ModifyInstanceAttribute</a></p>
+<p>The original security groups are put back in place using the ModifyInstanceAttribute API.</p>
+<h4 id="automatic-security-group-creation-mechanism">Automatic Security Group Creation Mechanism</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html">API DescribeSecurityGroups</a>, <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateSecurityGroup.html">API CreateSecurityGroup</a>, <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html">API DescribeVpcs</a></p>
+<p>The Default VPC is looked up using the DescribeVpcs API, and cached. The Security Groups are looked up using the DescribeSecurityGroup API, and parsed for a security group named ChaosEngine Security Group. If one is found, it is cached and used. If it is not found, it is created using the CreateSecurityGroup API, and cached for use.</p>
+<h3 id="terminate-instance-in-auto-scaling-group">Terminate Instance in Auto Scaling Group</h3>
+<p>Terminating an instance in an Auto Scaling Group tests the overall resolution time of an error, ensuring the overall customer experience is not impacted. Additionally, it verifies if the product returns back to it's steady state when the requested amount of instances is restored.</p>
+<h4 id="mechanism_3">Mechanism</h4>
+<p>API: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TerminateInstances.html">API TerminateInstances</a></p>
+<p>The TerminateInstances API is called with the InstanceID under test as parameter.</p>
+<h4 id="health-check_3">Health Check</h4>
+<p>API: <a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAutoScalingGroups.html">API DescribeAutoScalingGroups</a></p>
+<p>The health check proves if the actual capacity is back to the desired capacity inside the given Auto Scaling Group.</p>
+<h4 id="self-healing_3">Self Healing</h4>
+<p>As a terminated instance cannot be restored, no self healing mechanism has been implemented. Therefore, an outcome of this experiment can be that the steady state cannot be restored</p>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../../Core_Modules/scheduler/" title="Scheduler" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Scheduler
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../aws_rds_experiments/" title="AWS RDS Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                AWS RDS Experiments
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            &copy; 2019 Thales Group<br />
+<!-- version -->
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
+    
+      <a href="https://github.com/gemalto/chaos-engine/issues" class="md-footer-social__link fa fa-tags"></a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.245445c6.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+    
+  </body>
+</html>
