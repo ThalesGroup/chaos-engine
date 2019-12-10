@@ -16,14 +16,13 @@
             <id>sonar-scan</id>
             <activation>
                 <property>
-                    <name>SONAR_TOKEN</name>
+                    <name>env.SONAR_TOKEN</name>
                 </property>
             </activation>
             <properties>
                 <sonar.projectKey>gemalto_chaos-engine</sonar.projectKey>
                 <sonar.organization>thalesgroup</sonar.organization>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-                <!--suppress UnresolvedMavenProperty -->
                 <sonar.login>${env.SONAR_TOKEN}</sonar.login>
             </properties>
             <build>
