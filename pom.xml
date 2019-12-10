@@ -12,6 +12,51 @@
                 <module>chaosengine-integration</module>
             </modules>
         </profile>
+        <profile>
+            <id>sonar-scan</id>
+            <activation>
+                <property>
+                    <name>SONAR_TOKEN</name>
+                </property>
+            </activation>
+            <properties>
+                <sonar.projectKey>gemalto_chaos-engine</sonar.projectKey>
+                <sonar.organization>thalesgroup</sonar.organization>
+                <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+                <!--suppress UnresolvedMavenProperty -->
+                <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.5</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <version>3.7.0.1746</version>
+                        <executions>
+                            <execution>
+                                <phase>test</phase>
+                                <id>sonar-scan</id>
+                                <goals>
+                                    <goal>sonar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
     <modules>
         <module>chaosengine-experiments</module>
