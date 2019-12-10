@@ -19,6 +19,7 @@ jobs:
         run: mvn --batch-mode clean install
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Gather build artifacts
         run: mkdir artifacts; cp -r --parents $(find . | grep target) artifacts
       - name: Upload build artifacts
