@@ -16,7 +16,9 @@ jobs:
         with:
           java-version: 11.0.x
       - name: Run build
-        run: mvn --batch-mode clean org.jacoco:jacoco-maven-plugin:prepare-agent install
+        run: mvn --batch-mode clean install
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Gather build artifacts
         run: mkdir artifacts; cp -r --parents $(find . | grep target) artifacts
       - name: Upload build artifacts
