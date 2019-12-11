@@ -10,7 +10,12 @@ apt install -y jq curl
 
 SCAN_LOG_FILE=sonar_scan.log
 
-mvn $MAVEN_CLI_OPTS sonar:sonar -Dsonar.projectKey="$SONAR_PROJECT_KEY" -Dsonar.host.url="$SONAR_URL" -Dsonar.login="$SONAR_TOKEN" | tee $SCAN_LOG_FILE
+mvn $MAVEN_CLI_OPTS sonar:sonar \
+  -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+  -Dsonar.host.url="$SONAR_URL" \
+  -Dsonar.login="$SONAR_TOKEN" \
+  -Dsonar.organization="$SONAR_ORGANIZATION" | tee $SCAN_LOG_FILE
+
 SCAN_STATUS_URL=$(grep 'More about the report processing at' $SCAN_LOG_FILE | awk '{print $8}')
 
 while [ "$SCAN_STATUS" != "SUCCESS" ]; do
