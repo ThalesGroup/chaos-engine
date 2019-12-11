@@ -32,5 +32,5 @@ You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
 [documentation]: https://gemalto.github.io/chaos-engine/
-[E-mail us]: mailto:dl_chaos_engine@thalesgroup.com
+[E-mail us]: mailto:dl_chaos_engine@gemalto.com
 [Slack]: https://join.slack.com/t/thaleschaosengine/shared_invite/enQtODY1MDk1OTY4OTgyLTZjOGI5NzM1YTA2OWE5MjgzMWYxMzkwZjIwYTE3NjBlNDM4ZTkzNzc5YmMyMTU2Zjc5ODhlMTVkZDJhMmEzMzc
