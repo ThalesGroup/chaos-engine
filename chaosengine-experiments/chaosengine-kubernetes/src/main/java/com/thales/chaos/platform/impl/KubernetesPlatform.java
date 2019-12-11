@@ -31,12 +31,12 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.impl.KubernetesShellClient;
-import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
-import io.kubernetes.client.apis.AppsV1Api;
-import io.kubernetes.client.apis.CoreApi;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.*;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.CoreApi;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,7 +159,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                            .map(V1Pod::getStatus)
                            .map(V1PodStatus::getContainerStatuses)
                            .map(Collection::stream)
-                           .map(s -> s.allMatch(V1ContainerStatus::isReady))
+                           .map(s -> s.allMatch(V1ContainerStatus::getReady))
                            .map(aBoolean -> aBoolean ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT)
                            .orElse(ContainerHealth.DOES_NOT_EXIST);
         } catch (ApiException e) {
@@ -172,7 +172,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     private V1PodList listAllPodsInNamespace () throws ApiException {
-        return coreV1Api.listNamespacedPod(namespace, true, "", "", "", "", 0, "", 0, false);
+        return coreV1Api.listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
     }
 
     @Override
@@ -284,7 +284,14 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
-            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null, "Foreground");
+            coreV1Api.deleteNamespacedPod(instance.getPodName(),
+                    instance.getNamespace(),
+                    "false",
+                    "false",
+                    null,
+                    null,
+                    "Foreground",
+                    deleteOptions);
         } catch (JsonSyntaxException e1) {
             log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
         } catch (ApiException e) {

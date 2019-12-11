@@ -18,11 +18,11 @@
 package com.thales.chaos.services.impl;
 
 import com.thales.chaos.services.CloudService;
-import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.Exec;
-import io.kubernetes.client.apis.AppsV1Api;
-import io.kubernetes.client.apis.CoreApi;
-import io.kubernetes.client.apis.CoreV1Api;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.CoreApi;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.util.Config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,7 +30,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Configuration
 @ConfigurationProperties(prefix = "kubernetes")
@@ -62,8 +62,11 @@ public class KubernetesService implements CloudService {
     ApiClient apiClient () {
         ApiClient apiClient = Config.fromToken(url, token, validateSSL);
         apiClient.setDebugging(debug);
-        apiClient.getHttpClient().setConnectTimeout(60, TimeUnit.SECONDS);
-        apiClient.getHttpClient().setReadTimeout(60, TimeUnit.SECONDS);
+        apiClient.setHttpClient(apiClient.getHttpClient()
+                                         .newBuilder()
+                                         .connectTimeout(Duration.ofMinutes(1))
+                                         .readTimeout(Duration.ofMinutes(1))
+                                         .build());
         return apiClient;
     }
 

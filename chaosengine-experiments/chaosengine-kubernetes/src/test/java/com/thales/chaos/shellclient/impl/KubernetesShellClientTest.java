@@ -25,8 +25,8 @@ import com.thales.chaos.constants.SSHConstants;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellOutput;
-import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiException;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,11 +118,19 @@ public class KubernetesShellClientTest {
         Process process = mock(Process.class);
         String command = randomUUID().toString();
         Throwable exception = new InterruptedException();
-        doReturn(process).when(exec).exec(NAMESPACE, POD_NAME, new String[]{ "sh", "-c", command }, CONTAINER_NAME, false, false);
+        InputStream inputStream = mock(InputStream.class);
+        doReturn(process).when(exec)
+                         .exec(NAMESPACE, POD_NAME, new String[]{ "sh", "-c", command }, CONTAINER_NAME, false, false);
+        doReturn(inputStream).when(process).getInputStream();
         doThrow(exception).when(process).waitFor();
         String output = kubernetesShellClient.runCommand(command, true).getStdOut();
         assertEquals(expectedOutput, output);
-        verify(exec, times(1)).exec(NAMESPACE, POD_NAME, new String[]{ "sh", "-c", command }, CONTAINER_NAME, false, false);
+        verify(exec, times(1)).exec(NAMESPACE,
+                POD_NAME,
+                new String[]{ "sh", "-c", command },
+                CONTAINER_NAME,
+                false,
+                false);
         verify(process, times(1)).destroy();
         assertTrue(Thread.interrupted());
     }

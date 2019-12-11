@@ -22,19 +22,17 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.ShellOutput;
-import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiException;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.util.StringJoiner;
+import java.util.concurrent.*;
 
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -69,18 +67,20 @@ public class KubernetesShellClient implements ShellClient {
         Process proc = null;
         try {
             proc = exec.exec(namespace, podName, command, containerName, false, false);
-            int exitCode = proc.waitFor();
             if (getOutput) {
-                ShellOutput shellOutput = ShellOutput.builder()
-                                                     .withExitCode(exitCode)
-                                                     .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset
-                                                             .defaultCharset()))
-                                                     .build();
+                Future<String> output = Executors.newSingleThreadExecutor()
+                                                 .submit(getFutureOutputFromInputStream(proc.getInputStream()));
+                int exitCode = proc.waitFor();
+                proc.destroy();
+                proc = null;
+                String stdOut = getOutputFromFutureString(output);
+                ShellOutput shellOutput = ShellOutput.builder().withExitCode(exitCode).withStdOut(stdOut).build();
                 if (exitCode > 0) {
                     log.debug("Command execution failed {}", v("failure", shellOutput));
                 }
                 return shellOutput;
             } else {
+                proc.waitFor();
                 return ShellOutput.EMPTY_SHELL_OUTPUT;
             }
         } catch (InterruptedException e) {
@@ -91,6 +91,26 @@ public class KubernetesShellClient implements ShellClient {
             throw new ChaosException(KubernetesChaosErrorCode.K8S_SHELL_CLIENT_ERROR, e);
         } finally {
             if (proc != null) proc.destroy();
+        }
+    }
+
+    private static Callable<String> getFutureOutputFromInputStream (InputStream in) {
+        return () -> {
+            StringJoiner outputBuilder = new StringJoiner("\n");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                    outputBuilder.add(line);
+                }
+            }
+            return outputBuilder.toString();
+        };
+    }
+
+    private static <T> T getOutputFromFutureString (Future<T> futureMethod) throws IOException, InterruptedException {
+        try {
+            return futureMethod.get(1, TimeUnit.SECONDS);
+        } catch (ExecutionException | TimeoutException e) {
+            throw new IOException(e);
         }
     }
 
