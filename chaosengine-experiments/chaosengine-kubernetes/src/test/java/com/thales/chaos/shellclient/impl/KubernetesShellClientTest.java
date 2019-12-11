@@ -26,6 +26,7 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellOutput;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Before;
@@ -56,16 +57,19 @@ public class KubernetesShellClientTest {
     private static final String NAMESPACE = randomUUID().toString();
     private KubernetesShellClient kubernetesShellClient;
     @Mock
+    private ApiClient apiClient;
+    @Mock
     private Exec exec;
 
     @Before
     public void setUp () {
         kubernetesShellClient = Mockito.spy(KubernetesShellClient.builder()
-                                                                 .withExec(exec)
+                                                                 .withApiClient(apiClient)
                                                                  .withNamespace(NAMESPACE)
                                                                  .withPodName(POD_NAME)
                                                                  .withContainerName(CONTAINER_NAME)
                                                                  .build());
+        doReturn(exec).when(kubernetesShellClient).getExec();
     }
 
     @Test

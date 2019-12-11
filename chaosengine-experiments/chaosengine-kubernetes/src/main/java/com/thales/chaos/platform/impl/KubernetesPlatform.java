@@ -31,7 +31,7 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.impl.KubernetesShellClient;
-import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreApi;
@@ -62,16 +62,16 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Autowired
     private CoreV1Api coreV1Api;
     @Autowired
-    private Exec exec;
+    private ApiClient apiClient;
     @Autowired
     private AppsV1Api appsV1Api;
     private String namespace = "default";
 
     @Autowired
-    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec, AppsV1Api appsV1Api) {
+    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, ApiClient apiClient, AppsV1Api appsV1Api) {
         this.coreApi = coreApi;
         this.coreV1Api = coreV1Api;
-        this.exec = exec;
+        this.apiClient = apiClient;
         this.appsV1Api = appsV1Api;
         log.info("Kubernetes Platform created");
     }
@@ -304,8 +304,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Override
     public ShellClient getConnectedShellClient (KubernetesPodContainer container) {
         log.debug("Creating shell client into {}", v(DATADOG_CONTAINER_KEY, container));
-        return KubernetesShellClient.builder()
-                                    .withExec(exec)
+        return KubernetesShellClient.builder().withApiClient(apiClient)
                                     .withContainerName(container.getTargetedSubcontainer())
                                     .withPodName(container.getPodName())
                                     .withNamespace(container.getNamespace())

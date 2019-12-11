@@ -27,7 +27,7 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
-import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreApi;
@@ -77,7 +77,7 @@ public class KubernetesPlatformTest {
     @Autowired
     private CoreV1Api coreV1Api;
     @Autowired
-    private Exec exec;
+    private ApiClient apiClient;
     @Autowired
     private AppsV1Api appsV1Api;
 
@@ -942,7 +942,7 @@ public class KubernetesPlatformTest {
     public void testGetConnectedShellClient () throws IOException, ApiException {
         KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
         platform.getConnectedShellClient(kubernetesPodContainer);
-        verify(exec, never()).exec(anyString(), anyString(), any(), anyString(), anyBoolean(), anyBoolean());
+
     }
 
     @Configuration
@@ -954,13 +954,13 @@ public class KubernetesPlatformTest {
         @MockBean
         private CoreV1Api coreV1Api;
         @MockBean
-        private Exec exec;
+        private ApiClient apiClient;
         @MockBean
         private AppsV1Api appsV1Api;
 
         @Bean
         KubernetesPlatform kubernetesPlatform () {
-            KubernetesPlatform platform = new KubernetesPlatform(coreApi, coreV1Api, exec, appsV1Api);
+            KubernetesPlatform platform = new KubernetesPlatform(coreApi, coreV1Api, apiClient, appsV1Api);
             return Mockito.spy(platform);
         }
     }
