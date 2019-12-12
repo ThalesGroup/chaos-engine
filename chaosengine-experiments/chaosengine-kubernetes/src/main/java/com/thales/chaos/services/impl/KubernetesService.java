@@ -18,11 +18,7 @@
 package com.thales.chaos.services.impl;
 
 import com.thales.chaos.services.CloudService;
-import io.kubernetes.client.Exec;
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.AppsV1Api;
-import io.kubernetes.client.openapi.apis.CoreApi;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.util.Config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -70,27 +66,5 @@ public class KubernetesService implements CloudService {
         return apiClient;
     }
 
-    @Bean
-    @RefreshScope
-    CoreApi coreApi (ApiClient apiClient) {
-        return new CoreApi(apiClient);
-    }
 
-    @Bean
-    @RefreshScope
-    CoreV1Api coreV1Api (ApiClient apiClient) {
-        return new CoreV1Api(apiClient);
-    }
-
-    @Bean
-    @RefreshScope
-    Exec exec (ApiClient apiClient) {
-        return new Exec(apiClient);
-    }
-
-    @Bean
-    @RefreshScope
-    AppsV1Api appsV1Api (ApiClient apiClient) {
-        return new AppsV1Api(apiClient);
-    }
 }

@@ -24,7 +24,6 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.KubernetesPodContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.enums.ApiStatus;
-import com.thales.chaos.platform.enums.ControllerKind;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import io.kubernetes.client.openapi.ApiClient;
@@ -40,6 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -53,11 +53,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+import static com.thales.chaos.platform.enums.ControllerKind.REPLICA_SET;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -72,17 +70,20 @@ public class KubernetesPlatformTest {
     private ContainerManager containerManager;
     @Autowired
     private KubernetesPlatform platform;
-    @Autowired
+    @Mock
     private CoreApi coreApi;
-    @Autowired
+    @Mock
     private CoreV1Api coreV1Api;
     @Autowired
     private ApiClient apiClient;
-    @Autowired
+    @Mock
     private AppsV1Api appsV1Api;
 
     @Before
     public void setUp () {
+        doReturn(coreApi).when(platform).getCoreApi();
+        doReturn(coreV1Api).when(platform).getCoreV1Api();
+        doReturn(appsV1Api).when(platform).getAppsV1Api();
         platform.setNamespace(NAMESPACE_NAME);
     }
 
@@ -846,15 +847,31 @@ public class KubernetesPlatformTest {
         String uid = randomUUID().toString();
         String containerName = randomUUID().toString();
         KubernetesPodContainer kubernetesPodContainer = spy(KubernetesPodContainer.builder()
-                                                                                  .withSubcontainers(List.of(containerName))
+                                                                                  .withUUID(uid)
+                                                                                  .withSubcontainers(List.of(
+                                                                                          containerName))
                                                                                   .build());
         V1ObjectMeta podMetadata = new V1ObjectMeta().uid(uid);
-        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now().minusMinutes(1)));
-        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName).state(state)));
+        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now()
+                                                                                                                .minusMinutes(
+                                                                                                                        1)));
+        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName)
+                                                                                                   .state(state)));
         V1Pod pod = new V1Pod().metadata(podMetadata).status(podStatus);
+        doReturn(new V1PodList().items(List.of(pod))).when(coreV1Api)
+                                                     .listNamespacedPod(NAMESPACE_NAME,
+                                                             "true",
+                                                             false,
+                                                             "",
+                                                             "",
+                                                             "",
+                                                             0,
+                                                             "",
+                                                             0,
+                                                             false);
         doReturn(pod).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
         doReturn(Instant.now().minusSeconds(100)).when(kubernetesPodContainer).getExperimentStartTime();
-        assertTrue("Restarted", platform.isContainerRecycled(kubernetesPodContainer));
+        assertTrue(platform.isContainerRecycled(kubernetesPodContainer));
     }
 
     @Test
@@ -890,7 +907,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(new V1PodList());
-        when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.REPLICA_SET);
+        when(kubernetesPodContainer.getOwnerKind()).thenReturn(REPLICA_SET);
         when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
         when(coreV1Api.readNamespacedPodStatus(any(),
                 any(),
@@ -900,24 +917,13 @@ public class KubernetesPlatformTest {
 
     @Test(expected = ChaosException.class)
     public void testIsContainerRecycledAPIError () throws ApiException {
-        KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
-        V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
-                                                                                                      .withReadyReplicas(
-                                                                                                              1)
-                                                                                                      .build()).build();
-        when(coreV1Api.listNamespacedPod(anyString(),
-                anyString(),
-                anyBoolean(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyInt(),
-                anyString(),
-                anyInt(),
-                anyBoolean())).thenReturn(new V1PodList());
-        when(kubernetesPodContainer.getOwnerKind()).thenReturn(ControllerKind.REPLICA_SET);
-        when(appsV1Api.readNamespacedReplicaSetStatus(any(), any(), any())).thenReturn(replicaSet);
-        when(coreV1Api.readNamespacedPodStatus(any(), any(), any())).thenThrow(new ApiException("ERROR"));
+        String subContainer = randomUUID().toString();
+        KubernetesPodContainer kubernetesPodContainer = KubernetesPodContainer.builder()
+                                                                              .withOwnerKind(REPLICA_SET.toString())
+                                                                              .withSubcontainers(Set.of(subContainer))
+                                                                              .build();
+        doReturn(Optional.of(Boolean.TRUE)).when(platform).podExists(kubernetesPodContainer);
+        doThrow(new ApiException()).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
         platform.isContainerRecycled(kubernetesPodContainer);
     }
 
@@ -950,17 +956,11 @@ public class KubernetesPlatformTest {
         @Autowired
         private ContainerManager containerManager;
         @MockBean
-        private CoreApi coreApi;
-        @MockBean
-        private CoreV1Api coreV1Api;
-        @MockBean
         private ApiClient apiClient;
-        @MockBean
-        private AppsV1Api appsV1Api;
 
         @Bean
         KubernetesPlatform kubernetesPlatform () {
-            KubernetesPlatform platform = new KubernetesPlatform(coreApi, coreV1Api, apiClient, appsV1Api);
+            KubernetesPlatform platform = new KubernetesPlatform(apiClient);
             return Mockito.spy(platform);
         }
     }
