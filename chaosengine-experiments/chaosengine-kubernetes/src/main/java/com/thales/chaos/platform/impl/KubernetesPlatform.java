@@ -19,7 +19,6 @@ package com.thales.chaos.platform.impl;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.JsonSyntaxException;
-import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -225,8 +224,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         try {
             v1Pod = getCoreV1Api().readNamespacedPodStatus(container.getPodName(), container.getNamespace(), "true");
         } catch (ApiException e) {
-            if (e.getMessage() != null && e.getMessage()
-                                           .equals(KubernetesConstants.KUBERNETES_POD_NOT_FOUND_ERROR_MESSAGE)) {
+            if (HttpStatus.SC_NOT_FOUND == e.getCode()) {
                 return replicaSetRecovered(container) == ContainerHealth.NORMAL;
             }
             throw new ChaosException(K8S_API_ERROR, e);
