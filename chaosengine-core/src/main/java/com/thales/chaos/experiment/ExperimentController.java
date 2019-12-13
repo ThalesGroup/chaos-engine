@@ -116,8 +116,7 @@ public class ExperimentController {
                description = "Enable automated scheduling of experiments",
                responses = {
                        @ApiResponse(description = "Mode set successfully",
-                                    content = @Content(mediaType = "text/plain",
-                                                       schema = @Schema(implementation = String.class)))
+                                    content = @Content(schema = @Schema(implementation = String.class)))
                })
     @PostMapping(MODE_PATH)
     public String enableAutomatedMode () {
@@ -129,8 +128,7 @@ public class ExperimentController {
                description = "Disable automated scheduling of experiments",
                responses = {
                        @ApiResponse(description = "Mode set successfully",
-                                    content = @Content(mediaType = "text/plain",
-                                                       schema = @Schema(implementation = String.class)))
+                                    content = @Content(schema = @Schema(implementation = String.class)))
                })
     @DeleteMapping(MODE_PATH)
     public String disableAutomatedMode () {
