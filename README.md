@@ -4,6 +4,8 @@ Chaos Engine is an application for creating random Chaos Events in cloud applica
 
 Chaos Engine makes intelligent decisions in how and when to create experiments. When properly configured, experiments can be restricted to occur only **during** normal business hours (i.e., no pager alerts).
 
+## Supported Platforms
+
 Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.
 
 ### :warning: Warning
