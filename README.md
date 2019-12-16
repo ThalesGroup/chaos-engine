@@ -1,6 +1,7 @@
 ![Chaos Engine](/docs/markdown/images/chaos-engine-full.png)
 
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=gemalto_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=gemalto_chaos-engine)
+[![Known Vulnerabilities](https://snyk.io/test/github/gemalto/chaos-engine/badge.svg)](https://snyk.io/test/github/gemalto/chaos-engine)
 
 Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the [Principles of Chaos] to create random faults (*experiments*) that could reasonably occur in a real application deployment.
 
