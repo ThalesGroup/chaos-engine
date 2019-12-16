@@ -26,7 +26,7 @@ Running chaos experiments in a non-resilient system can result in significant fa
 | GCP Compute | :construction: | :construction: | :construction: |
 
 #### Legend
-:heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support |
+:heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support
 | :heavy_multiplication_x: - Not Supported | :construction: - Planned
 
 For more information on how these experiments are done, please refer to the full [documentation].
