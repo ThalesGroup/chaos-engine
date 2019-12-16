@@ -2,6 +2,11 @@
 
 The Chaos Engine Kubernetes Module is able to connect to a Kubernetes cluster and interact with deployed PODs.
 
+## Supported Versions
+
+Chaos Engine supports minimum Kubernetes version 1.9 and currently supports up to version 1.15. Support is driven by the Kubernetes Client SDK version compatibility.
+
+
 ## SDK
 
 The official Kubernetes Java Client is used to interact with the cluster.
@@ -9,7 +14,7 @@ The official Kubernetes Java Client is used to interact with the cluster.
 | | |
 | --- | --- |
 | Resource | <https://github.com/kubernetes-client/java> |
-| Version | 4.0.0 |
+| Version | 7.0.0 |
 |  Maven Repositories | <https://mvnrepository.com/artifact/io.kubernetes/client-java> |
 
 ## Configuration

@@ -22,25 +22,24 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.KubernetesChaosErrorCode;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.ShellOutput;
-import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.util.StringJoiner;
+import java.util.concurrent.*;
 
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class KubernetesShellClient implements ShellClient {
     private static final Logger log = LoggerFactory.getLogger(KubernetesShellClient.class);
-    private Exec exec;
+    private ApiClient apiClient;
     private String namespace;
     private String podName;
     private String containerName;
@@ -59,28 +58,25 @@ public class KubernetesShellClient implements ShellClient {
         }
     }
 
-    @Override
-    public ShellOutput runCommand (String command) {
-        return runCommand(command, true);
-    }
-
     ShellOutput runCommand (String[] command, boolean getOutput) {
         log.debug("Running command {}, waiting for output = {}", v("command", command), getOutput);
         Process proc = null;
         try {
-            proc = exec.exec(namespace, podName, command, containerName, false, false);
-            int exitCode = proc.waitFor();
+            proc = getExec().exec(namespace, podName, command, containerName, false, false);
             if (getOutput) {
-                ShellOutput shellOutput = ShellOutput.builder()
-                                                     .withExitCode(exitCode)
-                                                     .withStdOut(StreamUtils.copyToString(proc.getInputStream(), Charset
-                                                             .defaultCharset()))
-                                                     .build();
+                Future<String> output = Executors.newSingleThreadExecutor()
+                                                 .submit(getFutureOutputFromInputStream(proc.getInputStream()));
+                int exitCode = proc.waitFor();
+                proc.destroy();
+                proc = null;
+                String stdOut = getOutputFromFutureString(output);
+                ShellOutput shellOutput = ShellOutput.builder().withExitCode(exitCode).withStdOut(stdOut).build();
                 if (exitCode > 0) {
                     log.debug("Command execution failed {}", v("failure", shellOutput));
                 }
                 return shellOutput;
             } else {
+                proc.waitFor();
                 return ShellOutput.EMPTY_SHELL_OUTPUT;
             }
         } catch (InterruptedException e) {
@@ -94,12 +90,28 @@ public class KubernetesShellClient implements ShellClient {
         }
     }
 
-    ShellOutput runCommand (String command, boolean getOutput) {
-        return runCommand(new String[]{ "sh", "-c", command }, getOutput);
+    Exec getExec () {
+        return new Exec(apiClient);
     }
 
-    String copyResourceToPath (Resource resource) throws IOException {
-        return copyResourceToPath(resource, SSHConstants.TEMP_DIRECTORY);
+    private static Callable<String> getFutureOutputFromInputStream (InputStream in) {
+        return () -> {
+            StringJoiner outputBuilder = new StringJoiner("\n");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                    outputBuilder.add(line);
+                }
+            }
+            return outputBuilder.toString();
+        };
+    }
+
+    private static <T> T getOutputFromFutureString (Future<T> futureMethod) throws IOException, InterruptedException {
+        try {
+            return futureMethod.get(1, TimeUnit.SECONDS);
+        } catch (ExecutionException | TimeoutException e) {
+            throw new IOException(e);
+        }
     }
 
     String copyResourceToPath (Resource resource, String path) throws IOException {
@@ -109,7 +121,7 @@ public class KubernetesShellClient implements ShellClient {
         log.debug("Transferring {} to {}/{} in path {}", resource, namespace, podName, path);
         Process proc = null;
         try {
-            proc = exec.exec(namespace, podName, command, containerName, true, false);
+            proc = getExec().exec(namespace, podName, command, containerName, true, false);
             try (OutputStream os = proc.getOutputStream()) {
                 try (InputStream is = resource.getInputStream()) {
                     StreamUtils.copy(is, os);
@@ -136,6 +148,19 @@ public class KubernetesShellClient implements ShellClient {
         }
     }
 
+    ShellOutput runCommand (String command, boolean getOutput) {
+        return runCommand(new String[]{ "sh", "-c", command }, getOutput);
+    }
+
+    String copyResourceToPath (Resource resource) throws IOException {
+        return copyResourceToPath(resource, SSHConstants.TEMP_DIRECTORY);
+    }
+
+    @Override
+    public ShellOutput runCommand (String command) {
+        return runCommand(command, true);
+    }
+
     @Override
     public void close () {
         /*
@@ -145,7 +170,7 @@ public class KubernetesShellClient implements ShellClient {
     }
 
     public static final class KubernetesShellClientBuilder {
-        private Exec exec;
+        private ApiClient apiClient;
         private String namespace;
         private String podName;
         private String containerName;
@@ -157,8 +182,8 @@ public class KubernetesShellClient implements ShellClient {
             return new KubernetesShellClientBuilder();
         }
 
-        public KubernetesShellClientBuilder withExec (Exec exec) {
-            this.exec = exec;
+        public KubernetesShellClientBuilder withApiClient (ApiClient apiClient) {
+            this.apiClient = apiClient;
             return this;
         }
 
@@ -179,7 +204,7 @@ public class KubernetesShellClient implements ShellClient {
 
         public KubernetesShellClient build () {
             KubernetesShellClient kubernetesShellClient = new KubernetesShellClient();
-            kubernetesShellClient.exec = this.exec;
+            kubernetesShellClient.apiClient = this.apiClient;
             kubernetesShellClient.podName = this.podName;
             kubernetesShellClient.namespace = this.namespace;
             kubernetesShellClient.containerName = this.containerName;
