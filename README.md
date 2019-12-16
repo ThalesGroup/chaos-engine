@@ -26,6 +26,8 @@ Running chaos experiments in a non-resilient system can result in significant fa
 :heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support |
 | :heavy_multiplication_x: - Not Supported | :construction: - Planned
 
+For more information on how these experiments are done, please refer to the full [documentation].
+
 ## Requirements
 
 Chaos Engine does not specifically require the use of any other significant applications to already exist in your deployment. Each Cloud Platform is separately configured with access credentials.
