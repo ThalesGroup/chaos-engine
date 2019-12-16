@@ -12,6 +12,20 @@ Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and 
 
 Running chaos experiments in a non-resilient system can result in significant faults. We highly recommend you use a graduated approach to chaos implementation, and build confidence in your development and staging environments before attempting the same in your production environment.
 
+## Capabilities 
+
+| | Resource Faults | Communication Faults | Application Faults |
+| --- | :---: | :---: | :---: |
+| Kubernetes | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_check_mark: |
+| Cloud Foundry | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| AWS EC2 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| AWS RDS | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x: |
+| GCP Compute | :construction: | :construction: | :construction: |
+
+#### Legend
+:heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support |
+| :heavy_multiplication_x: - Not Supported | :construction: - Planned
+
 ## Requirements
 
 Chaos Engine does not specifically require the use of any other significant applications to already exist in your deployment. Each Cloud Platform is separately configured with access credentials.
