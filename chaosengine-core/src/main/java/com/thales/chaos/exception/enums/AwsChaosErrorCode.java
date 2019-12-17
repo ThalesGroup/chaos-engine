@@ -35,6 +35,12 @@ public enum AwsChaosErrorCode implements ErrorCode {
     NOT_PART_OF_ASG(22101),
     SINGLE_INSTANCE_CLUSTER(22201),
     INVALID_CIDR_BLOCK(21103),
+    RDS_SNAPSHOT_EXISTS(21204),
+    RDS_IN_INVALID_STATE(21205),
+    RDS_INSTANCE_NOT_FOUND(21206),
+    RDS_SNAPSHOT_QUOTA_EXCEEDED(21207),
+    RDS_INVALID_SNAPSHOT(21208),
+    RDS_RUNTIME_ERROR(21209),
     ;
     private final int errorCode;
     private final String shortName;
