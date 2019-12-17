@@ -29,7 +29,7 @@ Running chaos experiments in a non-resilient system can result in significant fa
 :heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support
 | :heavy_multiplication_x: - Not Supported | :construction: - Planned
 
-For more information on how these experiments are done, please refer to the full [documentation].
+For more information on how these experiments are done, please refer to the full [experiment modules documentation].
 
 ## Requirements
 
@@ -53,5 +53,6 @@ You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
 [documentation]: https://gemalto.github.io/chaos-engine/
+[experiment modules documentation]: https://gemalto.github.io/chaos-engine/Experiment_Modules
 [E-mail us]: mailto:dl_chaos_engine@gemalto.com
 [Slack]: https://join.slack.com/t/thaleschaosengine/shared_invite/enQtODY1MDk1OTY4OTgyLTZjOGI5NzM1YTA2OWE5MjgzMWYxMzkwZjIwYTE3NjBlNDM4ZTkzNzc5YmMyMTU2Zjc5ODhlMTVkZDJhMmEzMzc
