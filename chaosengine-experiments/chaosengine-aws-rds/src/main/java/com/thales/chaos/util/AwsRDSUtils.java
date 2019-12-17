@@ -46,16 +46,14 @@ public class AwsRDSUtils {
 
     public static String generateSnapshotName (@NotNull String identifier) {
         String timestamp = new DateTimeFormatterBuilder().appendInstant(3).toFormatter().format(Instant.now());
-        String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp)
-                              .replaceAll(":", "-")
-                              .replaceAll(",", "-")
+        String output = String.format("ChaosSnapshot-%s-%s", identifier, timestamp).replace(":", "-").replace(",", "-")
                               .replaceAll("\\.", "-")
                               .replaceAll("--+", "-");
         int identifierTrim = 0;
         while (!isValidSnapshotName(output)) {
-            output = String.format("ChaosSnapshot-%s-%s", identifier.substring(0, identifier.length() - ++identifierTrim), timestamp)
-                           .replaceAll(":", "-")
-                           .replaceAll(",", "-")
+            output = String.format("ChaosSnapshot-%s-%s",
+                    identifier.substring(0, identifier.length() - ++identifierTrim),
+                    timestamp).replace(":", "-").replace(",", "-")
                            .replaceAll("\\.", "-")
                            .replaceAll("--+", "-");
             if (identifierTrim == identifier.length()) {
