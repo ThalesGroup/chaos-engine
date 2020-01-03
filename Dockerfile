@@ -27,7 +27,7 @@ RUN bash -c 'if [[ "${BUILD_VERSION}" =~ ^v?[0-9]+(\.[0-9]+)+ ]] ; then mvn -B v
 
 RUN mvn -B install && rm -rf chaosengine-test*
 
-FROM openjdk:11-jre-slim AS develop
+FROM openjdk:11.0.4-jre-slim AS develop
 EXPOSE 8080
 WORKDIR /chaosengine
 COPY --from=build-env /chaosengine/*/target/*.jar /chaosengine/*/*/target/*.jar ./lib/
