@@ -67,7 +67,12 @@ public class HttpUtils {
     public static String curl (String url, boolean suppressErrors) {
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
-            return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            int statusCode = response.statusCode();
+            if (!isGoodResponse(statusCode)) {
+                throw new IOException("Received HTTP " + statusCode + " response.");
+            }
+            return response.body();
         } catch (IOException e) {
             if (suppressErrors) return null;
             log.error("Exception when polling {}", url, e);
@@ -77,5 +82,9 @@ public class HttpUtils {
             log.error("Interrupted when polling {}", url, e);
             return null;
         }
+    }
+
+    private static boolean isGoodResponse (int statusCode) {
+        return statusCode >= 200 && statusCode < 300;
     }
 }
