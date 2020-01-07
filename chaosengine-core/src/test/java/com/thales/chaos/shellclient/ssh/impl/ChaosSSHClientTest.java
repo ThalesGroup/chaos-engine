@@ -166,7 +166,7 @@ public class ChaosSSHClientTest {
         assertEquals(output, chaosSSHClient.runCommand(shellCommand).getStdOut());
     }
 
-    @Test(timeout = 2000L)
+    @Test(timeout = 30000L)
     public void runResource () throws Exception {
         Resource resourceFile = Mockito.mock(Resource.class, RETURNS_DEEP_STUBS);
         String SCRIPT_NAME = randomUUID().toString();
