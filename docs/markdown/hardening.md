@@ -4,7 +4,7 @@
 
 ### Chaos Engine Source Code
 
-If you build your own Chaos Engine images make sure that your source code was downloaded from official[Gemalto repository in GitHub](https://github.com/gemalto).
+If you build your own Chaos Engine images make sure that your source code was downloaded from official [Gemalto repository in GitHub](https://github.com/gemalto).
 
 ### Docker Images
 
@@ -13,8 +13,8 @@ If you build your own Chaos Engine images make sure that your source code was do
 Official public repository is [in DockerHub.](https://cloud.docker.com/u/thalesgroup/repository/docker/thalesgroup/chaos-engine)
 There are two important tags:
 
-1.  1.  master – containing latest stable release of the framework
-    2.  develop– representing latest development snapshot
+1.  1.  stable – containing latest stable release of the framework
+    2.  latest – representing latest development snapshot
 
 It's recommended to run ***master*** branch based images in production environments
 
@@ -27,7 +27,7 @@ Activate production profile, make sure that following environment variables are 
 
 Verify that the HTTPS scheme is used for communication with Vault. Environment variable *VAULT\_SCHEME* must be set to *HTTPS* or left empty.
 
-## Secure Chaos Engine REST API
+### Secure Chaos Engine REST API
 [Follow REST Security documentation](Configuration/security.md)
 
 ## Vault

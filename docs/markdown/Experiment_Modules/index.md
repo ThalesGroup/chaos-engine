@@ -10,7 +10,7 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
   |------------------------------------------|---------------------------------------------------------|--------------------|
   | ${prefix}.averageMillisPerExperiment     | The average number of Milliseconds between experiments. | 14400000 (4 Hours) |
   
-  ##### Available prefixes
+##### Available prefixes
   
   | Prefix     | Description               |
   |------------|---------------------------|
