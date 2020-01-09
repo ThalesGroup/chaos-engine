@@ -438,29 +438,23 @@ public class AwsRDSPlatform extends Platform {
             log.info("Requesting an instance snapshot {}", v("CreateDBSnapshotRequest", createDBSnapshotRequest));
             return amazonRDS.createDBSnapshot(createDBSnapshotRequest);
         } catch (DBSnapshotAlreadyExistsException e) {
-            log.error("A snapshot by that name already exists", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_SNAPSHOT_EXISTS, e);
         } catch (InvalidDBInstanceStateException e) {
-            log.error("Cannot snapshot database in an invalid state", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_IN_INVALID_STATE, e);
         } catch (DBInstanceNotFoundException e) {
-            log.error("DB Instance not found to take snapshot", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_INSTANCE_NOT_FOUND, e);
         } catch (SnapshotQuotaExceededException e) {
             if (!retry) {
                 log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
                 cleanupOldSnapshots();
                 return snapshotDBInstance(dbInstanceIdentifier, true);
             } else {
-                log.error("Exceeded snapshot quota", e);
-                throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+                throw new ChaosException(AwsChaosErrorCode.RDS_SNAPSHOT_QUOTA_EXCEEDED, e);
             }
         } catch (AmazonRDSException e) {
-            log.error("AWS RDS Exception occurred while taking a snapshot", e);
             throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
         } catch (RuntimeException e) {
-            log.error("Unknown error occurred while taking a snapshot", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_RUNTIME_ERROR, e);
         }
     }
 
@@ -481,32 +475,25 @@ public class AwsRDSPlatform extends Platform {
             log.info("Requesting a cluster snapshot {}", v("CreateDBClusterSnapshotRequest", createDBClusterSnapshotRequest));
             return amazonRDS.createDBClusterSnapshot(createDBClusterSnapshotRequest);
         } catch (DBClusterSnapshotAlreadyExistsException e) {
-            log.error("A cluster snapshot by that name already exists", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_SNAPSHOT_EXISTS, e);
         } catch (InvalidDBClusterStateException e) {
-            log.error("DB Cluster is in invalid state for snapshot", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_IN_INVALID_STATE, e);
         } catch (DBClusterNotFoundException e) {
-            log.error("DB Cluster not found to take snapshot", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_INSTANCE_NOT_FOUND, e);
         } catch (SnapshotQuotaExceededException e) {
             if (!retry) {
                 log.warn("Snapshot failed because quota exceeded. Cleaning old chaos snapshots and retrying");
                 cleanupOldSnapshots();
                 return snapshotDBCluster(dbClusterIdentifier, true);
             } else {
-                log.error("Exceeded snapshot quota", e);
-                throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+                throw new ChaosException(AwsChaosErrorCode.RDS_SNAPSHOT_QUOTA_EXCEEDED, e);
             }
         } catch (InvalidDBClusterSnapshotStateException e) {
-            log.error("DB Cluster Snapshot in invalid state", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_INVALID_SNAPSHOT, e);
         } catch (AmazonRDSException e) {
-            log.error("AWS RDS Exception occurred while taking a snapshot", e);
             throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
         } catch (RuntimeException e) {
-            log.error("Unknown error occurred while taking a snapshot", e);
-            throw new ChaosException(AwsChaosErrorCode.AWS_RDS_GENERIC_API_ERROR, e);
+            throw new ChaosException(AwsChaosErrorCode.RDS_RUNTIME_ERROR, e);
         }
     }
 

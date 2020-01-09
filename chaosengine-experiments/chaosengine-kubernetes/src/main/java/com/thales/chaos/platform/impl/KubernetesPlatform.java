@@ -17,8 +17,8 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.JsonSyntaxException;
-import com.thales.chaos.constants.KubernetesConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -31,12 +31,12 @@ import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.impl.KubernetesShellClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Exec;
-import io.kubernetes.client.apis.AppsV1Api;
-import io.kubernetes.client.apis.CoreApi;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.*;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.CoreApi;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,22 +57,14 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class KubernetesPlatform extends Platform implements ShellBasedExperiment<KubernetesPodContainer> {
     @Autowired
     private ContainerManager containerManager;
+
     @Autowired
-    private CoreApi coreApi;
-    @Autowired
-    private CoreV1Api coreV1Api;
-    @Autowired
-    private Exec exec;
-    @Autowired
-    private AppsV1Api appsV1Api;
+    private ApiClient apiClient;
     private String namespace = "default";
 
     @Autowired
-    KubernetesPlatform (CoreApi coreApi, CoreV1Api coreV1Api, Exec exec, AppsV1Api appsV1Api) {
-        this.coreApi = coreApi;
-        this.coreV1Api = coreV1Api;
-        this.exec = exec;
-        this.appsV1Api = appsV1Api;
+    KubernetesPlatform (ApiClient apiClient) {
+        this.apiClient = apiClient;
         log.info("Kubernetes Platform created");
     }
 
@@ -84,67 +76,6 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         this.namespace = namespace;
     }
 
-    public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
-        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer).orElse(false) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-    }
-
-    /**
-     * @param instance The Kubernetes Pod Container to retrieve Owner information from
-     * @return ContainerHealth
-     * <p>
-     * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
-     * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
-     * REPLICATION_CONTROLLER, REPLICA_SET, STATEFUL_SET, DAEMON_SET, DEPLOYMENT, JOB and CRON_JOB
-     * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
-     */
-    public boolean isDesiredReplicas (KubernetesPodContainer instance) {
-        try {
-            switch (instance.getOwnerKind()) {
-                case REPLICATION_CONTROLLER:
-                    V1ReplicationController rc = coreV1Api.readNamespacedReplicationControllerStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (rc.getStatus().getReplicas().equals(rc.getStatus().getReadyReplicas()));
-                case REPLICA_SET:
-                    V1ReplicaSet replicaSet = appsV1Api.readNamespacedReplicaSetStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (replicaSet.getStatus().getReplicas().equals(replicaSet.getStatus().getReadyReplicas()));
-                case STATEFUL_SET:
-                    V1StatefulSet statefulSet = appsV1Api.readNamespacedStatefulSetStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (statefulSet.getStatus().getReplicas().equals(statefulSet.getStatus().getReadyReplicas()));
-                case DAEMON_SET:
-                    V1DaemonSet daemonSet = appsV1Api.readNamespacedDaemonSetStatus(instance.getOwnerName(), instance.getNamespace(), "true");
-                    return (daemonSet.getStatus().getCurrentNumberScheduled().equals(daemonSet.getStatus().getDesiredNumberScheduled()));
-                case DEPLOYMENT:
-                    V1Deployment deployment = appsV1Api.readNamespacedDeploymentStatus(instance.getOwnerName(), instance
-                            .getNamespace(), "true");
-                    return (deployment.getStatus().getReplicas().equals(deployment.getStatus().getReadyReplicas()));
-                case JOB:
-                case CRON_JOB:
-                    log.warn("Job containers are not supported");
-                    return false;
-                default:
-                    log.error("Unsupported owner type");
-                    return false;
-            }
-        } catch (ApiException e) {
-            log.error("ApiException was thrown while checking desired replica count.", e);
-            return false;
-        }
-    }
-
-    Optional<Boolean> podExists (KubernetesPodContainer kubernetesPodContainer) {
-        try {
-            V1PodList pods = listAllPodsInNamespace();
-            Boolean podExists = pods.getItems().stream().map(V1Pod::getMetadata).map(V1ObjectMeta::getUid).anyMatch(uid -> uid.equals(kubernetesPodContainer.getUuid()));
-            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
-            return Optional.of(podExists);
-        } catch (ApiException e) {
-            log.debug("Exception when checking container existence", e);
-            return Optional.empty();
-        }
-    }
-
     public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
         try {
             Optional<Boolean> podExists = podExists(kubernetesPodContainer);
@@ -153,13 +84,14 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
             } else if (!podExists.get()) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
-            V1Pod result = coreV1Api.readNamespacedPodStatus(kubernetesPodContainer.getPodName(), kubernetesPodContainer
-                    .getNamespace(), "true");
+            V1Pod result = getCoreV1Api().readNamespacedPodStatus(kubernetesPodContainer.getPodName(),
+                    kubernetesPodContainer.getNamespace(),
+                    "true");
             return Optional.ofNullable(result)
                            .map(V1Pod::getStatus)
                            .map(V1PodStatus::getContainerStatuses)
                            .map(Collection::stream)
-                           .map(s -> s.allMatch(V1ContainerStatus::isReady))
+                           .map(s -> s.allMatch(V1ContainerStatus::getReady))
                            .map(aBoolean -> aBoolean ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT)
                            .orElse(ContainerHealth.DOES_NOT_EXIST);
         } catch (ApiException e) {
@@ -171,19 +103,47 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         return ContainerHealth.RUNNING_EXPERIMENT;
     }
 
+    Optional<Boolean> podExists (KubernetesPodContainer kubernetesPodContainer) {
+        String podUuid = kubernetesPodContainer.getUuid();
+        if (podUuid == null) return Optional.empty();
+        try {
+            Boolean podExists = listAllPodsInNamespace().getItems()
+                                                        .stream()
+                                                        .map(V1Pod::getMetadata)
+                                                        .filter(Objects::nonNull)
+                                                        .map(V1ObjectMeta::getUid)
+                                                        .anyMatch(podUuid::equals);
+            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
+            return Optional.of(podExists);
+        } catch (ApiException e) {
+            log.debug("Exception when checking container existence", e);
+            return Optional.empty();
+        }
+    }
+
+    @JsonIgnore
+    CoreV1Api getCoreV1Api () {
+        return new CoreV1Api(apiClient);
+    }
+
     private V1PodList listAllPodsInNamespace () throws ApiException {
-        return coreV1Api.listNamespacedPod(namespace, true, "", "", "", "", 0, "", 0, false);
+        return getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
     }
 
     @Override
     public ApiStatus getApiStatus () {
         try {
-            coreApi.getAPIVersions().getVersions();
+            getCoreApi().getAPIVersions().getVersions();
             return ApiStatus.OK;
         } catch (ApiException e) {
             log.error("Kubernetes API health check failed", e);
             return ApiStatus.ERROR;
         }
+    }
+
+    @JsonIgnore
+    CoreApi getCoreApi () {
+        return new CoreApi(apiClient);
     }
 
     @Override
@@ -218,41 +178,23 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Override
     public boolean isContainerRecycled (Container container) {
         KubernetesPodContainer kubernetesPodContainer = (KubernetesPodContainer) container;
-        return isContainerRestarted(kubernetesPodContainer, ((KubernetesPodContainer) container).getTargetedSubcontainer());
-    }
-
-    private boolean isContainerRestarted (KubernetesPodContainer container, String subContainerName) {
-        V1Pod v1Pod;
-        try {
-            v1Pod = coreV1Api.readNamespacedPodStatus(container.getPodName(), container.getNamespace(), "true");
-        } catch (ApiException e) {
-            if (e.getMessage().equals(KubernetesConstants.KUBERNETES_POD_NOT_FOUND_ERROR_MESSAGE)) {
-                return replicaSetRecovered(container) == ContainerHealth.NORMAL;
-            }
-            throw new ChaosException(K8S_API_ERROR, e);
-        }
-        return v1Pod.getStatus()
-                    .getContainerStatuses()
-                    .stream()
-                    .filter(v1ContainerStatus -> v1ContainerStatus.getName().equals(subContainerName))
-                    .map(v1ContainerStatus -> v1ContainerStatus.getState().getRunning())
-                    .filter(Objects::nonNull)
-                    .peek(v1ContainerStateRunning -> log.debug("Evaluating last restart time from {}", v("v1ContainerStateRunning", v1ContainerStateRunning)))
-                    .anyMatch(v1ContainerStateRunning -> v1ContainerStateRunning.getStartedAt()
-                                                                                .isAfter(container.getExperimentStartTime()
-                                                                                                  .toEpochMilli()));
+        if (podExists(kubernetesPodContainer).orElse(false)) return isContainerRestarted(kubernetesPodContainer,
+                ((KubernetesPodContainer) container).getTargetedSubcontainer());
+        return isDesiredReplicas(kubernetesPodContainer);
     }
 
     KubernetesPodContainer fromKubernetesAPIPod (V1Pod pod) {
-        KubernetesPodContainer container = containerManager.getMatchingContainer(KubernetesPodContainer.class, pod.getMetadata()
-                                                                                                                  .getName());
+        KubernetesPodContainer container = containerManager.getMatchingContainer(KubernetesPodContainer.class,
+                Optional.of(pod).map(V1Pod::getMetadata).map(V1ObjectMeta::getName).orElse(null));
         if (container == null) {
-            container = KubernetesPodContainer.builder().withUUID(pod.getMetadata().getUid())
+            container = KubernetesPodContainer.builder()
+                                              .withUUID(pod.getMetadata().getUid())
                                               .withPodName(pod.getMetadata().getName())
                                               .withNamespace(pod.getMetadata().getNamespace())
                                               .withLabels(pod.getMetadata().getLabels())
                                               .withKubernetesPlatform(this)
-                                              .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata().getOwnerReferences()))
+                                              .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata()
+                                                                                                  .getOwnerReferences()))
                                               .withOwnerKind(Optional.of(pod.getMetadata().getOwnerReferences())
                                                                      .flatMap(list -> list.stream().findFirst())
                                                                      .map(V1OwnerReference::getKind)
@@ -261,11 +203,13 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                                                                      .flatMap(list -> list.stream().findFirst())
                                                                      .map(V1OwnerReference::getName)
                                                                      .orElse(""))
-                                              .withSubcontainers(pod.getSpec()
-                                                                    .getContainers()
-                                                                    .stream()
-                                                                    .map(V1Container::getName)
-                                                                    .collect(Collectors.toList()))
+                                              .withSubcontainers(Optional.of(pod)
+                                                                         .map(V1Pod::getSpec)
+                                                                         .map(V1PodSpec::getContainers)
+                                                                         .stream()
+                                                                         .flatMap(Collection::stream)
+                                                                         .map(V1Container::getName)
+                                                                         .collect(Collectors.toList()))
                                               .build();
             log.info("Found new Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
@@ -273,6 +217,107 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
             log.debug("Found existing Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
         }
         return container;
+    }
+
+    private boolean isContainerRestarted (KubernetesPodContainer container, String subContainerName) {
+        V1Pod v1Pod;
+        try {
+            v1Pod = getCoreV1Api().readNamespacedPodStatus(container.getPodName(), container.getNamespace(), "true");
+        } catch (ApiException e) {
+            if (HttpStatus.SC_NOT_FOUND == e.getCode()) {
+                return replicaSetRecovered(container) == ContainerHealth.NORMAL;
+            }
+            throw new ChaosException(K8S_API_ERROR, e);
+        }
+        return Optional.of(v1Pod)
+                       .map(V1Pod::getStatus)
+                       .map(V1PodStatus::getContainerStatuses)
+                       .stream()
+                       .flatMap(Collection::stream)
+                       .filter(v1ContainerStatus -> v1ContainerStatus.getName().equals(subContainerName))
+                       .map(V1ContainerStatus::getState)
+                       .filter(Objects::nonNull)
+                       .map(V1ContainerState::getRunning)
+                       .filter(Objects::nonNull)
+                       .peek(v1ContainerStateRunning -> log.debug("Evaluating last restart time from {}",
+                               v("v1ContainerStateRunning", v1ContainerStateRunning)))
+                       .map(V1ContainerStateRunning::getStartedAt)
+                       .filter(Objects::nonNull)
+                       .anyMatch(dateTime -> dateTime.isAfter(container.getExperimentStartTime().toEpochMilli()));
+    }
+
+    public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
+        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer).orElse(false) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
+    /**
+     * @param instance The Kubernetes Pod Container to retrieve Owner information from
+     * @return ContainerHealth
+     * <p>
+     * In this function we retrieve the desired vs. the actual count of replicas during an experiment.
+     * Due to the nature of Kubernetes, there can be 7 different controller types backing a pod:
+     * REPLICATION_CONTROLLER, REPLICA_SET, STATEFUL_SET, DAEMON_SET, DEPLOYMENT, JOB and CRON_JOB
+     * (see https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents)
+     */
+    public boolean isDesiredReplicas (KubernetesPodContainer instance) {
+        try {
+            switch (instance.getOwnerKind()) {
+                case REPLICATION_CONTROLLER:
+                    V1ReplicationController rc = getCoreV1Api().readNamespacedReplicationControllerStatus(instance.getOwnerName(),
+                            instance.getNamespace(),
+                            "true");
+                    Optional<V1ReplicationControllerStatus> controllerStatus = Optional.of(rc)
+                                                                                       .map(V1ReplicationController::getStatus);
+                    return controllerStatus.map(V1ReplicationControllerStatus::getReplicas)
+                                           .equals(controllerStatus.map(V1ReplicationControllerStatus::getReadyReplicas));
+                case REPLICA_SET:
+                    V1ReplicaSet replicaSet = getAppsV1Api().readNamespacedReplicaSetStatus(instance.getOwnerName(),
+                            instance.getNamespace(),
+                            "true");
+                    Optional<V1ReplicaSetStatus> replicaSetStatus = Optional.of(replicaSet)
+                                                                            .map(V1ReplicaSet::getStatus);
+                    return replicaSetStatus.map(V1ReplicaSetStatus::getReplicas)
+                                           .equals(replicaSetStatus.map(V1ReplicaSetStatus::getReadyReplicas));
+                case STATEFUL_SET:
+                    V1StatefulSet statefulSet = getAppsV1Api().readNamespacedStatefulSetStatus(instance.getOwnerName(),
+                            instance.getNamespace(),
+                            "true");
+                    Optional<V1StatefulSetStatus> statefulSetStatus = Optional.of(statefulSet)
+                                                                              .map(V1StatefulSet::getStatus);
+                    return statefulSetStatus.map(V1StatefulSetStatus::getReplicas)
+                                            .equals(statefulSetStatus.map(V1StatefulSetStatus::getReadyReplicas));
+                case DAEMON_SET:
+                    V1DaemonSet daemonSet = getAppsV1Api().readNamespacedDaemonSetStatus(instance.getOwnerName(),
+                            instance.getNamespace(),
+                            "true");
+                    Optional<V1DaemonSetStatus> daemonSetStatus = Optional.of(daemonSet).map(V1DaemonSet::getStatus);
+                    return daemonSetStatus.map(V1DaemonSetStatus::getCurrentNumberScheduled)
+                                          .equals(daemonSetStatus.map(V1DaemonSetStatus::getDesiredNumberScheduled));
+                case DEPLOYMENT:
+                    V1Deployment deployment = getAppsV1Api().readNamespacedDeploymentStatus(instance.getOwnerName(),
+                            instance.getNamespace(),
+                            "true");
+                    Optional<V1DeploymentStatus> deploymentStatus = Optional.of(deployment)
+                                                                            .map(V1Deployment::getStatus);
+                    return deploymentStatus.map(V1DeploymentStatus::getReplicas)
+                                           .equals(deploymentStatus.map(V1DeploymentStatus::getReadyReplicas));
+                case JOB:
+                case CRON_JOB:
+                    log.warn("Job containers are not supported");
+                    return false;
+                default:
+                    log.error("Unsupported owner type");
+                    return false;
+            }
+        } catch (ApiException e) {
+            log.error("ApiException was thrown while checking desired replica count.", e);
+            return false;
+        }
+    }
+
+    @JsonIgnore
+    AppsV1Api getAppsV1Api () {
+        return new AppsV1Api(apiClient);
     }
 
     @Override
@@ -284,7 +329,14 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
             V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
-            coreV1Api.deleteNamespacedPod(instance.getPodName(), instance.getNamespace(), deleteOptions, "true", null, null, null, "Foreground");
+            getCoreV1Api().deleteNamespacedPod(instance.getPodName(),
+                    instance.getNamespace(),
+                    "false",
+                    null,
+                    null,
+                    null,
+                    "Foreground",
+                    deleteOptions);
         } catch (JsonSyntaxException e1) {
             log.debug("Normal exception, see https://github.com/kubernetes-client/java/issues/86");
         } catch (ApiException e) {
@@ -297,8 +349,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Override
     public ShellClient getConnectedShellClient (KubernetesPodContainer container) {
         log.debug("Creating shell client into {}", v(DATADOG_CONTAINER_KEY, container));
-        return KubernetesShellClient.builder()
-                                    .withExec(exec)
+        return KubernetesShellClient.builder().withApiClient(apiClient)
                                     .withContainerName(container.getTargetedSubcontainer())
                                     .withPodName(container.getPodName())
                                     .withNamespace(container.getNamespace())

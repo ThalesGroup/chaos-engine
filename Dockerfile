@@ -23,7 +23,7 @@ COPY chaosengine-core/src/ ./chaosengine-core/src/
 COPY --from=build-docs /mkdocs/docs/help ./chaosengine-launcher/src/main/resources/static/help/
 
 ARG BUILD_VERSION
-RUN if [ -n "${BUILD_VERSION}" ] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi
+RUN bash -c 'if [[ "${BUILD_VERSION}" =~ ^v?[0-9]+(\.[0-9]+)+ ]] ; then mvn -B versions:set -DnewVersion=${BUILD_VERSION} -DprocessAllModules ; fi'
 
 RUN mvn -B install && rm -rf chaosengine-test*
 

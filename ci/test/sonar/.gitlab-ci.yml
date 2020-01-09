@@ -1,5 +1,7 @@
 sonar_scan:
   stage: test
+  variables:
+    SONAR_ORGANIZATION: "default-organization"
   cache:
     key: ${CI_COMMIT_REF_SLUG}-maven
     paths:
