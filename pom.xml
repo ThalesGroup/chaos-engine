@@ -70,6 +70,7 @@
 
     <name>chaos-engine</name>
     <description>Implement Chaos in various environments</description>
+    <url>https://gemalto.github.io/chaos-engine/</url>
 
     <licenses>
         <license>
