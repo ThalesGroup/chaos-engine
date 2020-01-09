@@ -4,7 +4,7 @@
 
     <groupId>com.thales.chaos</groupId>
     <artifactId>chaosengine</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <profiles>
         <profile>
             <id>openapi</id>
