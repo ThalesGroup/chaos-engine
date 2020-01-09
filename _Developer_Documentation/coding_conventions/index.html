@@ -1040,29 +1040,29 @@
 <div class="superfences-tabs">
 <input name="__tabs_1" type="radio" id="__tab_1_0" checked="checked" />
 <label for="__tab_1_0">Bad Chain Call</label>
-<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="n">ContainerHealth</span> <span class="nf">checkHealth</span> <span class="o">(</span><span class="n">KubernetesPodContainer</span> <span class="n">container</span><span class="o">)</span> <span class="o">{</span>
- <span class="n">V1Pod</span> <span class="n">pod</span> <span class="o">=</span> <span class="n">getPodFromContainer</span><span class="o">(</span><span class="n">container</span><span class="o">);</span>
- <span class="k">return</span> <span class="n">pod</span><span class="o">.</span><span class="na">getStatus</span><span class="o">()</span>
- <span class="o">.</span><span class="na">getContainerStatuses</span><span class="o">()</span>
- <span class="o">.</span><span class="na">stream</span><span class="o">()</span>
- <span class="o">.</span><span class="na">anyMatch</span><span class="o">(</span><span class="n">s</span> <span class="o">-&gt;</span> <span class="o">!</span><span class="n">s</span><span class="o">.</span><span class="na">isReady</span><span class="o">())</span> <span class="o">?</span> <span class="n">ContainerHealth</span><span class="o">.</span><span class="na">RUNNING_EXPERIMENT</span> <span class="o">:</span> <span class="n">ContainerHealth</span><span class="o">.</span><span class="na">NORMAL</span><span class="o">)</span>
-<span class="o">}</span>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="n">ContainerHealth</span> <span class="nf">checkHealth</span> <span class="p">(</span><span class="n">KubernetesPodContainer</span> <span class="n">container</span><span class="p">)</span> <span class="p">{</span>
+ <span class="n">V1Pod</span> <span class="n">pod</span> <span class="o">=</span> <span class="n">getPodFromContainer</span><span class="p">(</span><span class="n">container</span><span class="p">);</span>
+ <span class="k">return</span> <span class="n">pod</span><span class="p">.</span><span class="na">getStatus</span><span class="p">()</span>
+ <span class="p">.</span><span class="na">getContainerStatuses</span><span class="p">()</span>
+ <span class="p">.</span><span class="na">stream</span><span class="p">()</span>
+ <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">s</span> <span class="o">-&gt;</span> <span class="o">!</span><span class="n">s</span><span class="p">.</span><span class="na">isReady</span><span class="p">())</span> <span class="o">?</span> <span class="n">ContainerHealth</span><span class="p">.</span><span class="na">RUNNING_EXPERIMENT</span> <span class="p">:</span> <span class="n">ContainerHealth</span><span class="p">.</span><span class="na">NORMAL</span><span class="p">)</span>
+<span class="p">}</span>
 
 <span class="cm">/* In this example, there are multiple opportunities</span>
 <span class="cm"> for a Null entry to cause a Null Pointer Exception. */</span>
 </pre></div></div>
 <input name="__tabs_1" type="radio" id="__tab_1_1" />
 <label for="__tab_1_1">Good Chain Call</label>
-<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="n">ContainerHealth</span> <span class="nf">checkHealth</span> <span class="o">(</span><span class="n">KubernetesPodContainer</span> <span class="n">kubernetesPodContainer</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">V1Pod</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getPodFromContainer</span><span class="o">(</span><span class="n">container</span><span class="o">);</span>
-    <span class="k">return</span> <span class="n">Optional</span><span class="o">.</span><span class="na">ofNullable</span><span class="o">(</span><span class="n">result</span><span class="o">)</span>
-               <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">V1Pod</span><span class="o">::</span><span class="n">getStatus</span><span class="o">)</span>
-               <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">V1PodStatus</span><span class="o">::</span><span class="n">getContainerStatuses</span><span class="o">)</span>
-               <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">Collection</span><span class="o">::</span><span class="n">stream</span><span class="o">)</span>
-               <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">s</span> <span class="o">-&gt;</span> <span class="n">s</span><span class="o">.</span><span class="na">anyMatch</span><span class="o">(</span><span class="n">ContainerStatus</span><span class="o">::</span><span class="n">isReady</span><span class="o">))</span>
-               <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">aBoolean</span> <span class="o">-&gt;</span> <span class="n">aBoolean</span> <span class="o">?</span> <span class="n">ContainerHealth</span><span class="o">.</span><span class="na">NORMAL</span> <span class="o">:</span> <span class="n">ContainerHealth</span><span class="o">.</span><span class="na">RUNNING_EXPERIMENT</span><span class="o">)</span>
-               <span class="o">.</span><span class="na">orElse</span><span class="o">(</span><span class="n">ContainerHealth</span><span class="o">.</span><span class="na">DOES_NOT_EXIST</span><span class="o">);</span>
-<span class="o">}</span>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="n">ContainerHealth</span> <span class="nf">checkHealth</span> <span class="p">(</span><span class="n">KubernetesPodContainer</span> <span class="n">kubernetesPodContainer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">V1Pod</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getPodFromContainer</span><span class="p">(</span><span class="n">container</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">ofNullable</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+               <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">V1Pod</span><span class="p">::</span><span class="n">getStatus</span><span class="p">)</span>
+               <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">V1PodStatus</span><span class="p">::</span><span class="n">getContainerStatuses</span><span class="p">)</span>
+               <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">Collection</span><span class="p">::</span><span class="n">stream</span><span class="p">)</span>
+               <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">s</span> <span class="o">-&gt;</span> <span class="n">s</span><span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">ContainerStatus</span><span class="p">::</span><span class="n">isReady</span><span class="p">))</span>
+               <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">aBoolean</span> <span class="o">-&gt;</span> <span class="n">aBoolean</span> <span class="o">?</span> <span class="n">ContainerHealth</span><span class="p">.</span><span class="na">NORMAL</span> <span class="p">:</span> <span class="n">ContainerHealth</span><span class="p">.</span><span class="na">RUNNING_EXPERIMENT</span><span class="p">)</span>
+               <span class="p">.</span><span class="na">orElse</span><span class="p">(</span><span class="n">ContainerHealth</span><span class="p">.</span><span class="na">DOES_NOT_EXIST</span><span class="p">);</span>
+<span class="p">}</span>
 
 <span class="cm">/* In this example, the Optional class wraps the method</span>
 <span class="cm"> calls, and uses an orElse value to provide a third potential</span>

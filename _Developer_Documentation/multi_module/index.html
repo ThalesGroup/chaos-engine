@@ -1153,11 +1153,11 @@
                 <h1 id="multi-module-structure">Multi Module Structure</h1>
 <p>This page is intended to be a guide on how to create, maintain, and organize modules for components of the Chaos Engine.</p>
 <h2 id="module-structure">Module Structure</h2>
-<div class="codehilite"><pre><span></span><span class="o">`</span><span class="c1">--pom.xml (Parent)</span>
- <span class="o">`-</span><span class="n">Module</span><span class="o">-</span><span class="n">A</span><span class="o">+-</span><span class="n">src</span>
- <span class="o">|</span>         <span class="o">`-</span><span class="n">pom</span><span class="p">.</span><span class="n">xml</span> <span class="p">(</span><span class="n">Module</span> <span class="n">A</span><span class="p">)</span>
- <span class="o">`-</span><span class="n">Module</span><span class="o">-</span><span class="n">B</span><span class="o">+-</span><span class="n">src</span>
-           <span class="o">`-</span><span class="n">pom</span><span class="p">.</span><span class="n">xml</span> <span class="p">(</span><span class="n">Module</span> <span class="n">B</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="err">`--pom.xml (Parent)</span>
+<span class="err"> `-Module-A+-src</span>
+<span class="err"> |         `-pom.xml (Module A)</span>
+<span class="err"> `-Module-B+-src</span>
+<span class="err">           `-pom.xml (Module B)</span>
 </pre></div>
 
 <p>The parent project directory contains a single pom.xml file that manages the entire project. The packaging field of that file will be pom. Each module is listed as a module under a modules section.</p>
@@ -1204,50 +1204,50 @@
 <p>The child pom may reference other modules as dependencies. If this is done, they should be set with scope of provided. This ensures that the build process does not include the dependent JAR inside the child JAR.</p>
 <h3 id="nested-modules">Nested Modules</h3>
 <p>To keep the root level clean, similar module types should be grouped together with a second level module. This prevents the need to regularly add updates to the project pom. This second level module will be of type <strong>packaging</strong> = <strong>pom</strong>, and be declared as a module of the parent.</p>
-<div class="codehilite"><pre><span></span><span class="n">chaosengine</span>
-<span class="o">|</span><span class="c1">-- chaosengine-core</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>       <span class="o">|</span><span class="c1">-- main</span>
-<span class="o">|</span>       <span class="o">`</span><span class="c1">-- test</span>
-<span class="o">|</span><span class="c1">-- chaosengine-experiments</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-aws-ec2</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-aws-rds</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-kubernetes</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-pcf</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">`</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span><span class="c1">-- chaosengine-launcher</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>       <span class="o">|</span><span class="c1">-- main</span>
-<span class="o">|</span>       <span class="o">`</span><span class="c1">-- test</span>
-<span class="o">|</span><span class="c1">-- chaosengine-notifications</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-notif-datadog</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">|</span><span class="c1">-- chaosengine-notif-slack</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-<span class="o">|</span>   <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-<span class="o">|</span>   <span class="o">`</span><span class="c1">-- pom.xml</span>
-<span class="o">`</span><span class="c1">-- chaosengine-schedule</span>
-    <span class="o">|</span><span class="c1">-- canada</span>
-    <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-    <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-    <span class="o">|</span><span class="c1">-- czech-republic</span>
-    <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-    <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-    <span class="o">|</span><span class="c1">-- france</span>
-    <span class="o">|</span>   <span class="o">|</span><span class="c1">-- pom.xml</span>
-    <span class="o">|</span>   <span class="o">`</span><span class="c1">-- src</span>
-    <span class="o">`</span><span class="c1">-- pom.xml</span>
+<div class="codehilite"><pre><span></span><span class="err">chaosengine</span>
+<span class="err">|-- chaosengine-core</span>
+<span class="err">|   |-- pom.xml</span>
+<span class="err">|   `-- src</span>
+<span class="err">|       |-- main</span>
+<span class="err">|       `-- test</span>
+<span class="err">|-- chaosengine-experiments</span>
+<span class="err">|   |-- chaosengine-aws-ec2</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   |-- chaosengine-aws-rds</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   |-- chaosengine-kubernetes</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   |-- chaosengine-pcf</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   `-- pom.xml</span>
+<span class="err">|-- chaosengine-launcher</span>
+<span class="err">|   |-- pom.xml</span>
+<span class="err">|   `-- src</span>
+<span class="err">|       |-- main</span>
+<span class="err">|       `-- test</span>
+<span class="err">|-- chaosengine-notifications</span>
+<span class="err">|   |-- chaosengine-notif-datadog</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   |-- chaosengine-notif-slack</span>
+<span class="err">|   |   |-- pom.xml</span>
+<span class="err">|   |   `-- src</span>
+<span class="err">|   `-- pom.xml</span>
+<span class="err">`-- chaosengine-schedule</span>
+<span class="err">    |-- canada</span>
+<span class="err">    |   |-- pom.xml</span>
+<span class="err">    |   `-- src</span>
+<span class="err">    |-- czech-republic</span>
+<span class="err">    |   |-- pom.xml</span>
+<span class="err">    |   `-- src</span>
+<span class="err">    |-- france</span>
+<span class="err">    |   |-- pom.xml</span>
+<span class="err">    |   `-- src</span>
+<span class="err">    `-- pom.xml</span>
 </pre></div>
 
 <h2 id="building-modules">Building Modules</h2>
@@ -1258,22 +1258,22 @@
 <p>If any module fails at any step, the remainder of steps will be skipped. For instance, a unit test failure in the Core module prevents the Experiment modules from being compiled.</p>
 <p>A final output will show the results and build times of each module the reactor built, in the order they were built, with their corresponding exit status and build time.</p>
 <p><strong>Final Build Output</strong></p>
-<div class="codehilite"><pre><span></span>[<span class="nv">INFO</span>] <span class="o">------------------------------------------------------------------------</span>
-[<span class="nv">INFO</span>] <span class="nv">Reactor</span> <span class="nv">Summary</span> <span class="k">for</span> <span class="nv">chaos</span><span class="o">-</span><span class="nv">engine</span> <span class="mi">1</span>.<span class="mi">1</span>.<span class="mi">0</span><span class="o">-</span><span class="nv">SNAPSHOT</span>:
-[<span class="nv">INFO</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaos</span><span class="o">-</span><span class="nv">engine</span> ....................................... <span class="nv">SUCCESS</span> [  <span class="mi">3</span>.<span class="mi">103</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">launcher</span> ............................... <span class="nv">SUCCESS</span> [  <span class="mi">5</span>.<span class="mi">987</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">core</span> ................................... <span class="nv">SUCCESS</span> [ <span class="mi">58</span>.<span class="mi">850</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">kubernetes</span> ............................. <span class="nv">SUCCESS</span> [ <span class="mi">16</span>.<span class="mi">017</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">aws</span><span class="o">-</span><span class="nv">ec2</span> ................................ <span class="nv">SUCCESS</span> [  <span class="mi">9</span>.<span class="mi">143</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">aws</span><span class="o">-</span><span class="nv">rds</span> ................................ <span class="nv">SUCCESS</span> [  <span class="mi">8</span>.<span class="mi">887</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="nv">chaosengine</span><span class="o">-</span><span class="nv">pcf</span> .................................... <span class="nv">SUCCESS</span> [ <span class="mi">10</span>.<span class="mi">948</span> <span class="nv">s</span>]
-[<span class="nv">INFO</span>] <span class="o">------------------------------------------------------------------------</span>
-[<span class="nv">INFO</span>] <span class="nv">BUILD</span> <span class="nv">SUCCESS</span>
-[<span class="nv">INFO</span>] <span class="o">------------------------------------------------------------------------</span>
-[<span class="nv">INFO</span>] <span class="nv">Total</span> <span class="nv">time</span>:  <span class="mi">01</span>:<span class="mi">54</span> <span class="nv">min</span>
-[<span class="nv">INFO</span>] <span class="nv">Finished</span> <span class="nv">at</span>: <span class="mi">2019</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">01</span><span class="nv">T13</span>:<span class="mi">48</span>:<span class="mi">34</span><span class="o">-</span><span class="mi">04</span>:<span class="mi">00</span>
-[<span class="nv">INFO</span>] <span class="o">------------------------------------------------------------------------</span>
+<div class="codehilite"><pre><span></span><span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="c1">------------------------------------------------------------------------</span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">Reactor</span><span class="w"> </span><span class="n">Summary</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">chaos</span><span class="o">-</span><span class="n">engine</span><span class="w"> </span><span class="mf">1.1.0</span><span class="o">-</span><span class="nl">SNAPSHOT</span><span class="p">:</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaos</span><span class="o">-</span><span class="n">engine</span><span class="w"> </span><span class="p">.......................................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n">  3.103 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">launcher</span><span class="w"> </span><span class="p">...............................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n">  5.987 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">core</span><span class="w"> </span><span class="p">...................................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n"> 58.850 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">kubernetes</span><span class="w"> </span><span class="p">.............................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n"> 16.017 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">aws</span><span class="o">-</span><span class="n">ec2</span><span class="w"> </span><span class="p">................................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n">  9.143 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">aws</span><span class="o">-</span><span class="n">rds</span><span class="w"> </span><span class="p">................................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n">  8.887 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">chaosengine</span><span class="o">-</span><span class="n">pcf</span><span class="w"> </span><span class="p">....................................</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"> </span><span class="o">[</span><span class="n"> 10.948 s</span><span class="o">]</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="c1">------------------------------------------------------------------------</span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">BUILD</span><span class="w"> </span><span class="n">SUCCESS</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="c1">------------------------------------------------------------------------</span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">Total</span><span class="w"> </span><span class="nc">time</span><span class="err">:</span><span class="w">  </span><span class="mi">01</span><span class="err">:</span><span class="mi">54</span><span class="w"> </span><span class="nf">min</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="n">Finished</span><span class="w"> </span><span class="k">at</span><span class="err">:</span><span class="w"> </span><span class="mi">2019</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">01</span><span class="nl">T13</span><span class="p">:</span><span class="mi">48</span><span class="err">:</span><span class="mi">34</span><span class="o">-</span><span class="mi">04</span><span class="err">:</span><span class="mi">00</span><span class="w"></span>
+<span class="o">[</span><span class="n">INFO</span><span class="o">]</span><span class="w"> </span><span class="c1">------------------------------------------------------------------------</span>
 </pre></div>
 
 <h3 id="packaging-and-assembly">Packaging and Assembly</h3>

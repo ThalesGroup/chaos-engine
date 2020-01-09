@@ -1063,41 +1063,41 @@
 <h3 id="usage">Usage</h3>
 <p>See this simple code example on how the Container Manager should be used in the process of creating a container.</p>
 <p><strong>ContainerManager Usage</strong></p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.thales.chaos</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.thales.chaos</span><span class="p">;</span>
 
-<span class="kn">import</span> <span class="nn">com.thales.chaos.container.Container</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.thales.chaos.container.ContainerManager</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.thales.chaos.container.enums.ContainerHealth</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.thales.chaos.experiment.enums.ExperimentType</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.thales.chaos.notification.datadog.DataDogIdentifier</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.thales.chaos.platform.Platform</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">org.springframework.beans.factory.annotation.Autowired</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">org.springframework.stereotype.Service</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.container.Container</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.container.ContainerManager</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.container.enums.ContainerHealth</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.experiment.enums.ExperimentType</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.notification.datadog.DataDogIdentifier</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.thales.chaos.platform.Platform</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.beans.factory.annotation.Autowired</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.stereotype.Service</span><span class="p">;</span>
 
-<span class="kn">import</span> <span class="nn">javax.validation.constraints.NotNull</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.validation.constraints.NotNull</span><span class="p">;</span>
 
 <span class="nd">@Service</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Example</span> <span class="o">{</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Example</span> <span class="p">{</span>
     <span class="nd">@Autowired</span>
-    <span class="kd">private</span> <span class="n">ContainerManager</span> <span class="n">containerManager</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ContainerManager</span> <span class="n">containerManager</span><span class="p">;</span>
 
-    <span class="kd">private</span> <span class="n">ExampleContainer</span> <span class="nf">getContainer</span> <span class="o">(</span><span class="n">Object</span> <span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">ExampleContainer</span> <span class="n">exampleContainer</span> <span class="o">=</span> <span class="n">containerManager</span><span class="o">.</span><span class="na">getMatchingContainer</span><span class="o">(</span><span class="n">ExampleContainer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">args</span><span class="o">.</span><span class="na">getIdentifier</span><span class="o">());</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">exampleContainer</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">exampleContainer</span> <span class="o">=</span> <span class="n">actuallyCreateContainer</span><span class="o">();</span>
-            <span class="n">containerManager</span><span class="o">.</span><span class="na">offer</span><span class="o">(</span><span class="n">exampleContainer</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">return</span> <span class="n">exampleContainer</span><span class="o">;</span>
-    <span class="o">}</span>
+    <span class="kd">private</span> <span class="n">ExampleContainer</span> <span class="nf">getContainer</span> <span class="p">(</span><span class="n">Object</span> <span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ExampleContainer</span> <span class="n">exampleContainer</span> <span class="o">=</span> <span class="n">containerManager</span><span class="p">.</span><span class="na">getMatchingContainer</span><span class="p">(</span><span class="n">ExampleContainer</span><span class="p">.</span><span class="na">class</span><span class="p">,</span> <span class="n">args</span><span class="p">.</span><span class="na">getIdentifier</span><span class="p">());</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">exampleContainer</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">exampleContainer</span> <span class="o">=</span> <span class="n">actuallyCreateContainer</span><span class="p">();</span>
+            <span class="n">containerManager</span><span class="p">.</span><span class="na">offer</span><span class="p">(</span><span class="n">exampleContainer</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">exampleContainer</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    <span class="kd">private</span> <span class="n">ExampleContainer</span> <span class="nf">actuallyCreateContainer</span><span class="o">()</span>
-    <span class="o">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="n">ExampleContainer</span><span class="o">()</span> <span class="o">{};</span>
-    <span class="o">}</span>
+    <span class="kd">private</span> <span class="n">ExampleContainer</span> <span class="nf">actuallyCreateContainer</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">ExampleContainer</span><span class="p">()</span> <span class="p">{};</span>
+    <span class="p">}</span>
 
-    <span class="kd">private</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ExampleContainer</span> <span class="kd">extends</span> <span class="n">Container</span> <span class="o">{</span>
-    <span class="o">}</span>
-<span class="o">}</span>
+    <span class="kd">private</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ExampleContainer</span> <span class="kd">extends</span> <span class="n">Container</span> <span class="p">{</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>In this example class, a Spring Service is attempting to look for an existing container if it already exists in the Container Manager cache <strong><em>(Line 20)</em></strong>. If it does not exist <strong><em>(21)</em></strong>, it will create the container using another call <strong><em>(22)</em></strong>, and then offer that container back into the Container Manager <strong><em>(23)</em></strong>, before finally returning the container <strong><em>(25)</em></strong> that was either retrieved from the cache or created.</p>
