@@ -19,4 +19,15 @@
         <module>chaosengine-pcf</module>
     </modules>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>com.thales.chaos</groupId>
+            <artifactId>chaosengine-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
 </project>
