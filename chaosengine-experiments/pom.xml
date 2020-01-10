@@ -13,6 +13,7 @@
     <artifactId>chaosengine-experiments</artifactId>
 
     <modules>
+        <module>chaosengine-gcp-compute</module>
         <module>chaosengine-kubernetes</module>
         <module>chaosengine-aws-ec2</module>
         <module>chaosengine-aws-rds</module>
