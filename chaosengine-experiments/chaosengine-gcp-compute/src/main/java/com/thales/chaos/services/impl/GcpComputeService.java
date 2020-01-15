@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +40,7 @@ import java.io.IOException;
 
 @Configuration
 @ConfigurationProperties("gcp.compute")
+@ConditionalOnProperty("gcp.compute")
 public class GcpComputeService implements CloudService {
     public static final String COMPUTE_CREDENTIALS = "compute-credentials";
     public static final String COMPUTE_PROJECT = "compute-project";
@@ -78,13 +80,8 @@ public class GcpComputeService implements CloudService {
     @Bean(COMPUTE_CREDENTIALS)
     @JsonIgnore
     public GoogleCredentials googleCredentials () throws IOException {
-        try {
-            return ServiceAccountCredentials.fromStream(new ByteArrayInputStream(jsonKey.getBytes()))
-                                            .createScoped(ComputeScopes.CLOUD_PLATFORM);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        return ServiceAccountCredentials.fromStream(new ByteArrayInputStream(jsonKey.getBytes()))
+                                        .createScoped(ComputeScopes.CLOUD_PLATFORM);
     }
 
     @Bean(COMPUTE_PROJECT)
