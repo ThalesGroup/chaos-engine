@@ -18,6 +18,7 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.cloud.compute.v1.*;
+import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.platform.Platform;
@@ -90,7 +91,7 @@ public class GcpComputePlatform extends Platform {
                                    .map(Metadata::getItemsList)
                                    .stream()
                                    .flatMap(Collection::stream)
-                                   .filter(items -> items.getKey().equals("created-by"))
+                                   .filter(GcpComputePlatform::isCreatedByItem)
                                    .map(Items::getValue)
                                    .findFirst()
                                    .orElse(null);
@@ -101,6 +102,10 @@ public class GcpComputePlatform extends Platform {
                                           .withPlatform(this)
                                           .withCreatedBy(createdBy)
                                           .build();
+    }
+
+    private static boolean isCreatedByItem (Items items) {
+        return items.getKey().equals(GcpConstants.CREATED_BY_METADATA_KEY);
     }
 
     @Override
