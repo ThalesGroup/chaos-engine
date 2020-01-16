@@ -2,6 +2,7 @@
   <settings>
     <module2copyright>
       <element module="MkDocs Theme Partials" copyright="No Copyright" />
+      <element module="Java Classes" copyright="Apache 2" />
     </module2copyright>
   </settings>
 </component>
