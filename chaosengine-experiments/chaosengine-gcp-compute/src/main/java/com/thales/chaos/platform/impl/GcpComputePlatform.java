@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
-import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @ConditionalOnProperty("gcp.compute")
 @ConfigurationProperties("gcp.compute")
@@ -82,7 +81,6 @@ public class GcpComputePlatform extends Platform {
     }
 
     private GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
-        log.info("Creating container from {}", kv("instance", instance));
         String id = instance.getId();
         String name = instance.getName();
         Tags tags = instance.getTags();
