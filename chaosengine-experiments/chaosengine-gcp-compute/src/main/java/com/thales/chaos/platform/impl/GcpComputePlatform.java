@@ -18,6 +18,7 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.cloud.compute.v1.*;
+import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 @ConditionalOnProperty("gcp.compute")
 @ConfigurationProperties("gcp.compute")
@@ -77,6 +79,8 @@ public class GcpComputePlatform extends Platform {
                             .filter(Objects::nonNull)
                             .flatMap(Collection::stream)
                             .map(this::createContainerFromInstance)
+                            .peek(container -> log.info("Created container {}",
+                                    v(DataDogConstants.DATADOG_CONTAINER_KEY, container)))
                             .collect(Collectors.toList());
     }
 
