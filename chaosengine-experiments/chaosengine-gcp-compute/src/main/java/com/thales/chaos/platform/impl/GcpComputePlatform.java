@@ -94,6 +94,7 @@ public class GcpComputePlatform extends Platform {
         String id = instance.getId();
         String name = instance.getName();
         Tags tags = instance.getTags();
+        String zone = instance.getZone();
         String createdBy = Optional.of(instance)
                                    .map(Instance::getMetadata)
                                    .map(Metadata::getItemsList)
@@ -103,11 +104,13 @@ public class GcpComputePlatform extends Platform {
                                    .map(Items::getValue)
                                    .findFirst()
                                    .orElse(null);
-        return GcpComputeInstanceContainer.builder().withFirewallTags(tags != null ? tags.getItemsList() : emptyList())
+        return GcpComputeInstanceContainer.builder()
+                                          .withFirewallTags(tags != null ? tags.getItemsList() : emptyList())
                                           .withInstanceName(name)
                                           .withUniqueIdentifier(id)
                                           .withPlatform(this)
                                           .withCreatedBy(createdBy)
+                                          .withZone(zone)
                                           .build();
     }
 

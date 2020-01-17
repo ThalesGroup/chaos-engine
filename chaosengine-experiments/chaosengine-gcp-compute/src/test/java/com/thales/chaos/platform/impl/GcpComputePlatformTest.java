@@ -68,21 +68,28 @@ public class GcpComputePlatformTest {
                                     .addItems(Items.newBuilder()
                                                    .setKey(GcpConstants.CREATED_BY_METADATA_KEY)
                                                    .setValue(createdByValue)
-                                                   .build())
-                                    .build();
+                                                   .build()).build();
         String tag1 = "HTTP";
         String tag2 = "SSH";
         String tag3 = "RDP";
         Tags tags = Tags.newBuilder().addAllItems(List.of(tag1, tag2, tag3)).build();
         String id = "123456789101112131415";
         String name = "My-Weird-SSH-and-RDP-Web-Server";
-        Instance instance = Instance.newBuilder().setMetadata(metadata).setName(name).setId(id).setTags(tags).build();
+        String zone = "some-datacenter-somewhere";
+        Instance instance = Instance.newBuilder()
+                                    .setMetadata(metadata)
+                                    .setName(name)
+                                    .setId(id)
+                                    .setTags(tags)
+                                    .setZone(zone)
+                                    .build();
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
                                                                            .withCreatedBy(createdByValue)
                                                                            .withFirewallTags(List.of(tag1, tag2, tag3))
                                                                            .withPlatform(gcpComputePlatform)
                                                                            .withInstanceName(name)
                                                                            .withUniqueIdentifier(id)
+                                                                           .withZone(zone)
                                                                            .build();
         assertEquals(container, gcpComputePlatform.createContainerFromInstance(instance));
     }

@@ -42,6 +42,9 @@ public class GcpComputeInstanceContainer extends Container {
     private GcpComputePlatform platform;
     @JsonProperty
     private String createdBy;
+    @JsonProperty
+    @Identifier(order = 2)
+    private String zone;
 
     public static GcpComputeInstanceContainerBuilder builder () {
         return new GcpComputeInstanceContainerBuilder();
@@ -83,6 +86,7 @@ public class GcpComputeInstanceContainer extends Container {
         private List<String> firewallTags;
         private GcpComputePlatform platform;
         private String createdBy;
+        private String zone;
 
         private GcpComputeInstanceContainerBuilder () {
         }
@@ -114,11 +118,17 @@ public class GcpComputeInstanceContainer extends Container {
             container.firewallTags = this.firewallTags;
             container.platform = this.platform;
             container.createdBy = this.createdBy;
+            container.zone = this.zone;
             return container;
         }
 
         public GcpComputeInstanceContainerBuilder withCreatedBy (String createdBy) {
             this.createdBy = createdBy;
+            return this;
+        }
+
+        public GcpComputeInstanceContainerBuilder withZone (String zone) {
+            this.zone = zone;
             return this;
         }
     }
