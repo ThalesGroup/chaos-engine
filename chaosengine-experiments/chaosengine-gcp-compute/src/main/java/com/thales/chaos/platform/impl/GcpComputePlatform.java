@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static java.util.Collections.emptyList;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @ConditionalOnProperty("gcp.compute")
@@ -89,7 +90,7 @@ public class GcpComputePlatform extends Platform {
                             .collect(Collectors.toList());
     }
 
-    private GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
+    GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
         String id = instance.getId();
         String name = instance.getName();
         Tags tags = instance.getTags();
@@ -102,8 +103,7 @@ public class GcpComputePlatform extends Platform {
                                    .map(Items::getValue)
                                    .findFirst()
                                    .orElse(null);
-        return GcpComputeInstanceContainer.builder()
-                                          .withFirewallTags(tags.getItemsList())
+        return GcpComputeInstanceContainer.builder().withFirewallTags(tags != null ? tags.getItemsList() : emptyList())
                                           .withInstanceName(name)
                                           .withUniqueIdentifier(id)
                                           .withPlatform(this)
@@ -120,7 +120,7 @@ public class GcpComputePlatform extends Platform {
         return false;
     }
 
-    private InstanceClient.AggregatedListInstancesPagedResponse getAggregatedInstanceList () {
+    InstanceClient.AggregatedListInstancesPagedResponse getAggregatedInstanceList () {
         return instanceClient.aggregatedListInstances(projectName);
     }
 }
