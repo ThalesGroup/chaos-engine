@@ -43,8 +43,8 @@ public class GcpComputeInstanceContainer extends Container {
     @JsonProperty
     private String createdBy;
 
-    public static GcpComputerInstanceContainerBuilder builder () {
-        return new GcpComputerInstanceContainerBuilder();
+    public static GcpComputeInstanceContainerBuilder builder () {
+        return new GcpComputeInstanceContainerBuilder();
     }
 
     @Override
@@ -77,32 +77,32 @@ public class GcpComputeInstanceContainer extends Container {
         return uniqueIdentifier != null && uniqueIdentifier.equals(this.uniqueIdentifier);
     }
 
-    public static class GcpComputerInstanceContainerBuilder {
+    public static class GcpComputeInstanceContainerBuilder {
         private String uniqueIdentifier;
         private String instanceName;
         private List<String> firewallTags;
         private GcpComputePlatform platform;
         private String createdBy;
 
-        private GcpComputerInstanceContainerBuilder () {
+        private GcpComputeInstanceContainerBuilder () {
         }
 
-        public GcpComputerInstanceContainerBuilder withUniqueIdentifier (String uniqueIdentifier) {
+        public GcpComputeInstanceContainerBuilder withUniqueIdentifier (String uniqueIdentifier) {
             this.uniqueIdentifier = uniqueIdentifier;
             return this;
         }
 
-        public GcpComputerInstanceContainerBuilder withInstanceName (String instanceName) {
+        public GcpComputeInstanceContainerBuilder withInstanceName (String instanceName) {
             this.instanceName = instanceName;
             return this;
         }
 
-        public GcpComputerInstanceContainerBuilder withFirewallTags (List<String> firewallTags) {
+        public GcpComputeInstanceContainerBuilder withFirewallTags (List<String> firewallTags) {
             this.firewallTags = firewallTags;
             return this;
         }
 
-        public GcpComputerInstanceContainerBuilder withPlatform (GcpComputePlatform platform) {
+        public GcpComputeInstanceContainerBuilder withPlatform (GcpComputePlatform platform) {
             this.platform = platform;
             return this;
         }
@@ -117,7 +117,7 @@ public class GcpComputeInstanceContainer extends Container {
             return container;
         }
 
-        public GcpComputerInstanceContainerBuilder withCreatedBy (String createdBy) {
+        public GcpComputeInstanceContainerBuilder withCreatedBy (String createdBy) {
             this.createdBy = createdBy;
             return this;
         }
