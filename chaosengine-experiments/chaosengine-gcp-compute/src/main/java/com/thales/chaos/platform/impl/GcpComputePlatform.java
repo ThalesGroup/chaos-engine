@@ -126,4 +126,23 @@ public class GcpComputePlatform extends Platform {
     InstanceClient.AggregatedListInstancesPagedResponse getAggregatedInstanceList () {
         return instanceClient.aggregatedListInstances(projectName);
     }
+
+    public void stopInstance (GcpComputeInstanceContainer container) {
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        instanceClient.stopInstance(instance);
+    }
+
+    private static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                                  ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getUniqueIdentifier())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
+    }
+
+    public void startInstance (GcpComputeInstanceContainer container) {
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        instanceClient.startInstance(instance);
+    }
 }

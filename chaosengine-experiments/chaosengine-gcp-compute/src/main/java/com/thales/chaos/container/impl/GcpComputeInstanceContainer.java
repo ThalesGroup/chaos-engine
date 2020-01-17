@@ -50,6 +50,22 @@ public class GcpComputeInstanceContainer extends Container {
         return new GcpComputeInstanceContainerBuilder();
     }
 
+    public String getUniqueIdentifier () {
+        return uniqueIdentifier;
+    }
+
+    public String getInstanceName () {
+        return instanceName;
+    }
+
+    public List<String> getFirewallTags () {
+        return firewallTags;
+    }
+
+    public String getZone () {
+        return zone;
+    }
+
     @Override
     public Platform getPlatform () {
         return platform;
