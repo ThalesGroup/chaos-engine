@@ -129,17 +129,23 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
-    private static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
-                                                                                  ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder()
-                                      .setInstance(container.getUniqueIdentifier())
-                                      .setZone(container.getZone())
-                                      .setProject(projectName.getProject())
-                                      .build();
+    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
+        instanceClient.setTagsInstance(instance, newTags);
     }
 
     public void startInstance (GcpComputeInstanceContainer container) {
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.startInstance(instance);
+    }
+
+    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                          ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getUniqueIdentifier())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
     }
 }

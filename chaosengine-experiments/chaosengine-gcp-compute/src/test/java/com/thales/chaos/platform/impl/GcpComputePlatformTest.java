@@ -68,7 +68,8 @@ public class GcpComputePlatformTest {
                                     .addItems(Items.newBuilder()
                                                    .setKey(GcpConstants.CREATED_BY_METADATA_KEY)
                                                    .setValue(createdByValue)
-                                                   .build()).build();
+                                                   .build())
+                                    .build();
         String tag1 = "HTTP";
         String tag2 = "SSH";
         String tag3 = "RDP";
@@ -107,6 +108,22 @@ public class GcpComputePlatformTest {
         doReturn(iterableInstances).when(response).iterateAll();
         doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
+    }
+
+    @Test
+    public void setTags () {
+        String zone = "my-zone";
+        String uniqueIdentifier = "12345678901234567890";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueIdentifier)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        Tags tags = Tags.newBuilder().addItems("my-tag").addItems("my-other-tag").build();
+        List<String> tagList = tags.getItemsList();
+        gcpComputePlatform.setTags(container, tagList);
+        verify(instanceClient).setTagsInstance(instanceName, tags);
     }
 
     @Configuration
