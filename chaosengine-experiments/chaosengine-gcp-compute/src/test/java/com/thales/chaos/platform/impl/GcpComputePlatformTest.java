@@ -111,6 +111,34 @@ public class GcpComputePlatformTest {
     }
 
     @Test
+    public void startInstance () {
+        String zone = "my-zone";
+        String uniqueIdentifier = "12345678901234567890";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueIdentifier)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        gcpComputePlatform.startInstance(container);
+        verify(instanceClient).startInstance(instanceName);
+    }
+
+    @Test
+    public void stopInstance () {
+        String zone = "my-zone";
+        String uniqueIdentifier = "12345678901234567890";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueIdentifier)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        gcpComputePlatform.stopInstance(container);
+        verify(instanceClient).stopInstance(instanceName);
+    }
+
+    @Test
     public void setTags () {
         String zone = "my-zone";
         String uniqueIdentifier = "12345678901234567890";
