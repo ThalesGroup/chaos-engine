@@ -91,7 +91,7 @@ public class GcpComputePlatform extends Platform {
                             .collect(Collectors.toList());
     }
 
-    private boolean isNotFiltered (Instance instance) {
+    boolean isNotFiltered (Instance instance) {
         List<Items> itemsList = Optional.of(instance)
                                         .map(Instance::getMetadata)
                                         .map(Metadata::getItemsList)
@@ -128,13 +128,7 @@ public class GcpComputePlatform extends Platform {
     }
 
     public Collection<Items> getIncludeFilter () {
-        return includeFilter.entrySet()
-                            .stream()
-                            .map(entrySet -> Items.newBuilder()
-                                                  .setKey(entrySet.getKey())
-                                                  .setValue(entrySet.getValue())
-                                                  .build())
-                            .collect(Collectors.toSet());
+        return asItemCollection(includeFilter);
     }
 
     public void setIncludeFilter (Map<String, String> includeFilter) {

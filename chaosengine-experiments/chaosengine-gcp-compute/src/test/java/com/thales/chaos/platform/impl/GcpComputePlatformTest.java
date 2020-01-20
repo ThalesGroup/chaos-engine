@@ -31,11 +31,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
@@ -108,6 +108,7 @@ public class GcpComputePlatformTest {
         doReturn(iterableInstances).when(response).iterateAll();
         doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
+        verify(gcpComputePlatform).isNotFiltered(instance);
     }
 
     @Test
@@ -168,6 +169,20 @@ public class GcpComputePlatformTest {
                                                                               .setProject(projectName.getProject())
                                                                               .build();
         assertEquals(actualInstanceName, expectedInstanceName);
+    }
+
+    @Test
+    public void isNotFiltered () {
+        Items includeTags = Items.newBuilder().setKey("include").setValue("true").build();
+        Metadata includeMetadata = Metadata.newBuilder().addItems(includeTags).build();
+        Items excludeTags = Items.newBuilder().setKey("exclude").setValue("true").build();
+        Metadata excludeMetadata = Metadata.newBuilder().addItems(excludeTags).build();
+        Instance matchingInclude = Instance.newBuilder().setMetadata(includeMetadata).build();
+        Instance includeWithExclude = Instance.newBuilder(matchingInclude).setMetadata(excludeMetadata).build();
+        gcpComputePlatform.setIncludeFilter(Map.of("include", "true"));
+        gcpComputePlatform.setExcludeFilter(Map.of("exclude", "true"));
+        assertTrue(gcpComputePlatform.isNotFiltered(matchingInclude));
+        assertFalse(gcpComputePlatform.isNotFiltered(includeWithExclude));
     }
 
     @Configuration
