@@ -34,10 +34,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -55,6 +52,8 @@ public class GcpComputePlatform extends Platform {
     @Autowired
     @Qualifier(COMPUTE_PROJECT)
     private ProjectName projectName;
+    private Map<String, String> includeFilter = Collections.emptyMap();
+    private Map<String, String> excludeFilter = Collections.emptyMap();
 
     @Override
     public ApiStatus getApiStatus () {
@@ -85,10 +84,23 @@ public class GcpComputePlatform extends Platform {
                             .map(InstancesScopedList::getInstancesList)
                             .filter(Objects::nonNull)
                             .flatMap(Collection::stream)
+                            .filter(this::isNotFiltered)
                             .map(this::createContainerFromInstance)
                             .peek(container -> log.info("Created container {}",
                                     v(DataDogConstants.DATADOG_CONTAINER_KEY, container)))
                             .collect(Collectors.toList());
+    }
+
+    private boolean isNotFiltered (Instance instance) {
+        List<Items> itemsList = Optional.of(instance)
+                                        .map(Instance::getMetadata)
+                                        .map(Metadata::getItemsList)
+                                        .orElse(emptyList());
+        Collection<Items> includeFilter = getIncludeFilter();
+        Collection<Items> excludeFilter = getExcludeFilter();
+        boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream().anyMatch(includeFilter::contains);
+        boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilter::contains);
+        return hasAllMustIncludes && hasNoMustNotIncludes;
     }
 
     GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
@@ -115,8 +127,40 @@ public class GcpComputePlatform extends Platform {
                                           .build();
     }
 
+    public Collection<Items> getIncludeFilter () {
+        return includeFilter.entrySet()
+                            .stream()
+                            .map(entrySet -> Items.newBuilder()
+                                                  .setKey(entrySet.getKey())
+                                                  .setValue(entrySet.getValue())
+                                                  .build())
+                            .collect(Collectors.toSet());
+    }
+
+    public void setIncludeFilter (Map<String, String> includeFilter) {
+        this.includeFilter = includeFilter;
+    }
+
+    public Collection<Items> getExcludeFilter () {
+        return asItemCollection(excludeFilter);
+    }
+
+    public void setExcludeFilter (Map<String, String> excludeFilter) {
+        this.excludeFilter = excludeFilter;
+    }
+
     private static boolean isCreatedByItem (Items items) {
         return items.getKey().equals(GcpConstants.CREATED_BY_METADATA_KEY);
+    }
+
+    private static Collection<Items> asItemCollection (Map<String, String> itemMap) {
+        return itemMap.entrySet()
+                      .stream()
+                      .map(entrySet -> Items.newBuilder()
+                                            .setKey(entrySet.getKey())
+                                            .setValue(entrySet.getValue())
+                                            .build())
+                      .collect(Collectors.toSet());
     }
 
     @Override
@@ -129,6 +173,15 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
+    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                          ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getUniqueIdentifier())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
+    }
+
     public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         Tags newTags = Tags.newBuilder().addAllItems(tags).build();
@@ -138,14 +191,5 @@ public class GcpComputePlatform extends Platform {
     public void startInstance (GcpComputeInstanceContainer container) {
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.startInstance(instance);
-    }
-
-    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
-                                                                          ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder()
-                                      .setInstance(container.getUniqueIdentifier())
-                                      .setZone(container.getZone())
-                                      .setProject(projectName.getProject())
-                                      .build();
     }
 }
