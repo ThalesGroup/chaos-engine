@@ -154,6 +154,22 @@ public class GcpComputePlatformTest {
         verify(instanceClient).setTagsInstance(instanceName, tags);
     }
 
+    @Test
+    public void getProjectZoneInstanceName () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-zone")
+                                                                           .withUniqueIdentifier("unique-identifier")
+                                                                           .build();
+        ProjectZoneInstanceName actualInstanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        ProjectZoneInstanceName expectedInstanceName = ProjectZoneInstanceName.newBuilder()
+                                                                              .setZone("my-zone")
+                                                                              .setInstance("unique-identifier")
+                                                                              .setProject(projectName.getProject())
+                                                                              .build();
+        assertEquals(actualInstanceName, expectedInstanceName);
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
