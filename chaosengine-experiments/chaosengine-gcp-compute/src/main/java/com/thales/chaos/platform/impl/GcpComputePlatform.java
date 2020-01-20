@@ -59,7 +59,7 @@ public class GcpComputePlatform extends Platform {
     @Override
     public ApiStatus getApiStatus () {
         try {
-            getAggregatedInstanceList();
+            instanceClient.aggregatedListInstances(projectName);
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
@@ -79,7 +79,8 @@ public class GcpComputePlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
-        InstanceClient.AggregatedListInstancesPagedResponse instances = getAggregatedInstanceList();
+        InstanceClient.AggregatedListInstancesPagedResponse instances = instanceClient.aggregatedListInstances(
+                projectName);
         return StreamSupport.stream(instances.iterateAll().spliterator(), false)
                             .map(InstancesScopedList::getInstancesList)
                             .filter(Objects::nonNull)
@@ -121,10 +122,6 @@ public class GcpComputePlatform extends Platform {
     @Override
     public boolean isContainerRecycled (Container container) {
         return false;
-    }
-
-    InstanceClient.AggregatedListInstancesPagedResponse getAggregatedInstanceList () {
-        return instanceClient.aggregatedListInstances(projectName);
     }
 
     public void stopInstance (GcpComputeInstanceContainer container) {

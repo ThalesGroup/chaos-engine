@@ -105,7 +105,7 @@ public class GcpComputePlatformTest {
                                                                                      .addInstances(instance)
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(gcpComputePlatform).getAggregatedInstanceList();
+        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
     }
 
