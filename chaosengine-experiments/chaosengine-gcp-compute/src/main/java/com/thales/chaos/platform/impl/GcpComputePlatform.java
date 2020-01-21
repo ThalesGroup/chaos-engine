@@ -194,4 +194,49 @@ public class GcpComputePlatform extends Platform {
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.startInstance(instance);
     }
+
+    public boolean isContainerGroupAtCapacity (GcpComputeInstanceContainer container) {
+        String group = container.getAggregationIdentifier();
+        if (group.startsWith("project/")) {
+            group = group.substring("project/".length());
+        }
+        if (ProjectZoneInstanceGroupName.isParsableFrom(group)) {
+            return isContainerZoneGroupAtDesiredCapacity(container);
+        } else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group)) {
+            return isContainerRegionGroupAtDesiredCapacity(container);
+        }
+        return false;
+    }
+
+    private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
+        String group = container.getAggregationIdentifier();
+        if (group.startsWith("project/")) {
+            group = group.substring("project/".length());
+        }
+        ProjectZoneInstanceGroupName projectZoneInstanceGroupName = ProjectZoneInstanceGroupName.parse(group);
+        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.of(
+                projectZoneInstanceGroupName.getInstanceGroup(),
+                projectZoneInstanceGroupName.getProject(),
+                projectZoneInstanceGroupName.getZone());
+        Integer actualSize = instanceGroupClient.getInstanceGroup(projectZoneInstanceGroupName).getSize();
+        Integer targetSize = instanceGroupManagerClient.getInstanceGroupManager(projectZoneInstanceGroupManagerName)
+                                                       .getTargetSize();
+        return targetSize.equals(actualSize);
+    }
+
+    private boolean isContainerRegionGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
+        String group = container.getAggregationIdentifier();
+        if (group.startsWith("project/")) {
+            group = group.substring("project/".length());
+        }
+        ProjectRegionInstanceGroupName projectRegionInstanceGroupName = ProjectRegionInstanceGroupName.parse(group);
+        ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
+                .of(projectRegionInstanceGroupName.getInstanceGroup(),
+                        projectRegionInstanceGroupName.getProject(),
+                        projectRegionInstanceGroupName.getRegion());
+        Integer actualSize = regionInstanceGroupClient.getRegionInstanceGroup(projectRegionInstanceGroupName).getSize();
+        Integer targetSize = regionInstanceGroupManagerClient.getRegionInstanceGroupManager(
+                projectRegionInstanceGroupManagerName).getTargetSize();
+        return targetSize.equals(actualSize);
+    }
 }
