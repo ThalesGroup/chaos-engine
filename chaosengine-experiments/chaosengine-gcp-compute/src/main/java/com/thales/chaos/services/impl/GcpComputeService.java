@@ -21,9 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.api.services.compute.ComputeScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.compute.v1.InstanceClient;
-import com.google.cloud.compute.v1.InstanceSettings;
-import com.google.cloud.compute.v1.ProjectName;
+import com.google.cloud.compute.v1.*;
 import com.thales.chaos.services.CloudService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +73,79 @@ public class GcpComputeService implements CloudService {
     public InstanceClient instanceClientUsingCommonCredentials (GoogleCredentials googleCredentials) throws IOException {
         log.info("Creating Google Compute Instance client using shared credentials");
         return createInstanceClient(googleCredentials);
+    }
+
+    @Bean
+    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public InstanceGroupSettings instanceGroupSettings (
+            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials googleCredentials) throws IOException {
+        return InstanceGroupSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public InstanceGroupSettings instanceGroupSettingsUsingCommonCredentials (GoogleCredentials googleCredentials) throws IOException {
+        return InstanceGroupSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    public InstanceGroupClient instanceGroupClient (InstanceGroupSettings instanceGroupSettings) throws IOException {
+        return InstanceGroupClient.create(instanceGroupSettings);
+    }
+
+    @Bean
+    public InstanceGroupManagerClient instanceGroupManagerClient (InstanceGroupManagerSettings instanceGroupManagerSettings) throws IOException {
+        return InstanceGroupManagerClient.create(instanceGroupManagerSettings);
+    }
+
+    @Bean
+    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public InstanceGroupManagerSettings instanceGroupManagerSettings (
+            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials googleCredentials) throws IOException {
+        return InstanceGroupManagerSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public InstanceGroupManagerSettings instanceGroupManagerSettingsUsingCommonCredentials (GoogleCredentials googleCredentials) throws IOException {
+        return InstanceGroupManagerSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public RegionInstanceGroupSettings regionInstanceGroupSettings (
+            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials googleCredentials) throws IOException {
+        return RegionInstanceGroupSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public RegionInstanceGroupSettings regionInstanceGroupSettingsUsingCommonCredentials (GoogleCredentials googleCredentials) throws IOException {
+        return RegionInstanceGroupSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    public RegionInstanceGroupClient regionInstanceGroupClient (RegionInstanceGroupSettings regionInstanceGroupSettings) throws IOException {
+        return RegionInstanceGroupClient.create(regionInstanceGroupSettings);
+    }
+
+    @Bean
+    public RegionInstanceGroupManagerClient regionInstanceGroupManagerClient (RegionInstanceGroupManagerSettings regionInstanceGroupManagerSettings) throws IOException {
+        return RegionInstanceGroupManagerClient.create(regionInstanceGroupManagerSettings);
+    }
+
+    @Bean
+    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public RegionInstanceGroupManagerSettings regionInstanceGroupManagerSettings (
+            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials googleCredentials) throws IOException {
+        return RegionInstanceGroupManagerSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public RegionInstanceGroupManagerSettings regionInstanceGroupManagerSettingsUsingCommonCredentials (
+            GoogleCredentials googleCredentials) throws IOException {
+        return RegionInstanceGroupManagerSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
     }
 
     @Bean(COMPUTE_CREDENTIALS)

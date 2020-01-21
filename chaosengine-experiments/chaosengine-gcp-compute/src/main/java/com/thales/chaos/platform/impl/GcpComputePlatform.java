@@ -50,6 +50,14 @@ public class GcpComputePlatform extends Platform {
     @Autowired
     private InstanceClient instanceClient;
     @Autowired
+    private InstanceGroupClient instanceGroupClient;
+    @Autowired
+    private InstanceGroupManagerClient instanceGroupManagerClient;
+    @Autowired
+    private RegionInstanceGroupClient regionInstanceGroupClient;
+    @Autowired
+    private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
+    @Autowired
     @Qualifier(COMPUTE_PROJECT)
     private ProjectName projectName;
     private Map<String, String> includeFilter = Collections.emptyMap();

@@ -44,6 +44,14 @@ public class GcpComputePlatformTest {
     private static final String MY_AWESOME_PROJECT = "my-awesome-project";
     @MockBean
     private InstanceClient instanceClient;
+    @MockBean
+    private InstanceGroupClient instanceGroupClient;
+    @MockBean
+    private InstanceGroupManagerClient instanceGroupManagerClient;
+    @MockBean
+    private RegionInstanceGroupClient regionInstanceGroupClient;
+    @MockBean
+    private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
     @Autowired
     private ProjectName projectName;
     @Autowired
@@ -189,6 +197,14 @@ public class GcpComputePlatformTest {
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
         private InstanceClient instanceClient;
+        @Autowired
+        private InstanceGroupClient instanceGroupClient;
+        @Autowired
+        private InstanceGroupManagerClient instanceGroupManagerClient;
+        @Autowired
+        private RegionInstanceGroupClient regionInstanceGroupClient;
+        @Autowired
+        private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
 
         @Bean(name = COMPUTE_PROJECT)
         public ProjectName projectName () {
