@@ -197,12 +197,12 @@ public class GcpComputePlatform extends Platform {
 
     public boolean isContainerGroupAtCapacity (GcpComputeInstanceContainer container) {
         String group = container.getAggregationIdentifier();
-        if (group.startsWith("project/")) {
-            group = group.substring("project/".length());
+        if (group.startsWith("projects/")) {
+            group = group.substring("projects/".length());
         }
         if (ProjectZoneInstanceGroupName.isParsableFrom(group)) {
             return isContainerZoneGroupAtDesiredCapacity(container);
-        } else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group)) {
+        } else if (ProjectRegionInstanceGroupName.isParsableFrom(group)) {
             return isContainerRegionGroupAtDesiredCapacity(container);
         }
         return false;
@@ -210,8 +210,8 @@ public class GcpComputePlatform extends Platform {
 
     private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
         String group = container.getAggregationIdentifier();
-        if (group.startsWith("project/")) {
-            group = group.substring("project/".length());
+        if (group.startsWith("projects/")) {
+            group = group.substring("projects/".length());
         }
         ProjectZoneInstanceGroupName projectZoneInstanceGroupName = ProjectZoneInstanceGroupName.parse(group);
         ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.of(
@@ -221,13 +221,13 @@ public class GcpComputePlatform extends Platform {
         Integer actualSize = instanceGroupClient.getInstanceGroup(projectZoneInstanceGroupName).getSize();
         Integer targetSize = instanceGroupManagerClient.getInstanceGroupManager(projectZoneInstanceGroupManagerName)
                                                        .getTargetSize();
-        return targetSize.equals(actualSize);
+        return targetSize.compareTo(actualSize) <= 0;
     }
 
     private boolean isContainerRegionGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
         String group = container.getAggregationIdentifier();
-        if (group.startsWith("project/")) {
-            group = group.substring("project/".length());
+        if (group.startsWith("projects/")) {
+            group = group.substring("projects/".length());
         }
         ProjectRegionInstanceGroupName projectRegionInstanceGroupName = ProjectRegionInstanceGroupName.parse(group);
         ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
@@ -237,6 +237,6 @@ public class GcpComputePlatform extends Platform {
         Integer actualSize = regionInstanceGroupClient.getRegionInstanceGroup(projectRegionInstanceGroupName).getSize();
         Integer targetSize = regionInstanceGroupManagerClient.getRegionInstanceGroupManager(
                 projectRegionInstanceGroupManagerName).getTargetSize();
-        return targetSize.equals(actualSize);
+        return targetSize.compareTo(actualSize) <= 0;
     }
 }
