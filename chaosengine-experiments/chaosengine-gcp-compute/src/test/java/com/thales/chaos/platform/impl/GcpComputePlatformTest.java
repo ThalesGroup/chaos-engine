@@ -358,6 +358,52 @@ public class GcpComputePlatformTest {
         assertTrue(gcpComputePlatform.isContainerGroupAtCapacity(container));
     }
 
+    @Test
+    public void isContainerGroupAtDesiredCapacityWithFullProjectLink () {
+        final String INSTANCE_GROUP = "12345";
+        final String PROJECT = "54321";
+        final String ZONE = "my-datacenter";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withCreatedBy(ProjectZoneInstanceGroupName.of(
+                                                                                   INSTANCE_GROUP,
+                                                                                   PROJECT,
+                                                                                   ZONE).toString())
+                                                                           .build();
+        InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(10).build();
+        InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
+        doReturn(instanceGroup).when(instanceGroupClient)
+                               .getInstanceGroup(ProjectZoneInstanceGroupName.of(INSTANCE_GROUP, PROJECT, ZONE));
+        doReturn(instanceGroupManager).when(instanceGroupManagerClient)
+                                      .getInstanceGroupManager(ProjectZoneInstanceGroupManagerName.of(INSTANCE_GROUP,
+                                              PROJECT,
+                                              ZONE));
+        assertTrue(gcpComputePlatform.isContainerGroupAtCapacity(container));
+    }
+
+    @Test
+    public void isContainerRegionGroupAtDesiredCapacityWithFullProjectLink () {
+        final String INSTANCE_GROUP = "12345";
+        final String PROJECT = "54321";
+        final String ZONE = "my-datacenter";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withCreatedBy(ProjectRegionInstanceGroupName
+                                                                                   .of(INSTANCE_GROUP, PROJECT, ZONE)
+                                                                                   .toString())
+                                                                           .build();
+        InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(10).build();
+        InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
+        doReturn(instanceGroup).when(regionInstanceGroupClient)
+                               .getRegionInstanceGroup(ProjectRegionInstanceGroupName.of(INSTANCE_GROUP,
+                                       PROJECT,
+                                       ZONE));
+        doReturn(instanceGroupManager).when(regionInstanceGroupManagerClient)
+                                      .getRegionInstanceGroupManager(ProjectRegionInstanceGroupManagerName.of(
+                                              INSTANCE_GROUP,
+                                              PROJECT,
+                                              ZONE));
+        assertTrue(gcpComputePlatform.isContainerGroupAtCapacity(container));
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
