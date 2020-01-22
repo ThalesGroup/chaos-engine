@@ -18,7 +18,6 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.cloud.compute.v1.*;
-import com.thales.chaos.constants.DataDogConstants;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
@@ -38,8 +37,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
 import static java.util.Collections.emptyList;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @ConditionalOnProperty("gcp.compute")
@@ -94,8 +95,7 @@ public class GcpComputePlatform extends Platform {
                             .flatMap(Collection::stream)
                             .filter(this::isNotFiltered)
                             .map(this::createContainerFromInstance)
-                            .peek(container -> log.info("Created container {}",
-                                    v(DataDogConstants.DATADOG_CONTAINER_KEY, container)))
+                            .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
                             .collect(Collectors.toList());
     }
 
@@ -175,6 +175,13 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
+    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
+        log.debug("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
+        instanceClient.setTagsInstance(instance, newTags);
+    }
+
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
                                                                           ProjectName projectName) {
         return ProjectZoneInstanceName.newBuilder()
@@ -184,22 +191,27 @@ public class GcpComputePlatform extends Platform {
                                       .build();
     }
 
-    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
+    public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {
+        log.debug("Evaluating tags of {}, expecting {}", v(DATADOG_CONTAINER_KEY, container), expectedTags);
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
-        instanceClient.setTagsInstance(instance, newTags);
+        List<String> actualTags = instanceClient.getInstance(instance).getTags().getItemsList();
+        log.debug("Actual tags are {}", actualTags);
+        actualTags = new ArrayList<>(actualTags);
+        expectedTags = new ArrayList<>(expectedTags);
+        actualTags.sort(Comparator.naturalOrder());
+        expectedTags.sort(Comparator.naturalOrder());
+        return actualTags.equals(expectedTags);
     }
 
     public void startInstance (GcpComputeInstanceContainer container) {
+        log.debug("Starting instance {}", v(DATADOG_CONTAINER_KEY, container));
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.startInstance(instance);
     }
 
     public boolean isContainerGroupAtCapacity (GcpComputeInstanceContainer container) {
-        String group = container.getAggregationIdentifier();
-        if (group.startsWith("projects/")) {
-            group = group.substring("projects/".length());
-        }
+        log.debug("Checking group actual size vs desired size for {}", v(DATADOG_CONTAINER_KEY, container));
+        String group = getContainerGroup(container);
         if (ProjectZoneInstanceGroupName.isParsableFrom(group)) {
             return isContainerZoneGroupAtDesiredCapacity(container);
         } else if (ProjectRegionInstanceGroupName.isParsableFrom(group)) {
@@ -208,11 +220,16 @@ public class GcpComputePlatform extends Platform {
         return false;
     }
 
-    private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
+    private String getContainerGroup (GcpComputeInstanceContainer container) {
         String group = container.getAggregationIdentifier();
         if (group.startsWith("projects/")) {
             group = group.substring("projects/".length());
         }
+        return group;
+    }
+
+    private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
+        String group = getContainerGroup(container);
         ProjectZoneInstanceGroupName projectZoneInstanceGroupName = ProjectZoneInstanceGroupName.parse(group);
         ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.of(
                 projectZoneInstanceGroupName.getInstanceGroup(),
@@ -221,14 +238,12 @@ public class GcpComputePlatform extends Platform {
         Integer actualSize = instanceGroupClient.getInstanceGroup(projectZoneInstanceGroupName).getSize();
         Integer targetSize = instanceGroupManagerClient.getInstanceGroupManager(projectZoneInstanceGroupManagerName)
                                                        .getTargetSize();
+        log.debug("For group {}, {}, {}", group, kv("actualSize", actualSize), kv("targetSize", targetSize));
         return targetSize.compareTo(actualSize) <= 0;
     }
 
     private boolean isContainerRegionGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
-        String group = container.getAggregationIdentifier();
-        if (group.startsWith("projects/")) {
-            group = group.substring("projects/".length());
-        }
+        String group = getContainerGroup(container);
         ProjectRegionInstanceGroupName projectRegionInstanceGroupName = ProjectRegionInstanceGroupName.parse(group);
         ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
                 .of(projectRegionInstanceGroupName.getInstanceGroup(),
@@ -237,6 +252,7 @@ public class GcpComputePlatform extends Platform {
         Integer actualSize = regionInstanceGroupClient.getRegionInstanceGroup(projectRegionInstanceGroupName).getSize();
         Integer targetSize = regionInstanceGroupManagerClient.getRegionInstanceGroupManager(
                 projectRegionInstanceGroupManagerName).getTargetSize();
+        log.debug("For group {}, {}, {}", group, kv("actualSize", actualSize), kv("targetSize", targetSize));
         return targetSize.compareTo(actualSize) <= 0;
     }
 }

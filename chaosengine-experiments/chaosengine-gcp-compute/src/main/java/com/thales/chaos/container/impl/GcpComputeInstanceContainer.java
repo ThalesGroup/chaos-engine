@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.experiment.Experiment;
+import com.thales.chaos.experiment.annotations.ChaosExperiment;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -28,6 +30,7 @@ import com.thales.chaos.platform.impl.GcpComputePlatform;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class GcpComputeInstanceContainer extends Container {
     public static final String DATADOG_IDENTIFIER_KEY = "placeholder";
@@ -56,10 +59,6 @@ public class GcpComputeInstanceContainer extends Container {
 
     public String getInstanceName () {
         return instanceName;
-    }
-
-    public List<String> getFirewallTags () {
-        return firewallTags;
     }
 
     public String getZone () {
@@ -94,6 +93,27 @@ public class GcpComputeInstanceContainer extends Container {
     @Override
     protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
         return uniqueIdentifier != null && uniqueIdentifier.equals(this.uniqueIdentifier);
+    }
+
+    @Override
+    public boolean isCattle () {
+        return createdBy != null;
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK
+                     /* TODO This needs to be a Pet-Only experiment*/)
+    public void removeNetworkTags (Experiment experiment) {
+        List<String> originalTags = List.copyOf(getFirewallTags());
+        final Callable<ContainerHealth> containerHealthCallable = () -> platform.checkTags(this,
+                originalTags) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        final Runnable selfHealingMethod = () -> platform.setTags(this, originalTags);
+        experiment.setCheckContainerHealth(containerHealthCallable);
+        experiment.setSelfHealingMethod(selfHealingMethod);
+        platform.setTags(this, List.of());
+    }
+
+    public List<String> getFirewallTags () {
+        return firewallTags;
     }
 
     public static class GcpComputeInstanceContainerBuilder {
