@@ -36,7 +36,5 @@ public @interface ChaosExperiment {
 
     @NotNull int maximumDurationInSeconds () default 300;
 
-    @NotNull boolean cattleOnly () default false;
-
     @NotNull ExperimentScope experimentScope () default ExperimentScope.MIXED;
 }

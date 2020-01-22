@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -170,8 +170,9 @@ public abstract class Experiment {
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
         Collection<ExperimentMethod<T>> reflectionBasedMethods = getReflectionBasedMethods();
         Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods(specificExperiment != null);
-        Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
-                                                           .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
+        Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(),
+                reflectionBasedMethods.stream())
+                                                           .filter(m -> getContainer().supportsExperimentScope(m.getExperimentScope()))
                                                            .collect(Collectors.toSet());
         if (specificExperiment != null) {
             log.debug("Experiment creation set to require specific experiment of {}", specificExperiment);

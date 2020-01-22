@@ -39,7 +39,6 @@ import static com.thales.chaos.exception.enums.ChaosErrorCode.PLATFORM_DOES_NOT_
 public class ExperimentMethod<T extends Container> implements BiConsumer<T, Experiment> {
     private BiConsumer<T, Experiment> actualBiconsumer;
     private String experimentName;
-    private boolean cattleOnly;
     private ExperimentScope experimentScope;
     private ExperimentType experimentType;
 
@@ -63,7 +62,6 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         };
         experimentMethod.experimentName = method.getName();
         experimentMethod.experimentType = experimentConfiguration.experimentType();
-        experimentMethod.cattleOnly = experimentConfiguration.cattleOnly();
         experimentMethod.experimentScope = experimentConfiguration.experimentScope();
         return experimentMethod;
     }
@@ -90,7 +88,6 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         finalizeMethod = (finalizeCommand == null || finalizeCommand.isBlank()) ? null : () -> container.runCommand(finalizeCommand);
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.experimentType = script.getExperimentType();
-        experimentMethod.cattleOnly = cattle;
         experimentMethod.experimentScope = cattle ? ExperimentScope.CATTLE : ExperimentScope.MIXED;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {
@@ -115,10 +112,6 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
 
     public ExperimentScope getExperimentScope () {
         return experimentScope;
-    }
-
-    public boolean isCattleOnly () {
-        return cattleOnly;
     }
 
     public ExperimentType getExperimentType () {
