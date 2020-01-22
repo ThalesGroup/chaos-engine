@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.scripts.Script;
 import com.thales.chaos.shellclient.ShellOutput;
@@ -39,6 +40,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
     private BiConsumer<T, Experiment> actualBiconsumer;
     private String experimentName;
     private boolean cattleOnly;
+    private ExperimentScope experimentScope;
     private ExperimentType experimentType;
 
     @SuppressWarnings("unchecked")
@@ -62,6 +64,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         experimentMethod.experimentName = method.getName();
         experimentMethod.experimentType = experimentConfiguration.experimentType();
         experimentMethod.cattleOnly = experimentConfiguration.cattleOnly();
+        experimentMethod.experimentScope = experimentConfiguration.experimentScope();
         return experimentMethod;
     }
 
@@ -88,6 +91,7 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
         final ExperimentMethod experimentMethod = new ExperimentMethod();
         experimentMethod.experimentType = script.getExperimentType();
         experimentMethod.cattleOnly = cattle;
+        experimentMethod.experimentScope = cattle ? ExperimentScope.CATTLE : ExperimentScope.MIXED;
         experimentMethod.experimentName = script.getScriptName();
         experimentMethod.actualBiconsumer = (BiConsumer<Container, Experiment>) (container1, experiment) -> {
             experiment.setMaximumDuration(script.getMaximumDuration());
@@ -107,6 +111,10 @@ public class ExperimentMethod<T extends Container> implements BiConsumer<T, Expe
 
     public String getExperimentName () {
         return experimentName;
+    }
+
+    public ExperimentScope getExperimentScope () {
+        return experimentScope;
     }
 
     public boolean isCattleOnly () {
