@@ -25,6 +25,7 @@ import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -197,7 +198,7 @@ public class AwsEC2Container extends AwsContainer {
         // If Ctrl+Alt+Del is disabled in the AMI, then it takes 4 minutes for EC2 to initiate a hard reboot.
     }
 
-    @ChaosExperiment(experimentType = ExperimentType.STATE, cattleOnly = true)
+    @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.CATTLE)
     public void terminateASGContainer (Experiment experiment) {
         if (!isNativeAwsAutoscaling()) {
             log.debug("Instance {} is not part of an autoscaling group, won't terminate it.", v(DataDogConstants.EC2_INSTANCE, instanceId));

@@ -17,6 +17,7 @@
 
 package com.thales.chaos.experiment.annotations;
 
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 
 import javax.validation.constraints.NotNull;
@@ -35,5 +36,5 @@ public @interface ChaosExperiment {
 
     @NotNull int maximumDurationInSeconds () default 300;
 
-    @NotNull boolean cattleOnly () default false;
+    @NotNull ExperimentScope experimentScope () default ExperimentScope.MIXED;
 }

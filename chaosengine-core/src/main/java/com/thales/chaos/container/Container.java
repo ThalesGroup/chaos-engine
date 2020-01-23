@@ -26,6 +26,7 @@ import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.ExperimentalObject;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
@@ -310,5 +311,9 @@ public abstract class Container implements ExperimentalObject {
 
     public void clearExperiment () {
         currentExperiment = null;
+    }
+
+    public boolean supportsExperimentScope (ExperimentScope experimentScope) {
+        return ExperimentScope.MIXED.equals(experimentScope) || (ExperimentScope.CATTLE.equals(experimentScope) && isCattle());
     }
 }

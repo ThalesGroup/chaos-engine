@@ -170,8 +170,9 @@ public abstract class Experiment {
     private <T extends Container> ExperimentMethod<T> chooseExperimentMethodConsumer () {
         Collection<ExperimentMethod<T>> reflectionBasedMethods = getReflectionBasedMethods();
         Collection<ExperimentMethod<T>> scriptBasedMethods = getScriptBasedMethods(specificExperiment != null);
-        Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(), reflectionBasedMethods.stream())
-                                                           .filter(m -> !m.isCattleOnly() || getContainer().isCattle())
+        Collection<ExperimentMethod<T>> allMethods = Stream.concat(scriptBasedMethods.stream(),
+                reflectionBasedMethods.stream())
+                                                           .filter(m -> getContainer().supportsExperimentScope(m.getExperimentScope()))
                                                            .collect(Collectors.toSet());
         if (specificExperiment != null) {
             log.debug("Experiment creation set to require specific experiment of {}", specificExperiment);
