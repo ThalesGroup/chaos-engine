@@ -87,6 +87,7 @@ public class GcpComputePlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
+        log.debug("Generating roster of GCP Compute instances");
         InstanceClient.AggregatedListInstancesPagedResponse instances = instanceClient.aggregatedListInstances(
                 projectName);
         return StreamSupport.stream(instances.iterateAll().spliterator(), false)
@@ -108,7 +109,13 @@ public class GcpComputePlatform extends Platform {
         Collection<Items> excludeFilter = getExcludeFilter();
         boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream().anyMatch(includeFilter::contains);
         boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilter::contains);
-        return hasAllMustIncludes && hasNoMustNotIncludes;
+        final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
+        if (!isNotFiltered) {
+            log.info("Instance filtered because of {}, {}",
+                    kv("includeFilter", hasAllMustIncludes),
+                    kv("excludeFilter", hasNoMustNotIncludes));
+        }
+        return isNotFiltered;
     }
 
     GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
@@ -171,15 +178,9 @@ public class GcpComputePlatform extends Platform {
     }
 
     public void stopInstance (GcpComputeInstanceContainer container) {
+        log.info("Stopping instance {}", v(DATADOG_CONTAINER_KEY, container));
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.stopInstance(instance);
-    }
-
-    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
-        log.debug("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
-        instanceClient.setTagsInstance(instance, newTags);
     }
 
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
@@ -189,6 +190,13 @@ public class GcpComputePlatform extends Platform {
                                       .setZone(container.getZone())
                                       .setProject(projectName.getProject())
                                       .build();
+    }
+
+    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
+        log.info("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
+        instanceClient.setTagsInstance(instance, newTags);
     }
 
     public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {
@@ -204,7 +212,7 @@ public class GcpComputePlatform extends Platform {
     }
 
     public void startInstance (GcpComputeInstanceContainer container) {
-        log.debug("Starting instance {}", v(DATADOG_CONTAINER_KEY, container));
+        log.info("Starting instance {}", v(DATADOG_CONTAINER_KEY, container));
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         instanceClient.startInstance(instance);
     }
