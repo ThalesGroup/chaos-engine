@@ -25,6 +25,7 @@ import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
+import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import java.util.stream.StreamSupport;
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
 import static java.util.Collections.emptyList;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -61,6 +63,8 @@ public class GcpComputePlatform extends Platform {
     @Autowired
     @Qualifier(COMPUTE_PROJECT)
     private ProjectName projectName;
+    @Autowired
+    private GcpComputeSelfAwareness selfAwareness;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
 
@@ -94,10 +98,21 @@ public class GcpComputePlatform extends Platform {
                             .map(InstancesScopedList::getInstancesList)
                             .filter(Objects::nonNull)
                             .flatMap(Collection::stream)
+                            .filter(not(this::isMe))
                             .filter(this::isNotFiltered)
                             .map(this::createContainerFromInstance)
                             .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
                             .collect(Collectors.toList());
+    }
+
+    private boolean isMe (Instance instance) {
+        long id;
+        try {
+            id = Long.parseLong(instance.getId());
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return selfAwareness.isMe(id);
     }
 
     boolean isNotFiltered (Instance instance) {

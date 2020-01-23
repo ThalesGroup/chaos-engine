@@ -21,12 +21,14 @@ import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.platform.enums.PlatformLevel;
+import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GcpComputePlatformTest {
     private static final String MY_AWESOME_PROJECT = "my-awesome-project";
     @MockBean
@@ -52,6 +55,8 @@ public class GcpComputePlatformTest {
     private RegionInstanceGroupClient regionInstanceGroupClient;
     @MockBean
     private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
+    @MockBean
+    private GcpComputeSelfAwareness selfAwareness;
     @Autowired
     private ProjectName projectName;
     @Autowired
@@ -115,6 +120,25 @@ public class GcpComputePlatformTest {
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
         doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
+        verify(gcpComputePlatform).isNotFiltered(instance);
+    }
+
+    @Test
+    public void generateRosterWithChaosEngineHost () {
+        GcpComputeInstanceContainer expected = GcpComputeInstanceContainer.builder()
+                                                                          .withUniqueIdentifier("12345678901234567890")
+                                                                          .build();
+        InstanceClient.AggregatedListInstancesPagedResponse response = mock(InstanceClient.AggregatedListInstancesPagedResponse.class);
+        Instance instance = Instance.newBuilder().setId("12345678901234567890").build();
+        Instance chaosEngineHost = Instance.newBuilder().setId("31415926535897").build();
+        Iterable<InstancesScopedList> iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                                                     .addInstances(instance)
+                                                                                     .addInstances(chaosEngineHost)
+                                                                                     .build());
+        doReturn(iterableInstances).when(response).iterateAll();
+        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        doReturn(true).when(selfAwareness).isMe(31415926535897L);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
         verify(gcpComputePlatform).isNotFiltered(instance);
     }
@@ -430,6 +454,8 @@ public class GcpComputePlatformTest {
         private RegionInstanceGroupClient regionInstanceGroupClient;
         @Autowired
         private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
+        @Autowired
+        private GcpComputeSelfAwareness selfAwareness;
 
         @Bean(name = COMPUTE_PROJECT)
         public ProjectName projectName () {
