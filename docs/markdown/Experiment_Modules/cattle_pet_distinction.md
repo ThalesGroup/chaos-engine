@@ -1,8 +1,15 @@
 # Cattle/Pet Distinction
 
-## Description
+## Definition
+
+There are two inherit types of objects in cloud platforms.
+Pets are objects that were created by hand and are meticulously managed.
+The process for replacing a pet is intensive.
+Conversely, Cattle are objects that are created by some form of automation. 
+It is expected that if a Cattle container is unhealthy, rather than repair, it is replaced. 
 
 Some experiments may be destructive in nature. These experiments should only ever be applied to Cattle, and not to Pets. 
+Conversely, some cloud providers may prevent actions on objects they consider "managed", meaning some experiments can only be done to Pets.
 Both Containers and Experiments need to be appropriately tagged.
 
 ## Defining Containers as Cattle
