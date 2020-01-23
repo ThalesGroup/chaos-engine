@@ -18,13 +18,14 @@ The base Container class has a method called **isCattle()**. The default value f
 
 For example, an EC2 container may evaluate if it is part of an Autoscaling Group, while a Kubernetes Pod Container may evaluate if it is backed by a Replica Set.
 
-## Defining Experiments as Cattle-only
+## Defining Experiment Scopes
 
-Experiments are assumed to be Pet-Friendly unless otherwise specified. There are two ways of denoting experiments to be cattle-only.
+
+Experiments are assumed to be compatible with both ways of running experiments unless otherwise specified. There are two ways of denoting experiment scope.
 
 ### Method-Based Experiments
 
-Experiments defined in the Container classes can be annotated with the annotation **@CattleExperiment** to denote that they are reserved for Cattle.
+Method Based experiments use the **@ChaosExperiment** annotation for discovery. The **experimentScope** field of this annotation controls the targeting criteria.
 
 ### Script-Based Experiments
 
