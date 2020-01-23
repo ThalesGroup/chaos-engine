@@ -2,7 +2,8 @@
 
 ## Description
 
-Some experiments may be destructive in nature. These experiments should only ever be applied to Cattle, and not to Pets. Both Containers and Experiments need to be appropriately tagged.
+Some experiments may be destructive in nature. These experiments should only ever be applied to Cattle, and not to Pets. 
+Both Containers and Experiments need to be appropriately tagged.
 
 ## Defining Containers as Cattle
 
