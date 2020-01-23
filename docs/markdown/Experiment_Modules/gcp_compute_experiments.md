@@ -29,8 +29,24 @@ If credentials are supplied for a specific GCP Module, that module will always u
 
 ## Node Discovery
 
+Nodes are discovered using the [Compute instances.list] API. The results are parsed in all zones and converted into Java objects.
+
 ### Filtering
+
+The GCP Compute platform supports both inclusive and exclusive filtering based on instance metadata key/value pairs.
+If any include-filters are specified, all must exist in the metadata of the instance.
+Similarly, if any exclude-filters are specified, none must exist in the metadata of the instance.
+
+The filter values are case-sensitive.
+
+### Self Awareness
+
+The GCP Compute platform uses the [Google Cloud Instance Metadata Server] to discover its own Google Cloud Resource ID.
+Instances are evaluated against that resource ID and removed from the pool of potential experiments. 
 
 
 
 [GCP Compute SDK for Java]: https://github.com/googleapis/google-cloud-java
+[Google Cloud Instance Metadata Server]: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+
+[Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
