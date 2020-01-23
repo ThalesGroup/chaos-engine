@@ -23,6 +23,7 @@ import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
@@ -100,8 +101,7 @@ public class GcpComputeInstanceContainer extends Container {
         return createdBy != null;
     }
 
-    @ChaosExperiment(experimentType = ExperimentType.NETWORK
-                     /* TODO This needs to be a Pet-Only experiment*/)
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK, experimentScope = ExperimentScope.PET)
     public void removeNetworkTags (Experiment experiment) {
         List<String> originalTags = List.copyOf(getFirewallTags());
         final Callable<ContainerHealth> containerHealthCallable = () -> platform.checkTags(this,
