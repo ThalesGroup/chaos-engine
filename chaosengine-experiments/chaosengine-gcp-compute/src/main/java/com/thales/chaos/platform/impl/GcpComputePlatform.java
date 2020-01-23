@@ -263,4 +263,9 @@ public class GcpComputePlatform extends Platform {
         log.debug("For group {}, {}, {}", group, kv("actualSize", actualSize), kv("targetSize", targetSize));
         return targetSize.compareTo(actualSize) <= 0;
     }
+
+    public void restartContainer (GcpComputeInstanceContainer container) {
+        log.info("Restarting instance {}", v(DATADOG_CONTAINER_KEY, container));
+        instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName));
+    }
 }

@@ -404,6 +404,20 @@ public class GcpComputePlatformTest {
         assertTrue(gcpComputePlatform.isContainerGroupAtCapacity(container));
     }
 
+    @Test
+    public void restartContainer () {
+        String zone = "my-zone";
+        String uniqueIdentifier = "12345678901234567890";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueIdentifier)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        gcpComputePlatform.restartContainer(container);
+        verify(instanceClient).resetInstance(instanceName);
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
