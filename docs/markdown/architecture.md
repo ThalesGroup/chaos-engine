@@ -5,7 +5,7 @@
 |  Language   | Java 11 |
 | Operating System | Cross Platform |
 | Platform | Java Virtual Machine |
-| Frameworks | Spring Framework <br/> Spring Boot 2.1.11.RELEASE |
+| Frameworks | Spring Framework <br/> Spring Boot 2.2.3.RELEASE |
 | Port Requirements | API Interface: 8080  |
 
 
