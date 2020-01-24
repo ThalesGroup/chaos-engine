@@ -20,12 +20,11 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
 
 
 
-### Credential Sharing Across GCP Modules
-
-Enabled GCP Modules can share credentials amongst each other. If the specific module does not have any credentials configured, it will attempt to use credentials from another enabled module.
-If multiple other modules hold credentials, there is no specific preference for which module it will inherit. It is recommended to provide credentials for either all modules, or exactly one module.
-
-If credentials are supplied for a specific GCP Module, that module will always use its specifically configured credentials.
+!!! note "Credential Sharing Across GCP Modules"
+    Enabled GCP Modules can share credentials amongst each other. If the specific module does not have any credentials configured, it will attempt to use credentials from another enabled module.
+    If multiple other modules hold credentials, there is no specific preference for which module it will inherit. It is recommended to provide credentials for either all modules, or exactly one module.
+    
+    If credentials are supplied for a specific GCP Module, that module will always use its specifically configured credentials.
 
 ## Node Discovery
 
