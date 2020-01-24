@@ -12,9 +12,9 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
 
 | Key Name | Description | Default |
 | --- | --- | :---: |
-| `gcp.compute` | The presence of this key enables the module | N/A |
-| `gcp.compute.project-id` | This key controls which GCP Project the module will experiment on | N/A |
-| `gcp.compute.json-key` | This key should be the JSON Key of the Service Account the module is to use | N/A |
+| `gcp.compute` | The presence of this key enables the module. | N/A |
+| `gcp.compute.project-id` | This key controls which GCP Project the module will experiment on. | N/A |
+| `gcp.compute.json-key` | This key should be the JSON Key of the Service Account the module is to use. | N/A |
 | `gcp.compute.include-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A |
 | `gcp.compute.exclude-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A |
 
