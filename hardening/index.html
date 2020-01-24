@@ -232,7 +232,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../Experiment_Modules/aws_ec2_experiments/" title="Experiment Modules" class="md-tabs__link">
+        <a href="../Experiment_Modules/" title="Experiment Modules" class="md-tabs__link">
           Experiment Modules
         </a>
       
@@ -438,15 +438,15 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#secure-chaos-engine-rest-api" title="Secure Chaos Engine REST API" class="md-nav__link">
     Secure Chaos Engine REST API
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -693,6 +693,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../Experiment_Modules/" title="Experiment Modules" class="md-nav__link">
+      Experiment Modules
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../Experiment_Modules/aws_ec2_experiments/" title="AWS EC2 Experiments" class="md-nav__link">
       AWS EC2 Experiments
     </a>
@@ -729,18 +741,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../Experiment_Modules/common_experiment_configuration/" title="Common Configuration" class="md-nav__link">
-      Common Configuration
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
       Kubernetes Module
     </a>
@@ -753,8 +753,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../Experiment_Modules/pcf_experiments/" title="Pcf experiments" class="md-nav__link">
-      Pcf experiments
+    <a href="../Experiment_Modules/pcf_experiments/" title="PCF Experiments" class="md-nav__link">
+      PCF Experiments
     </a>
   </li>
 
@@ -1150,15 +1150,15 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#secure-chaos-engine-rest-api" title="Secure Chaos Engine REST API" class="md-nav__link">
     Secure Chaos Engine REST API
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1259,7 +1259,7 @@
                 <h1 id="hardening-guidelines">Hardening Guidelines</h1>
 <h2 id="chaos-engine-framework">Chaos Engine Framework</h2>
 <h3 id="chaos-engine-source-code">Chaos Engine Source Code</h3>
-<p>If you build your own Chaos Engine images make sure that your source code was downloaded from official<a href="https://github.com/gemalto">Gemalto repository in GitHub</a>.</p>
+<p>If you build your own Chaos Engine images make sure that your source code was downloaded from official <a href="https://github.com/gemalto">Gemalto repository in GitHub</a>.</p>
 <h3 id="docker-images">Docker Images</h3>
 <h4 id="docker-registry">Docker registry</h4>
 <p>Official public repository is <a href="https://cloud.docker.com/u/thalesgroup/repository/docker/thalesgroup/chaos-engine">in DockerHub.</a>
@@ -1267,8 +1267,8 @@ There are two important tags:</p>
 <ol>
 <li>
 <ol>
-<li>master – containing latest stable release of the framework</li>
-<li>develop– representing latest development snapshot</li>
+<li>stable – containing latest stable release of the framework</li>
+<li>latest – representing latest development snapshot</li>
 </ol>
 </li>
 </ol>
@@ -1284,7 +1284,7 @@ There are two important tags:</p>
 </li>
 </ol>
 <p>Verify that the HTTPS scheme is used for communication with Vault. Environment variable <em>VAULT_SCHEME</em> must be set to <em>HTTPS</em> or left empty.</p>
-<h2 id="secure-chaos-engine-rest-api">Secure Chaos Engine REST API</h2>
+<h3 id="secure-chaos-engine-rest-api">Secure Chaos Engine REST API</h3>
 <p><a href="../Configuration/security/">Follow REST Security documentation</a></p>
 <h2 id="vault">Vault</h2>
 <p>Apply following rules:</p>
