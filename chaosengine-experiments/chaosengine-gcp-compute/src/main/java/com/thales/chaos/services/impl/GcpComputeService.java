@@ -148,6 +148,24 @@ public class GcpComputeService implements CloudService {
         return RegionInstanceGroupManagerSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
     }
 
+    @Bean
+    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public ZoneOperationSettings zoneOperationSettings (
+            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials googleCredentials) throws IOException {
+        return ZoneOperationSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    public ZoneOperationSettings zoneOperationSettingsUsingCommonCredentials (GoogleCredentials googleCredentials) throws IOException {
+        return ZoneOperationSettings.newBuilder().setCredentialsProvider(() -> googleCredentials).build();
+    }
+
+    @Bean
+    public ZoneOperationClient zoneOperationClient (ZoneOperationSettings zoneOperationSettings) throws IOException {
+        return ZoneOperationClient.create(zoneOperationSettings);
+    }
+
     @Bean(COMPUTE_CREDENTIALS)
     @JsonIgnore
     public GoogleCredentials googleCredentials () throws IOException {

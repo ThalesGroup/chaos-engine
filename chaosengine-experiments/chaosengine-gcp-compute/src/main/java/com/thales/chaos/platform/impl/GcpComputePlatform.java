@@ -61,6 +61,8 @@ public class GcpComputePlatform extends Platform {
     @Autowired
     private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
     @Autowired
+    private ZoneOperationClient zoneOperationClient;
+    @Autowired
     @Qualifier(COMPUTE_PROJECT)
     private ProjectName projectName;
     @Autowired

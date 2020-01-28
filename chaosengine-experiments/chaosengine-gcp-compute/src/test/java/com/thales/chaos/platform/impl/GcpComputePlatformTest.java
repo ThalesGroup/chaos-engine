@@ -56,6 +56,8 @@ public class GcpComputePlatformTest {
     @MockBean
     private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
     @MockBean
+    private ZoneOperationClient zoneOperationClient;
+    @MockBean
     private GcpComputeSelfAwareness selfAwareness;
     @Autowired
     private ProjectName projectName;
@@ -454,6 +456,8 @@ public class GcpComputePlatformTest {
         private RegionInstanceGroupClient regionInstanceGroupClient;
         @Autowired
         private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
+        @Autowired
+        private ZoneOperationClient zoneOperationClient;
         @Autowired
         private GcpComputeSelfAwareness selfAwareness;
 
