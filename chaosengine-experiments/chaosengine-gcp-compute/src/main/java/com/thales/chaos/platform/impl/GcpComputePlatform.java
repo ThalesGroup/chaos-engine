@@ -203,13 +203,10 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
-    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
-                                                                          ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder()
-                                      .setInstance(container.getUniqueIdentifier())
-                                      .setZone(container.getZone())
-                                      .setProject(projectName.getProject())
-                                      .build();
+    public String simulateMaintenance (GcpComputeInstanceContainer container) {
+        final Operation operation = instanceClient.simulateMaintenanceEventInstance(
+                getProjectZoneInstanceNameOfContainer(container, projectName));
+        return operation.getSelfLink();
     }
 
     public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
@@ -291,8 +288,7 @@ public class GcpComputePlatform extends Platform {
 
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
                                                                           ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder()
-                                      .setInstance(container.getInstanceName())
+        return ProjectZoneInstanceName.newBuilder().setInstance(container.getUniqueIdentifier())
                                       .setZone(container.getZone())
                                       .setProject(projectName.getProject())
                                       .build();
