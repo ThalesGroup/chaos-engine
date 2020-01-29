@@ -140,6 +140,9 @@ public class GcpComputePlatform extends Platform {
         String name = instance.getName();
         Tags tags = instance.getTags();
         String zone = instance.getZone();
+        if (zone != null && zone.contains("/")) {
+            zone = zone.substring(zone.lastIndexOf('/') + 1);
+        }
         String createdBy = Optional.of(instance)
                                    .map(Instance::getMetadata)
                                    .map(Metadata::getItemsList)
@@ -284,5 +287,22 @@ public class GcpComputePlatform extends Platform {
     public void restartContainer (GcpComputeInstanceContainer container) {
         log.info("Restarting instance {}", v(DATADOG_CONTAINER_KEY, container));
         instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName));
+    }
+
+    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                          ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getInstanceName())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
+    }
+
+    public boolean isOperationComplete (String operationId) {
+        if (operationId.startsWith("https://www.googleapis.com/compute/v1/projects/")) {
+            operationId = operationId.substring("https://www.googleapis.com/compute/v1/projects/".length());
+        }
+        Operation zoneOperation = zoneOperationClient.getZoneOperation(ProjectZoneOperationName.parse(operationId));
+        return zoneOperation.getProgress() >= 100;
     }
 }

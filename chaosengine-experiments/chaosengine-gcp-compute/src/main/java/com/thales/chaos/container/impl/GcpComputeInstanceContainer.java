@@ -32,6 +32,7 @@ import com.thales.chaos.platform.impl.GcpComputePlatform;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GcpComputeInstanceContainer extends Container {
     public static final String DATADOG_IDENTIFIER_KEY = "placeholder";
@@ -73,7 +74,7 @@ public class GcpComputeInstanceContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-        return null;
+        return ContainerHealth.NORMAL;
     }
 
     @Override
@@ -114,6 +115,15 @@ public class GcpComputeInstanceContainer extends Container {
 
     public List<String> getFirewallTags () {
         return firewallTags;
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.RESOURCE)
+    public void simulateMaintenance (Experiment experiment) {
+        AtomicReference<String> operationId = new AtomicReference<>();
+        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setSelfHealingMethod(() -> {
+        });
+        operationId.set(platform.simulateMaintenance(this));
     }
 
     public static class GcpComputeInstanceContainerBuilder {

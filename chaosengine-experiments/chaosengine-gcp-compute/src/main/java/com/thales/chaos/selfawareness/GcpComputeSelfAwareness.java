@@ -25,9 +25,10 @@ import java.util.Optional;
 @Component
 public class GcpComputeSelfAwareness {
     private Long instanceId;
+    private boolean initialized = false;
 
     public synchronized boolean isMe (Number otherInstanceId) {
-        if (instanceId == null) {
+        if (!initialized) {
             init();
         }
         return Optional.ofNullable(instanceId).map(otherInstanceId::equals).orElse(false);
@@ -35,6 +36,14 @@ public class GcpComputeSelfAwareness {
 
     private void init () {
         if (instanceId != null) return;
-        instanceId = GoogleCloudMetadataUtil.getGoogleCloudInstanceIdentity().getId();
+        try {
+            instanceId = GoogleCloudMetadataUtil.getGoogleCloudInstanceIdentity().getId();
+        } catch (RuntimeException ignored) {
+            /*
+            An exception here just means it's not in GCP
+             */
+        } finally {
+            initialized = true;
+        }
     }
 }
