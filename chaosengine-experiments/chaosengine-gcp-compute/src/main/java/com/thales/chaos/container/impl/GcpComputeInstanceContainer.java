@@ -74,7 +74,7 @@ public class GcpComputeInstanceContainer extends Container {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-        return ContainerHealth.NORMAL;
+        return platform.isContainerRunning(this);
     }
 
     @Override

@@ -17,9 +17,12 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.google.api.gax.rpc.ApiException;
+import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
@@ -203,6 +206,40 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
+    public ContainerHealth isContainerRunning (GcpComputeInstanceContainer gcpComputeInstanceContainer) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(gcpComputeInstanceContainer,
+                projectName);
+        Instance instance;
+        try {
+            instance = instanceClient.getInstance(instanceName);
+        } catch (ApiException e) {
+            return Optional.of(e)
+                           .map(ApiException::getStatusCode)
+                           .map(StatusCode::getCode)
+                           .filter(code -> code == StatusCode.Code.NOT_FOUND)
+                           .map(code -> ContainerHealth.DOES_NOT_EXIST)
+                           .orElse(ContainerHealth.RUNNING_EXPERIMENT);
+        }
+        String status = instance.getStatus();
+        switch (status) {
+            case "RUNNING":
+                return ContainerHealth.NORMAL;
+            case "TERMINATED":
+                return ContainerHealth.DOES_NOT_EXIST;
+            default:
+                return ContainerHealth.RUNNING_EXPERIMENT;
+        }
+    }
+
+    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                          ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getUniqueIdentifier())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
+    }
+
     public String simulateMaintenance (GcpComputeInstanceContainer container) {
         log.info("Simulating Host Maintenance for Google Compute instance {}", v(DATADOG_CONTAINER_KEY, container));
         final Operation operation = instanceClient.simulateMaintenanceEventInstance(
@@ -285,14 +322,6 @@ public class GcpComputePlatform extends Platform {
     public void restartContainer (GcpComputeInstanceContainer container) {
         log.info("Restarting instance {}", v(DATADOG_CONTAINER_KEY, container));
         instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName));
-    }
-
-    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
-                                                                          ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder().setInstance(container.getUniqueIdentifier())
-                                      .setZone(container.getZone())
-                                      .setProject(projectName.getProject())
-                                      .build();
     }
 
     public boolean isOperationComplete (String operationId) {
