@@ -204,6 +204,7 @@ public class GcpComputePlatform extends Platform {
     }
 
     public String simulateMaintenance (GcpComputeInstanceContainer container) {
+        log.info("Simulating Host Maintenance for Google Compute instance {}", v(DATADOG_CONTAINER_KEY, container));
         final Operation operation = instanceClient.simulateMaintenanceEventInstance(
                 getProjectZoneInstanceNameOfContainer(container, projectName));
         return operation.getSelfLink();
@@ -298,6 +299,7 @@ public class GcpComputePlatform extends Platform {
         if (operationId.startsWith("https://www.googleapis.com/compute/v1/projects/")) {
             operationId = operationId.substring("https://www.googleapis.com/compute/v1/projects/".length());
         }
+        log.info("Checking status of Google Compute Operation {}", operationId);
         Operation zoneOperation = zoneOperationClient.getZoneOperation(ProjectZoneOperationName.parse(operationId));
         return zoneOperation.getProgress() >= 100;
     }
