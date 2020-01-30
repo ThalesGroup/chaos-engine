@@ -44,8 +44,32 @@ The GCP Compute platform uses the [Google Cloud Instance Metadata Server] to dis
 Instances are evaluated against that resource ID and removed from the pool of potential experiments. 
 
 
+## Experiment Methods
+
+### Simulate Maintenance Event
+
+Google Cloud Compute regularly performs [Maintenance Events](https://cloud.google.com/compute/docs/instances/setting-instance-scheduling-options#maintenanceevents) on their physical hosts, for operations such as kernel upgrades, or hardware maintenance. When they perform these tasks, they take actions on all Virtual Machines on that host. A Compute Engine VM may be live-migrated to another host, or it may be terminated and recreated (requires configuration). This experiment tests to validate that no unforeseen problems occur as a result of these maintenance events, which may happen at any time. 
+
+#### Mechanism
+
+API: [Compute instances.simulateMaintenanceEvent]
+
+The `simulateMaintenanceEvent` API is called against the Instance UUID. This operation performs the real action of either live-migrating or replacing the VM.
+
+##### Health Check
+
+API: [Compute zoneOperations.get]
+
+The operation status is called and checked. The experiment is considered finished when the operation returns Progress >= 100.
+
+##### Self Healing
+
+Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. 
+
 
 [GCP Compute SDK for Java]: https://github.com/googleapis/google-cloud-java
 [Google Cloud Instance Metadata Server]: https://cloud.google.com/compute/docs/storing-retrieving-metadata
 
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
+[Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
+[Compute zoneOperations.get]: https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get
