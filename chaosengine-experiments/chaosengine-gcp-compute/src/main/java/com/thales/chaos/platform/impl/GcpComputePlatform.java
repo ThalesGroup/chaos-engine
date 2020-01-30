@@ -206,6 +206,15 @@ public class GcpComputePlatform extends Platform {
         instanceClient.stopInstance(instance);
     }
 
+    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
+                                                                          ProjectName projectName) {
+        return ProjectZoneInstanceName.newBuilder()
+                                      .setInstance(container.getUniqueIdentifier())
+                                      .setZone(container.getZone())
+                                      .setProject(projectName.getProject())
+                                      .build();
+    }
+
     public ContainerHealth isContainerRunning (GcpComputeInstanceContainer gcpComputeInstanceContainer) {
         ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(gcpComputeInstanceContainer,
                 projectName);
@@ -213,8 +222,7 @@ public class GcpComputePlatform extends Platform {
         try {
             instance = instanceClient.getInstance(instanceName);
         } catch (ApiException e) {
-            return Optional.of(e)
-                           .map(ApiException::getStatusCode)
+            return Optional.of(e).map(ApiException::getStatusCode)
                            .map(StatusCode::getCode)
                            .filter(code -> code == StatusCode.Code.NOT_FOUND)
                            .map(code -> ContainerHealth.DOES_NOT_EXIST)
@@ -229,15 +237,6 @@ public class GcpComputePlatform extends Platform {
             default:
                 return ContainerHealth.RUNNING_EXPERIMENT;
         }
-    }
-
-    static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
-                                                                          ProjectName projectName) {
-        return ProjectZoneInstanceName.newBuilder()
-                                      .setInstance(container.getUniqueIdentifier())
-                                      .setZone(container.getZone())
-                                      .setProject(projectName.getProject())
-                                      .build();
     }
 
     public String simulateMaintenance (GcpComputeInstanceContainer container) {
