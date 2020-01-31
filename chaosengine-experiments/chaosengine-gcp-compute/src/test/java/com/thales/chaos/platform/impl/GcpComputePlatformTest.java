@@ -444,6 +444,39 @@ public class GcpComputePlatformTest {
         verify(instanceClient).resetInstance(instanceName);
     }
 
+    @Test
+    public void isOperationCompletePartialName () {
+        String project = MY_AWESOME_PROJECT;
+        String zone = "my-datacenter";
+        String operationName = "my-operation";
+        String operationId = String.format("%s/zones/%s/operations/%s", project, zone, operationName);
+        ProjectZoneOperationName projectZoneOperation = ProjectZoneOperationName.of(operationName, project, zone);
+        Operation operation = mock(Operation.class);
+        doReturn(operation).when(zoneOperationClient).getZoneOperation(projectZoneOperation);
+        doReturn(99, 100, 101).when(operation).getProgress();
+        assertFalse(gcpComputePlatform.isOperationComplete(operationId));
+        assertTrue(gcpComputePlatform.isOperationComplete(operationId));
+        assertTrue(gcpComputePlatform.isOperationComplete(operationId));
+    }
+
+    @Test
+    public void isOperationCompleteFullName () {
+        String project = MY_AWESOME_PROJECT;
+        String zone = "my-datacenter";
+        String operationName = "my-operation";
+        String operationId = String.format(ProjectZoneOperationName.SERVICE_ADDRESS + "%s/zones/%s/operations/%s",
+                project,
+                zone,
+                operationName);
+        ProjectZoneOperationName projectZoneOperation = ProjectZoneOperationName.of(operationName, project, zone);
+        Operation operation = mock(Operation.class);
+        doReturn(operation).when(zoneOperationClient).getZoneOperation(projectZoneOperation);
+        doReturn(99, 100, 101).when(operation).getProgress();
+        assertFalse(gcpComputePlatform.isOperationComplete(operationId));
+        assertTrue(gcpComputePlatform.isOperationComplete(operationId));
+        assertTrue(gcpComputePlatform.isOperationComplete(operationId));
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired

@@ -222,7 +222,8 @@ public class GcpComputePlatform extends Platform {
         try {
             instance = instanceClient.getInstance(instanceName);
         } catch (ApiException e) {
-            return Optional.of(e).map(ApiException::getStatusCode)
+            return Optional.of(e)
+                           .map(ApiException::getStatusCode)
                            .map(StatusCode::getCode)
                            .filter(code -> code == StatusCode.Code.NOT_FOUND)
                            .map(code -> ContainerHealth.DOES_NOT_EXIST)
@@ -324,8 +325,8 @@ public class GcpComputePlatform extends Platform {
     }
 
     public boolean isOperationComplete (String operationId) {
-        if (operationId.startsWith("https://www.googleapis.com/compute/v1/projects/")) {
-            operationId = operationId.substring("https://www.googleapis.com/compute/v1/projects/".length());
+        if (operationId.startsWith(ProjectZoneOperationName.SERVICE_ADDRESS)) {
+            operationId = operationId.substring(ProjectZoneOperationName.SERVICE_ADDRESS.length());
         }
         log.info("Checking status of Google Compute Operation {}", operationId);
         Operation zoneOperation = zoneOperationClient.getZoneOperation(ProjectZoneOperationName.parse(operationId));
