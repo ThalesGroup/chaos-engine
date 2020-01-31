@@ -589,6 +589,25 @@ public class GcpComputePlatformTest {
         assertEquals(ContainerHealth.NORMAL, gcpComputePlatform.isContainerRunning(container));
     }
 
+    @Test
+    public void simulateMaintenance () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.newBuilder()
+                                                                      .setProject(MY_AWESOME_PROJECT)
+                                                                      .setZone(zone)
+                                                                      .setInstance(uniqueId)
+                                                                      .build();
+        Operation operation = mock(Operation.class);
+        doReturn(operation).when(instanceClient).simulateMaintenanceEventInstance(instanceName);
+        doReturn("self-link").when(operation).getSelfLink();
+        assertEquals("self-link", gcpComputePlatform.simulateMaintenance(container));
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
