@@ -17,8 +17,11 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.google.api.gax.rpc.ApiException;
+import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
@@ -465,9 +468,7 @@ public class GcpComputePlatformTest {
         String zone = "my-datacenter";
         String operationName = "my-operation";
         String operationId = String.format(ProjectZoneOperationName.SERVICE_ADDRESS + "%s/zones/%s/operations/%s",
-                project,
-                zone,
-                operationName);
+                project, zone, operationName);
         ProjectZoneOperationName projectZoneOperation = ProjectZoneOperationName.of(operationName, project, zone);
         Operation operation = mock(Operation.class);
         doReturn(operation).when(zoneOperationClient).getZoneOperation(projectZoneOperation);
@@ -475,6 +476,117 @@ public class GcpComputePlatformTest {
         assertFalse(gcpComputePlatform.isOperationComplete(operationId));
         assertTrue(gcpComputePlatform.isOperationComplete(operationId));
         assertTrue(gcpComputePlatform.isOperationComplete(operationId));
+    }
+
+    @Test
+    public void isContainerRunningDeleted () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instance = ProjectZoneInstanceName.newBuilder()
+                                                                  .setProject(MY_AWESOME_PROJECT)
+                                                                  .setZone(zone)
+                                                                  .setInstance(uniqueId)
+                                                                  .build();
+        doThrow(new ApiException(new RuntimeException(), new StatusCode() {
+            @Override
+            public Code getCode () {
+                return Code.NOT_FOUND;
+            }
+
+            @Override
+            public Object getTransportCode () {
+                return null;
+            }
+        }, false)).when(instanceClient).getInstance(instance);
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, gcpComputePlatform.isContainerRunning(container));
+    }
+
+    @Test
+    public void isContainerRunningGenericError () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instance = ProjectZoneInstanceName.newBuilder()
+                                                                  .setProject(MY_AWESOME_PROJECT)
+                                                                  .setZone(zone)
+                                                                  .setInstance(uniqueId)
+                                                                  .build();
+        doThrow(new ApiException(new RuntimeException(), new StatusCode() {
+            @Override
+            public Code getCode () {
+                return Code.UNKNOWN;
+            }
+
+            @Override
+            public Object getTransportCode () {
+                return null;
+            }
+        }, false)).when(instanceClient).getInstance(instance);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
+    }
+
+    @Test
+    public void isContainerRunningTerminated () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.newBuilder()
+                                                                      .setProject(MY_AWESOME_PROJECT)
+                                                                      .setZone(zone)
+                                                                      .setInstance(uniqueId)
+                                                                      .build();
+        Instance instance = mock(Instance.class);
+        doReturn("TERMINATED").when(instance).getStatus();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, gcpComputePlatform.isContainerRunning(container));
+    }
+
+    @Test
+    public void isContainerRunningStopped () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.newBuilder()
+                                                                      .setProject(MY_AWESOME_PROJECT)
+                                                                      .setZone(zone)
+                                                                      .setInstance(uniqueId)
+                                                                      .build();
+        Instance instance = mock(Instance.class);
+        doReturn("STOPPED").when(instance).getStatus();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
+    }
+
+    @Test
+    public void isContainerRunningYesItIs () {
+        String zone = "my-zone";
+        String uniqueId = "my-unique-id";
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier(uniqueId)
+                                                                           .withZone(zone)
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.newBuilder()
+                                                                      .setProject(MY_AWESOME_PROJECT)
+                                                                      .setZone(zone)
+                                                                      .setInstance(uniqueId)
+                                                                      .build();
+        Instance instance = mock(Instance.class);
+        doReturn("RUNNING").when(instance).getStatus();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertEquals(ContainerHealth.NORMAL, gcpComputePlatform.isContainerRunning(container));
     }
 
     @Configuration
