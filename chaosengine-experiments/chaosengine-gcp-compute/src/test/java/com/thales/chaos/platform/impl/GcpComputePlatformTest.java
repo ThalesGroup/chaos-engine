@@ -468,7 +468,9 @@ public class GcpComputePlatformTest {
         String zone = "my-datacenter";
         String operationName = "my-operation";
         String operationId = String.format(ProjectZoneOperationName.SERVICE_ADDRESS + "%s/zones/%s/operations/%s",
-                project, zone, operationName);
+                project,
+                zone,
+                operationName);
         ProjectZoneOperationName projectZoneOperation = ProjectZoneOperationName.of(operationName, project, zone);
         Operation operation = mock(Operation.class);
         doReturn(operation).when(zoneOperationClient).getZoneOperation(projectZoneOperation);
