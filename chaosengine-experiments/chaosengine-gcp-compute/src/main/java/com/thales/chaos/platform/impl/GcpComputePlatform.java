@@ -24,6 +24,8 @@ import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
+import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
@@ -275,11 +277,12 @@ public class GcpComputePlatform extends Platform {
     public boolean isContainerGroupAtCapacity (GcpComputeInstanceContainer container) {
         log.debug("Checking group actual size vs desired size for {}", v(DATADOG_CONTAINER_KEY, container));
         String group = getContainerGroup(container);
-        if (ProjectZoneInstanceGroupName.isParsableFrom(group)) {
+        if (ProjectZoneInstanceGroupManagerName.isParsableFrom(group)) {
             return isContainerZoneGroupAtDesiredCapacity(container);
-        } else if (ProjectRegionInstanceGroupName.isParsableFrom(group)) {
+        } else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group)) {
             return isContainerRegionGroupAtDesiredCapacity(container);
         }
+        log.debug("Could not find either a zone or regional group for {}", group);
         return false;
     }
 
@@ -293,11 +296,12 @@ public class GcpComputePlatform extends Platform {
 
     private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
         String group = getContainerGroup(container);
-        ProjectZoneInstanceGroupName projectZoneInstanceGroupName = ProjectZoneInstanceGroupName.parse(group);
-        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.of(
-                projectZoneInstanceGroupName.getInstanceGroup(),
-                projectZoneInstanceGroupName.getProject(),
-                projectZoneInstanceGroupName.getZone());
+        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.parse(
+                group);
+        ProjectZoneInstanceGroupName projectZoneInstanceGroupName = ProjectZoneInstanceGroupName.of(
+                projectZoneInstanceGroupManagerName.getInstanceGroupManager(),
+                projectZoneInstanceGroupManagerName.getProject(),
+                projectZoneInstanceGroupManagerName.getZone());
         Integer actualSize = instanceGroupClient.getInstanceGroup(projectZoneInstanceGroupName).getSize();
         Integer targetSize = instanceGroupManagerClient.getInstanceGroupManager(projectZoneInstanceGroupManagerName)
                                                        .getTargetSize();
@@ -307,11 +311,12 @@ public class GcpComputePlatform extends Platform {
 
     private boolean isContainerRegionGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
         String group = getContainerGroup(container);
-        ProjectRegionInstanceGroupName projectRegionInstanceGroupName = ProjectRegionInstanceGroupName.parse(group);
         ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
-                .of(projectRegionInstanceGroupName.getInstanceGroup(),
-                        projectRegionInstanceGroupName.getProject(),
-                        projectRegionInstanceGroupName.getRegion());
+                .parse(group);
+        ProjectRegionInstanceGroupName projectRegionInstanceGroupName = ProjectRegionInstanceGroupName.of(
+                projectRegionInstanceGroupManagerName.getInstanceGroupManager(),
+                projectRegionInstanceGroupManagerName.getProject(),
+                projectRegionInstanceGroupManagerName.getRegion());
         Integer actualSize = regionInstanceGroupClient.getRegionInstanceGroup(projectRegionInstanceGroupName).getSize();
         Integer targetSize = regionInstanceGroupManagerClient.getRegionInstanceGroupManager(
                 projectRegionInstanceGroupManagerName).getTargetSize();
@@ -325,11 +330,56 @@ public class GcpComputePlatform extends Platform {
     }
 
     public boolean isOperationComplete (String operationId) {
+        if (operationId == null) return false;
         if (operationId.startsWith(ProjectZoneOperationName.SERVICE_ADDRESS)) {
             operationId = operationId.substring(ProjectZoneOperationName.SERVICE_ADDRESS.length());
         }
         log.info("Checking status of Google Compute Operation {}", operationId);
         Operation zoneOperation = zoneOperationClient.getZoneOperation(ProjectZoneOperationName.parse(operationId));
         return zoneOperation.getProgress() >= 100;
+    }
+
+    public String recreateInstanceInInstanceGroup (GcpComputeInstanceContainer container) {
+        String group = getContainerGroup(container);
+        String instanceName = ProjectZoneInstanceName.newBuilder()
+                                                     .setInstance(container.getInstanceName())
+                                                     .setZone(container.getZone())
+                                                     .setProject(projectName.getProject())
+                                                     .build()
+                                                     .toString();
+        if (ProjectZoneInstanceGroupManagerName.isParsableFrom(group))
+            return recreateInstanceInZoneInstanceGroup(instanceName, group);
+        else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group))
+            return recreateInstanceInRegionInstanceGroup(instanceName, group);
+        throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR);
+    }
+
+    private String recreateInstanceInZoneInstanceGroup (String instanceName, String group) {
+        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.parse(
+                group);
+        InstanceGroupManagersRecreateInstancesRequest request;
+        request = InstanceGroupManagersRecreateInstancesRequest.newBuilder().addInstances(instanceName).build();
+        Operation operation = instanceGroupManagerClient.recreateInstancesInstanceGroupManager(
+                projectZoneInstanceGroupManagerName,
+                request);
+        log.debug("Operation to recreate instance created: {}", v("operation", operation));
+        return operation.getSelfLink();
+    }
+
+    private String recreateInstanceInRegionInstanceGroup (String instanceName, String group) {
+        ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
+                .parse(group);
+        RegionInstanceGroupManagersRecreateRequest request;
+        request = RegionInstanceGroupManagersRecreateRequest.newBuilder().addInstances(instanceName).build();
+        Operation operation = regionInstanceGroupManagerClient.recreateInstancesRegionInstanceGroupManager(
+                projectRegionInstanceGroupManagerName,
+                request);
+        log.debug("Operation to recreate instance created: {}", v("operation", operation));
+        return operation.getSelfLink();
+    }
+
+    public String getLatestInstanceId (String instanceName, String zone) {
+        return instanceClient.getInstance(ProjectZoneInstanceName.of(instanceName, projectName.getProject(), zone))
+                             .getId();
     }
 }

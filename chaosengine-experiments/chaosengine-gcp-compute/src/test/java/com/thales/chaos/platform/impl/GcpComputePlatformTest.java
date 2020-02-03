@@ -27,6 +27,7 @@ import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -203,7 +204,7 @@ public class GcpComputePlatformTest {
         ProjectZoneInstanceName expectedInstanceName = ProjectZoneInstanceName.newBuilder()
                                                                               .setZone("my-zone")
                                                                               .setInstance("unique-identifier")
-                                                                              .setProject(projectName.getProject())
+                                                                              .setProject(MY_AWESOME_PROJECT)
                                                                               .build();
         assertEquals(actualInstanceName, expectedInstanceName);
     }
@@ -228,13 +229,14 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectZoneInstanceGroupName.of(
-                                                                                   INSTANCE_GROUP,
-                                                                                   PROJECT,
-                                                                                   ZONE)
+                                                                           .withCreatedBy(
+                                                                                   ProjectZoneInstanceGroupManagerName.of(
+                                                                                           INSTANCE_GROUP,
+                                                                                           PROJECT,
+                                                                                           ZONE)
                                                                                                                       .toString()
                                                                                                                       .substring(
-                                                                                                                              ProjectRegionInstanceGroupName.SERVICE_ADDRESS
+                                                                                                                              ProjectZoneInstanceGroupManagerName.SERVICE_ADDRESS
                                                                                                                                       .length() - "projects/"
                                                                                                                                       .length()))
                                                                            .build();
@@ -282,13 +284,14 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectZoneInstanceGroupName.of(
-                                                                                   INSTANCE_GROUP,
-                                                                                   PROJECT,
-                                                                                   ZONE)
+                                                                           .withCreatedBy(
+                                                                                   ProjectZoneInstanceGroupManagerName.of(
+                                                                                           INSTANCE_GROUP,
+                                                                                           PROJECT,
+                                                                                           ZONE)
                                                                                                                       .toString()
                                                                                                                       .substring(
-                                                                                                                              ProjectRegionInstanceGroupName.SERVICE_ADDRESS
+                                                                                                                              ProjectZoneInstanceGroupManagerName.SERVICE_ADDRESS
                                                                                                                                       .length() - "projects/"
                                                                                                                                       .length()))
                                                                            .build();
@@ -309,13 +312,16 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectRegionInstanceGroupName
-                                                                                   .of(INSTANCE_GROUP, PROJECT, ZONE)
-                                                                                   .toString()
-                                                                                   .substring(
-                                                                                           ProjectRegionInstanceGroupName.SERVICE_ADDRESS
-                                                                                                   .length() - "projects/"
-                                                                                                   .length()))
+                                                                           .withCreatedBy(
+                                                                                   ProjectRegionInstanceGroupManagerName
+                                                                                           .of(INSTANCE_GROUP,
+                                                                                                   PROJECT,
+                                                                                                   ZONE)
+                                                                                           .toString()
+                                                                                           .substring(
+                                                                                                   ProjectRegionInstanceGroupManagerName.SERVICE_ADDRESS
+                                                                                                           .length() - "projects/"
+                                                                                                           .length()))
                                                                            .build();
         InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(10).build();
         InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
@@ -365,13 +371,16 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectRegionInstanceGroupName
-                                                                                   .of(INSTANCE_GROUP, PROJECT, ZONE)
-                                                                                   .toString()
-                                                                                   .substring(
-                                                                                           ProjectRegionInstanceGroupName.SERVICE_ADDRESS
-                                                                                                   .length() - "projects/"
-                                                                                                   .length()))
+                                                                           .withCreatedBy(
+                                                                                   ProjectRegionInstanceGroupManagerName
+                                                                                           .of(INSTANCE_GROUP,
+                                                                                                   PROJECT,
+                                                                                                   ZONE)
+                                                                                           .toString()
+                                                                                           .substring(
+                                                                                                   ProjectRegionInstanceGroupName.SERVICE_ADDRESS
+                                                                                                           .length() - "projects/"
+                                                                                                           .length()))
                                                                            .build();
         InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(11).build();
         InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
@@ -393,10 +402,11 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectZoneInstanceGroupName.of(
-                                                                                   INSTANCE_GROUP,
-                                                                                   PROJECT,
-                                                                                   ZONE).toString())
+                                                                           .withCreatedBy(
+                                                                                   ProjectZoneInstanceGroupManagerName.of(
+                                                                                           INSTANCE_GROUP,
+                                                                                           PROJECT,
+                                                                                           ZONE).toString())
                                                                            .build();
         InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(10).build();
         InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
@@ -415,9 +425,12 @@ public class GcpComputePlatformTest {
         final String PROJECT = "54321";
         final String ZONE = "my-datacenter";
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withCreatedBy(ProjectRegionInstanceGroupName
-                                                                                   .of(INSTANCE_GROUP, PROJECT, ZONE)
-                                                                                   .toString())
+                                                                           .withCreatedBy(
+                                                                                   ProjectRegionInstanceGroupManagerName
+                                                                                           .of(INSTANCE_GROUP,
+                                                                                                   PROJECT,
+                                                                                                   ZONE)
+                                                                                           .toString())
                                                                            .build();
         InstanceGroup instanceGroup = InstanceGroup.newBuilder().setSize(10).build();
         InstanceGroupManager instanceGroupManager = InstanceGroupManager.newBuilder().setTargetSize(10).build();
@@ -608,6 +621,76 @@ public class GcpComputePlatformTest {
         doReturn(operation).when(instanceClient).simulateMaintenanceEventInstance(instanceName);
         doReturn("self-link").when(operation).getSelfLink();
         assertEquals("self-link", gcpComputePlatform.simulateMaintenance(container));
+    }
+
+    @Test
+    public void recreateInstanceInRegionalInstanceGroup () {
+        String uuid = "12345678901234567890";
+        String instanceName = "my-awesome-instance";
+        String zone = "my-datacenter";
+        String region = "my-city";
+        String instanceGroup = "my-high-availability-group";
+        ProjectRegionInstanceGroupManagerName groupManagerName = ProjectRegionInstanceGroupManagerName.of(instanceGroup,
+                MY_AWESOME_PROJECT,
+                region);
+        String createdBy = groupManagerName.toString();
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withCreatedBy(createdBy)
+                                                                           .withZone(zone)
+                                                                           .withPlatform(gcpComputePlatform)
+                                                                           .withInstanceName(instanceName)
+                                                                           .withUniqueIdentifier(uuid)
+                                                                           .build();
+        ArgumentCaptor<RegionInstanceGroupManagersRecreateRequest> request = ArgumentCaptor.forClass(
+                RegionInstanceGroupManagersRecreateRequest.class);
+        String operationSelfLink = "my-operation-self-link";
+        Operation operation = Operation.newBuilder().setSelfLink(operationSelfLink).build();
+        doReturn(operation).when(regionInstanceGroupManagerClient)
+                           .recreateInstancesRegionInstanceGroupManager(any(ProjectRegionInstanceGroupManagerName.class),
+                                   request.capture());
+        assertEquals(operationSelfLink, gcpComputePlatform.recreateInstanceInInstanceGroup(container));
+        assertThat(request.getValue().getInstancesList(),
+                containsInAnyOrder(ProjectZoneInstanceName.of(instanceName, MY_AWESOME_PROJECT, zone).toString()));
+    }
+
+    @Test
+    public void recreateInstanceInZoneInstanceGroup () {
+        String uuid = "12345678901234567890";
+        String instanceName = "my-awesome-instance";
+        String zone = "my-datacenter";
+        String instanceGroup = "my-high-availability-group";
+        ProjectZoneInstanceGroupManagerName groupManagerName = ProjectZoneInstanceGroupManagerName.of(instanceGroup,
+                MY_AWESOME_PROJECT,
+                zone);
+        String createdBy = groupManagerName.toString();
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withCreatedBy(createdBy)
+                                                                           .withZone(zone)
+                                                                           .withPlatform(gcpComputePlatform)
+                                                                           .withInstanceName(instanceName)
+                                                                           .withUniqueIdentifier(uuid)
+                                                                           .build();
+        ArgumentCaptor<InstanceGroupManagersRecreateInstancesRequest> request = ArgumentCaptor.forClass(
+                InstanceGroupManagersRecreateInstancesRequest.class);
+        String operationSelfLink = "my-operation-self-link";
+        Operation operation = Operation.newBuilder().setSelfLink(operationSelfLink).build();
+        doReturn(operation).when(instanceGroupManagerClient)
+                           .recreateInstancesInstanceGroupManager(any(ProjectZoneInstanceGroupManagerName.class),
+                                   request.capture());
+        assertEquals(operationSelfLink, gcpComputePlatform.recreateInstanceInInstanceGroup(container));
+        assertThat(request.getValue().getInstancesList(),
+                containsInAnyOrder(ProjectZoneInstanceName.of(instanceName, MY_AWESOME_PROJECT, zone).toString()));
+    }
+
+    @Test
+    public void getLatestInstanceId () {
+        String instanceGivenName = "my-instance";
+        String zone = "my-datacenter";
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of(instanceGivenName, MY_AWESOME_PROJECT, zone);
+        String newId = "987654321";
+        Instance instance = Instance.newBuilder().setId(newId).build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        gcpComputePlatform.getLatestInstanceId(instanceGivenName, zone);
     }
 
     @Configuration
