@@ -51,12 +51,19 @@ public class GcpComputeInstanceContainer extends Container {
     @Identifier(order = 2)
     private String zone;
 
+    private GcpComputeInstanceContainer () {
+    }
+
     public static GcpComputeInstanceContainerBuilder builder () {
         return new GcpComputeInstanceContainerBuilder();
     }
 
     public String getUniqueIdentifier () {
         return uniqueIdentifier;
+    }
+
+    void setUniqueIdentifier (String uniqueIdentifier) {
+        this.uniqueIdentifier = uniqueIdentifier;
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE,
@@ -73,6 +80,14 @@ public class GcpComputeInstanceContainer extends Container {
             setUniqueIdentifier(newUUID);
         });
         operationId.set(platform.recreateInstanceInInstanceGroup(this));
+    }
+
+    public String getInstanceName () {
+        return instanceName;
+    }
+
+    public String getZone () {
+        return zone;
     }
 
     @Override
@@ -132,18 +147,6 @@ public class GcpComputeInstanceContainer extends Container {
         experiment.setSelfHealingMethod(() -> {
         });
         operationId.set(platform.simulateMaintenance(this));
-    }
-
-    public String getInstanceName () {
-        return instanceName;
-    }
-
-    public String getZone () {
-        return zone;
-    }
-
-    private void setUniqueIdentifier (String uniqueIdentifier) {
-        this.uniqueIdentifier = uniqueIdentifier;
     }
 
     public static class GcpComputeInstanceContainerBuilder {
