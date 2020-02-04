@@ -1,6 +1,15 @@
 #!/bin/sh
-# Description: Fill 80% of remaining free space in system root partition
-# Dependencies: dd, df, grep, awk
+# Description: Gradualy allocates remaining free space in system root partition
+# Dependencies: dd, df, grep, awk, sleep
 
-FREE_SPACE=$(($(df -amP | grep '/$' | awk '{print $4}') * 80 / 100))
-dd if=/dev/zero of=/burn bs=1M count=$FREE_SPACE
+
+
+FREE_SPACE=$(($(df -amPk | grep '/$' | awk '{print $4}')*1024))
+
+fallocate -l $(($FREE_SPACE*25/100)) /blob
+sleep 60
+fallocate -l $(($FREE_SPACE*50/100)) /blob
+sleep 60
+fallocate -l $(($FREE_SPACE*75/100)) /blob
+sleep 60
+fallocate -l $FREE_SPACE /blob
