@@ -125,7 +125,6 @@ public class GcpComputeInstanceContainer extends Container {
         return createdBy != null;
     }
 
-    @ChaosExperiment(experimentType = ExperimentType.NETWORK, experimentScope = ExperimentScope.PET)
     public void removeNetworkTags (Experiment experiment) {
         List<String> originalTags = List.copyOf(getFirewallTags());
         final Callable<ContainerHealth> containerHealthCallable = () -> platform.checkTags(this,
@@ -147,6 +146,15 @@ public class GcpComputeInstanceContainer extends Container {
         experiment.setSelfHealingMethod(() -> {
         });
         operationId.set(platform.simulateMaintenance(this));
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
+    public void stopInstance (Experiment experiment) {
+        AtomicReference<String> operationId = new AtomicReference<>();
+        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? platform
+                .isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setSelfHealingMethod(() -> platform.startInstance(this));
+        operationId.set(platform.stopInstance(this));
     }
 
     public static class GcpComputeInstanceContainerBuilder {

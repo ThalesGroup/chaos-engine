@@ -202,10 +202,10 @@ public class GcpComputePlatform extends Platform {
         return false;
     }
 
-    public void stopInstance (GcpComputeInstanceContainer container) {
+    public String stopInstance (GcpComputeInstanceContainer container) {
         log.info("Stopping instance {}", v(DATADOG_CONTAINER_KEY, container));
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        instanceClient.stopInstance(instance);
+        return instanceClient.stopInstance(instance).getSelfLink();
     }
 
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
@@ -232,14 +232,7 @@ public class GcpComputePlatform extends Platform {
                            .orElse(ContainerHealth.RUNNING_EXPERIMENT);
         }
         String status = instance.getStatus();
-        switch (status) {
-            case "RUNNING":
-                return ContainerHealth.NORMAL;
-            case "TERMINATED":
-                return ContainerHealth.DOES_NOT_EXIST;
-            default:
-                return ContainerHealth.RUNNING_EXPERIMENT;
-        }
+        return "RUNNING".equals(status) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public String simulateMaintenance (GcpComputeInstanceContainer container) {

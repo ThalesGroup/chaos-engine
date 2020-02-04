@@ -173,8 +173,9 @@ public class GcpComputePlatformTest {
                                                                            .build();
         ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
                 projectName);
-        gcpComputePlatform.stopInstance(container);
-        verify(instanceClient).stopInstance(instanceName);
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        doReturn(operation).when(instanceClient).stopInstance(instanceName);
+        assertEquals("my-operation", gcpComputePlatform.stopInstance(container));
     }
 
     @Test
@@ -563,7 +564,7 @@ public class GcpComputePlatformTest {
         Instance instance = mock(Instance.class);
         doReturn("TERMINATED").when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, gcpComputePlatform.isContainerRunning(container));
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
     }
 
     @Test

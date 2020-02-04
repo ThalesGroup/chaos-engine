@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thales.chaos.container.Container;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exception.enums.ChaosErrorCode;
 import com.thales.chaos.platform.Platform;
@@ -50,9 +51,12 @@ public class ExperimentSuite {
 
     static ExperimentSuite fromExperiments (Platform platform, Collection<Experiment> experiments) {
         Map<String, List<String>> map = experiments.stream()
-                                                   .collect(Collectors.groupingBy(experiment -> experiment.getContainer()
-                                                                                                          .getAggregationIdentifier(), Collectors
-                                                           .mapping(Experiment::getExperimentMethodName, Collectors.toList())));
+                                                   .collect(Collectors.groupingBy(experiment -> Optional.of(experiment)
+                                                                                                        .map(Experiment::getContainer)
+                                                                                                        .map(Container::getAggregationIdentifier)
+                                                                                                        .orElse("ungrouped"),
+                                                           Collectors.mapping(Experiment::getExperimentMethodName,
+                                                                   Collectors.toList())));
         return new ExperimentSuite(platform.getPlatformType(), fromMap(map));
     }
 
