@@ -317,9 +317,10 @@ public class GcpComputePlatform extends Platform {
         return targetSize.compareTo(actualSize) <= 0;
     }
 
-    public void restartContainer (GcpComputeInstanceContainer container) {
+    public String restartContainer (GcpComputeInstanceContainer container) {
         log.info("Restarting instance {}", v(DATADOG_CONTAINER_KEY, container));
-        instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName));
+        return instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName))
+                             .getSelfLink();
     }
 
     public boolean isOperationComplete (String operationId) {

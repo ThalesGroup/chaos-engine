@@ -457,8 +457,9 @@ public class GcpComputePlatformTest {
                                                                            .build();
         ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
                 projectName);
-        gcpComputePlatform.restartContainer(container);
-        verify(instanceClient).resetInstance(instanceName);
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        doReturn(operation).when(instanceClient).resetInstance(instanceName);
+        assertEquals("my-operation", gcpComputePlatform.restartContainer(container));
     }
 
     @Test
