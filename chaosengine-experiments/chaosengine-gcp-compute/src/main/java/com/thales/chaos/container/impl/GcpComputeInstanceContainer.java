@@ -125,7 +125,6 @@ public class GcpComputeInstanceContainer extends Container {
         return createdBy != null;
     }
 
-    @ChaosExperiment(experimentType = ExperimentType.NETWORK, experimentScope = ExperimentScope.PET)
     public void removeNetworkTags (Experiment experiment) {
         List<String> originalTags = List.copyOf(getFirewallTags());
         final Callable<ContainerHealth> containerHealthCallable = () -> platform.checkTags(this,
