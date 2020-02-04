@@ -66,6 +66,28 @@ The operation status is called and checked. The experiment is considered finishe
 
 Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. 
 
+### Stop Instance
+
+Instances that are not part of instance groups can be stopped. A VM can be configured to be automatically restarted if it is in an unexpected stopped state, but this takes time to recognize and accomplish. 
+
+#### Mechanism 
+
+API: [Compute instances.stop]
+
+The `stop` API is called against the instance. 
+
+#### Health Check
+
+API: [Compute zoneOperations.get], [Compute instances.get]
+
+The operation for the `stop` is polled until complete. Then, the instance is specifically called using the `get` API, and the `status` field compared. If the `status` is not "RUNNING", then the experiment is still in progress. If the `get` call returns an HTTP 404, the instance no longer exists and the experiment is considered failed.
+
+#### Self Healing
+
+API: [Compute instances.start]
+
+The `start` API is called to self-heal the instance after the experiment duration.
+
 
 ### Recreate Instance in Instance Group
 
@@ -101,6 +123,8 @@ After the experiment is finished, Chaos Engine will perform a [Compute instances
 [Compute instances.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
 [Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
+[Compute instances.start]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/start
+[Compute instances.stop]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/stop
 [Compute regionInstanceGroup.get]: https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroups/get
 [Compute regionInstanceGroupManager.get]: https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroupManagers/get
 [Compute zoneOperations.get]: https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get
