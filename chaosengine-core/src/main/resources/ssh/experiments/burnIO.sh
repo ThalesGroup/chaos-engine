@@ -1,6 +1,8 @@
 #!/bin/sh
 # Dependencies: dd
 
+TMP_FILESYSTEM=$(df /tmp -T | grep '/$' | awk '{print $2}')
+
 if [ "$TMP_FILESYSTEM" != "tmpfs" ]; then
   FILE_PATH=/tmp/blob
 else
