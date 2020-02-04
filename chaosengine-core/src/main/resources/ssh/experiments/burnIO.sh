@@ -1,7 +1,7 @@
 #!/bin/sh
 # Dependencies: dd
 
-if [ "$TMP_FILESYSTEM" == "overlay" ]; then
+if [ "$TMP_FILESYSTEM" != "tmpfs" ]; then
   FILE_PATH=/tmp/blob
 else
   FILE_PATH=$HOME/blob
