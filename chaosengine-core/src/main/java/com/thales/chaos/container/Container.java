@@ -314,6 +314,6 @@ public abstract class Container implements ExperimentalObject {
     }
 
     public boolean supportsExperimentScope (ExperimentScope experimentScope) {
-        return ExperimentScope.MIXED.equals(experimentScope) || (ExperimentScope.CATTLE.equals(experimentScope) && isCattle());
+        return ExperimentScope.MIXED.equals(experimentScope) || (ExperimentScope.PET.equals(experimentScope) ^ isCattle());
     }
 }
