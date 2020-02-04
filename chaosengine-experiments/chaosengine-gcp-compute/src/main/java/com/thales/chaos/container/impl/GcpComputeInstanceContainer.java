@@ -149,6 +149,15 @@ public class GcpComputeInstanceContainer extends Container {
         operationId.set(platform.simulateMaintenance(this));
     }
 
+    @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
+    public void stopInstance (Experiment experiment) {
+        AtomicReference<String> operationId = new AtomicReference<>();
+        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? platform
+                .isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setSelfHealingMethod(() -> platform.startInstance(this));
+        operationId.set(platform.stopInstance(this));
+    }
+
     public static class GcpComputeInstanceContainerBuilder {
         private String uniqueIdentifier;
         private String instanceName;
