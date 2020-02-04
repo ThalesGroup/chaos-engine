@@ -67,9 +67,40 @@ The operation status is called and checked. The experiment is considered finishe
 Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. 
 
 
+### Recreate Instance in Instance Group
+
+Recreating an instance that is part of an instance group replaces and reinitializes a VM. This operation is similar to how Google Cloud will heal an instance that is failing health checks. This experiment may find errors in how an instance group behaves when it is below capacity by one instance, or issues with rolling out an old image after an update in [opportunistic mode](https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups#starting_an_opportunistic_or_proactive_update) has started.
+
+#### Mechanism
+
+API: [Compute instanceGroupManagers.recreateInstances]
+
+The `recreateInstances` API is called against the managed instance group, passing the specific instance as a parameter. 
+
+#### Health Check
+
+API: [Compute zoneOperation.get], [Compute instanceGroup.get], [Compute instanceGroupManager.get], [Compute regionInstanceGroup.get], [Compute regionInstanceGroupManager.get]
+
+The operation status is called and checked. If the operation is completed, additionally the instance group size and target size are called via the (region)InstanceGroup and associated Manager API's. If the target and actual size are equal, then the instance group manager has properly resolved the capacity.
+
+#### Self Healing
+
+Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. 
+
+#### Finalization
+
+After the experiment is finished, Chaos Engine will perform a [Compute instances.get] operation against the specific instance name it experimented upon. While most other metadata will remain the same, the new version of the instance will have a new unique identifier that needs to be updated locally for future experiments. 
+
 [GCP Compute SDK for Java]: https://github.com/googleapis/google-cloud-java
 [Google Cloud Instance Metadata Server]: https://cloud.google.com/compute/docs/storing-retrieving-metadata
 
+
+[Compute instanceGroup.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroups/get
+[Compute instanceGroupManager.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroupManagers/get
+[Compute instanceGroupManagers.recreateInstances]: https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroupManagers/recreateInstances
+[Compute instances.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
 [Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
+[Compute regionInstanceGroup.get]: https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroups/get
+[Compute regionInstanceGroupManager.get]: https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroupManagers/get
 [Compute zoneOperations.get]: https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get
