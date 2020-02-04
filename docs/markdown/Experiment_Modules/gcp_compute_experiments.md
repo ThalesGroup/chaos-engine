@@ -88,6 +88,28 @@ API: [Compute instances.start]
 
 The `start` API is called to self-heal the instance after the experiment duration.
 
+### Reset Instance
+
+Instances that are not part of instance groups can be reset. The VM is restarted, and temporarily unavailable. If the startup sequence is extensive, it may result in full application stack issues.
+
+#### Mechanism 
+
+API: [Compute instances.reset]
+
+The `reset` API is called against the instance. 
+
+#### Health Check
+
+API: [Compute zoneOperations.get], [Compute instances.get]
+
+The operation for the `stop` is polled until complete. Then, the instance is specifically called using the `get` API, and the `status` field compared. If the `status` is not "RUNNING", then the experiment is still in progress. If the `get` call returns an HTTP 404, the instance no longer exists and the experiment is considered failed.
+
+#### Self Healing
+
+API: [Compute instances.start]
+
+The `start` API is called to self-heal the instance after the experiment duration.
+
 
 ### Recreate Instance in Instance Group
 
@@ -122,6 +144,7 @@ After the experiment is finished, Chaos Engine will perform a [Compute instances
 [Compute instanceGroupManagers.recreateInstances]: https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroupManagers/recreateInstances
 [Compute instances.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
+[Compute instances.reset]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/reset
 [Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
 [Compute instances.start]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/start
 [Compute instances.stop]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/stop
