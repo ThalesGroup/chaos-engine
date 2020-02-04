@@ -232,14 +232,7 @@ public class GcpComputePlatform extends Platform {
                            .orElse(ContainerHealth.RUNNING_EXPERIMENT);
         }
         String status = instance.getStatus();
-        switch (status) {
-            case "RUNNING":
-                return ContainerHealth.NORMAL;
-            case "TERMINATED":
-                return ContainerHealth.DOES_NOT_EXIST;
-            default:
-                return ContainerHealth.RUNNING_EXPERIMENT;
-        }
+        return "RUNNING".equals(status) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     public String simulateMaintenance (GcpComputeInstanceContainer container) {
