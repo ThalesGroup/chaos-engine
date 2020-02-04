@@ -101,7 +101,7 @@ The `recreateInstances` API is called against the managed instance group, passin
 
 #### Health Check
 
-API: [Compute zoneOperation.get], [Compute instanceGroup.get], [Compute instanceGroupManager.get], [Compute regionInstanceGroup.get], [Compute regionInstanceGroupManager.get]
+API: [Compute zoneOperations.get], [Compute instanceGroup.get], [Compute instanceGroupManager.get], [Compute regionInstanceGroup.get], [Compute regionInstanceGroupManager.get]
 
 The operation status is called and checked. If the operation is completed, additionally the instance group size and target size are called via the (region)InstanceGroup and associated Manager API's. If the target and actual size are equal, then the instance group manager has properly resolved the capacity.
 
