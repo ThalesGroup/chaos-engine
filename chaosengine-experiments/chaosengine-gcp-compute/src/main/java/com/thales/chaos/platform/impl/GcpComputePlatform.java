@@ -202,10 +202,10 @@ public class GcpComputePlatform extends Platform {
         return false;
     }
 
-    public void stopInstance (GcpComputeInstanceContainer container) {
+    public String stopInstance (GcpComputeInstanceContainer container) {
         log.info("Stopping instance {}", v(DATADOG_CONTAINER_KEY, container));
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        instanceClient.stopInstance(instance);
+        return instanceClient.stopInstance(instance).getSelfLink();
     }
 
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
