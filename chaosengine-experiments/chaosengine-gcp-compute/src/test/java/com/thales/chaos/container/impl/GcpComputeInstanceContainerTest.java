@@ -202,4 +202,49 @@ public class GcpComputeInstanceContainerTest {
             assertEquals(containerHealth, experiment.getCheckContainerHealth().call());
         }
     }
+
+    @Test
+    public void resetInstance () {
+        container.resetInstance(experiment);
+        verify(platform).restartContainer(container);
+        verify(experiment).setSelfHealingMethod(any());
+        verify(experiment).setCheckContainerHealth(any());
+    }
+
+    @Test
+    public void resetInstanceSelfHealing () {
+        container.resetInstance(experiment);
+        experiment.getSelfHealingMethod().run();
+        verify(platform).startInstance(container);
+    }
+
+    @Test
+    public void resetInstanceCheckHealthNullOperation () throws Exception {
+        container.resetInstance(experiment);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(platform, never()).isOperationComplete(any());
+    }
+
+    @Test
+    public void resetInstanceCheckHealthIncompleteOperation () throws Exception {
+        String operationId = "my-operation";
+        doReturn(operationId).when(platform).restartContainer(container);
+        doReturn(false).when(platform).isOperationComplete(operationId);
+        container.resetInstance(experiment);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(platform).isOperationComplete(operationId);
+        verify(platform, never()).isContainerRunning(container);
+    }
+
+    @Test
+    public void resetInstanceCheckHealthCompleteOperation () throws Exception {
+        String operationId = "my-operation";
+        for (ContainerHealth containerHealth : ContainerHealth.values()) {
+            doReturn(operationId).when(platform).restartContainer(container);
+            doReturn(true).when(platform).isOperationComplete(operationId);
+            doReturn(containerHealth).when(platform).isContainerRunning(container);
+            container.resetInstance(experiment);
+            assertEquals(containerHealth, experiment.getCheckContainerHealth().call());
+        }
+    }
 }
