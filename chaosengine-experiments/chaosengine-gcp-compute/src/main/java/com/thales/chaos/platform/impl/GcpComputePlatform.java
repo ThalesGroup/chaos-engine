@@ -242,11 +242,11 @@ public class GcpComputePlatform extends Platform {
         return operation.getSelfLink();
     }
 
-    public void setTags (GcpComputeInstanceContainer container, List<String> tags) {
+    public String setTags (GcpComputeInstanceContainer container, List<String> tags) {
         log.info("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         Tags newTags = Tags.newBuilder().addAllItems(tags).build();
-        instanceClient.setTagsInstance(instance, newTags);
+        return instanceClient.setTagsInstance(instance, newTags).getSelfLink();
     }
 
     public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {

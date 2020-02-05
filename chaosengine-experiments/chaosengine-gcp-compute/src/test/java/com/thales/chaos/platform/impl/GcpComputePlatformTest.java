@@ -190,8 +190,9 @@ public class GcpComputePlatformTest {
                 projectName);
         Tags tags = Tags.newBuilder().addItems("my-tag").addItems("my-other-tag").build();
         List<String> tagList = tags.getItemsList();
-        gcpComputePlatform.setTags(container, tagList);
-        verify(instanceClient).setTagsInstance(instanceName, tags);
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        doReturn(operation).when(instanceClient).setTagsInstance(instanceName, tags);
+        assertEquals("my-operation", gcpComputePlatform.setTags(container, tagList));
     }
 
     @Test
