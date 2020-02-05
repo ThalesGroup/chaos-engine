@@ -1,5 +1,5 @@
 #!/bin/sh
-# Dependencies: dd
+# Dependencies: dd, df, grep, awk
 
 TMP_FILESYSTEM=$(df /tmp -T | grep '/$' | awk '{print $2}')
 
