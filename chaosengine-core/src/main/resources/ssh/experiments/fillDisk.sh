@@ -1,5 +1,5 @@
 #!/bin/sh
-# Description: Gradualy allocates remaining free space in system root partition
+# Description: Gradually allocates remaining free space in system root partition
 # Dependencies: dd, df, grep, awk
 
 TMP_FILESYSTEM=$(df /tmp -T | grep '/$' | awk '{print $2}')
