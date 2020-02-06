@@ -92,7 +92,7 @@ public class ExperimentManager {
                     if (threadPool != null) threadPool.shutdown();
                 }
                 if (log.isDebugEnabled()) {
-                    calculateExperimentStats();
+                    printExperimentStats();
                 }
                 allExperiments.removeIf(Experiment::isComplete);
                 if (allExperiments.isEmpty()) {
@@ -111,7 +111,7 @@ public class ExperimentManager {
         this.experimentBackoffPeriod = experimentBackoffPeriod;
     }
 
-    void calculateExperimentStats () {
+    void printExperimentStats () {
         //noinspection PlaceholderCountMatchesArgumentCount
         log.debug("Experiments count by state", v("experimentState", getExperimentCountByState()));
         //noinspection PlaceholderCountMatchesArgumentCount
