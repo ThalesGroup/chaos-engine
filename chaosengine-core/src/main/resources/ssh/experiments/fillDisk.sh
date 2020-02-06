@@ -14,4 +14,4 @@ FREE_SPACE=$(($(df -amPk | grep '/$' | awk '{print $4}') * 1024))
 fallocate -l $(($FREE_SPACE * 99 / 100)) $FILE_PATH
 
 FREE_SPACE=$(($(df -amPk | grep '/$' | awk '{print $4}')))
-dd if=/dev/zero of=${FILE_PATH}2 bs=1K count=$FREE_SPACE
+dd if=/dev/zero of=${FILE_PATH}-filler bs=1K count=$FREE_SPACE
