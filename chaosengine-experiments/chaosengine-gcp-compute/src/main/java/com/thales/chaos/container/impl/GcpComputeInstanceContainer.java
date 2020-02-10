@@ -139,7 +139,7 @@ public class GcpComputeInstanceContainer extends Container {
         return firewallTags;
     }
 
-    @ChaosExperiment(experimentType = ExperimentType.RESOURCE)
+    @ChaosExperiment(experimentType = ExperimentType.RESOURCE, maximumDurationInSeconds = 600)
     public void simulateMaintenance (Experiment experiment) {
         AtomicReference<String> operationId = new AtomicReference<>();
         experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
