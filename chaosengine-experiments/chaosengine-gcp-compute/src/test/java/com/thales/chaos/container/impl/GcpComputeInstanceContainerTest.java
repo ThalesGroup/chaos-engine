@@ -129,6 +129,14 @@ public class GcpComputeInstanceContainerTest {
     }
 
     @Test
+    public void simulateMaintenanceSelfHealing () {
+        container.simulateMaintenance(experiment);
+        reset(platform);
+        experiment.getSelfHealingMethod().run();
+        verifyZeroInteractions(platform);
+    }
+
+    @Test
     public void simulateMaintenanceCheckHealthMethodWithNullOperationId () throws Exception {
         container.simulateMaintenance(experiment);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
