@@ -20,6 +20,7 @@ package com.thales.chaos.platform.impl;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
+import com.google.common.collect.Ordering;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -259,10 +260,8 @@ public class GcpComputePlatform extends Platform {
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
         List<String> actualTags = instanceClient.getInstance(instance).getTags().getItemsList();
         log.debug("Actual tags are {}", actualTags);
-        actualTags = new ArrayList<>(actualTags);
-        expectedTags = new ArrayList<>(expectedTags);
-        actualTags.sort(Comparator.naturalOrder());
-        expectedTags.sort(Comparator.naturalOrder());
+        actualTags = actualTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(actualTags);
+        expectedTags = expectedTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(expectedTags);
         return actualTags.equals(expectedTags);
     }
 
