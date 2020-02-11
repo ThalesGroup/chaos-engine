@@ -735,6 +735,24 @@ public class GcpComputePlatformTest {
         assertEquals(actualTags, expectedTags);
     }
 
+    @Test
+    public void checkTags () {
+        GcpComputeInstanceContainer container;
+        Tags actualTags = Tags.newBuilder().addAllItems(List.of("HTTP", "HTTPS", "SSH")).build();
+        List<String> orderedTags, unorderedTags, differentTags;
+        orderedTags = List.of("HTTP", "HTTPS", "SSH");
+        unorderedTags = List.of("SSH", "HTTPS", "HTTP");
+        differentTags = List.of("RDP", "NTP");
+        String instanceName = "0123456789";
+        String zone = "my-datacenter";
+        container = GcpComputeInstanceContainer.builder().withUniqueIdentifier(instanceName).withZone(zone).build();
+        ProjectZoneInstanceName instance = ProjectZoneInstanceName.of(instanceName, MY_AWESOME_PROJECT, zone);
+        doReturn(Instance.newBuilder().setTags(actualTags).build()).when(instanceClient).getInstance(instance);
+        assertTrue(gcpComputePlatform.checkTags(container, orderedTags));
+        assertTrue(gcpComputePlatform.checkTags(container, unorderedTags));
+        assertFalse(gcpComputePlatform.checkTags(container, differentTags));
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
