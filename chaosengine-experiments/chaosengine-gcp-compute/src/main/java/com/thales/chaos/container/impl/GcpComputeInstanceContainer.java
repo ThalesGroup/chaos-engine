@@ -31,7 +31,6 @@ import com.thales.chaos.platform.impl.GcpComputePlatform;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GcpComputeInstanceContainer extends Container {
@@ -42,8 +41,6 @@ public class GcpComputeInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 1)
     private String instanceName;
-    @JsonProperty
-    private List<String> firewallTags;
     private GcpComputePlatform platform;
     @JsonProperty
     private String createdBy;
@@ -125,24 +122,30 @@ public class GcpComputeInstanceContainer extends Container {
         return createdBy != null;
     }
 
+    @ChaosExperiment(experimentType = ExperimentType.NETWORK, experimentScope = ExperimentScope.PET)
     public void removeNetworkTags (Experiment experiment) {
-        List<String> originalTags = List.copyOf(getFirewallTags());
-        final Callable<ContainerHealth> containerHealthCallable = () -> platform.checkTags(this,
-                originalTags) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
-        final Runnable selfHealingMethod = () -> platform.setTags(this, originalTags);
-        experiment.setCheckContainerHealth(containerHealthCallable);
-        experiment.setSelfHealingMethod(selfHealingMethod);
-        platform.setTags(this, List.of());
+        GcpComputePlatform.Fingerprint<List<String>> listFingerprint = fetchFirewallTags();
+        List<String> originalTags = listFingerprint.get();
+        String oldFingerprint = listFingerprint.getFingerprint();
+        AtomicReference<String> operationId = new AtomicReference<>();
+        experiment.setCheckContainerHealth(() -> isOperationComplete(operationId) && platform.checkTags(this,
+                originalTags) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setSelfHealingMethod(() -> platform.setTags(this, originalTags));
+        operationId.set(platform.setTagsSafe(this, List.of(), oldFingerprint));
     }
 
-    public List<String> getFirewallTags () {
-        return firewallTags;
+    private GcpComputePlatform.Fingerprint<List<String>> fetchFirewallTags () {
+        return platform.getFirewallTags(this);
+    }
+
+    private boolean isOperationComplete (AtomicReference<String> operationId) {
+        return operationId.get() != null && platform.isOperationComplete(operationId.get());
     }
 
     @ChaosExperiment(experimentType = ExperimentType.RESOURCE, maximumDurationInSeconds = 600)
     public void simulateMaintenance (Experiment experiment) {
         AtomicReference<String> operationId = new AtomicReference<>();
-        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setCheckContainerHealth(() -> isOperationComplete(operationId) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
         experiment.setSelfHealingMethod(() -> {
         });
         operationId.set(platform.simulateMaintenance(this));
@@ -151,8 +154,7 @@ public class GcpComputeInstanceContainer extends Container {
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
     public void stopInstance (Experiment experiment) {
         AtomicReference<String> operationId = new AtomicReference<>();
-        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? platform
-                .isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setCheckContainerHealth(() -> isOperationComplete(operationId) ? platform.isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
         experiment.setSelfHealingMethod(() -> platform.startInstance(this));
         operationId.set(platform.stopInstance(this));
     }
@@ -160,8 +162,7 @@ public class GcpComputeInstanceContainer extends Container {
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
     public void resetInstance (Experiment experiment) {
         AtomicReference<String> operationId = new AtomicReference<>();
-        experiment.setCheckContainerHealth(() -> operationId.get() != null && platform.isOperationComplete(operationId.get()) ? platform
-                .isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
+        experiment.setCheckContainerHealth(() -> isOperationComplete(operationId) ? platform.isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
         experiment.setSelfHealingMethod(() -> platform.startInstance(this));
         operationId.set(platform.restartContainer(this));
     }
@@ -169,7 +170,6 @@ public class GcpComputeInstanceContainer extends Container {
     public static class GcpComputeInstanceContainerBuilder {
         private String uniqueIdentifier;
         private String instanceName;
-        private List<String> firewallTags;
         private GcpComputePlatform platform;
         private String createdBy;
         private String zone;
@@ -187,10 +187,6 @@ public class GcpComputeInstanceContainer extends Container {
             return this;
         }
 
-        public GcpComputeInstanceContainerBuilder withFirewallTags (List<String> firewallTags) {
-            this.firewallTags = firewallTags;
-            return this;
-        }
 
         public GcpComputeInstanceContainerBuilder withPlatform (GcpComputePlatform platform) {
             this.platform = platform;
@@ -201,7 +197,6 @@ public class GcpComputeInstanceContainer extends Container {
             GcpComputeInstanceContainer container = new GcpComputeInstanceContainer();
             container.uniqueIdentifier = this.uniqueIdentifier;
             container.instanceName = this.instanceName;
-            container.firewallTags = this.firewallTags;
             container.platform = this.platform;
             container.createdBy = this.createdBy;
             container.zone = this.zone;

@@ -105,7 +105,6 @@ public class GcpComputePlatformTest {
                                     .build();
         GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
                                                                            .withCreatedBy(createdByValue)
-                                                                           .withFirewallTags(List.of(tag1, tag2, tag3))
                                                                            .withPlatform(gcpComputePlatform)
                                                                            .withInstanceName(name)
                                                                            .withUniqueIdentifier(id)
@@ -178,22 +177,6 @@ public class GcpComputePlatformTest {
         assertEquals("my-operation", gcpComputePlatform.stopInstance(container));
     }
 
-    @Test
-    public void setTags () {
-        String zone = "my-zone";
-        String uniqueIdentifier = "12345678901234567890";
-        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
-                                                                           .withUniqueIdentifier(uniqueIdentifier)
-                                                                           .withZone(zone)
-                                                                           .build();
-        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
-                projectName);
-        Tags tags = Tags.newBuilder().addItems("my-tag").addItems("my-other-tag").build();
-        List<String> tagList = tags.getItemsList();
-        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
-        doReturn(operation).when(instanceClient).setTagsInstance(instanceName, tags);
-        assertEquals("my-operation", gcpComputePlatform.setTags(container, tagList));
-    }
 
     @Test
     public void getProjectZoneInstanceName () {
@@ -694,6 +677,62 @@ public class GcpComputePlatformTest {
         Instance instance = Instance.newBuilder().setId(newId).build();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         gcpComputePlatform.getLatestInstanceId(instanceGivenName, zone);
+    }
+
+    @Test
+    public void setTags () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withInstanceName("my-instance")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        List<String> tags = List.of("new-tag");
+        String oldFingerprint = "old-fingerprint";
+        Tags oldTags = Tags.newBuilder().setFingerprint(oldFingerprint).build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        Instance instance = Instance.newBuilder().setTags(oldTags).build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        doReturn("my-operation").when(gcpComputePlatform).setTagsSafe(container, tags, oldFingerprint);
+        assertEquals("my-operation", gcpComputePlatform.setTags(container, tags));
+    }
+
+    @Test
+    public void setTagsSafe () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withInstanceName("my-instance")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        List<String> tags = List.of("new-tag");
+        String oldFingerprint = "old-fingerprint";
+        Tags actualTags = Tags.newBuilder().setFingerprint(oldFingerprint).addAllItems(tags).build();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        doReturn(Operation.newBuilder().setSelfLink("my-operation").build()).when(instanceClient)
+                                                                            .setTagsInstance(instanceName, actualTags);
+        assertEquals("my-operation", gcpComputePlatform.setTagsSafe(container, tags, oldFingerprint));
+    }
+
+    @Test
+    public void getFirewallTags () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .withZone("my-datacenter")
+                                                                           .build();
+        ProjectZoneInstanceName instanceName = GcpComputePlatform.getProjectZoneInstanceNameOfContainer(container,
+                projectName);
+        Tags tags = Tags.newBuilder()
+                        .setFingerprint("tags-fingerprint")
+                        .addAllItems(List.of("HTTP", "HTTPS", "SSH"))
+                        .build();
+        doReturn(Instance.newBuilder().setTags(tags).build()).when(instanceClient).getInstance(instanceName);
+        GcpComputePlatform.Fingerprint<List<String>> expectedTags;
+        GcpComputePlatform.Fingerprint<List<String>> actualTags = gcpComputePlatform.getFirewallTags(container);
+        expectedTags = new GcpComputePlatform.Fingerprint<>("tags-fingerprint", List.of("HTTP", "HTTPS", "SSH"));
+        assertEquals(actualTags, expectedTags);
     }
 
     @Configuration

@@ -143,7 +143,6 @@ public class GcpComputePlatform extends Platform {
     GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
         String id = instance.getId();
         String name = instance.getName();
-        Tags tags = instance.getTags();
         String zone = instance.getZone();
         if (zone != null && zone.contains("/")) {
             zone = zone.substring(zone.lastIndexOf('/') + 1);
@@ -158,7 +157,6 @@ public class GcpComputePlatform extends Platform {
                                    .findFirst()
                                    .orElse(null);
         return GcpComputeInstanceContainer.builder()
-                                          .withFirewallTags(tags != null ? tags.getItemsList() : emptyList())
                                           .withInstanceName(name)
                                           .withUniqueIdentifier(id)
                                           .withPlatform(this)
@@ -245,8 +243,15 @@ public class GcpComputePlatform extends Platform {
     public String setTags (GcpComputeInstanceContainer container, List<String> tags) {
         log.info("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
         ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        Tags newTags = Tags.newBuilder().addAllItems(tags).build();
-        return instanceClient.setTagsInstance(instance, newTags).getSelfLink();
+        String oldFingerprint = instanceClient.getInstance(instance).getTags().getFingerprint();
+        return setTagsSafe(container, tags, oldFingerprint);
+    }
+
+    public String setTagsSafe (GcpComputeInstanceContainer container, List<String> newTags, String oldFingerprint) {
+        Tags tagChangeRequest = Tags.newBuilder().addAllItems(newTags != null ? newTags : Collections.emptyList()).
+                setFingerprint(oldFingerprint).build();
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
+        return instanceClient.setTagsInstance(instance, tagChangeRequest).getSelfLink();
     }
 
     public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {
@@ -375,5 +380,47 @@ public class GcpComputePlatform extends Platform {
     public String getLatestInstanceId (String instanceName, String zone) {
         return instanceClient.getInstance(ProjectZoneInstanceName.of(instanceName, projectName.getProject(), zone))
                              .getId();
+    }
+
+    public Fingerprint<List<String>> getFirewallTags (GcpComputeInstanceContainer container) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Tags tags = instanceClient.getInstance(instanceName).getTags();
+        return fingerprintTags(tags);
+    }
+
+    private static Fingerprint<List<String>> fingerprintTags (Tags tags) {
+        if (tags == null) return null;
+        return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
+    }
+
+    public static class Fingerprint<T> {
+        private String fingerprint;
+        private T object;
+
+        public Fingerprint (String fingerprint, T object) {
+            this.fingerprint = Objects.requireNonNull(fingerprint);
+            this.object = Objects.requireNonNull(object);
+        }
+
+        public T get () {
+            return object;
+        }
+
+        public String getFingerprint () {
+            return fingerprint;
+        }
+
+        @Override
+        public int hashCode () {
+            return Objects.hash(fingerprint, object);
+        }
+
+        @Override
+        public boolean equals (Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Fingerprint<?> that = (Fingerprint<?>) o;
+            return fingerprint.equals(that.fingerprint) && object.equals(that.object);
+        }
     }
 }

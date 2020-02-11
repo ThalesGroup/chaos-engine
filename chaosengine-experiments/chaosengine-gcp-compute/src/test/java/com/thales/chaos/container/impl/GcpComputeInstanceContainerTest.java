@@ -27,8 +27,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.List;
-
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -43,7 +41,6 @@ public class GcpComputeInstanceContainerTest {
     String zone = "my-datacenter";
     String instanceName = "my-apache-server";
     String uniqueIdentifier = "1234567890";
-    List<String> firewallTags = List.of("HTTP", "HTTPS", "SSH");
 
     @Before
     public void setUp () {
@@ -51,7 +48,6 @@ public class GcpComputeInstanceContainerTest {
                                                    .withUniqueIdentifier(uniqueIdentifier)
                                                    .withInstanceName(instanceName)
                                                    .withZone(zone)
-                                                   .withFirewallTags(firewallTags)
                                                    .withCreatedBy(createdBy)
                                                    .withPlatform(platform)
                                                    .build());
