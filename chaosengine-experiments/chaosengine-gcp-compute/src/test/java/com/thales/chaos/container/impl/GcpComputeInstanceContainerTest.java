@@ -27,6 +27,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -250,5 +252,67 @@ public class GcpComputeInstanceContainerTest {
             container.resetInstance(experiment);
             assertEquals(containerHealth, experiment.getCheckContainerHealth().call());
         }
+    }
+
+    @Test
+    public void removeNetworkTagsExperiment () {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        container.removeNetworkTags(experiment);
+        verify(platform).setTagsSafe(container, List.of(), "fingerprint");
+        verify(experiment).setSelfHealingMethod(any());
+        verify(experiment).setCheckContainerHealth(any());
+    }
+
+    @Test
+    public void removeNetworkTagsCheckHealthOperationNotStarted () throws Exception {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        container.removeNetworkTags(experiment);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(platform, never()).isOperationComplete(any());
+    }
+
+    @Test
+    public void removeNetworkTagsCheckHealthOperationIncomplete () throws Exception {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        doReturn("my-operation").when(platform).setTagsSafe(any(), any(), any());
+        container.removeNetworkTags(experiment);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(platform).isOperationComplete("my-operation");
+        verify(platform, never()).checkTags(any(), any());
+    }
+
+    @Test
+    public void removeNetworkTagsCheckHealthOperationCompleteExperimentRunning () throws Exception {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        doReturn("my-operation").when(platform).setTagsSafe(any(), any(), any());
+        doReturn(true).when(platform).isOperationComplete("my-operation");
+        container.removeNetworkTags(experiment);
+        assertEquals(ContainerHealth.RUNNING_EXPERIMENT, experiment.getCheckContainerHealth().call());
+        verify(platform).isOperationComplete("my-operation");
+        verify(platform).checkTags(any(), any());
+    }
+
+    @Test
+    public void removeNetworkTagsCheckHealthOperationCompleteExperimentComplete () throws Exception {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        doReturn("my-operation").when(platform).setTagsSafe(any(), any(), any());
+        doReturn(true).when(platform).isOperationComplete("my-operation");
+        doReturn(true).when(platform).checkTags(container, List.of("old-tag"));
+        container.removeNetworkTags(experiment);
+        assertEquals(ContainerHealth.NORMAL, experiment.getCheckContainerHealth().call());
+    }
+
+    @Test
+    public void removeNetworkTagsSelfHealing () {
+        doReturn(new GcpComputePlatform.Fingerprint<>("fingerprint", List.of("old-tag"))).when(platform)
+                                                                                         .getFirewallTags(container);
+        container.removeNetworkTags(experiment);
+        experiment.getSelfHealingMethod().run();
+        verify(platform).setTags(container, List.of("old-tag"));
     }
 }
