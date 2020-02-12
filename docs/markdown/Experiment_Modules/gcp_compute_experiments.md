@@ -135,6 +135,29 @@ Because this is an entirely cloud managed operation, Self Healing is not possibl
 
 After the experiment is finished, Chaos Engine will perform a [Compute instances.get] operation against the specific instance name it experimented upon. While most other metadata will remain the same, the new version of the instance will have a new unique identifier that needs to be updated locally for future experiments. 
 
+### Remove Firewall Tags from Instance
+
+Removing firewall tags from an instance will block the flow of traffic into the instance. This can simulate a network availability issue for the one specific instance. This experiment is only applicable to instances that are not part of instance groups.
+
+#### Mechanism
+
+API: [Compute instances.get], [Compute instances.setTags]
+
+The latest tags and their fingerprint are fetched using the [Compute instances.get] API. The fingerprint is used along with an empty set of tags in the [Compute instances.setTags] API.
+
+#### Health Check
+
+API: [Compute zoneOperations.get], [Compute instances.get]
+
+The operation status from the original `setTags` operation is checked. If the operation is completed, the instance data is retrieved and the contents of the tags are compared. If the original tags that were fetched during the experiment startup match the current tags, the experiment is considered complete. Tag order is irrelevant in this comparison.
+
+#### Self Healing
+
+API: [Compute instances.get], [Compute instances.setTags]
+
+The new tag fingerprint is retrieved using [Compute instances.get], and the original tags from setup are pushed back using [Compute instances.setTags]. 
+
+
 [GCP Compute SDK for Java]: https://github.com/googleapis/google-cloud-java
 [Google Cloud Instance Metadata Server]: https://cloud.google.com/compute/docs/storing-retrieving-metadata
 
@@ -145,6 +168,7 @@ After the experiment is finished, Chaos Engine will perform a [Compute instances
 [Compute instances.get]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
 [Compute instances.reset]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/reset
+[Compute instances.setTags]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags
 [Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
 [Compute instances.start]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/start
 [Compute instances.stop]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/stop
