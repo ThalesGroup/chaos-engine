@@ -26,6 +26,12 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
     
     If credentials are supplied for a specific GCP Module, that module will always use its specifically configured credentials.
 
+### Required Permissions
+
+Each experiment below lists the specific API calls it makes. These API calls map 1-to-1 with individual IAM permissions. 
+
+If you do not wish to manage maintaining a role for Chaos Engine, the `roles.editor` role can be used instead, but be aware that this role contains many powerful permissions that are unnecessary for the Chaos Engine to operate.
+
 ## Node Discovery
 
 Nodes are discovered using the [Compute instances.list] API. The results are parsed in all zones and converted into Java objects.
