@@ -47,6 +47,11 @@ Please see our [documentation] for configuration instructions.
 
 Chaos Engine is being actively developed, but we welcome public participation. Please note that we have internal processes that may slow down or require alterations to any pull requests. We may also have internal development on similar features. You can contact us for more information.
 
+
+## Demo Video
+
+[![Chaos Engine Introduction](https://img.youtube.com/vi/IX-gNYBLyDM/0.jpg)](https://www.youtube.com/watch?v=IX-gNYBLyDM) 
+
 ## Contact
 
 You can [e-mail us], or find us on [Slack].
