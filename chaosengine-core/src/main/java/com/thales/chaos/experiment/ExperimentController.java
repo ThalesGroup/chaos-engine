@@ -162,14 +162,22 @@ public class ExperimentController {
     }
 
     @Operation(summary = "Get Experiments By State",
-               description = "Returns a list of IDs of all active experiments grouped by experiment state")
+               description = "Returns a list of IDs of all active experiments grouped by experiment state",
+               responses = {
+                       @ApiResponse(description = "List of IDs aggregated by experiment state",
+                                    content = @Content(schema = @Schema(implementation = String.class)))
+               })
     @GetMapping("/stats/groupbystate")
     public Map<ExperimentState, List<String>> getExperimentsByState () {
         return experimentManager.getExperimentsByState();
     }
 
     @Operation(summary = "Count Experiments By State ",
-               description = "Counts all active experiments by experiment state")
+               description = "Counts all active experiments by experiment state",
+               responses = {
+                       @ApiResponse(description = "List of counters",
+                                    content = @Content(schema = @Schema(implementation = String.class)))
+               })
     @GetMapping("/stats/countbystate")
     public Map<ExperimentState, Long> getExperimentCountByState () {
         return experimentManager.getExperimentCountByState();
