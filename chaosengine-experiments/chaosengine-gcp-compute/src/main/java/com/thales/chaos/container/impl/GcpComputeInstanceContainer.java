@@ -31,7 +31,11 @@ import com.thales.chaos.platform.impl.GcpComputePlatform;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
 
 public class GcpComputeInstanceContainer extends Container {
     public static final String DATADOG_IDENTIFIER_KEY = "placeholder";
@@ -104,7 +108,11 @@ public class GcpComputeInstanceContainer extends Container {
 
     @Override
     public String getAggregationIdentifier () {
-        return createdBy;
+        return Stream.of(createdBy, instanceName)
+                     .filter(Objects::nonNull)
+                     .filter(not(String::isBlank))
+                     .findFirst()
+                     .orElse(uniqueIdentifier);
     }
 
     @Override
