@@ -134,7 +134,8 @@ public class GcpComputePlatform extends Platform {
         boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilter::contains);
         final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
         if (!isNotFiltered) {
-            log.info("Instance filtered because of {}, {}",
+            log.info("Instance {} filtered because of {}, {}",
+                    instance.getName(),
                     kv("includeFilter", hasAllMustIncludes),
                     kv("excludeFilter", hasNoMustNotIncludes));
         }
