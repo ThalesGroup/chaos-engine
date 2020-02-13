@@ -7,6 +7,7 @@
     <modules>
         <module>chaosengine-notif-slack</module>
         <module>chaosengine-notif-datadog</module>
+        <module>chaosengine-notif-xmpp</module>
     </modules>
     <packaging>pom</packaging>
 
