@@ -80,6 +80,18 @@ public class GcpSSHKeyMetadata {
         return String.format("%s:ssh-rsa %s %s", username, publicKey, identifier);
     }
 
+    public String getUsername () {
+        return username;
+    }
+
+    public String getPublicKey () {
+        return publicKey;
+    }
+
+    public String getIdentifier () {
+        return identifier;
+    }
+
     @Override
     public int hashCode () {
         return Objects.hash(username, publicKey, identifier);
