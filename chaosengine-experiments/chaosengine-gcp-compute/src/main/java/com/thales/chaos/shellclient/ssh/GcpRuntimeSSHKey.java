@@ -17,10 +17,10 @@
 
 package com.thales.chaos.shellclient.ssh;
 
+import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import static com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_KEY_CREATION_ERROR;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class GcpRuntimeSSHKey extends ChaosSSHCredentials {
@@ -40,8 +41,15 @@ public class GcpRuntimeSSHKey extends ChaosSSHCredentials {
         return sshKeyMetadata;
     }
 
-    @Autowired
-    public void constructKey () throws NoSuchAlgorithmException {
+    public GcpRuntimeSSHKey () {
+        try {
+            constructKey();
+        } catch (NoSuchAlgorithmException e) {
+            throw new ChaosException(GCP_COMPUTE_KEY_CREATION_ERROR, e);
+        }
+    }
+
+    void constructKey () throws NoSuchAlgorithmException {
         KeyPair keyPair = generateKeyPair();
         this.withUsername(CHAOS_USERNAME).withKeyPair(keyPair.getPrivate(), keyPair.getPublic());
         String b64Key = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());

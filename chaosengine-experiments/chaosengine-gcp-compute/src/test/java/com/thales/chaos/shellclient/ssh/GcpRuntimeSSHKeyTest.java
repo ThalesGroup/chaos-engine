@@ -18,13 +18,8 @@
 package com.thales.chaos.shellclient.ssh;
 
 import org.hamcrest.collection.IsMapWithSize;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.security.Key;
 import java.security.PrivateKey;
@@ -38,11 +33,13 @@ import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.spy;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration
 public class GcpRuntimeSSHKeyTest {
-    @Autowired
     private GcpRuntimeSSHKey gcpRuntimeSSHKey;
+
+    @Before
+    public void setUp () {
+        gcpRuntimeSSHKey = spy(new GcpRuntimeSSHKey());
+    }
 
     @Test
     public void fieldNullCheck () {
@@ -90,11 +87,4 @@ public class GcpRuntimeSSHKeyTest {
         assertTrue("KeyPair did not validate challenge/response", signature.verify(signatureBytes));
     }
 
-    @Configuration
-    public static class GcpRuntimeSSHKeyTestConfiguration {
-        @Bean
-        public GcpRuntimeSSHKey gcpRuntimeSSHKey () {
-            return spy(new GcpRuntimeSSHKey());
-        }
-    }
 }

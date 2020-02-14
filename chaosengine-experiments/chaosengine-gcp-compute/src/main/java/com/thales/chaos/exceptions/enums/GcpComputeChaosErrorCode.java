@@ -25,7 +25,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public enum GcpComputeChaosErrorCode implements ErrorCode {
-    GCP_COMPUTE_GENERIC_ERROR(51000);
+    GCP_COMPUTE_GENERIC_ERROR(51000),
+    GCP_COMPUTE_KEY_CREATION_ERROR(55101);
     private final int errorCode;
     private final String shortName;
     private final String message;
