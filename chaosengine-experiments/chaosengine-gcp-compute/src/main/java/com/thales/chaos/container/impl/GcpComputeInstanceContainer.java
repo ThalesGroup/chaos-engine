@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 import static java.util.function.Predicate.not;
 
 public class GcpComputeInstanceContainer extends Container {
-    public static final String DATADOG_IDENTIFIER_KEY = "placeholder";
+    public static final String DATADOG_IDENTIFIER_KEY = "placeholder"; // TODO Better Identifier
     @JsonProperty
     @Identifier(order = 0)
     private String uniqueIdentifier;
@@ -51,7 +51,6 @@ public class GcpComputeInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 2)
     private String zone;
-
     private GcpComputeInstanceContainer () {
     }
 
@@ -194,7 +193,6 @@ public class GcpComputeInstanceContainer extends Container {
             this.instanceName = instanceName;
             return this;
         }
-
 
         public GcpComputeInstanceContainerBuilder withPlatform (GcpComputePlatform platform) {
             this.platform = platform;
