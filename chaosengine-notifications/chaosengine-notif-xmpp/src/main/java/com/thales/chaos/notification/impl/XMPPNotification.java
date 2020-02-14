@@ -86,12 +86,12 @@ public class XMPPNotification implements NotificationMethods {
         log.info("XMPP notification channel created");
     }
 
-    XMPPTCPConnectionConfiguration getConfig () {
-        return configuration;
+    void setAddressBook (XMPPNotificationService.AddressBook addressBook) {
+        this.addressBook = addressBook;
     }
 
     AbstractXMPPConnection getConnection () throws InterruptedException, XMPPException, SmackException, IOException {
-        AbstractXMPPConnection connection = new XMPPTCPConnection(getConfig());
+        AbstractXMPPConnection connection = new XMPPTCPConnection(configuration);
         connection.connect();
         connection.login();
         return connection;

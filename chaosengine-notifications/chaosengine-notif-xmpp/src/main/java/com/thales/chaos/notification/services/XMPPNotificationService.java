@@ -91,7 +91,7 @@ public class XMPPNotificationService {
                                              .build();
     }
 
-    public class AddressBook {
+    public static class AddressBook {
         private Collection<EntityBareJid> recipients;
         private Collection<EntityBareJid> conferenceRooms;
 
