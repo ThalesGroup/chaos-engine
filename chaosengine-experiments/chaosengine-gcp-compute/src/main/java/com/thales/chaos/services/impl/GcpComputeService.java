@@ -23,7 +23,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.services.CloudService;
-import com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -179,8 +178,4 @@ public class GcpComputeService implements CloudService {
         return ProjectName.of(projectId);
     }
 
-    @Bean
-    public GcpRuntimeSSHKey sshKey () {
-        return new GcpRuntimeSSHKey();
-    }
 }
