@@ -61,6 +61,9 @@ public class XMPPNotification implements NotificationMethods {
     static final String COLOR_GREEN = "color: green;";
     static final String COLOR_ORANGE = "color: orange;";
     static final String COLOR_NORMAL = "color: initial;";
+    static final String MESSAGE_HEADER = "Message";
+    static final String INSTANCE_HEADER = "Chaos Engine Instance";
+    static final String EVENT_TIMESTEMP_HEADER = "Timestamp";
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title",
             "message",
@@ -177,6 +180,19 @@ public class XMPPNotification implements NotificationMethods {
         return text;
     }
 
+    Message buildMessage (ChaosNotification notification) {
+        Message msg = new Message();
+        msg.setSubject(notification.getTitle());
+        msg.setBody(notification.getMessage());
+        XHTMLManager.addBody(msg, composeMessageTitle(notification.getTitle()));
+        XHTMLManager.addBody(msg, composeParagraphHeader(MESSAGE_HEADER));
+        XHTMLManager.addBody(msg, composeMessage(notification.getMessage(), notification.getNotificationLevel()));
+        XHTMLManager.addBody(msg, composeParagraphHeader(INSTANCE_HEADER));
+        XHTMLManager.addBody(msg, composeText(HttpUtils.getMachineHostname()));
+        collectExperimentEventFields(notification.asMap(), msg);
+        return msg;
+    }
+
     private void collectExperimentEventFields (Map<String, Object> fieldMap, Message msg) {
         fieldMap.entrySet()
                 .stream()
@@ -192,7 +208,7 @@ public class XMPPNotification implements NotificationMethods {
                 .map(Long.class::cast)
                 .map(Instant::ofEpochMilli)
                 .ifPresent(time -> {
-                    XHTMLManager.addBody(msg, composeParagraphHeader("Timestamp"));
+                    XHTMLManager.addBody(msg, composeParagraphHeader(EVENT_TIMESTEMP_HEADER));
                     XHTMLManager.addBody(msg, composeText(time.toString()));
                 });
         Optional.ofNullable(fieldMap.get("targetContainer"))
@@ -208,19 +224,6 @@ public class XMPPNotification implements NotificationMethods {
                             composeParagraphHeader(StringUtils.convertCamelCaseToSentence(e.getKey())));
                     XHTMLManager.addBody(msg, composeText(e.getValue()));
                 });
-    }
-
-    Message buildMessage (ChaosNotification notification) {
-        Message msg = new Message();
-        msg.setSubject(notification.getTitle());
-        msg.setBody(notification.getMessage());
-        XHTMLManager.addBody(msg, composeMessageTitle(notification.getTitle()));
-        XHTMLManager.addBody(msg, composeParagraphHeader("Message"));
-        XHTMLManager.addBody(msg, composeMessage(notification.getMessage(), notification.getNotificationLevel()));
-        XHTMLManager.addBody(msg, composeParagraphHeader("Chaos Engine Instance"));
-        XHTMLManager.addBody(msg, composeText(HttpUtils.getMachineHostname()));
-        collectExperimentEventFields(notification.asMap(), msg);
-        return msg;
     }
 
     void sendDirectNotifications (Message msg) {
