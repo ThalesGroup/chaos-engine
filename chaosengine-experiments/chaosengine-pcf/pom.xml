@@ -10,8 +10,8 @@
     <artifactId>chaosengine-pcf</artifactId>
 
     <properties>
-        <pcf.sdk.version>4.0.1.RELEASE</pcf.sdk.version>
-        <reactor.core>3.2.12.RELEASE</reactor.core>
+        <pcf.sdk.version>4.3.0.RELEASE</pcf.sdk.version>
+        <reactor.core>3.3.2.RELEASE</reactor.core>
         <reactor.netty>0.7.15.RELEASE</reactor.netty>
     </properties>
 
