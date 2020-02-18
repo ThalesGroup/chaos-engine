@@ -59,3 +59,14 @@ Following tags are assigned to each event:
 | --- | --- |
 | GOOD | ![Good Message](../../images/datadog/events/dd_message_good.jpg) |
 | WARN | ![Warn Message](../../images/datadog/events/dd_message_warn.jpg) |
+
+## Configuration
+
+All DataDog related configuration variables have `datadog` prefix.
+DataDog notification channel can be enabled by adding enableEvents property into your environment variables.
+
+| Variable | Description | Value | Default |
+| --- | --- | --- | --- |
+| datadog.enableEvents | Environment variable controlling DD notification module | true / false | false |
+| datadog.statsdHost | Datadog agent host | | datadog |
+| datadog.statsdPort | Datadog agent StatsD Port | | 8125 |
