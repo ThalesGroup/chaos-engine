@@ -806,6 +806,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
       
       
       
@@ -1117,6 +1124,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#configuration" title="Configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
       
       
       
@@ -1290,6 +1304,39 @@ Following tags are assigned to each event:</p>
 <tr>
 <td>WARN</td>
 <td><img alt="Warn Message" src="../../../images/datadog/events/dd_message_warn.jpg" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration">Configuration</h2>
+<p>All DataDog related configuration variables have <code>datadog</code> prefix.
+DataDog notification channel can be enabled by adding enableEvents property into your environment variables.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Value</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>datadog.enableEvents</td>
+<td>Environment variable controlling DD notification module</td>
+<td>true / false</td>
+<td>false</td>
+</tr>
+<tr>
+<td>datadog.statsdHost</td>
+<td>Datadog agent host</td>
+<td></td>
+<td>datadog</td>
+</tr>
+<tr>
+<td>datadog.statsdPort</td>
+<td>Datadog agent StatsD Port</td>
+<td></td>
+<td>8125</td>
 </tr>
 </tbody>
 </table>
