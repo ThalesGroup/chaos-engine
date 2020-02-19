@@ -104,9 +104,12 @@ public class XMPPNotificationTest {
 
     @Test
     public void mapLevelToColor () {
-        assertEquals(XMPPNotification.COLOR_RED, xmppNotification.mapLevelToColor(NotificationLevel.ERROR));
-        assertEquals(XMPPNotification.COLOR_ORANGE, xmppNotification.mapLevelToColor(NotificationLevel.WARN));
-        assertEquals(XMPPNotification.COLOR_GREEN, xmppNotification.mapLevelToColor(NotificationLevel.GOOD));
+        assertEquals(XMPPNotification.ParagraphStyle.NOTIFICATION_MESSAGE_ERROR,
+                xmppNotification.mapLevelToStyle(NotificationLevel.ERROR));
+        assertEquals(XMPPNotification.ParagraphStyle.NOTIFICATION_MESSAGE_WARN,
+                xmppNotification.mapLevelToStyle(NotificationLevel.WARN));
+        assertEquals(XMPPNotification.ParagraphStyle.NOTIFICATION_MESSAGE_GOOD,
+                xmppNotification.mapLevelToStyle(NotificationLevel.GOOD));
     }
 
     @Test

@@ -76,6 +76,21 @@ public class XMPPNotification implements NotificationMethods {
     private final Collection<String> knownContainerFields = Set.of("aggregationIdentifier",
             "simpleName",
             "containerType");
+
+    Message buildMessage (ChaosNotification notification) {
+        Message msg = new Message();
+        msg.setSubject(notification.getTitle());
+        msg.setBody(notification.getMessage());
+        XHTMLManager.addBody(msg, composeParagraph(notification.getTitle(), ParagraphStyle.NOTIFICATION_TITLE));
+        XHTMLManager.addBody(msg, composeParagraph(MESSAGE_HEADER, ParagraphStyle.NOTIFICATION_MESSAGE_HEADER));
+        XHTMLManager.addBody(msg,
+                composeParagraph(notification.getMessage(), mapLevelToStyle(notification.getNotificationLevel())));
+        XHTMLManager.addBody(msg, composeParagraph(INSTANCE_HEADER, ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+        XHTMLManager.addBody(msg, composeParagraph(HttpUtils.getMachineHostname(), ParagraphStyle.NOTIFICATION_FIELD));
+        collectExperimentEventFields(notification.asMap(), msg);
+        return msg;
+    }
+
     @Autowired
     private XMPPTCPConnectionConfiguration configuration;
     @Autowired
@@ -129,68 +144,25 @@ public class XMPPNotification implements NotificationMethods {
         connection.disconnect();
     }
 
-    String mapLevelToColor (NotificationLevel level) {
+    XHTMLText composeParagraph (String text, ParagraphStyle style) {
+        XHTMLText paragraph = new XHTMLText("", "");
+        paragraph.appendBrTag();
+        paragraph.appendOpenParagraphTag(style.getStyling());
+        paragraph.append(text);
+        paragraph.appendCloseParagraphTag();
+        paragraph.appendCloseBodyTag();
+        return paragraph;
+    }
+
+    ParagraphStyle mapLevelToStyle (NotificationLevel level) {
         switch (level) {
             case WARN:
-                return COLOR_ORANGE;
+                return ParagraphStyle.NOTIFICATION_MESSAGE_WARN;
             case ERROR:
-                return COLOR_RED;
+                return ParagraphStyle.NOTIFICATION_MESSAGE_ERROR;
             default:
-                return COLOR_GREEN;
+                return ParagraphStyle.NOTIFICATION_MESSAGE_GOOD;
         }
-    }
-
-    XHTMLText composeMessageTitle (String notificationTitle) {
-        XHTMLText title = new XHTMLText("", "");
-        title.appendBrTag();
-        title.appendOpenParagraphTag(SIZE_NORMAL + WEIGHT_NORMAL + COLOR_BLUE);
-        title.append(notificationTitle);
-        title.appendCloseParagraphTag();
-        title.appendCloseBodyTag();
-        return title;
-    }
-
-    XHTMLText composeMessage (String notificationMessage, NotificationLevel level) {
-        XHTMLText message = new XHTMLText("", "");
-        message.appendBrTag();
-        message.appendOpenParagraphTag(SIZE_SMALLER + WEIGHT_NORMAL + mapLevelToColor(level));
-        message.append(notificationMessage);
-        message.appendCloseParagraphTag();
-        message.appendCloseBodyTag();
-        return message;
-    }
-
-    XHTMLText composeParagraphHeader (String headerName) {
-        XHTMLText paragraphHeader = new XHTMLText("", "");
-        paragraphHeader.appendBrTag();
-        paragraphHeader.appendOpenParagraphTag(SIZE_NORMAL + WEIGHT_BOLD + COLOR_NORMAL);
-        paragraphHeader.append(headerName);
-        paragraphHeader.appendCloseParagraphTag();
-        paragraphHeader.appendCloseBodyTag();
-        return paragraphHeader;
-    }
-
-    XHTMLText composeText (String notificationText) {
-        XHTMLText text = new XHTMLText("", "");
-        text.appendBrTag();
-        text.appendOpenParagraphTag(SIZE_SMALLER + WEIGHT_NORMAL + COLOR_NORMAL);
-        text.append(notificationText);
-        text.appendCloseParagraphTag();
-        text.appendCloseBodyTag();
-        return text;
-    }
-
-    Message buildMessage (ChaosNotification notification) {
-        Message msg = new Message();
-        msg.setSubject(notification.getTitle());
-        msg.setBody(notification.getMessage());
-        XHTMLManager.addBody(msg, composeMessageTitle(notification.getTitle()));
-        XHTMLManager.addBody(msg, composeParagraphHeader(MESSAGE_HEADER));
-        XHTMLManager.addBody(msg, composeMessage(notification.getMessage(), notification.getNotificationLevel()));
-        XHTMLManager.addBody(msg, composeParagraphHeader(INSTANCE_HEADER));
-        XHTMLManager.addBody(msg, composeText(HttpUtils.getMachineHostname()));
-        collectExperimentEventFields(notification.asMap(), msg);
-        return msg;
     }
 
     private void collectExperimentEventFields (Map<String, Object> fieldMap, Message msg) {
@@ -200,16 +172,19 @@ public class XMPPNotification implements NotificationMethods {
                 .filter(e -> e.getKey().startsWith("experiment") && e.getValue() != null)
                 .forEach(e -> {
                     XHTMLManager.addBody(msg,
-                            composeParagraphHeader(StringUtils.convertCamelCaseToSentence(e.getKey())));
-                    XHTMLManager.addBody(msg, composeText(e.getValue().toString()));
+                            composeParagraph(StringUtils.convertCamelCaseToSentence(e.getKey()),
+                                    ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                    XHTMLManager.addBody(msg,
+                            composeParagraph(e.getValue().toString(), ParagraphStyle.NOTIFICATION_FIELD));
                 });
         Optional.ofNullable(fieldMap.get("chaosTime"))
                 .filter(Long.class::isInstance)
                 .map(Long.class::cast)
                 .map(Instant::ofEpochMilli)
                 .ifPresent(time -> {
-                    XHTMLManager.addBody(msg, composeParagraphHeader(EVENT_TIMESTAMP_HEADER));
-                    XHTMLManager.addBody(msg, composeText(time.toString()));
+                    XHTMLManager.addBody(msg,
+                            composeParagraph(EVENT_TIMESTAMP_HEADER, ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                    XHTMLManager.addBody(msg, composeParagraph(time.toString(), ParagraphStyle.NOTIFICATION_FIELD));
                 });
         Optional.ofNullable(fieldMap.get("targetContainer"))
                 .filter(Map.class::isInstance)
@@ -221,9 +196,29 @@ public class XMPPNotification implements NotificationMethods {
                 .filter(entry -> knownContainerFields.contains(entry.getKey()))
                 .forEach(e -> {
                     XHTMLManager.addBody(msg,
-                            composeParagraphHeader(StringUtils.convertCamelCaseToSentence(e.getKey())));
-                    XHTMLManager.addBody(msg, composeText(e.getValue()));
+                            composeParagraph(StringUtils.convertCamelCaseToSentence(e.getKey()),
+                                    ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                    XHTMLManager.addBody(msg, composeParagraph(e.getValue(), ParagraphStyle.NOTIFICATION_FIELD));
                 });
+    }
+
+    enum ParagraphStyle {
+        NOTIFICATION_TITLE(SIZE_NORMAL + WEIGHT_NORMAL + COLOR_BLUE),
+        NOTIFICATION_MESSAGE_HEADER(SIZE_NORMAL + WEIGHT_BOLD + COLOR_NORMAL),
+        NOTIFICATION_MESSAGE_GOOD(SIZE_SMALLER + WEIGHT_NORMAL + COLOR_GREEN),
+        NOTIFICATION_MESSAGE_WARN(SIZE_SMALLER + WEIGHT_NORMAL + COLOR_ORANGE),
+        NOTIFICATION_MESSAGE_ERROR(SIZE_SMALLER + WEIGHT_NORMAL + COLOR_RED),
+        NOTIFICATION_FIELD_HEADER(SIZE_NORMAL + WEIGHT_BOLD + COLOR_NORMAL),
+        NOTIFICATION_FIELD(SIZE_SMALLER + WEIGHT_NORMAL + COLOR_NORMAL);
+        private String styling;
+
+        ParagraphStyle (String styling) {
+            this.styling = styling;
+        }
+
+        public String getStyling () {
+            return styling;
+        }
     }
 
     void sendDirectNotifications (Message msg) {
