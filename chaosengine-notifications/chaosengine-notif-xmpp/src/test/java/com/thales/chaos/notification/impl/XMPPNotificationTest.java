@@ -61,6 +61,12 @@ import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class XMPPNotificationTest {
+    private static final String USER_1 = "user1@localhost";
+    private static final String USER_2 = "user2@localhost";
+    private static final String ROOM_1 = "room@conference.localhost";
+    private static final String ROOM_2 = "room2@conference.localhost";
+    private static final String TITLE = "Title";
+    private static final String MESSAGE = "Lorem Ipsum";
     Container dummyContainer = new Container() {
         @Identifier
         private String name = "dummyContainer";
@@ -82,7 +88,7 @@ public class XMPPNotificationTest {
 
         @Override
         public String getAggregationIdentifier () {
-            return name;
+            return getSimpleName();
         }
 
         @Override
@@ -110,14 +116,14 @@ public class XMPPNotificationTest {
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
         Message msg = new Message();
         doReturn(abstractXMPPConnection).when(xmppNotification).getConnection();
-        xmppNotification.sendDirectMessage(msg, JidCreate.entityBareFrom("test@localhost"));
+        xmppNotification.sendDirectMessage(msg, JidCreate.entityBareFrom(USER_1));
         assertEquals(Message.Type.normal, msg.getType());
         verify(abstractXMPPConnection, times(1)).disconnect();
     }
 
     @Test
     public void getMultiUserChat () throws Exception {
-        EntityBareJid roomName = JidCreate.entityBareFrom("test@localhost");
+        EntityBareJid roomName = JidCreate.entityBareFrom(USER_1);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
         when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
         MultiUserChat multiUserChat = xmppNotification.getMultiUserChat(abstractXMPPConnection, roomName);
@@ -127,7 +133,7 @@ public class XMPPNotificationTest {
     @Test
     public void sendMultiUserMessage () throws Exception {
         Message msg = new Message();
-        EntityBareJid roomName = JidCreate.entityBareFrom("test@localhost");
+        EntityBareJid roomName = JidCreate.entityBareFrom(USER_1);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
         when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
         doReturn(abstractXMPPConnection).when(xmppNotification).getConnection();
@@ -144,11 +150,7 @@ public class XMPPNotificationTest {
 
     @Test
     public void buildMessageChaosMessage () {
-        String title = "Title";
-        String message = "Lorem Ipsum";
-        ChaosNotification messageNotif = ChaosMessage.builder()
-                                                     .withTitle(title)
-                                                     .withMessage(message)
+        ChaosNotification messageNotif = ChaosMessage.builder().withTitle(TITLE).withMessage(MESSAGE)
                                                      .withNotificationLevel(NotificationLevel.GOOD)
                                                      .build();
         Message notification = xmppNotification.buildMessage(messageNotif);
@@ -191,16 +193,14 @@ public class XMPPNotificationTest {
 
     @Test
     public void buildMessageEventMessage () {
-        String title = "Title";
-        String message = "Lorem Ipsum";
         Date date = Date.from(Instant.now());
         String experimentId = randomUUID().toString();
         String experimentMethod = "Restart Container";
         ExperimentType experimentType = ExperimentType.STATE;
         ChaosNotification eventNotif = ChaosExperimentEvent.builder()
                                                            .withChaosTime(date)
-                                                           .withTitle(title)
-                                                           .withMessage(message)
+                                                           .withTitle(TITLE)
+                                                           .withMessage(MESSAGE)
                                                            .withTargetContainer(dummyContainer)
                                                            .withExperimentMethod(experimentMethod)
                                                            .withExperimentType(experimentType)
@@ -243,7 +243,7 @@ public class XMPPNotificationTest {
                         Matchers.containsString(XMPPNotification.SIZE_SMALLER),
                         Matchers.containsString(XMPPNotification.WEIGHT_NORMAL),
                         Matchers.containsString(XMPPNotification.COLOR_NORMAL)));
-        List<String> bodyList = bodies.stream().map(b -> String.valueOf(b)).collect(Collectors.toList());
+        List<String> bodyList = bodies.stream().map(String::valueOf).collect(Collectors.toList());
         List<String> expectedHeaders = List.of("Container Type",
                 "Simple Name",
                 "Experiment Id",
@@ -273,15 +273,13 @@ public class XMPPNotificationTest {
 
     @Test
     public void logNotification () throws Exception {
-        String title = "Title";
-        String message = "Lorem Ipsum";
         ChaosNotification messageNotif = ChaosMessage.builder()
-                                                     .withTitle(title)
-                                                     .withMessage(message)
+                                                     .withTitle(TITLE)
+                                                     .withMessage(MESSAGE)
                                                      .withNotificationLevel(NotificationLevel.GOOD)
                                                      .build();
-        String recipients = "user1@localhost,user2@localhost";
-        String conferenceRooms = "room@conference.localhost,room2@conference.localhost";
+        String recipients = USER_1 + "," + USER_2;
+        String conferenceRooms = ROOM_1 + "," + ROOM_2;
         XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
         when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
@@ -301,15 +299,13 @@ public class XMPPNotificationTest {
 
     @Test
     public void logNotificationError () throws Exception {
-        String title = "Title";
-        String message = "Lorem Ipsum";
         ChaosNotification messageNotif = ChaosMessage.builder()
-                                                     .withTitle(title)
-                                                     .withMessage(message)
+                                                     .withTitle(TITLE)
+                                                     .withMessage(MESSAGE)
                                                      .withNotificationLevel(NotificationLevel.GOOD)
                                                      .build();
-        String recipients = "user1@localhost,user2@localhost";
-        String conferenceRooms = "room@conference.localhost,room2@conference.localhost";
+        String recipients = USER_1 + "," + USER_2;
+        String conferenceRooms = ROOM_1 + "," + ROOM_2;
         XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
         xmppNotification.setAddressBook(book);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
