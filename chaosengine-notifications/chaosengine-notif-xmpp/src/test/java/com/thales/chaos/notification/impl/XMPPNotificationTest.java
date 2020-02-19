@@ -31,9 +31,7 @@ import com.thales.chaos.platform.Platform;
 import com.thales.chaos.util.HttpUtils;
 import org.hamcrest.Matchers;
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.StanzaCollector;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.xhtmlim.XHTMLManager;
 import org.junit.Test;
@@ -42,7 +40,7 @@ import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -59,7 +57,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class XMPPNotificationTest {
     private static final String USER_1 = "user1@localhost";
     private static final String USER_2 = "user2@localhost";
@@ -125,7 +123,6 @@ public class XMPPNotificationTest {
     public void getMultiUserChat () throws Exception {
         EntityBareJid roomName = JidCreate.entityBareFrom(USER_1);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
-        when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
         MultiUserChat multiUserChat = xmppNotification.getMultiUserChat(abstractXMPPConnection, roomName);
         assertThat(roomName, equalTo(multiUserChat.getRoom()));
     }
@@ -135,12 +132,7 @@ public class XMPPNotificationTest {
         Message msg = new Message();
         EntityBareJid roomName = JidCreate.entityBareFrom(USER_1);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
-        when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
         doReturn(abstractXMPPConnection).when(xmppNotification).getConnection();
-        StanzaCollector stanzaCollector = Mockito.mock(StanzaCollector.class);
-        DiscoverInfo stanza = Mockito.mock(DiscoverInfo.class);
-        doReturn(stanzaCollector).when(abstractXMPPConnection).createStanzaCollectorAndSend(any());
-        doReturn(stanza).when(stanzaCollector).nextResultOrThrow();
         MultiUserChat multiUserChat = Mockito.mock(MultiUserChat.class);
         doReturn(multiUserChat).when(xmppNotification).getMultiUserChat(abstractXMPPConnection, roomName);
         xmppNotification.sendMultiUserMessage(msg, JidCreate.entityBareFrom(roomName));
@@ -282,12 +274,7 @@ public class XMPPNotificationTest {
         String conferenceRooms = ROOM_1 + "," + ROOM_2;
         XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
         AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
-        when(abstractXMPPConnection.getReplyTimeout()).thenReturn(1L);
         doReturn(abstractXMPPConnection).when(xmppNotification).getConnection();
-        StanzaCollector stanzaCollector = Mockito.mock(StanzaCollector.class);
-        DiscoverInfo stanza = Mockito.mock(DiscoverInfo.class);
-        doReturn(stanzaCollector).when(abstractXMPPConnection).createStanzaCollectorAndSend(any());
-        doReturn(stanza).when(stanzaCollector).nextResultOrThrow();
         MultiUserChat multiUserChat = Mockito.mock(MultiUserChat.class);
         doReturn(multiUserChat).when(xmppNotification).getMultiUserChat(any(), any());
         xmppNotification.setAddressBook(book);
@@ -308,7 +295,6 @@ public class XMPPNotificationTest {
         String conferenceRooms = ROOM_1 + "," + ROOM_2;
         XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
         xmppNotification.setAddressBook(book);
-        AbstractXMPPConnection abstractXMPPConnection = Mockito.mock(AbstractXMPPConnection.class);
         doThrow(IOException.class).when(xmppNotification).getConnection();
         xmppNotification.logNotification(messageNotif);
         verify(xmppNotification, times(2)).sendDirectMessage(any(), any());
