@@ -63,7 +63,7 @@ public class XMPPNotification implements NotificationMethods {
     static final String COLOR_NORMAL = "color: initial;";
     static final String MESSAGE_HEADER = "Message";
     static final String INSTANCE_HEADER = "Chaos Engine Instance";
-    static final String EVENT_TIMESTEMP_HEADER = "Timestamp";
+    static final String EVENT_TIMESTAMP_HEADER = "Timestamp";
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Collection<String> knownChaosEventFields = List.of("title",
             "message",
