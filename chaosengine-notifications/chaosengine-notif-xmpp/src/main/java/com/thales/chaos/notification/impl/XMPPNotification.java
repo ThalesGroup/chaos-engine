@@ -208,7 +208,7 @@ public class XMPPNotification implements NotificationMethods {
                 .map(Long.class::cast)
                 .map(Instant::ofEpochMilli)
                 .ifPresent(time -> {
-                    XHTMLManager.addBody(msg, composeParagraphHeader(EVENT_TIMESTEMP_HEADER));
+                    XHTMLManager.addBody(msg, composeParagraphHeader(EVENT_TIMESTAMP_HEADER));
                     XHTMLManager.addBody(msg, composeText(time.toString()));
                 });
         Optional.ofNullable(fieldMap.get("targetContainer"))
