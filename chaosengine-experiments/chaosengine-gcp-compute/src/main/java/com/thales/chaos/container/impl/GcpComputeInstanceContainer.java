@@ -28,6 +28,9 @@ import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.GcpComputePlatform;
+import com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey;
+import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
+import com.thales.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -51,6 +54,8 @@ public class GcpComputeInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 2)
     private String zone;
+    private GcpRuntimeSSHKey gcpRuntimeSSHKey;
+
     private GcpComputeInstanceContainer () {
     }
 
@@ -172,6 +177,25 @@ public class GcpComputeInstanceContainer extends Container {
         experiment.setCheckContainerHealth(() -> isOperationComplete(operationId) ? platform.isContainerRunning(this) : ContainerHealth.RUNNING_EXPERIMENT);
         experiment.setSelfHealingMethod(() -> platform.startInstance(this));
         operationId.set(platform.restartContainer(this));
+    }
+
+    public GcpSSHKeyMetadata getGcpSSHKeyMetadata () {
+        return getGcpRuntimeSSHKey().getSshKeyMetadata();
+    }
+
+    private GcpRuntimeSSHKey getGcpRuntimeSSHKey () {
+        return gcpRuntimeSSHKey != null ? gcpRuntimeSSHKey : initGcpRuntimeSSHKey();
+    }
+
+    private synchronized GcpRuntimeSSHKey initGcpRuntimeSSHKey () {
+        if (gcpRuntimeSSHKey == null) {
+            gcpRuntimeSSHKey = new GcpRuntimeSSHKey();
+        }
+        return gcpRuntimeSSHKey;
+    }
+
+    public ChaosSSHCredentials getChaosSSHCredentials () {
+        return getGcpRuntimeSSHKey();
     }
 
     public static class GcpComputeInstanceContainerBuilder {

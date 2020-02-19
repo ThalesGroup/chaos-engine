@@ -23,8 +23,10 @@ import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
+import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +37,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.StopWatch;
 
 import java.util.List;
 import java.util.Map;
@@ -751,6 +754,86 @@ public class GcpComputePlatformTest {
         assertTrue(gcpComputePlatform.checkTags(container, orderedTags));
         assertTrue(gcpComputePlatform.checkTags(container, unorderedTags));
         assertFalse(gcpComputePlatform.checkTags(container, differentTags));
+    }
+
+    @Test
+    public void waitForOperationSuccess () {
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        doReturn(false).doReturn(false).doReturn(true).when(gcpComputePlatform).isOperationComplete("my-operation");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        gcpComputePlatform.waitForOperation(operation);
+        stopWatch.stop();
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.greaterThanOrEqualTo(2000L));
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.lessThanOrEqualTo(3999L));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void waitForOperationInterrupted () throws Exception {
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        Thread mainThread = Thread.currentThread();
+        doReturn(false).doAnswer(invocationOnMock -> {
+            mainThread.interrupt();
+            return null;
+        }).when(gcpComputePlatform).isOperationComplete("my-operation");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        gcpComputePlatform.waitForOperation(operation);
+        stopWatch.stop();
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.greaterThanOrEqualTo(1000L));
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.lessThanOrEqualTo(2999L));
+    }
+
+    @Test
+    public void addSSHKey () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        Metadata existingMetadata = Metadata.getDefaultInstance();
+        ArgumentCaptor<Metadata> metadataCaptor = ArgumentCaptor.forClass(Metadata.class);
+        Instance instance = Instance.newBuilder().setMetadata(existingMetadata).build();
+        Operation operation = mock(Operation.class);
+        ArgumentCaptor<Operation> operationCaptor = ArgumentCaptor.forClass(Operation.class);
+        ProjectZoneInstanceName expectedInstance = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        doReturn(instance).when(instanceClient).getInstance(expectedInstance);
+        doReturn(operation).when(instanceClient).setMetadataInstance(eq(expectedInstance), metadataCaptor.capture());
+        doNothing().when(gcpComputePlatform).waitForOperation(any());
+        gcpComputePlatform.addSSHKey(container);
+        verify(gcpComputePlatform).waitForOperation(operationCaptor.capture());
+        String capturedKey = metadataCaptor.getValue()
+                                           .getItemsList()
+                                           .stream()
+                                           .filter(items -> items.getKey().equals("ssh-keys"))
+                                           .map(Items::getValue)
+                                           .map(String::strip)
+                                           .findFirst()
+                                           .orElseThrow();
+        assertEquals(container.getGcpSSHKeyMetadata().toString(), capturedKey);
+        assertSame(operation, operationCaptor.getValue());
+    }
+
+    @Test
+    public void addSSHKeyAlreadyExists () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        String key = container.getGcpSSHKeyMetadata().toString();
+        Metadata existingMetadata = Metadata.newBuilder()
+                                            .addItems(Items.newBuilder().setKey("ssh-keys").setValue(key).build())
+                                            .build();
+        Instance instance = Instance.newBuilder().setMetadata(existingMetadata).build();
+        ProjectZoneInstanceName expectedInstance = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        doReturn(instance).when(instanceClient).getInstance(expectedInstance);
+        doNothing().when(gcpComputePlatform).waitForOperation(any());
+        gcpComputePlatform.addSSHKey(container);
+        verify(instanceClient, never()).setMetadataInstance(any(ProjectZoneInstanceName.class), any());
+        verify(gcpComputePlatform, never()).waitForOperation(any());
     }
 
     @Configuration

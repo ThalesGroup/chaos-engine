@@ -32,6 +32,7 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -422,5 +426,69 @@ public class GcpComputePlatform extends Platform {
             Fingerprint<?> that = (Fingerprint<?>) o;
             return fingerprint.equals(that.fingerprint) && object.equals(that.object);
         }
+    }
+
+    void addSSHKey (GcpComputeInstanceContainer container) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Metadata existingMetadata = getInstanceMetadata(instanceName);
+        Map<String, String> metadataMap = itemListAsMap(existingMetadata.getItemsList());
+        String sshKeys = metadataMap.get("ssh-keys");
+        // Format keys into objects for comparison and manipulation as a LinkedHashSet
+        // This maintains order but also duplicate detection.
+        Set<GcpSSHKeyMetadata> existingKeys = new LinkedHashSet<>(GcpSSHKeyMetadata.parseMetadata(sshKeys != null ? sshKeys : ""));
+        // If the key already exists, we're done here.
+        if (!existingKeys.add(container.getGcpSSHKeyMetadata())) return;
+        log.info("Key did not exist in container {}, adding new public key to metadata",
+                v(DATADOG_CONTAINER_KEY, container));
+        // Format the list back into a String and put it back into the Metadata Map.
+        metadataMap.put("ssh-keys", GcpSSHKeyMetadata.metadataFormat(existingKeys));
+        Metadata newMetadata = Metadata.newBuilder(existingMetadata).addAllItems(mapAsItemList(metadataMap)).build();
+        Operation operation = instanceClient.setMetadataInstance(instanceName, newMetadata);
+        waitForOperation(operation);
+    }
+
+    private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
+        return instanceClient.getInstance(instanceName).getMetadata();
+    }
+
+    private Map<String, String> itemListAsMap (List<Items> items) {
+        if (items == null) return new HashMap<>();
+        return items.stream().filter(Objects::nonNull).collect(Collectors.toMap(Items::getKey, Items::getValue));
+    }
+
+    private List<Items> mapAsItemList (Map<String, String> items) {
+        return items.entrySet()
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(this::mapEntryAsItem)
+                    .collect(Collectors.toList());
+    }
+
+    void waitForOperation (Operation operation) {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        synchronized (operation) {
+            executor.scheduleWithFixedDelay(() -> {
+                synchronized (operation) {
+                    if (isOperationComplete(operation.getSelfLink())) {
+                        operation.notify();
+                    }
+                }
+            }, 1, 1, TimeUnit.SECONDS);
+            try {
+                // 5 minute timeout since that is our default experiment timeout.
+                operation.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
+
+    private Items mapEntryAsItem (Map.Entry<String, String> item) {
+        String key = item.getKey();
+        String value = item.getValue();
+        return Items.newBuilder().setKey(key).setValue(value).build();
     }
 }

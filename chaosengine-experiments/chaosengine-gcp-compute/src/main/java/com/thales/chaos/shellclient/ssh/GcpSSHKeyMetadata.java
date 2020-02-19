@@ -106,4 +106,9 @@ public class GcpSSHKeyMetadata {
                 identifier,
                 that.identifier);
     }
+
+    @Override
+    public String toString () {
+        return metadataFormat();
+    }
 }
