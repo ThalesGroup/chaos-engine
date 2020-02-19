@@ -49,11 +49,11 @@ The Chaos Engine generates two types of notifications:
  | Variable | Description | Example Value | Default |
  | --- | --- | --- | --- |
  | xmpp.enabled | Enables XMPP notification module | true / false | false |
- | xmpp.user | JID of an account to be used by the Engine | chaos@jabber.com | None |
+ | xmpp.user | JID of an account to be used by the Engine | chaos@jabber.example.com | None |
  | xmpp.password | Password of an account to be used by the Engine |  | None |
- | xmpp.domain | XMPP domain  | chaos.jabber.com | None |
- | xmpp.hostname | XMPP server hostname | jabber.com | None | 
+ | xmpp.domain | XMPP domain  | chaos.jabber.example.com | None |
+ | xmpp.hostname | XMPP server hostname | jabber.example.com | None | 
  | xmpp.serverCertFingerprint | XMPP server certificate fingerprint used for [Java Pinning](https://github.com/Flowdalic/java-pinning) | CERTSHA256:F9:16:59:0B:93:72:66:A4:9A:DB:DF:2A:7F.... | None |
- | xmpp.conferenceRooms | Comma separated list of chat rooms where to post notifications | chaos@conference.jabber.com, infra@conference.jabber.com | None |
- | xmpp.recipients | Comma separated list of individual users to be notified | bob@jabber.com, eva@jabber.com | None |
+ | xmpp.conferenceRooms | Comma separated list of chat rooms where to post notifications | chaos@conference.jabber.example.com, infra@conference.jabber.example.com | None |
+ | xmpp.recipients | Comma separated list of individual users to be notified | support@jabber.example.com, operations@jabber.example.com | None |
  
