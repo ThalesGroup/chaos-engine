@@ -217,7 +217,7 @@ public class XMPPNotification implements NotificationMethods {
                 .orElse(Collections.emptyMap())
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .sorted(Map.Entry.comparingByKey())
                 .filter(entry -> knownContainerFields.contains(entry.getKey()))
                 .forEach(e -> {
                     XHTMLManager.addBody(msg,
