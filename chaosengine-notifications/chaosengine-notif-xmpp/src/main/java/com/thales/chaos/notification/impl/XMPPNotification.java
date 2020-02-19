@@ -65,7 +65,7 @@ public class XMPPNotification implements NotificationMethods {
     static final String INSTANCE_HEADER = "Chaos Engine Instance";
     static final String EVENT_TIMESTAMP_HEADER = "Timestamp";
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final Collection<String> knownChaosEventFields = List.of("title",
+    private final Collection<String> knownChaosEventFields = Set.of("title",
             "message",
             "notificationLevel",
             "experimentId",
@@ -73,7 +73,7 @@ public class XMPPNotification implements NotificationMethods {
             "experimentMethod",
             "chaosTime",
             "targetContainer");
-    private final Collection<String> knownContainerFields = List.of("aggregationIdentifier",
+    private final Collection<String> knownContainerFields = Set.of("aggregationIdentifier",
             "simpleName",
             "containerType");
     @Autowired
