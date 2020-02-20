@@ -225,9 +225,9 @@ public class XMPPNotification implements NotificationMethods {
         log.debug("List of recipients {}", addressBook.getRecipients());
         for (EntityBareJid jid : addressBook.getRecipients()) {
             try {
-                log.debug("Sending XMPP notification to: {}", jid);
+                log.info("Sending XMPP notification to: {}", jid);
                 sendDirectMessage(msg, jid);
-                log.debug("XMPP  notification to {} send", jid);
+                log.debug("XMPP  notification to {} sent", jid);
             } catch (Exception e) {
                 log.error("Cannot send XMPP notification to: {}", jid, e);
             }

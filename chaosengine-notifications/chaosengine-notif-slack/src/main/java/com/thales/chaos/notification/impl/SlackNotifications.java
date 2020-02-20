@@ -130,7 +130,7 @@ public class SlackNotifications extends BufferedNotificationMethod {
         }
         SlackMessage slackMessage = slackMessageBuilder.build();
         try {
-            log.debug("Sending Slack notification");
+            log.info("Sending Slack notification");
             sendSlackMessage(slackMessage);
             log.debug("Slack notification sent");
         } catch (Exception e) {
