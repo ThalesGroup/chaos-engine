@@ -23,8 +23,8 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.Calendar;
 
-@Repository("DUM")
-public class Dummy implements HolidayCalendar {
+@Repository("NONSTOP")
+public class Nonstop implements HolidayCalendar {
     @Override
     public boolean isHoliday (Calendar day) {
         return false;

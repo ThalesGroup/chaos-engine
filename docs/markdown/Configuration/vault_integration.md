@@ -44,7 +44,7 @@ The vault endpoint is configured through environment variables.
 export VAULT_ADDR='http://$VAULT_HOST:8200'
 export VAULT_DEV_ROOT_TOKEN_ID=00000000-0000-0000-0000-000000000000
 vault auth $VAULT_DEV_ROOT_TOKEN_ID
-vault kv put secret/chaosengine aws.accessKeyId=$AWS_ACCESS_KEY_ID aws.secretAccessKey=$AWS_SECRET_ACCESS_KEY aws.region=eu-west-1  AWS_FILTER_KEYS='Chaos Victim' AWS_FILTER_VALUES=true holidays=DUM aws.ec2=true
+vault kv put secret/chaosengine aws.accessKeyId=$AWS_ACCESS_KEY_ID aws.secretAccessKey=$AWS_SECRET_ACCESS_KEY aws.region=eu-west-1  AWS_FILTER_KEYS='Chaos Victim' AWS_FILTER_VALUES=true holidays=NONSTOP aws.ec2=true
 vault kv get secret/chaosengine
 ```
 

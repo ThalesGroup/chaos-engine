@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(properties = "holidays=DUM")
+@SpringBootTest(properties = "holidays=NONSTOP")
 @AutoConfigureMockMvc
 public class LoggingControllerTest {
     private static final String FIVE_MINUTES = Duration.ofMinutes(5).toString();

@@ -24,8 +24,8 @@ import java.util.Calendar;
 
 import static org.junit.Assert.*;
 
-public class DummyTest {
-    Dummy calendar = new Dummy();
+public class NonstopTest {
+    Nonstop calendar = new Nonstop();
 
     private Calendar getDate (int year, int month, int day) {
         Calendar c = Calendar.getInstance();
