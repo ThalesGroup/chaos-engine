@@ -17,10 +17,13 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.google.api.gax.httpjson.HttpJsonStatusCode;
 import com.google.api.gax.rpc.ApiException;
+import com.google.api.gax.rpc.ApiExceptionFactory;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
+import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
@@ -848,6 +851,79 @@ public class GcpComputePlatformTest {
         doReturn(false, true).when(gcpComputePlatform).isOperationComplete(operationId);
         gcpComputePlatform.performTaskAfterOperationCompletes(operationId, () -> operationComplete.set(true));
         await().atLeast(5500, TimeUnit.MILLISECONDS).atMost(7, TimeUnit.SECONDS).until(operationComplete::get);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void isContainerRecycledMalformedRequest () {
+        gcpComputePlatform.isContainerRecycled(mock(Container.class));
+    }
+
+    @Test
+    public void isContainerRecycledTrue () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        Instance instance = Instance.newBuilder().setId("0987654321").build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertTrue(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test
+    public void isContainerRecycledFalse () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        Instance instance = Instance.newBuilder().setId("1234567890").build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertFalse(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test
+    public void isContainerRecycledDeleted () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        ApiException exception = ApiExceptionFactory.createException(new RuntimeException(),
+                HttpJsonStatusCode.of(StatusCode.Code.NOT_FOUND),
+                false);
+        doThrow(exception).when(instanceClient).getInstance(instanceName);
+        assertTrue(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test(expected = ApiException.class)
+    public void isContainerRecycledApiException () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        ApiException exception = ApiExceptionFactory.createException(new RuntimeException(),
+                HttpJsonStatusCode.of(StatusCode.Code.UNKNOWN),
+                false);
+        doThrow(exception).when(instanceClient).getInstance(instanceName);
+        gcpComputePlatform.isContainerRecycled(container);
     }
 
     @Configuration
