@@ -65,10 +65,7 @@ public class XMPPNotification implements NotificationMethods {
     static final String INSTANCE_HEADER = "Chaos Engine Instance";
     static final String EVENT_TIMESTAMP_HEADER = "Timestamp";
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final Collection<String> knownChaosEventFields = Set.of("title",
-            "message",
-            "notificationLevel",
-            "experimentId",
+    private final List<String> knownChaosEventFields = List.of("experimentId",
             "experimentType",
             "experimentMethod",
             "chaosTime",
@@ -76,6 +73,7 @@ public class XMPPNotification implements NotificationMethods {
     private final Collection<String> knownContainerFields = Set.of("aggregationIdentifier",
             "simpleName",
             "containerType");
+    private final Collection<String> skipFields = Set.of("message", "title", "notificationLevel");
 
     Message buildMessage (ChaosNotification notification) {
         Message msg = new Message();
@@ -168,38 +166,53 @@ public class XMPPNotification implements NotificationMethods {
     private void collectExperimentEventFields (Map<String, Object> fieldMap, Message msg) {
         fieldMap.entrySet()
                 .stream()
-                .filter(e -> knownChaosEventFields.contains(e.getKey()))
-                .filter(e -> e.getKey().startsWith("experiment") && e.getValue() != null)
-                .forEach(e -> {
-                    XHTMLManager.addBody(msg,
-                            composeParagraph(StringUtils.convertCamelCaseToSentence(e.getKey()),
-                                    ParagraphStyle.NOTIFICATION_FIELD_HEADER));
-                    XHTMLManager.addBody(msg,
-                            composeParagraph(e.getValue().toString(), ParagraphStyle.NOTIFICATION_FIELD));
+                .filter(entry -> Objects.nonNull(entry.getValue()))
+                .filter(entry -> !skipFields.contains(entry.getKey()))
+                .sorted(sortMapByList(knownChaosEventFields))
+                .forEach(field -> {
+                    switch (field.getKey()) {
+                        case "chaosTime":
+                            Instant time = Instant.ofEpochMilli((Long) field.getValue());
+                            XHTMLManager.addBody(msg,
+                                    composeParagraph(EVENT_TIMESTAMP_HEADER, ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                            XHTMLManager.addBody(msg,
+                                    composeParagraph(time.toString(), ParagraphStyle.NOTIFICATION_FIELD));
+                            break;
+                        case "targetContainer":
+                            Map<String, String> map = (Map<String, String>) field.getValue();
+                            map.entrySet()
+                               .stream()
+                               .sorted(Map.Entry.comparingByKey())
+                               .filter(entry -> knownContainerFields.contains(entry.getKey()))
+                               .forEach(entry -> {
+                                   XHTMLManager.addBody(msg,
+                                           composeParagraph(StringUtils.convertCamelCaseToSentence(entry.getKey()),
+                                                   ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                                   XHTMLManager.addBody(msg,
+                                           composeParagraph(entry.getValue(), ParagraphStyle.NOTIFICATION_FIELD));
+                               });
+                            break;
+                        default:
+                            XHTMLManager.addBody(msg,
+                                    composeParagraph(StringUtils.convertCamelCaseToSentence(field.getKey()),
+                                            ParagraphStyle.NOTIFICATION_FIELD_HEADER));
+                            XHTMLManager.addBody(msg,
+                                    composeParagraph(field.getValue().toString(), ParagraphStyle.NOTIFICATION_FIELD));
+                    }
                 });
-        Optional.ofNullable(fieldMap.get("chaosTime"))
-                .filter(Long.class::isInstance)
-                .map(Long.class::cast)
-                .map(Instant::ofEpochMilli)
-                .ifPresent(time -> {
-                    XHTMLManager.addBody(msg,
-                            composeParagraph(EVENT_TIMESTAMP_HEADER, ParagraphStyle.NOTIFICATION_FIELD_HEADER));
-                    XHTMLManager.addBody(msg, composeParagraph(time.toString(), ParagraphStyle.NOTIFICATION_FIELD));
-                });
-        Optional.ofNullable(fieldMap.get("targetContainer"))
-                .filter(Map.class::isInstance)
-                .map(o -> (Map<String, String>) o)
-                .orElse(Collections.emptyMap())
-                .entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByKey())
-                .filter(entry -> knownContainerFields.contains(entry.getKey()))
-                .forEach(e -> {
-                    XHTMLManager.addBody(msg,
-                            composeParagraph(StringUtils.convertCamelCaseToSentence(e.getKey()),
-                                    ParagraphStyle.NOTIFICATION_FIELD_HEADER));
-                    XHTMLManager.addBody(msg, composeParagraph(e.getValue(), ParagraphStyle.NOTIFICATION_FIELD));
-                });
+    }
+
+    private <T> Comparator<Map.Entry<T, ?>> sortMapByList (List<? super T> list) {
+        return (e1, e2) -> {
+            int i = indexOrHash(e1.getKey(), list);
+            int j = indexOrHash(e2.getKey(), list);
+            return Integer.compare(i, j);
+        };
+    }
+
+    private <T> int indexOrHash (T element, List<? super T> list) {
+        int index = list.indexOf(element);
+        return index >= 0 ? index : Objects.hash(element) + list.size();
     }
 
     enum ParagraphStyle {
