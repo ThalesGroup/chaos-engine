@@ -50,7 +50,7 @@ user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 ### Basic Framework Setup
 
 ```bash
-user@host:~/chaos-engine$ echo "holidays=DUM
+user@host:~/chaos-engine$ echo "holidays=NONSTOP
 VAULT_TOKEN=00000000-0000-0000-0000-000000000000
 VAULT_SCHEME=http
 VAULT_HOST=vault

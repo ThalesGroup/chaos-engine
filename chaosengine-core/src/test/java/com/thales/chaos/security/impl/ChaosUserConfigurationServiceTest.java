@@ -36,7 +36,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = { "holidays=DUM", "chaos.security.users[0].username=" + ChaosUserConfigurationServiceTest.username, "chaos.security.users[0].password=" + ChaosUserConfigurationServiceTest.password, "chaos.security.users[0].authorities=ADMIN" })
+@SpringBootTest(properties = {
+        "holidays=NONSTOP",
+        "chaos.security.users[0].username=" + ChaosUserConfigurationServiceTest.username,
+        "chaos.security.users[0].password=" + ChaosUserConfigurationServiceTest.password,
+        "chaos.security.users[0].authorities=ADMIN"
+})
 @AutoConfigureMockMvc
 public class ChaosUserConfigurationServiceTest {
     public static final String username = "admin";

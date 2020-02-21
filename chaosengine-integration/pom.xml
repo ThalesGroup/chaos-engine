@@ -38,7 +38,7 @@
                         <configuration>
                             <mainClass>com.thales.chaos.ChaosEngine</mainClass>
                             <environmentVariables>
-                                <holidays>DUM</holidays>
+                                <holidays>NONSTOP</holidays>
                                 <chaos.security.enabled>false</chaos.security.enabled>
                                 <spring.application.admin.enabled>true</spring.application.admin.enabled>
                                 <scheduling>false</scheduling>
