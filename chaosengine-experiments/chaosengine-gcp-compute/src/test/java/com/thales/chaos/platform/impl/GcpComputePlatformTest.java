@@ -41,8 +41,11 @@ import org.springframework.util.StopWatch;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -769,7 +772,7 @@ public class GcpComputePlatformTest {
     }
 
     @Test(expected = ChaosException.class)
-    public void waitForOperationInterrupted () throws Exception {
+    public void waitForOperationInterrupted () {
         Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
         Thread mainThread = Thread.currentThread();
         doReturn(false).doAnswer(invocationOnMock -> {
@@ -801,6 +804,7 @@ public class GcpComputePlatformTest {
         doReturn(instance).when(instanceClient).getInstance(expectedInstance);
         doReturn(operation).when(instanceClient).setMetadataInstance(eq(expectedInstance), metadataCaptor.capture());
         doNothing().when(gcpComputePlatform).waitForOperation(any());
+        doNothing().when(gcpComputePlatform).addSSHKey(container, false);
         gcpComputePlatform.addSSHKey(container);
         verify(gcpComputePlatform).waitForOperation(operationCaptor.capture());
         String capturedKey = metadataCaptor.getValue()
@@ -813,6 +817,7 @@ public class GcpComputePlatformTest {
                                            .orElseThrow();
         assertEquals(container.getGcpSSHKeyMetadata().toString(), capturedKey);
         assertSame(operation, operationCaptor.getValue());
+        verify(gcpComputePlatform).addSSHKey(container, false);
     }
 
     @Test
@@ -831,9 +836,18 @@ public class GcpComputePlatformTest {
                 "my-datacenter");
         doReturn(instance).when(instanceClient).getInstance(expectedInstance);
         doNothing().when(gcpComputePlatform).waitForOperation(any());
-        gcpComputePlatform.addSSHKey(container);
+        gcpComputePlatform.addSSHKey(container, false);
         verify(instanceClient, never()).setMetadataInstance(any(ProjectZoneInstanceName.class), any());
         verify(gcpComputePlatform, never()).waitForOperation(any());
+    }
+
+    @Test
+    public void performTaskAfterOperationCompletes () {
+        String operationId = "my-operation-id";
+        final AtomicBoolean operationComplete = new AtomicBoolean(false);
+        doReturn(false, true).when(gcpComputePlatform).isOperationComplete(operationId);
+        gcpComputePlatform.performTaskAfterOperationCompletes(operationId, () -> operationComplete.set(true));
+        await().atLeast(5500, TimeUnit.MILLISECONDS).atMost(7, TimeUnit.SECONDS).until(operationComplete::get);
     }
 
     @Configuration

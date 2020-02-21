@@ -17,6 +17,8 @@
 
 package com.thales.chaos.shellclient.ssh;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
+@JsonIgnoreType
 public class GcpSSHKeyMetadata {
     private static final String[] patterns;
 

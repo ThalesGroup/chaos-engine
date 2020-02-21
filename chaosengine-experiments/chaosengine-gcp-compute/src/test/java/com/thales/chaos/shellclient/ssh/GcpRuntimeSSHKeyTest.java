@@ -17,11 +17,11 @@
 
 package com.thales.chaos.shellclient.ssh;
 
+import net.schmizz.sshj.common.Buffer;
 import org.hamcrest.collection.IsMapWithSize;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -56,7 +56,7 @@ public class GcpRuntimeSSHKeyTest {
         assertTrue(gcpRuntimeSSHKey.getSSHKeys()
                                    .keySet()
                                    .stream()
-                                   .map(Key::getEncoded)
+                                   .map(pub -> new Buffer.PlainBuffer().putPublicKey(pub).getCompactData())
                                    .map(bytes -> Base64.getEncoder().encodeToString(bytes))
                                    .anyMatch(s -> actual.getPublicKey().equals(s)));
         assertEquals("chaosengine", actual.getUsername());

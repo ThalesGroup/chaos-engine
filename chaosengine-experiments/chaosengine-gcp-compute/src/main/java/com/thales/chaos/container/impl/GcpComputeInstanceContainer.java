@@ -30,7 +30,7 @@ import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.GcpComputePlatform;
 import com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey;
 import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
-import com.thales.chaos.shellclient.ssh.impl.ChaosSSHCredentials;
+import com.thales.chaos.shellclient.ssh.SSHCredentials;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -54,6 +54,8 @@ public class GcpComputeInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 2)
     private String zone;
+    private String privateIPAddress;
+    private String publicIPAddress;
     private GcpRuntimeSSHKey gcpRuntimeSSHKey;
 
     private GcpComputeInstanceContainer () {
@@ -80,10 +82,7 @@ public class GcpComputeInstanceContainer extends Container {
                 .isContainerGroupAtCapacity(this) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
         experiment.setSelfHealingMethod(() -> {
         });
-        experiment.setFinalizeMethod(() -> {
-            String newUUID = platform.getLatestInstanceId(getInstanceName(), getZone());
-            setUniqueIdentifier(newUUID);
-        });
+        experiment.setFinalizeMethod(this::updateUUID);
         operationId.set(platform.recreateInstanceInInstanceGroup(this));
     }
 
@@ -194,8 +193,22 @@ public class GcpComputeInstanceContainer extends Container {
         return gcpRuntimeSSHKey;
     }
 
-    public ChaosSSHCredentials getChaosSSHCredentials () {
+    public void updateUUID () {
+        String newUUID = platform.getLatestInstanceId(getInstanceName(), getZone());
+        setUniqueIdentifier(newUUID);
+    }
+
+    public SSHCredentials getSSHCredentials () {
         return getGcpRuntimeSSHKey();
+    }
+
+    public String getSSHEndpoint () {
+        return platform.getBestEndpoint(privateIPAddress, publicIPAddress);
+    }
+
+    @Override
+    public boolean supportsShellBasedExperiments () {
+        return super.supportsShellBasedExperiments() && createdBy != null && privateIPAddress != null;
     }
 
     public static class GcpComputeInstanceContainerBuilder {
@@ -204,6 +217,8 @@ public class GcpComputeInstanceContainer extends Container {
         private GcpComputePlatform platform;
         private String createdBy;
         private String zone;
+        private String privateIPAddress;
+        private String publicIPAddress;
 
         private GcpComputeInstanceContainerBuilder () {
         }
@@ -230,6 +245,8 @@ public class GcpComputeInstanceContainer extends Container {
             container.platform = this.platform;
             container.createdBy = this.createdBy;
             container.zone = this.zone;
+            container.publicIPAddress = this.publicIPAddress;
+            container.privateIPAddress = this.privateIPAddress;
             return container;
         }
 
@@ -240,6 +257,16 @@ public class GcpComputeInstanceContainer extends Container {
 
         public GcpComputeInstanceContainerBuilder withZone (String zone) {
             this.zone = zone;
+            return this;
+        }
+
+        public GcpComputeInstanceContainerBuilder withPrivateIPAddress (String privateIPAddress) {
+            this.privateIPAddress = privateIPAddress;
+            return this;
+        }
+
+        public GcpComputeInstanceContainerBuilder withPublicIPAddress (String publicIPAddress) {
+            this.publicIPAddress = publicIPAddress;
             return this;
         }
     }

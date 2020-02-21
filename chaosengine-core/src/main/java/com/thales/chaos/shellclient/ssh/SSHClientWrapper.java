@@ -34,4 +34,6 @@ public interface SSHClientWrapper extends ShellClient {
     SSHClientWrapper withEndpoint (String hostname);
 
     SSHClientWrapper withEndpoint (String hostname, Integer portNumber);
+
+    SSHClientWrapper withRunningDirectory (String runningDirectory);
 }
