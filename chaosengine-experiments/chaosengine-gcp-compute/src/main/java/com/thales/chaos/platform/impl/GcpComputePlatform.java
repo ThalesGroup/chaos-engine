@@ -24,6 +24,7 @@ import com.google.cloud.compute.v1.*;
 import com.google.common.collect.Ordering;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
@@ -84,6 +85,8 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     private ProjectName projectName;
     @Autowired
     private GcpComputeSelfAwareness selfAwareness;
+    @Autowired
+    private ContainerManager containerManager;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
     @JsonProperty
@@ -163,6 +166,17 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     }
 
     GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
+        GcpComputeInstanceContainer matchingContainer = containerManager.getMatchingContainer(
+                GcpComputeInstanceContainer.class,
+                instance.getId());
+        if (matchingContainer == null) {
+            matchingContainer = createContainerFromInstanceInner(instance);
+            containerManager.offer(matchingContainer);
+        }
+        return matchingContainer;
+    }
+
+    GcpComputeInstanceContainer createContainerFromInstanceInner (Instance instance) {
         String id = instance.getId();
         String name = instance.getName();
         String zone = instance.getZone();

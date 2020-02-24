@@ -24,6 +24,7 @@ import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
@@ -72,6 +73,8 @@ public class GcpComputePlatformTest {
     private ZoneOperationClient zoneOperationClient;
     @MockBean
     private GcpComputeSelfAwareness selfAwareness;
+    @MockBean
+    private ContainerManager containerManager;
     @Autowired
     private ProjectName projectName;
     @Autowired
@@ -942,6 +945,8 @@ public class GcpComputePlatformTest {
         private ZoneOperationClient zoneOperationClient;
         @Autowired
         private GcpComputeSelfAwareness selfAwareness;
+        @Autowired
+        private ContainerManager containerManager;
 
         @Bean(name = COMPUTE_PROJECT)
         public ProjectName projectName () {
