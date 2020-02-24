@@ -35,8 +35,10 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.concurrent.*;
 
+import static com.thales.chaos.constants.SSHConstants.TEMP_DIRECTORY;
 import static com.thales.chaos.exception.enums.ChaosErrorCode.*;
 import static com.thales.chaos.shellclient.ShellConstants.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -47,6 +49,7 @@ public class ChaosSSHClient implements SSHClientWrapper {
     private SSHCredentials sshCredentials;
     private String hostname;
     private Integer port;
+    private String runningDirectory = TEMP_DIRECTORY;
 
     @Override
     public ShellClient connect (int connectionTimeout) throws IOException {
@@ -138,19 +141,38 @@ public class ChaosSSHClient implements SSHClientWrapper {
     }
 
     @Override
+    public SSHClientWrapper withRunningDirectory (String runningDirectory) {
+        this.runningDirectory = runningDirectory;
+        return this;
+    }
+
+    @Override
     public String runResource (Resource resource) {
         try {
             log.info("Transferring resource {}", resource);
-            getSshClient().newSCPFileTransfer().upload(new JarResourceFile(resource, true), SSHConstants.TEMP_DIRECTORY);
+            getSshClient().newSCPFileTransfer().upload(new JarResourceFile(resource, true), TEMP_DIRECTORY);
         } catch (IOException e) {
             throw new ChaosException(SSH_CLIENT_TRANSFER_ERROR, e);
         }
+        String shellCommand = runningDirectory + resource.getFilename();
+        moveFileIfNeeded(resource, shellCommand);
         try (Session session = getSshClient().startSession()) {
-            String shellCommand = SSHConstants.TEMP_DIRECTORY + resource.getFilename();
             log.debug("About to run {}", shellCommand);
             return runCommandInShell(session, shellCommand);
         } catch (IOException e) {
             throw new ChaosException(SSH_CLIENT_COMMAND_ERROR, e);
+        }
+    }
+
+    private void moveFileIfNeeded (Resource resource, String newFilename) {
+        if (!TEMP_DIRECTORY.equals(runningDirectory)) {
+            String oldFilename = TEMP_DIRECTORY + resource.getFilename();
+            StringJoiner command = new StringJoiner(" ");
+            if (!ROOT.equals(sshCredentials.getUsername()) && sshCredentials.isSupportSudo()) {
+                command.add(SUDO);
+            }
+            command.add("mv").add(oldFilename).add(newFilename);
+            runCommand(command.toString());
         }
     }
 

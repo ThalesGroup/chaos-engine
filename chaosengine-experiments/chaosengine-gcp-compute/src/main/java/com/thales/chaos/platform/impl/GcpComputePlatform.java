@@ -17,21 +17,27 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.google.common.collect.Ordering;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode;
 import com.thales.chaos.platform.Platform;
+import com.thales.chaos.platform.SshBasedExperiment;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
+import com.thales.chaos.shellclient.ssh.SSHCredentials;
+import org.apache.commons.net.util.SubnetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,11 +47,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey.CHAOS_USERNAME;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -54,7 +66,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConditionalOnProperty("gcp.compute")
 @ConfigurationProperties("gcp.compute")
 @Component
-public class GcpComputePlatform extends Platform {
+public class GcpComputePlatform extends Platform implements SshBasedExperiment<GcpComputeInstanceContainer> {
     private static final Logger log = LoggerFactory.getLogger(GcpComputePlatform.class);
     @Autowired
     private InstanceClient instanceClient;
@@ -73,8 +85,19 @@ public class GcpComputePlatform extends Platform {
     private ProjectName projectName;
     @Autowired
     private GcpComputeSelfAwareness selfAwareness;
+    @Autowired
+    private ContainerManager containerManager;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
+    @JsonProperty
+    private Collection<SubnetUtils.SubnetInfo> routableCIDRBlocks = Collections.emptySet();
+
+    public void setRoutableCIDRBlocks (Collection<String> routableCIDRBlocks) {
+        this.routableCIDRBlocks = routableCIDRBlocks.stream()
+                                                    .map(SubnetUtils::new)
+                                                    .map(SubnetUtils::getInfo)
+                                                    .collect(Collectors.toSet());
+    }
 
     @Override
     public ApiStatus getApiStatus () {
@@ -143,9 +166,22 @@ public class GcpComputePlatform extends Platform {
     }
 
     GcpComputeInstanceContainer createContainerFromInstance (Instance instance) {
+        GcpComputeInstanceContainer matchingContainer = containerManager.getMatchingContainer(
+                GcpComputeInstanceContainer.class,
+                instance.getId());
+        if (matchingContainer == null) {
+            matchingContainer = createContainerFromInstanceInner(instance);
+            containerManager.offer(matchingContainer);
+        }
+        return matchingContainer;
+    }
+
+    GcpComputeInstanceContainer createContainerFromInstanceInner (Instance instance) {
         String id = instance.getId();
         String name = instance.getName();
         String zone = instance.getZone();
+        String publicIP = getPrimaryPublicIP(instance.getNetworkInterfacesList());
+        String privateIP = getPrimaryPrivateIP(instance.getNetworkInterfacesList());
         if (zone != null && zone.contains("/")) {
             zone = zone.substring(zone.lastIndexOf('/') + 1);
         }
@@ -164,7 +200,36 @@ public class GcpComputePlatform extends Platform {
                                           .withPlatform(this)
                                           .withCreatedBy(createdBy)
                                           .withZone(zone)
+                                          .withPublicIPAddress(publicIP)
+                                          .withPrivateIPAddress(privateIP)
                                           .build();
+    }
+
+    private String getPrimaryPublicIP (Collection<NetworkInterface> networkInterfaceList) {
+        return Optional.ofNullable(networkInterfaceList)
+                       .stream()
+                       .flatMap(Collection::stream)
+                       .filter(GcpComputePlatform::isPrimaryNic)
+                       .map(NetworkInterface::getAccessConfigsList)
+                       .flatMap(Collection::stream)
+                       .map(AccessConfig::getNatIP)
+                       .findFirst()
+                       .orElse(null);
+    }
+
+    private String getPrimaryPrivateIP (Collection<NetworkInterface> networkInterfaceList) {
+        return Optional.ofNullable(networkInterfaceList)
+                       .stream()
+                       .flatMap(Collection::stream)
+                       .filter(GcpComputePlatform::isPrimaryNic)
+                       .map(NetworkInterface::getNetworkIP)
+                       .findFirst()
+                       .orElse(null);
+    }
+
+    private static boolean isPrimaryNic (NetworkInterface networkInterface) {
+        if (networkInterface == null) return false;
+        return "nic0".equals(networkInterface.getName());
     }
 
     public Collection<Items> getIncludeFilter () {
@@ -199,7 +264,20 @@ public class GcpComputePlatform extends Platform {
 
     @Override
     public boolean isContainerRecycled (Container container) {
-        return false;
+        if (!(container instanceof GcpComputeInstanceContainer)) throw new IllegalArgumentException();
+        GcpComputeInstanceContainer gcpContainer = (GcpComputeInstanceContainer) container;
+        String oldUUID = gcpContainer.getUniqueIdentifier();
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of(gcpContainer.getInstanceName(),
+                projectName.getProject(),
+                gcpContainer.getZone());
+        try {
+            Instance instance = instanceClient.getInstance(instanceName);
+            String instanceId = instance.getId();
+            return !Objects.equals(instanceId, oldUUID);
+        } catch (ApiException e) {
+            if (e.getStatusCode().getCode().getHttpStatusCode() == 404) return true;
+            throw e;
+        }
     }
 
     public String stopInstance (GcpComputeInstanceContainer container) {
@@ -393,6 +471,21 @@ public class GcpComputePlatform extends Platform {
         return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
     }
 
+    public String getBestEndpoint (String privateIPAddress, String publicIPAddress) {
+        if (privateIPAddress != null && isAddressRoutable(privateIPAddress)) return privateIPAddress;
+        return publicIPAddress;
+    }
+
+    public boolean isAddressRoutable (String privateIPAddress) {
+        return routableCIDRBlocks.stream().anyMatch(subnetInfo -> {
+            try {
+                return subnetInfo.isInRange(privateIPAddress);
+            } catch (RuntimeException e) {
+                return false;
+            }
+        });
+    }
+
     public static class Fingerprint<T> {
         private String fingerprint;
         private T object;
@@ -422,5 +515,131 @@ public class GcpComputePlatform extends Platform {
             Fingerprint<?> that = (Fingerprint<?>) o;
             return fingerprint.equals(that.fingerprint) && object.equals(that.object);
         }
+    }
+
+    @Override
+    public String getEndpoint (GcpComputeInstanceContainer container) {
+        return container.getSSHEndpoint();
+    }
+
+    private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
+        return instanceClient.getInstance(instanceName).getMetadata();
+    }
+
+    private Map<String, String> itemListAsMap (List<Items> items) {
+        if (items == null) return new HashMap<>();
+        return items.stream().filter(Objects::nonNull).collect(Collectors.toMap(Items::getKey, Items::getValue));
+    }
+
+    private List<Items> mapAsItemList (Map<String, String> items) {
+        return items.entrySet()
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(this::mapEntryAsItem)
+                    .collect(Collectors.toList());
+    }
+
+    void waitForOperation (Operation operation) {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        synchronized (operation) {
+            executor.scheduleWithFixedDelay(() -> {
+                synchronized (operation) {
+                    if (isOperationComplete(operation.getSelfLink())) {
+                        operation.notify();
+                    }
+                }
+            }, 1, 1, TimeUnit.SECONDS);
+            try {
+                // 5 minute timeout since that is our default experiment timeout.
+                operation.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
+
+    private Items mapEntryAsItem (Map.Entry<String, String> item) {
+        String key = item.getKey();
+        String value = item.getValue();
+        return Items.newBuilder().setKey(key).setValue(value).build();
+    }
+
+    @Override
+    public SSHCredentials getSshCredentials (GcpComputeInstanceContainer container) {
+        addSSHKey(container);
+        return container.getSSHCredentials();
+    }
+
+    @Override
+    public String getRunningDirectory () {
+        return "/run/";
+    }
+
+    void addSSHKey (GcpComputeInstanceContainer container) {
+        addSSHKey(container, true);
+    }
+
+    void addSSHKey (GcpComputeInstanceContainer container, boolean allowRetry) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, projectName);
+        Metadata existingMetadata = getInstanceMetadata(instanceName);
+        Map<String, String> metadataMap = itemListAsMap(existingMetadata.getItemsList());
+        String sshKeys = metadataMap.get("ssh-keys");
+        // Format keys into objects for comparison and manipulation as a LinkedHashSet
+        // This maintains order but also duplicate detection.
+        Set<GcpSSHKeyMetadata> existingKeys = new LinkedHashSet<>(GcpSSHKeyMetadata.parseMetadata(sshKeys != null ? sshKeys : ""));
+        // If the key already exists, we're done here.
+        if (!existingKeys.add(container.getGcpSSHKeyMetadata())) return;
+        Predicate<GcpSSHKeyMetadata> isNewKey = gcpSSHKeyMetadata -> gcpSSHKeyMetadata.equals(container.getGcpSSHKeyMetadata());
+        Predicate<GcpSSHKeyMetadata> isChaosKey = gcpSSHKeyMetadata -> Objects.equals(gcpSSHKeyMetadata.getUsername(),
+                CHAOS_USERNAME);
+        List<GcpSSHKeyMetadata> filteredKeys = existingKeys.stream()
+                                                           .filter(isNewKey.or(isChaosKey.negate()))
+                                                           .collect(Collectors.toList());
+        log.info("Key did not exist in container {}, adding new public key to metadata",
+                v(DATADOG_CONTAINER_KEY, container));
+        // Format the list back into a String and put it back into the Metadata Map.
+        metadataMap.put("ssh-keys", GcpSSHKeyMetadata.metadataFormat(filteredKeys));
+        Metadata newMetadata = Metadata.newBuilder()
+                                       .addAllItems(mapAsItemList(metadataMap))
+                                       .setFingerprint(existingMetadata.getFingerprint())
+                                       .build();
+        Operation operation = instanceClient.setMetadataInstance(instanceName, newMetadata);
+        waitForOperation(operation);
+        if (allowRetry) addSSHKey(container, false);
+    }
+
+    @Override
+    public void recycleContainer (GcpComputeInstanceContainer container) {
+        String operationId = recreateInstanceInInstanceGroup(container);
+        performTaskAfterOperationCompletes(operationId, container::updateUUID);
+    }
+
+    void performTaskAfterOperationCompletes (String operationSelfLink, Runnable task) {
+        ScheduledExecutorService operationWatcher = Executors.newSingleThreadScheduledExecutor();
+        ExecutorService taskRunner = Executors.newSingleThreadExecutor();
+        taskRunner.submit(() -> {
+            synchronized (operationSelfLink) {
+                try {
+                    operationSelfLink.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
+                } finally {
+                    operationWatcher.shutdown();
+                }
+                task.run();
+            }
+        });
+        operationWatcher.scheduleWithFixedDelay(() -> {
+            synchronized (operationSelfLink) {
+                if (isOperationComplete(operationSelfLink)) {
+                    operationSelfLink.notify();
+                    operationWatcher.shutdown();
+                }
+            }
+        }, 5, 1, TimeUnit.SECONDS);
     }
 }

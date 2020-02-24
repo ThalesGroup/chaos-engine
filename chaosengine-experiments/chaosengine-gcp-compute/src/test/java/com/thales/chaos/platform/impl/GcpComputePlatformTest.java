@@ -17,14 +17,20 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.google.api.gax.httpjson.HttpJsonStatusCode;
 import com.google.api.gax.rpc.ApiException;
+import com.google.api.gax.rpc.ApiExceptionFactory;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
 import com.thales.chaos.constants.GcpConstants;
+import com.thales.chaos.container.Container;
+import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
+import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -35,11 +41,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.StopWatch;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -63,6 +73,8 @@ public class GcpComputePlatformTest {
     private ZoneOperationClient zoneOperationClient;
     @MockBean
     private GcpComputeSelfAwareness selfAwareness;
+    @MockBean
+    private ContainerManager containerManager;
     @Autowired
     private ProjectName projectName;
     @Autowired
@@ -753,6 +765,170 @@ public class GcpComputePlatformTest {
         assertFalse(gcpComputePlatform.checkTags(container, differentTags));
     }
 
+    @Test
+    public void waitForOperationSuccess () {
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        doReturn(false).doReturn(false).doReturn(true).when(gcpComputePlatform).isOperationComplete("my-operation");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        gcpComputePlatform.waitForOperation(operation);
+        stopWatch.stop();
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.greaterThanOrEqualTo(2000L));
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.lessThanOrEqualTo(3999L));
+    }
+
+    @Test(expected = ChaosException.class)
+    public void waitForOperationInterrupted () {
+        Operation operation = Operation.newBuilder().setSelfLink("my-operation").build();
+        Thread mainThread = Thread.currentThread();
+        doReturn(false).doAnswer(invocationOnMock -> {
+            mainThread.interrupt();
+            return null;
+        }).when(gcpComputePlatform).isOperationComplete("my-operation");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        gcpComputePlatform.waitForOperation(operation);
+        stopWatch.stop();
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.greaterThanOrEqualTo(1000L));
+        assertThat(stopWatch.getLastTaskTimeMillis(), Matchers.lessThanOrEqualTo(2999L));
+    }
+
+    @Test
+    public void addSSHKey () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        Metadata existingMetadata = Metadata.getDefaultInstance();
+        ArgumentCaptor<Metadata> metadataCaptor = ArgumentCaptor.forClass(Metadata.class);
+        Instance instance = Instance.newBuilder().setMetadata(existingMetadata).build();
+        Operation operation = mock(Operation.class);
+        ArgumentCaptor<Operation> operationCaptor = ArgumentCaptor.forClass(Operation.class);
+        ProjectZoneInstanceName expectedInstance = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        doReturn(instance).when(instanceClient).getInstance(expectedInstance);
+        doReturn(operation).when(instanceClient).setMetadataInstance(eq(expectedInstance), metadataCaptor.capture());
+        doNothing().when(gcpComputePlatform).waitForOperation(any());
+        doNothing().when(gcpComputePlatform).addSSHKey(container, false);
+        gcpComputePlatform.addSSHKey(container);
+        verify(gcpComputePlatform).waitForOperation(operationCaptor.capture());
+        String capturedKey = metadataCaptor.getValue()
+                                           .getItemsList()
+                                           .stream()
+                                           .filter(items -> items.getKey().equals("ssh-keys"))
+                                           .map(Items::getValue)
+                                           .map(String::strip)
+                                           .findFirst()
+                                           .orElseThrow();
+        assertEquals(container.getGcpSSHKeyMetadata().toString(), capturedKey);
+        assertSame(operation, operationCaptor.getValue());
+        verify(gcpComputePlatform).addSSHKey(container, false);
+    }
+
+    @Test
+    public void addSSHKeyAlreadyExists () {
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder()
+                                                                           .withZone("my-datacenter")
+                                                                           .withUniqueIdentifier("1234567890")
+                                                                           .build();
+        String key = container.getGcpSSHKeyMetadata().toString();
+        Metadata existingMetadata = Metadata.newBuilder()
+                                            .addItems(Items.newBuilder().setKey("ssh-keys").setValue(key).build())
+                                            .build();
+        Instance instance = Instance.newBuilder().setMetadata(existingMetadata).build();
+        ProjectZoneInstanceName expectedInstance = ProjectZoneInstanceName.of("1234567890",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        doReturn(instance).when(instanceClient).getInstance(expectedInstance);
+        doNothing().when(gcpComputePlatform).waitForOperation(any());
+        gcpComputePlatform.addSSHKey(container, false);
+        verify(instanceClient, never()).setMetadataInstance(any(ProjectZoneInstanceName.class), any());
+        verify(gcpComputePlatform, never()).waitForOperation(any());
+    }
+
+    @Test
+    public void performTaskAfterOperationCompletes () {
+        String operationId = "my-operation-id";
+        final AtomicBoolean operationComplete = new AtomicBoolean(false);
+        doReturn(false, true).when(gcpComputePlatform).isOperationComplete(operationId);
+        gcpComputePlatform.performTaskAfterOperationCompletes(operationId, () -> operationComplete.set(true));
+        await().atLeast(5500, TimeUnit.MILLISECONDS).atMost(7, TimeUnit.SECONDS).until(operationComplete::get);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void isContainerRecycledMalformedRequest () {
+        gcpComputePlatform.isContainerRecycled(mock(Container.class));
+    }
+
+    @Test
+    public void isContainerRecycledTrue () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        Instance instance = Instance.newBuilder().setId("0987654321").build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertTrue(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test
+    public void isContainerRecycledFalse () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        Instance instance = Instance.newBuilder().setId("1234567890").build();
+        doReturn(instance).when(instanceClient).getInstance(instanceName);
+        assertFalse(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test
+    public void isContainerRecycledDeleted () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        ApiException exception = ApiExceptionFactory.createException(new RuntimeException(),
+                HttpJsonStatusCode.of(StatusCode.Code.NOT_FOUND),
+                false);
+        doThrow(exception).when(instanceClient).getInstance(instanceName);
+        assertTrue(gcpComputePlatform.isContainerRecycled(container));
+    }
+
+    @Test(expected = ApiException.class)
+    public void isContainerRecycledApiException () {
+        GcpComputeInstanceContainer container;
+        ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of("my-instance",
+                MY_AWESOME_PROJECT,
+                "my-datacenter");
+        container = GcpComputeInstanceContainer.builder()
+                                               .withUniqueIdentifier("1234567890")
+                                               .withInstanceName("my-instance")
+                                               .withZone("my-datacenter")
+                                               .build();
+        ApiException exception = ApiExceptionFactory.createException(new RuntimeException(),
+                HttpJsonStatusCode.of(StatusCode.Code.UNKNOWN),
+                false);
+        doThrow(exception).when(instanceClient).getInstance(instanceName);
+        gcpComputePlatform.isContainerRecycled(container);
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
@@ -769,6 +945,8 @@ public class GcpComputePlatformTest {
         private ZoneOperationClient zoneOperationClient;
         @Autowired
         private GcpComputeSelfAwareness selfAwareness;
+        @Autowired
+        private ContainerManager containerManager;
 
         @Bean(name = COMPUTE_PROJECT)
         public ProjectName projectName () {
