@@ -93,6 +93,18 @@ public class GcpComputePlatformTest {
     }
 
     @Test
+    public void createContainerFromInstanceAlreadyCached () {
+        Instance instance = Instance.newBuilder().setId("my-id").build();
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder().build();
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        doReturn(container).when(containerManager)
+                           .getMatchingContainer(eq(GcpComputeInstanceContainer.class), captor.capture());
+        assertSame(gcpComputePlatform.createContainerFromInstance(instance), container);
+        assertEquals("my-id", captor.getValue());
+        verify(gcpComputePlatform, never()).createContainerFromInstanceInner(any());
+    }
+
+    @Test
     public void createContainerFromInstanceWithDetails () {
         String createdByValue = "My-VM-Instance-Group";
         Metadata metadata = Metadata.newBuilder()
