@@ -17,6 +17,7 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
 | `gcp.compute.json-key` | This key should be the JSON Key of the Service Account the module is to use. | N/A |
 | `gcp.compute.include-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A |
 | `gcp.compute.exclude-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A |
+| `gcp.compute.routableCidrBlocks` | A comma separated list of private CIDR Blocks that should be considered Routable for SSH Access | N/A |
 
 
 
@@ -48,6 +49,16 @@ The filter values are case-sensitive.
 
 The GCP Compute platform uses the [Google Cloud Instance Metadata Server] to discover its own Google Cloud Resource ID.
 Instances are evaluated against that resource ID and removed from the pool of potential experiments. 
+
+## SSH Experiment Support
+
+API: [Compute instances.setMetadata], [Compute instances.get], [Compute zoneOperations.get]
+
+A Google Compute instance is considered SSH Accessible if it either has a Public NAT on nic0, or if the private address on nic0 is a member of the CIDR Blocks in the `gcp.compute.routableCidrBlocks` configuration parameter.
+
+On connection of any instance, Chaos Engine will create a new SSH Key and append it to the `ssh-keys` metadata field of the instance. The private key is never transmitted outside of Chaos Engine. This is accomplished with the [Compute instances.setMetadata] and [Compute instances.get] API, to retrieve the old metadata, alter the specific field, and set it back. The previous fingerprint is sent for consistency purposes, allowing one retry.
+
+The [Compute zoneOperations.get] API is polled until the `setMetadata` operation is complete. A verification is made and then an SSH Connection is initiated.
 
 
 ## Experiment Methods
@@ -175,6 +186,7 @@ The new tag fingerprint is retrieved using [Compute instances.get], and the orig
 [Compute instances.list]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
 [Compute instances.reset]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/reset
 [Compute instances.setTags]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags
+[Compute instances.setMetadata]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata
 [Compute instances.simulateMaintenanceEvent]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent
 [Compute instances.start]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/start
 [Compute instances.stop]: https://cloud.google.com/compute/docs/reference/rest/v1/instances/stop
