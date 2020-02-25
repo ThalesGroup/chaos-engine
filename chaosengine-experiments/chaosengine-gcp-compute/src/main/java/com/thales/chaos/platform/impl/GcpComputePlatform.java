@@ -541,17 +541,18 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
 
     void waitForOperation (Operation operation) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        synchronized (operation) {
+        final Object syncLock = new Object();
+        synchronized (syncLock) {
             executor.scheduleWithFixedDelay(() -> {
-                synchronized (operation) {
+                synchronized (syncLock) {
                     if (isOperationComplete(operation.getSelfLink())) {
-                        operation.notifyAll();
+                        syncLock.notifyAll();
                     }
                 }
             }, 1, 1, TimeUnit.SECONDS);
             try {
                 // 5 minute timeout since that is our default experiment timeout.
-                operation.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                syncLock.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
@@ -620,10 +621,11 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     void performTaskAfterOperationCompletes (String operationSelfLink, Runnable task) {
         ScheduledExecutorService operationWatcher = Executors.newSingleThreadScheduledExecutor();
         ExecutorService taskRunner = Executors.newSingleThreadExecutor();
+        final Object syncLock = new Object();
         taskRunner.submit(() -> {
-            synchronized (operationSelfLink) {
+            synchronized (syncLock) {
                 try {
-                    operationSelfLink.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                    syncLock.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
@@ -634,9 +636,9 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
             }
         });
         operationWatcher.scheduleWithFixedDelay(() -> {
-            synchronized (operationSelfLink) {
+            synchronized (syncLock) {
                 if (isOperationComplete(operationSelfLink)) {
-                    operationSelfLink.notifyAll();
+                    syncLock.notifyAll();
                     operationWatcher.shutdown();
                 }
             }
