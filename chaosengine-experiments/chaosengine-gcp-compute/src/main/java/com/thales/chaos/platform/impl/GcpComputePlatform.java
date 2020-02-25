@@ -552,7 +552,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
             }, 1, 1, TimeUnit.SECONDS);
             try {
                 // 5 minute timeout since that is our default experiment timeout.
-                syncLock.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
@@ -625,7 +625,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         taskRunner.submit(() -> {
             synchronized (syncLock) {
                 try {
-                    syncLock.wait(1000 /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                    syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
