@@ -11,12 +11,6 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>com.thales.chaos</groupId>
-            <artifactId>chaosengine-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- Kubernetes Dependencies -->
         <dependency>
             <groupId>io.kubernetes</groupId>

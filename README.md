@@ -9,7 +9,7 @@ Chaos Engine makes intelligent decisions in how and when to create experiments. 
 
 ## Supported Platforms
 
-Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.
+Chaos Engine currently supports Amazon Web Services, Google Cloud Platform, Pivotal Cloud Foundry, and Kubernetes. 
 
 ### :warning: Warning
 
@@ -23,7 +23,7 @@ Running chaos experiments in a non-resilient system can result in significant fa
 | Cloud Foundry | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | AWS EC2 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | AWS RDS | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x: |
-| GCP Compute | :construction: | :construction: | :construction: |
+| GCP Compute | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 #### Legend
 :heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support

@@ -16,13 +16,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.thales.chaos</groupId>
-            <artifactId>chaosengine-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-client-lib -->
         <dependency>
             <groupId>org.cloudfoundry</groupId>

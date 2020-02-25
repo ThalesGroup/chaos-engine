@@ -17,6 +17,7 @@
 
 package com.thales.chaos.platform;
 
+import com.thales.chaos.constants.SSHConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.shellclient.ShellClient;
 import com.thales.chaos.shellclient.ssh.SSHCredentials;
@@ -28,6 +29,7 @@ public interface SshBasedExperiment<T extends Container> extends ShellBasedExper
     default ShellClient getConnectedShellClient (T container) throws IOException {
         return new ChaosSSHClient().withEndpoint(getEndpoint(container))
                                    .withSSHCredentials(getSshCredentials(container))
+                                   .withRunningDirectory(getRunningDirectory())
                                    .connect();
     }
 
@@ -47,4 +49,8 @@ public interface SshBasedExperiment<T extends Container> extends ShellBasedExper
      * @return An SSH Credentials object, with a username, and either a Password Generator, or a private key
      */
     SSHCredentials getSshCredentials (T container);
+
+    default String getRunningDirectory () {
+        return SSHConstants.TEMP_DIRECTORY;
+    }
 }

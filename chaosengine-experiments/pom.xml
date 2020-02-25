@@ -13,10 +13,22 @@
     <artifactId>chaosengine-experiments</artifactId>
 
     <modules>
+        <module>chaosengine-gcp-compute</module>
         <module>chaosengine-kubernetes</module>
         <module>chaosengine-aws-ec2</module>
         <module>chaosengine-aws-rds</module>
         <module>chaosengine-pcf</module>
     </modules>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.thales.chaos</groupId>
+            <artifactId>chaosengine-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
 
 </project>
