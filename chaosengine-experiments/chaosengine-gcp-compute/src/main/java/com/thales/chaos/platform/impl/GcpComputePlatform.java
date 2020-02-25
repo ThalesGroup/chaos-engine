@@ -545,7 +545,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
             executor.scheduleWithFixedDelay(() -> {
                 synchronized (operation) {
                     if (isOperationComplete(operation.getSelfLink())) {
-                        operation.notify();
+                        operation.notifyAll();
                     }
                 }
             }, 1, 1, TimeUnit.SECONDS);
@@ -636,7 +636,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         operationWatcher.scheduleWithFixedDelay(() -> {
             synchronized (operationSelfLink) {
                 if (isOperationComplete(operationSelfLink)) {
-                    operationSelfLink.notify();
+                    operationSelfLink.notifyAll();
                     operationWatcher.shutdown();
                 }
             }
