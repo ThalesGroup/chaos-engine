@@ -32,6 +32,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -101,6 +102,9 @@ public class XMPPNotificationService {
         }
 
         private Collection<EntityBareJid> parse (String jids) {
+            if (jids == null || jids.isBlank()) {
+                return Collections.emptySet();
+            }
             return Arrays.stream(jids.split(","))
                          .map(JidCreate::entityBareFromOrNull)
                          .filter(Objects::nonNull)

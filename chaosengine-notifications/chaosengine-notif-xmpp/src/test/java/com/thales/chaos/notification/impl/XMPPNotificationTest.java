@@ -304,4 +304,34 @@ public class XMPPNotificationTest {
         verify(xmppNotification, times(2)).sendMultiUserMessage(any(), any());
         verify(xmppNotification, times(4)).getConnection();
     }
+
+    @Test
+    public void createAddressBook () throws Exception {
+        String recipients = USER_1 + "," + USER_2;
+        String conferenceRooms = ROOM_1 + "," + ROOM_2;
+        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
+        assertEquals(2, book.getConferenceRooms().size());
+        assertEquals(2, book.getRecipients().size());
+        assertThat(book.getRecipients(), hasItems(JidCreate.entityBareFrom(USER_1), JidCreate.entityBareFrom(USER_2)));
+        assertThat(book.getConferenceRooms(),
+                hasItems(JidCreate.entityBareFrom(ROOM_1), JidCreate.entityBareFrom(ROOM_2)));
+    }
+
+    @Test
+    public void createAddressBookUsersOnly () throws Exception {
+        String recipients = USER_1 + "," + USER_2;
+        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, null);
+        assertEquals(0, book.getConferenceRooms().size());
+        assertEquals(2, book.getRecipients().size());
+        assertThat(book.getRecipients(), hasItems(JidCreate.entityBareFrom(USER_1), JidCreate.entityBareFrom(USER_2)));
+    }
+
+    @Test
+    public void createAddressBookRoomsOnly () throws Exception {
+        String conferenceRooms = ROOM_1;
+        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(null, conferenceRooms);
+        assertEquals(1, book.getConferenceRooms().size());
+        assertEquals(0, book.getRecipients().size());
+        assertThat(book.getConferenceRooms(), hasItems(JidCreate.entityBareFrom(ROOM_1)));
+    }
 }
