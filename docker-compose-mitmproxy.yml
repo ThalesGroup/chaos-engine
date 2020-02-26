@@ -1,0 +1,22 @@
+version: '3.4'
+services:
+  mitmproxy:
+    image: mitmproxy/mitmproxy
+    volumes:
+      - mitmproxy_certificates:/home/mitmproxy/.mitmproxy
+    ports:
+      - "127.0.0.1:8081:8081"
+    command:
+      - mitmweb
+      - --web-iface
+      - 0.0.0.0
+
+  chaosengine:
+    command:
+      - "-Dhttp.proxyHost=mitmproxy"
+      - "-Dhttp.proxyPort=8080"
+      - "-jar"
+      - "chaosengine.jar"
+
+volumes:
+  mitmproxy_certificates: {}
