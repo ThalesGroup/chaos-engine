@@ -40,10 +40,6 @@ LABEL com.datadoghq.ad.logs='[ { "source":"java", "service": "chaosengine" } ]'
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib"]
 CMD ["-jar", "chaosengine.jar"]
 
-FROM develop AS debug
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", "-jar", "/chaosengine.jar"]
-EXPOSE 5005
-
 FROM develop AS master
 ENV DEPLOYMENT_ENVIRONMENT=PROD
 ENV SPRING_PROFILES_ACTIVE=PRODUCTION
