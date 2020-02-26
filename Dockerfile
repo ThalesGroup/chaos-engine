@@ -37,7 +37,8 @@ RUN rm ./lib/chaosengine-launcher*.jar
 ENV DEPLOYMENT_ENVIRONMENT=DEVELOPMENT
 ENV SPRING_PROFILES_ACTIVE=DEVELOPMENT
 LABEL com.datadoghq.ad.logs='[ { "source":"java", "service": "chaosengine" } ]'
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib", "-jar", "chaosengine.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-classpath", ".:./lib/*", "-Dloader.path=lib"]
+CMD ["-jar", "chaosengine.jar"]
 
 FROM develop AS debug
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", "-jar", "/chaosengine.jar"]
