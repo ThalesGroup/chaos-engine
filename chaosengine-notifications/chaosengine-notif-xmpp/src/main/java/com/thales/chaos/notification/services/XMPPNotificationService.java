@@ -24,6 +24,7 @@ import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,6 +33,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -76,19 +78,27 @@ public class XMPPNotificationService {
     }
 
     @Bean
+    @RefreshScope
     AddressBook getAddressBook () {
         return new AddressBook(recipients, conferenceRooms);
     }
 
     @Bean
+    @RefreshScope
     XMPPTCPConnectionConfiguration getConfig () throws XmppStringprepException, NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sc = JavaPinning.forPin(serverCertFingerprint);
         return XMPPTCPConnectionConfiguration.builder()
                                              .setUsernameAndPassword(user, password)
                                              .setXmppDomain(domain)
                                              .setHost(hostname)
-                                             .setCustomSSLContext(sc)
+                                             .setCustomSSLContext(getSecurityContext())
                                              .build();
+    }
+
+    SSLContext getSecurityContext () throws NoSuchAlgorithmException, KeyManagementException {
+        if (serverCertFingerprint != null && !serverCertFingerprint.isBlank()) {
+            return JavaPinning.forPin(serverCertFingerprint);
+        }
+        return SSLContext.getDefault();
     }
 
     public static class AddressBook {
@@ -101,6 +111,9 @@ public class XMPPNotificationService {
         }
 
         private Collection<EntityBareJid> parse (String jids) {
+            if (jids == null || jids.isBlank()) {
+                return Collections.emptySet();
+            }
             return Arrays.stream(jids.split(","))
                          .map(JidCreate::entityBareFromOrNull)
                          .filter(Objects::nonNull)
