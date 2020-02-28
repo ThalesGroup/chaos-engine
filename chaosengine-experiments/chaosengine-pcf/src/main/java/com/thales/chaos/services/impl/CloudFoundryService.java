@@ -86,7 +86,7 @@ public class CloudFoundryService implements CloudService {
     }
 
     Optional<ProxyConfiguration> proxyConfiguration () {
-        List<Proxy> proxies = ProxySelector.getDefault().select(URI.create(apiHost));
+        List<Proxy> proxies = ProxySelector.getDefault().select(URI.create("https://" + apiHost + ":" + port));
         if (proxies == null || proxies.isEmpty() || proxies.get(0).equals(Proxy.NO_PROXY)) {
             return Optional.empty();
         }
