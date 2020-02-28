@@ -24,6 +24,7 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
+import org.cloudfoundry.reactor.ProxyConfiguration;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.doppler.ReactorDopplerClient;
@@ -35,6 +36,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.*;
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 @ConfigurationProperties(prefix = "cf")
@@ -74,7 +79,26 @@ public class CloudFoundryService implements CloudService {
     @Bean
     @RefreshScope
     ConnectionContext connectionContext () {
-        return DefaultConnectionContext.builder().apiHost(apiHost).port(port).build();
+        DefaultConnectionContext.Builder connectionContextBuilder;
+        connectionContextBuilder = DefaultConnectionContext.builder().apiHost(apiHost).port(port);
+        proxyConfiguration().ifPresent(connectionContextBuilder::proxyConfiguration);
+        return connectionContextBuilder.build();
+    }
+
+    Optional<ProxyConfiguration> proxyConfiguration () {
+        List<Proxy> proxies = ProxySelector.getDefault().select(URI.create(apiHost));
+        if (proxies == null || proxies.isEmpty() || proxies.get(0).equals(Proxy.NO_PROXY)) {
+            return Optional.empty();
+        }
+        Proxy proxy = proxies.get(0);
+        SocketAddress proxyAddress = proxy.address();
+        if (!(proxyAddress instanceof InetSocketAddress)) {
+            return Optional.empty();
+        }
+        InetSocketAddress inetSocketAddress = (InetSocketAddress) proxyAddress;
+        String proxyHost = inetSocketAddress.getHostString();
+        int proxyPort = inetSocketAddress.getPort();
+        return Optional.of(ProxyConfiguration.builder().host(proxyHost).port(proxyPort).build());
     }
 
     @Bean
