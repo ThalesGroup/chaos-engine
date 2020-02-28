@@ -83,13 +83,19 @@ public class XMPPNotificationService {
 
     @Bean
     XMPPTCPConnectionConfiguration getConfig () throws XmppStringprepException, NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sc = JavaPinning.forPin(serverCertFingerprint);
         return XMPPTCPConnectionConfiguration.builder()
                                              .setUsernameAndPassword(user, password)
                                              .setXmppDomain(domain)
                                              .setHost(hostname)
-                                             .setCustomSSLContext(sc)
+                                             .setCustomSSLContext(getSecurityContext())
                                              .build();
+    }
+
+    SSLContext getSecurityContext () throws NoSuchAlgorithmException, KeyManagementException {
+        if (serverCertFingerprint != null && !serverCertFingerprint.isBlank()) {
+            return JavaPinning.forPin(serverCertFingerprint);
+        }
+        return SSLContext.getDefault();
     }
 
     public static class AddressBook {
