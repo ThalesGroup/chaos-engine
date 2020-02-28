@@ -34,7 +34,10 @@ public class XMPPNotificationServiceTest {
     public void createAddressBook () throws Exception {
         String recipients = USER_1 + "," + USER_2;
         String conferenceRooms = ROOM_1 + "," + ROOM_2;
-        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, conferenceRooms);
+        XMPPNotificationService service = new XMPPNotificationService();
+        service.setRecipients(recipients);
+        service.setConferenceRooms(conferenceRooms);
+        XMPPNotificationService.AddressBook book = service.getAddressBook();
         assertEquals(2, book.getConferenceRooms().size());
         assertEquals(2, book.getRecipients().size());
         assertThat(book.getRecipients(), hasItems(JidCreate.entityBareFrom(USER_1), JidCreate.entityBareFrom(USER_2)));
@@ -45,7 +48,9 @@ public class XMPPNotificationServiceTest {
     @Test
     public void createAddressBookUsersOnly () throws Exception {
         String recipients = USER_1 + "," + USER_2;
-        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(recipients, null);
+        XMPPNotificationService service = new XMPPNotificationService();
+        service.setRecipients(recipients);
+        XMPPNotificationService.AddressBook book = service.getAddressBook();
         assertEquals(0, book.getConferenceRooms().size());
         assertEquals(2, book.getRecipients().size());
         assertThat(book.getRecipients(), hasItems(JidCreate.entityBareFrom(USER_1), JidCreate.entityBareFrom(USER_2)));
@@ -54,7 +59,9 @@ public class XMPPNotificationServiceTest {
     @Test
     public void createAddressBookRoomsOnly () throws Exception {
         String conferenceRooms = ROOM_1;
-        XMPPNotificationService.AddressBook book = new XMPPNotificationService.AddressBook(null, conferenceRooms);
+        XMPPNotificationService service = new XMPPNotificationService();
+        service.setConferenceRooms(conferenceRooms);
+        XMPPNotificationService.AddressBook book = service.getAddressBook();
         assertEquals(1, book.getConferenceRooms().size());
         assertEquals(0, book.getRecipients().size());
         assertThat(book.getConferenceRooms(), hasItems(JidCreate.entityBareFrom(ROOM_1)));
