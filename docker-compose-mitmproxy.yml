@@ -1,0 +1,50 @@
+version: '3.4'
+services:
+  mitmproxy:
+    image: mitmproxy/mitmproxy
+    volumes:
+      - mitmproxy_certificates:/home/mitmproxy/.mitmproxy
+    ports:
+      - "127.0.0.1:8081:8081"
+    command:
+      - mitmweb
+      - --web-iface
+      - 0.0.0.0
+      - --ssl-insecure
+
+  mitmproxy_certificate_to_keystore:
+    image: openjdk:11.0.4-jre-slim
+    depends_on:
+      - mitmproxy
+    volumes:
+      - mitmproxy_certificates:/home/mitmproxy/certificates
+      - java_security:/usr/local/openjdk-11/lib/security
+    working_dir: /usr/local/openjdk-11/lib/security
+    entrypoint: [ "keytool" ]
+    command:
+      - -importcert
+      - -cacerts
+      - -storepass
+      - changeit
+      - -alias
+      - mitmproxy
+      - -file
+      - /home/mitmproxy/certificates/mitmproxy-ca-cert.pem
+      - -noprompt
+
+  chaosengine:
+    depends_on:
+      - mitmproxy_certificate_to_keystore
+    volumes:
+      - java_security:/usr/local/openjdk-11/lib/security
+    command:
+      - "-Dhttp.proxyHost=mitmproxy"
+      - "-Dhttp.proxyPort=8080"
+      - "-Dhttps.proxyHost=mitmproxy"
+      - "-Dhttps.proxyPort=8080"
+      - "-jar"
+      - "chaosengine.jar"
+
+volumes:
+  mitmproxy_certificates: {}
+  java_security: {}

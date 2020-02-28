@@ -1,9 +1,7 @@
 version: '3.4'
 services:
   chaosengine:
-    build:
-      target: debug
+    command: ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005", "-jar", "chaosengine.jar"]
     ports:
     - "8080:8080"
-    - "8081:8081"
     - "5005:5005"
