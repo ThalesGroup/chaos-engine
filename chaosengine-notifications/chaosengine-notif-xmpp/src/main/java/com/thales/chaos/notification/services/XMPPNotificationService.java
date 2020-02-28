@@ -24,6 +24,7 @@ import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -77,11 +78,13 @@ public class XMPPNotificationService {
     }
 
     @Bean
+    @RefreshScope
     AddressBook getAddressBook () {
         return new AddressBook(recipients, conferenceRooms);
     }
 
     @Bean
+    @RefreshScope
     XMPPTCPConnectionConfiguration getConfig () throws XmppStringprepException, NoSuchAlgorithmException, KeyManagementException {
         return XMPPTCPConnectionConfiguration.builder()
                                              .setUsernameAndPassword(user, password)
