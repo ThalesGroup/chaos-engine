@@ -17,10 +17,14 @@
 
 package com.thales.chaos.notification.services;
 
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
@@ -77,5 +81,36 @@ public class XMPPNotificationServiceTest {
         assertEquals(SSLContext.getDefault(), service.getSecurityContext());
         service.setServerCertFingerprint(certFingerPrint);
         assertNotEquals(SSLContext.getDefault(), service.getSecurityContext());
+    }
+
+    @Test
+    public void getConfig () throws XmppStringprepException, NoSuchAlgorithmException, KeyManagementException {
+        String user = "user";
+        String password = "passwd";
+        String domain = "domain";
+        String hostname = "hostname";
+        XMPPTCPConnectionConfiguration connectionConfigurationExpected = XMPPTCPConnectionConfiguration.builder()
+                                                                                                       .setUsernameAndPassword(
+                                                                                                               user,
+                                                                                                               password)
+                                                                                                       .setXmppDomain(
+                                                                                                               domain)
+                                                                                                       .setHost(hostname)
+                                                                                                       .setCustomSSLContext(
+                                                                                                               SSLContext
+                                                                                                                       .getDefault())
+                                                                                                       .build();
+        XMPPNotificationService service = new XMPPNotificationService();
+        service.setUser(user);
+        service.setPassword(password);
+        service.setDomain(domain);
+        service.setHostname(hostname);
+        XMPPTCPConnectionConfiguration connectionConfiguration = service.getConfig();
+        assertEquals(connectionConfigurationExpected.getUsername(), connectionConfiguration.getUsername());
+        assertEquals(connectionConfigurationExpected.getPassword(), connectionConfiguration.getPassword());
+        assertEquals(connectionConfigurationExpected.getXMPPServiceDomain(),
+                connectionConfiguration.getXMPPServiceDomain());
+        assertEquals(connectionConfigurationExpected.getCustomSSLContext(),
+                connectionConfiguration.getCustomSSLContext());
     }
 }
