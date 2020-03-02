@@ -10,7 +10,7 @@ The official Pivotal Cloud Foundry Java Client is used to interact with Cloud Fo
 
 Resource: <https://github.com/cloudfoundry/cf-java-client>
 
-Version: 3.13.0.RELEASE
+Version: 4.5.0.RELEASE
 
 Maven Repositories:
 
@@ -38,7 +38,7 @@ Node Discovery for Cloud Foundry results in two rosters. The first roster repres
 
 ### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html>
 
 The module calls the Applications List API from Cloud Foundry via the Java SDK. Multiple Container objects are created as the result of this call. One set of Containers represents each Application. Another set of Containers is created by iterating for each of the requested number of instances per application, and represents every individual instance.
 
@@ -58,19 +58,19 @@ Stopping a Cloud Foundry instance validates a few things. Any chain of calls tha
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html>
 
 The Application Instance Terminate is called through the Java SDK. This will stop the instance of an application. The BOSH manager is supposed to restart instances at this point.
 
 #### Health Check Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html>
 
 The Application Instance Summary information queried via the Java SDK. The specific InstanceID is filtered from the results, and the State of the container is checked.
 
 #### Self Healing
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html>
 
 The Application  is restaged via the Restage Application API via the Java SDK.
 
@@ -82,7 +82,7 @@ See [Script Experiments](./Script_Experiments/included_script_experiments.md) fo
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/info/get_info.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/info/get_info.html>
 
 Resource: <https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html>
 
@@ -127,7 +127,7 @@ $ ssh -p 2222 cf:abcdefab-1234-5678-abcd-1234abcd1234/0@ssh.MY-DOMAIN.com
 
 #### Health Check Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html>
 
 SSH base experiments use two phase health check mechanism:
 
@@ -147,19 +147,19 @@ Application Scaling tests verify that any autoscaling that is configured does no
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html>
 
 The Application Update API is called via the Cloud Foundry SDK Applications Scale interface. Containers are appropriately created or destroyed automatically.
 
 #### Health Check Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html>
 
 All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.
 
 #### Self Healing & Experiment Finalization
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html>
 
 The application is rescaled back to its original value through the same API by which the experiment was launched.
 
@@ -175,13 +175,13 @@ Restarting your application stops your application and restarts it with the alre
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/4.2.0/apps/creating_an_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/creating_an_app.html>
 
-[A Restart Application request is initiated through the Cloud Foundry SDK.](https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html)
+[A Restart Application request is initiated through the Cloud Foundry SDK.](https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html)
 
 #### Health Check Mechanism
 
-[API:](https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html)<https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html>
+[API:](https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html)<https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html>
 
 All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.
 
@@ -193,13 +193,13 @@ Restaging your application stops your application and restages it, by compiling 
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html>
 
 A Restage Application request is initiated through the Cloud Foundry SDK.
 
 #### Health Check Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html>
 
 All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.
 
@@ -211,19 +211,19 @@ Unmap application routes tests how the applications running in Cloud Foundry con
 
 #### Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/mapping_an_app_and_a_route.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/mapping_an_app_and_a_route.html>
 
 A unmap route request is initiated through the Cloud Foundry SDK. When an application has multiple routes one of them is selected randomly and unmaped. When an application has no routes the experiment is skipped.
 
 #### Health Check Mechanism
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html>
 
 All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.
 
 #### Self Healing & Experiment Finalization
 
-API: <https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/delete_a_particular_route_mapping.html>
+API: <https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/delete_a_particular_route_mapping.html>
 
 In the end of the experiment the previously unmaped route is assigned back to the application
 
