@@ -10,6 +10,10 @@
     <artifactId>chaosengine-kubernetes</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaos-engine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+
     <dependencies>
         <!-- Kubernetes Dependencies -->
         <dependency>

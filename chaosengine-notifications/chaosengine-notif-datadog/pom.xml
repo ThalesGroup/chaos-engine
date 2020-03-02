@@ -11,6 +11,10 @@
 
     <artifactId>chaosengine-notif-datadog</artifactId>
 
+    <properties>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaos-engine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.thales.chaos</groupId>

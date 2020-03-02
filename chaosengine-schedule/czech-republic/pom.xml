@@ -11,4 +11,8 @@
 
     <artifactId>chaosengine-schedule-czech-republic</artifactId>
 
+    <properties>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaos-engine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+
 </project>
