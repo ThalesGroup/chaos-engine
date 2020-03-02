@@ -1522,7 +1522,7 @@
 <h2 id="sdk">SDK</h2>
 <p>The official Pivotal Cloud Foundry Java Client is used to interact with Cloud Foundry.</p>
 <p>Resource: <a href="https://github.com/cloudfoundry/cf-java-client">https://github.com/cloudfoundry/cf-java-client</a></p>
-<p>Version: 3.13.0.RELEASE</p>
+<p>Version: 4.5.0.RELEASE</p>
 <p>Maven Repositories:</p>
 <ul>
 <li><a href="https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-operations">https://mvnrepository.com/artifact/org.cloudfoundry/cloudfoundry-operations</a></li>
@@ -1584,7 +1584,7 @@
 <h2 id="node-discovery">Node Discovery</h2>
 <p>Node Discovery for Cloud Foundry results in two rosters. The first roster represents every application, while the second represents every instance of every application. This allows experiments to operate at multiple layers in Cloud Foundry.</p>
 <h3 id="mechanism">Mechanism</h3>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html</a></p>
 <p>The module calls the Applications List API from Cloud Foundry via the Java SDK. Multiple Container objects are created as the result of this call. One set of Containers represents each Application. Another set of Containers is created by iterating for each of the requested number of instances per application, and represents every individual instance.</p>
 <h3 id="self-awareness">Self Awareness</h3>
 <p>The Chaos Engine is able to determine if it is running in Cloud Foundry. It does so by looking for a pair of environment variables that Cloud Foundry sets in the container where the application runs. These variables are <strong>vcap.application.name</strong> and <strong>CF_INSTANCE_ID</strong>. These values are compared to the nodes during discovery, and if there is a match, the node is dropped from the roster.</p>
@@ -1594,19 +1594,19 @@
 <h3 id="application-instance-stopped">Application Instance Stopped</h3>
 <p>Stopping a Cloud Foundry instance validates a few things. Any chain of calls that pass through the instance should seamlessly be handled by other available instances. The instance should be able to resume operations and start taking requests once BOSH realizes a container is terminated, and software in the container should be capable of starting up without issue.</p>
 <h4 id="mechanism_1">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html">https://apidocs.cloudfoundry.org/3.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html">https://apidocs.cloudfoundry.org/4.5.0/apps/terminate_the_running_app_instance_at_the_given_index.html</a></p>
 <p>The Application Instance Terminate is called through the Java SDK. This will stop the instance of an application. The BOSH manager is supposed to restart instances at this point.</p>
 <h4 id="health-check-mechanism">Health Check Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
 <p>The Application Instance Summary information queried via the Java SDK. The specific InstanceID is filtered from the results, and the State of the container is checked.</p>
 <h4 id="self-healing">Self Healing</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html</a></p>
 <p>The Application  is restaged via the Restage Application API via the Java SDK.</p>
 <h3 id="ssh-based-experiments">SSH Based Experiments</h3>
 <p>Cloud Foundry Containers support SSH Based experiments that can be used to simulate specific failure scenarios like high CPU or MEM consumption.</p>
 <p>See <a href="../Script_Experiments/included_script_experiments/">Script Experiments</a> for more details.</p>
 <h4 id="mechanism_2">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/info/get_info.html">https://apidocs.cloudfoundry.org/3.5.0/info/get_info.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/info/get_info.html">https://apidocs.cloudfoundry.org/4.5.0/info/get_info.html</a></p>
 <p>Resource: <a href="https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html">https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html</a></p>
 <p>A combination of information is used to create an SSH Connection. The Info API provides an SSH Endpoint Address and port. A separate API call provides a one time password to be used for the SSH connection.</p>
 <p>A connection for the individual instance is created by using the application id and instance id as a username (Formatted as <strong>cf:<em>ApplicationID</em>/*InstanceID</strong>*. This connection is passed to the SSH Manager to run SSH based experiments.</p>
@@ -1637,7 +1637,7 @@ With the above example, you ssh into the container hosting the first instance of
 </pre></div>
 
 <h4 id="health-check-mechanism_1">Health Check Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
 <p>SSH base experiments use two phase health check mechanism:</p>
 <p>1) The application instance summary information queried via the Java SDK. The specific InstanceID is filtered from the results, and the State of the container is checked.</p>
 <p>2) (If defined) When step 1 confirms the container is healthy, ssh connection to the container is made and specific health check command is executed, if expected status code is return the healthy state is returned</p>
@@ -1646,13 +1646,13 @@ With the above example, you ssh into the container hosting the first instance of
 <h3 id="application-scaling">Application Scaling</h3>
 <p>Application Scaling tests verify that any autoscaling that is configured does not cause random issues as applications are scaled up or down. For instance, too many instances of one application may cause thread pool exhaustion on a dependent service.</p>
 <h4 id="mechanism_3">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html</a></p>
 <p>The Application Update API is called via the Cloud Foundry SDK Applications Scale interface. Containers are appropriately created or destroyed automatically.</p>
 <h4 id="health-check-mechanism_2">Health Check Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html</a></p>
 <p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
 <h4 id="self-healing-experiment-finalization">Self Healing &amp; Experiment Finalization</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/updating_an_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/updating_an_app.html</a></p>
 <p>The application is rescaled back to its original value through the same API by which the experiment was launched.</p>
 <h3 id="application-restart">Application Restart</h3>
 <p>Application Restart tests how resilient the platform is to a short downtime of an entire application. This can happen while an application is being updated with a hotfix, or if a bug in an application causes all instances to simultaneously crash.</p>
@@ -1663,31 +1663,31 @@ With the above example, you ssh into the container hosting the first instance of
 <li>application source code</li>
 </ul>
 <h4 id="mechanism_4">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/4.2.0/apps/creating_an_app.html">https://apidocs.cloudfoundry.org/4.2.0/apps/creating_an_app.html</a></p>
-<p><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">A Restart Application request is initiated through the Cloud Foundry SDK.</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/creating_an_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/creating_an_app.html</a></p>
+<p><a href="https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html">A Restart Application request is initiated through the Cloud Foundry SDK.</a></p>
 <h4 id="health-check-mechanism_3">Health Check Mechanism</h4>
-<p><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">API:</a><a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p><a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">API:</a><a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html</a></p>
 <p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
 <h3 id="application-restage">Application Restage</h3>
 <p>Application Restage tests how resilient the platform is to a short downtime of an entire application. This can happen while an application is being updated with a hotfix, or if a bug in an application causes all instances to simultaneously crash.</p>
 <p>Restaging your application stops your application and restages it, by compiling a new droplet and starting it.</p>
 <h4 id="mechanism_5">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/3.5.0/apps/restage_an_app.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/restage_an_app.html</a></p>
 <p>A Restage Application request is initiated through the Cloud Foundry SDK.</p>
 <h4 id="health-check-mechanism_4">Health Check Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html</a></p>
 <p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
 <h3 id="unmap-application-route">Unmap Application Route</h3>
 <p>Unmap application routes tests how the applications running in Cloud Foundry containers are resilient to short unavailability of resources accessible over network.</p>
 <p><a href="https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html">Routes and Domains concept description</a></p>
 <h4 id="mechanism_6">Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/mapping_an_app_and_a_route.html">https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/mapping_an_app_and_a_route.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/mapping_an_app_and_a_route.html">https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/mapping_an_app_and_a_route.html</a></p>
 <p>A unmap route request is initiated through the Cloud Foundry SDK. When an application has multiple routes one of them is selected randomly and unmaped. When an application has no routes the experiment is skipped.</p>
 <h4 id="health-check-mechanism_5">Health Check Mechanism</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/3.5.0/apps/list_all_apps.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html">https://apidocs.cloudfoundry.org/4.5.0/apps/list_all_apps.html</a></p>
 <p>All Applications are listed and parsed for running state. This ensures that any dependency chains are still healthy.</p>
 <h4 id="self-healing-experiment-finalization_1">Self Healing &amp; Experiment Finalization</h4>
-<p>API: <a href="https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/delete_a_particular_route_mapping.html">https://apidocs.cloudfoundry.org/3.5.0/routes_mapping/delete_a_particular_route_mapping.html</a></p>
+<p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/delete_a_particular_route_mapping.html">https://apidocs.cloudfoundry.org/4.5.0/routes_mapping/delete_a_particular_route_mapping.html</a></p>
 <p>In the end of the experiment the previously unmaped route is assigned back to the application</p>
                 
                   
