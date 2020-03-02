@@ -12,7 +12,7 @@
     <artifactId>chaosengine-notif-xmpp</artifactId>
 
     <properties>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaos-engine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaosengine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencies>
