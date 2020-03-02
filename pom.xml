@@ -27,6 +27,9 @@
                 <sonar.login>${env.SONAR_TOKEN}</sonar.login>
                 <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
             </properties>
+            <modules>
+                <module>chaosengine-coverage</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -66,7 +69,6 @@
         <module>chaosengine-notifications</module>
         <module>chaosengine-schedule</module>
         <module>chaosengine-test-utilities</module>
-        <module>chaos-engine-coverage</module>
     </modules>
     <packaging>pom</packaging>
 
