@@ -65,6 +65,7 @@
         <module>chaosengine-notifications</module>
         <module>chaosengine-schedule</module>
         <module>chaosengine-test-utilities</module>
+        <module>chaos-engine-coverage</module>
     </modules>
     <packaging>pom</packaging>
 
