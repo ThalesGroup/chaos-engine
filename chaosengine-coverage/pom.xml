@@ -30,7 +30,7 @@
                         <goals>
                             <goal>report-aggregate</goal>
                         </goals>
-                        <phase>verify</phase>
+                        <phase>pre-site</phase>
                     </execution>
                 </executions>
             </plugin>
