@@ -11,8 +11,4 @@
 
     <artifactId>chaosengine-schedule-canada</artifactId>
 
-    <properties>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../chaosengine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
-
 </project>
