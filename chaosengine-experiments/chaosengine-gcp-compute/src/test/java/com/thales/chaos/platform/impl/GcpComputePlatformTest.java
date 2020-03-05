@@ -17,6 +17,7 @@
 
 package com.thales.chaos.platform.impl;
 
+import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.httpjson.HttpJsonStatusCode;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.ApiExceptionFactory;
@@ -31,9 +32,11 @@ import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -48,7 +51,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -59,26 +61,38 @@ import static org.mockito.Mockito.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GcpComputePlatformTest {
     private static final String MY_AWESOME_PROJECT = "my-awesome-project";
-    @MockBean
+    private static final ProjectName projectName = ProjectName.of(MY_AWESOME_PROJECT);
+    @Mock
     private InstanceClient instanceClient;
-    @MockBean
+    @Mock
     private InstanceGroupClient instanceGroupClient;
-    @MockBean
+    @Mock
     private InstanceGroupManagerClient instanceGroupManagerClient;
-    @MockBean
+    @Mock
     private RegionInstanceGroupClient regionInstanceGroupClient;
-    @MockBean
+    @Mock
     private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
-    @MockBean
+    @Mock
     private ZoneOperationClient zoneOperationClient;
+    @MockBean
+    private CredentialsProvider computeCredentialsProvider;
     @MockBean
     private GcpComputeSelfAwareness selfAwareness;
     @MockBean
     private ContainerManager containerManager;
     @Autowired
-    private ProjectName projectName;
-    @Autowired
     private GcpComputePlatform gcpComputePlatform;
+
+    @Before
+    public void setUp () {
+        gcpComputePlatform.setProjectId(MY_AWESOME_PROJECT);
+        doReturn(instanceClient).when(gcpComputePlatform).getInstanceClient();
+        doReturn(instanceGroupClient).when(gcpComputePlatform).getInstanceGroupClient();
+        doReturn(instanceGroupManagerClient).when(gcpComputePlatform).getInstanceGroupManagerClient();
+        doReturn(regionInstanceGroupClient).when(gcpComputePlatform).getRegionInstanceGroupClient();
+        doReturn(regionInstanceGroupManagerClient).when(gcpComputePlatform).getRegionInstanceGroupManagerClient();
+        doReturn(zoneOperationClient).when(gcpComputePlatform).getZoneOperationClient();
+    }
 
     @Test
     public void isIAASPlatform () {
@@ -700,7 +714,8 @@ public class GcpComputePlatformTest {
         String newId = "987654321";
         Instance instance = Instance.newBuilder().setId(newId).build();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
-        gcpComputePlatform.getLatestInstanceId(instanceGivenName, zone);
+        String latestInstanceId = gcpComputePlatform.getLatestInstanceId(instanceGivenName, zone);
+        assertEquals(latestInstanceId, newId);
     }
 
     @Test
@@ -944,26 +959,11 @@ public class GcpComputePlatformTest {
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
-        private InstanceClient instanceClient;
-        @Autowired
-        private InstanceGroupClient instanceGroupClient;
-        @Autowired
-        private InstanceGroupManagerClient instanceGroupManagerClient;
-        @Autowired
-        private RegionInstanceGroupClient regionInstanceGroupClient;
-        @Autowired
-        private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
-        @Autowired
-        private ZoneOperationClient zoneOperationClient;
-        @Autowired
         private GcpComputeSelfAwareness selfAwareness;
         @Autowired
         private ContainerManager containerManager;
-
-        @Bean(name = COMPUTE_PROJECT)
-        public ProjectName projectName () {
-            return ProjectName.of(MY_AWESOME_PROJECT);
-        }
+        @Autowired
+        private CredentialsProvider computeCredentialsProvider;
 
         @Bean
         public GcpComputePlatform gcpComputePlatform () {

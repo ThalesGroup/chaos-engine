@@ -18,6 +18,7 @@
 package com.thales.chaos.platform.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
@@ -28,7 +29,6 @@ import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
-import com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.SshBasedExperiment;
 import com.thales.chaos.platform.enums.ApiStatus;
@@ -38,14 +38,12 @@ import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
 import com.thales.chaos.shellclient.ssh.SSHCredentials;
 import org.apache.commons.net.util.SubnetUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,7 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.thales.chaos.services.impl.GcpComputeService.COMPUTE_PROJECT;
+import static com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
 import static com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey.CHAOS_USERNAME;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
@@ -67,22 +65,9 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 @ConfigurationProperties("gcp.compute")
 @Component
 public class GcpComputePlatform extends Platform implements SshBasedExperiment<GcpComputeInstanceContainer> {
-    private static final Logger log = LoggerFactory.getLogger(GcpComputePlatform.class);
     @Autowired
-    private InstanceClient instanceClient;
-    @Autowired
-    private InstanceGroupClient instanceGroupClient;
-    @Autowired
-    private InstanceGroupManagerClient instanceGroupManagerClient;
-    @Autowired
-    private RegionInstanceGroupClient regionInstanceGroupClient;
-    @Autowired
-    private RegionInstanceGroupManagerClient regionInstanceGroupManagerClient;
-    @Autowired
-    private ZoneOperationClient zoneOperationClient;
-    @Autowired
-    @Qualifier(COMPUTE_PROJECT)
-    private ProjectName projectName;
+    private CredentialsProvider computeCredentialsProvider;
+    private String projectId;
     @Autowired
     private GcpComputeSelfAwareness selfAwareness;
     @Autowired
@@ -102,7 +87,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     public ApiStatus getApiStatus () {
         try {
-            instanceClient.aggregatedListInstances(projectName);
+            getInstanceClient().aggregatedListInstances(getProjectName());
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
@@ -123,8 +108,8 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     protected List<Container> generateRoster () {
         log.debug("Generating roster of GCP Compute instances");
-        InstanceClient.AggregatedListInstancesPagedResponse instances = instanceClient.aggregatedListInstances(
-                projectName);
+        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(
+                getProjectName());
         return StreamSupport.stream(instances.iterateAll().spliterator(), false)
                             .map(InstancesScopedList::getInstancesList)
                             .filter(Objects::nonNull)
@@ -268,10 +253,10 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         GcpComputeInstanceContainer gcpContainer = (GcpComputeInstanceContainer) container;
         String oldUUID = gcpContainer.getUniqueIdentifier();
         ProjectZoneInstanceName instanceName = ProjectZoneInstanceName.of(gcpContainer.getInstanceName(),
-                projectName.getProject(),
+                getProjectName().getProject(),
                 gcpContainer.getZone());
         try {
-            Instance instance = instanceClient.getInstance(instanceName);
+            Instance instance = getInstanceClient().getInstance(instanceName);
             String instanceId = instance.getId();
             return !Objects.equals(instanceId, oldUUID);
         } catch (ApiException e) {
@@ -280,10 +265,14 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         }
     }
 
-    public String stopInstance (GcpComputeInstanceContainer container) {
-        log.info("Stopping instance {}", v(DATADOG_CONTAINER_KEY, container));
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        return instanceClient.stopInstance(instance).getSelfLink();
+    InstanceClient getInstanceClient () {
+        try {
+            return InstanceClient.create(InstanceSettings.newBuilder()
+                                                         .setCredentialsProvider(computeCredentialsProvider)
+                                                         .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
     }
 
     static ProjectZoneInstanceName getProjectZoneInstanceNameOfContainer (GcpComputeInstanceContainer container,
@@ -295,12 +284,22 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                                       .build();
     }
 
+    private ProjectName getProjectName () {
+        return ProjectName.of(projectId);
+    }
+
+    public String stopInstance (GcpComputeInstanceContainer container) {
+        log.info("Stopping instance {}", v(DATADOG_CONTAINER_KEY, container));
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        return getInstanceClient().stopInstance(instance).getSelfLink();
+    }
+
     public ContainerHealth isContainerRunning (GcpComputeInstanceContainer gcpComputeInstanceContainer) {
         ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(gcpComputeInstanceContainer,
-                projectName);
+                getProjectName());
         Instance instance;
         try {
-            instance = instanceClient.getInstance(instanceName);
+            instance = getInstanceClient().getInstance(instanceName);
         } catch (ApiException e) {
             return Optional.of(e)
                            .map(ApiException::getStatusCode)
@@ -315,39 +314,23 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
 
     public String simulateMaintenance (GcpComputeInstanceContainer container) {
         log.info("Simulating Host Maintenance for Google Compute instance {}", v(DATADOG_CONTAINER_KEY, container));
-        final Operation operation = instanceClient.simulateMaintenanceEventInstance(
-                getProjectZoneInstanceNameOfContainer(container, projectName));
+        final Operation operation = getInstanceClient().simulateMaintenanceEventInstance(
+                getProjectZoneInstanceNameOfContainer(container, getProjectName()));
         return operation.getSelfLink();
     }
 
     public String setTags (GcpComputeInstanceContainer container, List<String> tags) {
         log.info("Setting tags of instance {} to {}", v(DATADOG_CONTAINER_KEY, container), tags);
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        String oldFingerprint = instanceClient.getInstance(instance).getTags().getFingerprint();
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        String oldFingerprint = getInstanceClient().getInstance(instance).getTags().getFingerprint();
         return setTagsSafe(container, tags, oldFingerprint);
     }
 
     public String setTagsSafe (GcpComputeInstanceContainer container, List<String> newTags, String oldFingerprint) {
         Tags tagChangeRequest = Tags.newBuilder().addAllItems(newTags != null ? newTags : Collections.emptyList()).
                 setFingerprint(oldFingerprint).build();
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        return instanceClient.setTagsInstance(instance, tagChangeRequest).getSelfLink();
-    }
-
-    public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {
-        log.debug("Evaluating tags of {}, expecting {}", v(DATADOG_CONTAINER_KEY, container), expectedTags);
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        List<String> actualTags = instanceClient.getInstance(instance).getTags().getItemsList();
-        log.debug("Actual tags are {}", actualTags);
-        actualTags = actualTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(actualTags);
-        expectedTags = expectedTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(expectedTags);
-        return actualTags.equals(expectedTags);
-    }
-
-    public void startInstance (GcpComputeInstanceContainer container) {
-        log.info("Starting instance {}", v(DATADOG_CONTAINER_KEY, container));
-        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, projectName);
-        instanceClient.startInstance(instance);
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        return getInstanceClient().setTagsInstance(instance, tagChangeRequest).getSelfLink();
     }
 
     public boolean isContainerGroupAtCapacity (GcpComputeInstanceContainer container) {
@@ -370,6 +353,16 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         return group;
     }
 
+    public boolean checkTags (GcpComputeInstanceContainer container, List<String> expectedTags) {
+        log.debug("Evaluating tags of {}, expecting {}", v(DATADOG_CONTAINER_KEY, container), expectedTags);
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        List<String> actualTags = getInstanceClient().getInstance(instance).getTags().getItemsList();
+        log.debug("Actual tags are {}", actualTags);
+        actualTags = actualTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(actualTags);
+        expectedTags = expectedTags == null ? Collections.emptyList() : Ordering.natural().sortedCopy(expectedTags);
+        return actualTags.equals(expectedTags);
+    }
+
     private boolean isContainerZoneGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
         String group = getContainerGroup(container);
         ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.parse(
@@ -378,11 +371,32 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                 projectZoneInstanceGroupManagerName.getInstanceGroupManager(),
                 projectZoneInstanceGroupManagerName.getProject(),
                 projectZoneInstanceGroupManagerName.getZone());
-        Integer actualSize = instanceGroupClient.getInstanceGroup(projectZoneInstanceGroupName).getSize();
-        Integer targetSize = instanceGroupManagerClient.getInstanceGroupManager(projectZoneInstanceGroupManagerName)
-                                                       .getTargetSize();
+        Integer actualSize = getInstanceGroupClient().getInstanceGroup(projectZoneInstanceGroupName).getSize();
+        Integer targetSize = getInstanceGroupManagerClient().getInstanceGroupManager(projectZoneInstanceGroupManagerName)
+                                                            .getTargetSize();
         log.debug("For group {}, {}, {}", group, kv("actualSize", actualSize), kv("targetSize", targetSize));
         return targetSize.compareTo(actualSize) <= 0;
+    }
+
+    InstanceGroupClient getInstanceGroupClient () {
+        try {
+            return InstanceGroupClient.create(InstanceGroupSettings.newBuilder()
+                                                                   .setCredentialsProvider(computeCredentialsProvider)
+                                                                   .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
+    }
+
+    InstanceGroupManagerClient getInstanceGroupManagerClient () {
+        try {
+            return InstanceGroupManagerClient.create(InstanceGroupManagerSettings.newBuilder()
+                                                                                 .setCredentialsProvider(
+                                                                                         computeCredentialsProvider)
+                                                                                 .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
     }
 
     private boolean isContainerRegionGroupAtDesiredCapacity (GcpComputeInstanceContainer container) {
@@ -393,82 +407,46 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                 projectRegionInstanceGroupManagerName.getInstanceGroupManager(),
                 projectRegionInstanceGroupManagerName.getProject(),
                 projectRegionInstanceGroupManagerName.getRegion());
-        Integer actualSize = regionInstanceGroupClient.getRegionInstanceGroup(projectRegionInstanceGroupName).getSize();
-        Integer targetSize = regionInstanceGroupManagerClient.getRegionInstanceGroupManager(
+        Integer actualSize = getRegionInstanceGroupClient().getRegionInstanceGroup(projectRegionInstanceGroupName)
+                                                           .getSize();
+        Integer targetSize = getRegionInstanceGroupManagerClient().getRegionInstanceGroupManager(
                 projectRegionInstanceGroupManagerName).getTargetSize();
         log.debug("For group {}, {}, {}", group, kv("actualSize", actualSize), kv("targetSize", targetSize));
         return targetSize.compareTo(actualSize) <= 0;
     }
 
+    RegionInstanceGroupClient getRegionInstanceGroupClient () {
+        try {
+            return RegionInstanceGroupClient.create(RegionInstanceGroupSettings.newBuilder()
+                                                                               .setCredentialsProvider(
+                                                                                       computeCredentialsProvider)
+                                                                               .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
+    }
+
+    RegionInstanceGroupManagerClient getRegionInstanceGroupManagerClient () {
+        try {
+            return RegionInstanceGroupManagerClient.create(RegionInstanceGroupManagerSettings.newBuilder()
+                                                                                             .setCredentialsProvider(
+                                                                                                     computeCredentialsProvider)
+                                                                                             .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
+    }
+
+    public void startInstance (GcpComputeInstanceContainer container) {
+        log.info("Starting instance {}", v(DATADOG_CONTAINER_KEY, container));
+        ProjectZoneInstanceName instance = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        getInstanceClient().startInstance(instance);
+    }
+
     public String restartContainer (GcpComputeInstanceContainer container) {
         log.info("Restarting instance {}", v(DATADOG_CONTAINER_KEY, container));
-        return instanceClient.resetInstance(getProjectZoneInstanceNameOfContainer(container, projectName))
-                             .getSelfLink();
-    }
-
-    public boolean isOperationComplete (String operationId) {
-        if (operationId == null) return false;
-        if (operationId.startsWith(ProjectZoneOperationName.SERVICE_ADDRESS)) {
-            operationId = operationId.substring(ProjectZoneOperationName.SERVICE_ADDRESS.length());
-        }
-        log.info("Checking status of Google Compute Operation {}", operationId);
-        Operation zoneOperation = zoneOperationClient.getZoneOperation(ProjectZoneOperationName.parse(operationId));
-        return zoneOperation.getProgress() >= 100;
-    }
-
-    public String recreateInstanceInInstanceGroup (GcpComputeInstanceContainer container) {
-        String group = getContainerGroup(container);
-        String instanceName = ProjectZoneInstanceName.newBuilder()
-                                                     .setInstance(container.getInstanceName())
-                                                     .setZone(container.getZone())
-                                                     .setProject(projectName.getProject())
-                                                     .build()
-                                                     .toString();
-        if (ProjectZoneInstanceGroupManagerName.isParsableFrom(group))
-            return recreateInstanceInZoneInstanceGroup(instanceName, group);
-        else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group))
-            return recreateInstanceInRegionInstanceGroup(instanceName, group);
-        throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR);
-    }
-
-    private String recreateInstanceInZoneInstanceGroup (String instanceName, String group) {
-        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.parse(
-                group);
-        InstanceGroupManagersRecreateInstancesRequest request;
-        request = InstanceGroupManagersRecreateInstancesRequest.newBuilder().addInstances(instanceName).build();
-        Operation operation = instanceGroupManagerClient.recreateInstancesInstanceGroupManager(
-                projectZoneInstanceGroupManagerName,
-                request);
-        log.debug("Operation to recreate instance created: {}", v("operation", operation));
-        return operation.getSelfLink();
-    }
-
-    private String recreateInstanceInRegionInstanceGroup (String instanceName, String group) {
-        ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
-                .parse(group);
-        RegionInstanceGroupManagersRecreateRequest request;
-        request = RegionInstanceGroupManagersRecreateRequest.newBuilder().addInstances(instanceName).build();
-        Operation operation = regionInstanceGroupManagerClient.recreateInstancesRegionInstanceGroupManager(
-                projectRegionInstanceGroupManagerName,
-                request);
-        log.debug("Operation to recreate instance created: {}", v("operation", operation));
-        return operation.getSelfLink();
-    }
-
-    public String getLatestInstanceId (String instanceName, String zone) {
-        return instanceClient.getInstance(ProjectZoneInstanceName.of(instanceName, projectName.getProject(), zone))
-                             .getId();
-    }
-
-    public Fingerprint<List<String>> getFirewallTags (GcpComputeInstanceContainer container) {
-        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, projectName);
-        Tags tags = instanceClient.getInstance(instanceName).getTags();
-        return fingerprintTags(tags);
-    }
-
-    private static Fingerprint<List<String>> fingerprintTags (Tags tags) {
-        if (tags == null) return null;
-        return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
+        return getInstanceClient().resetInstance(getProjectZoneInstanceNameOfContainer(container, getProjectName()))
+                                  .getSelfLink();
     }
 
     public String getBestEndpoint (String privateIPAddress, String publicIPAddress) {
@@ -484,6 +462,214 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                 return false;
             }
         });
+    }
+
+    public String getLatestInstanceId (String instanceName, String zone) {
+        return getInstanceClient().getInstance(ProjectZoneInstanceName.of(instanceName,
+                getProjectName().getProject(),
+                zone)).getId();
+    }
+
+    public Fingerprint<List<String>> getFirewallTags (GcpComputeInstanceContainer container) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        Tags tags = getInstanceClient().getInstance(instanceName).getTags();
+        return fingerprintTags(tags);
+    }
+
+    private static Fingerprint<List<String>> fingerprintTags (Tags tags) {
+        if (tags == null) return null;
+        return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
+    }
+
+    public void setProjectId (String projectId) {
+        this.projectId = projectId;
+    }
+
+    private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
+        return getInstanceClient().getInstance(instanceName).getMetadata();
+    }
+
+    void waitForOperation (Operation operation) {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        final Object syncLock = new Object();
+        synchronized (syncLock) {
+            executor.scheduleWithFixedDelay(() -> {
+                synchronized (syncLock) {
+                    if (isOperationComplete(operation.getSelfLink())) {
+                        syncLock.notifyAll();
+                    }
+                }
+            }, 1, 1, TimeUnit.SECONDS);
+            try {
+                // 5 minute timeout since that is our default experiment timeout.
+                syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
+
+    void addSSHKey (GcpComputeInstanceContainer container, boolean allowRetry) {
+        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, getProjectName());
+        Metadata existingMetadata = getInstanceMetadata(instanceName);
+        Map<String, String> metadataMap = itemListAsMap(existingMetadata.getItemsList());
+        String sshKeys = metadataMap.get("ssh-keys");
+        // Format keys into objects for comparison and manipulation as a LinkedHashSet
+        // This maintains order but also duplicate detection.
+        Set<GcpSSHKeyMetadata> existingKeys = new LinkedHashSet<>(GcpSSHKeyMetadata.parseMetadata(sshKeys != null ? sshKeys : ""));
+        // If the key already exists, we're done here.
+        if (!existingKeys.add(container.getGcpSSHKeyMetadata())) return;
+        Predicate<GcpSSHKeyMetadata> isNewKey = gcpSSHKeyMetadata -> gcpSSHKeyMetadata.equals(container.getGcpSSHKeyMetadata());
+        Predicate<GcpSSHKeyMetadata> isChaosKey = gcpSSHKeyMetadata -> Objects.equals(gcpSSHKeyMetadata.getUsername(),
+                CHAOS_USERNAME);
+        List<GcpSSHKeyMetadata> filteredKeys = existingKeys.stream()
+                                                           .filter(isNewKey.or(isChaosKey.negate()))
+                                                           .collect(Collectors.toList());
+        log.info("Key did not exist in container {}, adding new public key to metadata",
+                v(DATADOG_CONTAINER_KEY, container));
+        // Format the list back into a String and put it back into the Metadata Map.
+        metadataMap.put("ssh-keys", GcpSSHKeyMetadata.metadataFormat(filteredKeys));
+        Metadata newMetadata = Metadata.newBuilder()
+                                       .addAllItems(mapAsItemList(metadataMap))
+                                       .setFingerprint(existingMetadata.getFingerprint())
+                                       .build();
+        Operation operation = getInstanceClient().setMetadataInstance(instanceName, newMetadata);
+        waitForOperation(operation);
+        if (allowRetry) addSSHKey(container, false);
+    }
+
+    private Map<String, String> itemListAsMap (List<Items> items) {
+        if (items == null) return new HashMap<>();
+        return items.stream().filter(Objects::nonNull).collect(Collectors.toMap(Items::getKey, Items::getValue));
+    }
+
+    private List<Items> mapAsItemList (Map<String, String> items) {
+        return items.entrySet()
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(this::mapEntryAsItem)
+                    .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getEndpoint (GcpComputeInstanceContainer container) {
+        return container.getSSHEndpoint();
+    }
+
+    @Override
+    public SSHCredentials getSshCredentials (GcpComputeInstanceContainer container) {
+        addSSHKey(container);
+        return container.getSSHCredentials();
+    }
+
+    @Override
+    public String getRunningDirectory () {
+        return "/run/";
+    }
+
+    private Items mapEntryAsItem (Map.Entry<String, String> item) {
+        String key = item.getKey();
+        String value = item.getValue();
+        return Items.newBuilder().setKey(key).setValue(value).build();
+    }
+
+    void addSSHKey (GcpComputeInstanceContainer container) {
+        addSSHKey(container, true);
+    }
+
+    @Override
+    public void recycleContainer (GcpComputeInstanceContainer container) {
+        String operationId = recreateInstanceInInstanceGroup(container);
+        performTaskAfterOperationCompletes(operationId, container::updateUUID);
+    }
+
+    public String recreateInstanceInInstanceGroup (GcpComputeInstanceContainer container) {
+        String group = getContainerGroup(container);
+        String instanceName = ProjectZoneInstanceName.newBuilder()
+                                                     .setInstance(container.getInstanceName())
+                                                     .setZone(container.getZone())
+                                                     .setProject(getProjectName().getProject())
+                                                     .build()
+                                                     .toString();
+        if (ProjectZoneInstanceGroupManagerName.isParsableFrom(group))
+            return recreateInstanceInZoneInstanceGroup(instanceName, group);
+        else if (ProjectRegionInstanceGroupManagerName.isParsableFrom(group))
+            return recreateInstanceInRegionInstanceGroup(instanceName, group);
+        throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR);
+    }
+
+    void performTaskAfterOperationCompletes (String operationSelfLink, Runnable task) {
+        ScheduledExecutorService operationWatcher = Executors.newSingleThreadScheduledExecutor();
+        ExecutorService taskRunner = Executors.newSingleThreadExecutor();
+        final Object syncLock = new Object();
+        taskRunner.submit(() -> {
+            synchronized (syncLock) {
+                try {
+                    syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+                } finally {
+                    operationWatcher.shutdown();
+                }
+                task.run();
+            }
+        });
+        operationWatcher.scheduleWithFixedDelay(() -> {
+            synchronized (syncLock) {
+                if (isOperationComplete(operationSelfLink)) {
+                    syncLock.notifyAll();
+                    operationWatcher.shutdown();
+                }
+            }
+        }, 5, 1, TimeUnit.SECONDS);
+    }
+
+    private String recreateInstanceInZoneInstanceGroup (String instanceName, String group) {
+        ProjectZoneInstanceGroupManagerName projectZoneInstanceGroupManagerName = ProjectZoneInstanceGroupManagerName.parse(
+                group);
+        InstanceGroupManagersRecreateInstancesRequest request;
+        request = InstanceGroupManagersRecreateInstancesRequest.newBuilder().addInstances(instanceName).build();
+        Operation operation = getInstanceGroupManagerClient().recreateInstancesInstanceGroupManager(
+                projectZoneInstanceGroupManagerName,
+                request);
+        log.debug("Operation to recreate instance created: {}", v("operation", operation));
+        return operation.getSelfLink();
+    }
+
+    private String recreateInstanceInRegionInstanceGroup (String instanceName, String group) {
+        ProjectRegionInstanceGroupManagerName projectRegionInstanceGroupManagerName = ProjectRegionInstanceGroupManagerName
+                .parse(group);
+        RegionInstanceGroupManagersRecreateRequest request;
+        request = RegionInstanceGroupManagersRecreateRequest.newBuilder().addInstances(instanceName).build();
+        Operation operation = getRegionInstanceGroupManagerClient().recreateInstancesRegionInstanceGroupManager(
+                projectRegionInstanceGroupManagerName,
+                request);
+        log.debug("Operation to recreate instance created: {}", v("operation", operation));
+        return operation.getSelfLink();
+    }
+
+    public boolean isOperationComplete (String operationId) {
+        if (operationId == null) return false;
+        if (operationId.startsWith(ProjectZoneOperationName.SERVICE_ADDRESS)) {
+            operationId = operationId.substring(ProjectZoneOperationName.SERVICE_ADDRESS.length());
+        }
+        log.info("Checking status of Google Compute Operation {}", operationId);
+        Operation zoneOperation = getZoneOperationClient().getZoneOperation(ProjectZoneOperationName.parse(operationId));
+        return zoneOperation.getProgress() >= 100;
+    }
+
+    ZoneOperationClient getZoneOperationClient () {
+        try {
+            return ZoneOperationClient.create(ZoneOperationSettings.newBuilder()
+                                                                   .setCredentialsProvider(computeCredentialsProvider)
+                                                                   .build());
+        } catch (IOException e) {
+            throw new ChaosException(GCP_COMPUTE_GENERIC_ERROR, e);
+        }
     }
 
     public static class Fingerprint<T> {
@@ -515,133 +701,5 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
             Fingerprint<?> that = (Fingerprint<?>) o;
             return fingerprint.equals(that.fingerprint) && object.equals(that.object);
         }
-    }
-
-    @Override
-    public String getEndpoint (GcpComputeInstanceContainer container) {
-        return container.getSSHEndpoint();
-    }
-
-    private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
-        return instanceClient.getInstance(instanceName).getMetadata();
-    }
-
-    private Map<String, String> itemListAsMap (List<Items> items) {
-        if (items == null) return new HashMap<>();
-        return items.stream().filter(Objects::nonNull).collect(Collectors.toMap(Items::getKey, Items::getValue));
-    }
-
-    private List<Items> mapAsItemList (Map<String, String> items) {
-        return items.entrySet()
-                    .stream()
-                    .filter(Objects::nonNull)
-                    .map(this::mapEntryAsItem)
-                    .collect(Collectors.toList());
-    }
-
-    void waitForOperation (Operation operation) {
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        final Object syncLock = new Object();
-        synchronized (syncLock) {
-            executor.scheduleWithFixedDelay(() -> {
-                synchronized (syncLock) {
-                    if (isOperationComplete(operation.getSelfLink())) {
-                        syncLock.notifyAll();
-                    }
-                }
-            }, 1, 1, TimeUnit.SECONDS);
-            try {
-                // 5 minute timeout since that is our default experiment timeout.
-                syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
-            } finally {
-                executor.shutdown();
-            }
-        }
-    }
-
-    private Items mapEntryAsItem (Map.Entry<String, String> item) {
-        String key = item.getKey();
-        String value = item.getValue();
-        return Items.newBuilder().setKey(key).setValue(value).build();
-    }
-
-    @Override
-    public SSHCredentials getSshCredentials (GcpComputeInstanceContainer container) {
-        addSSHKey(container);
-        return container.getSSHCredentials();
-    }
-
-    @Override
-    public String getRunningDirectory () {
-        return "/run/";
-    }
-
-    void addSSHKey (GcpComputeInstanceContainer container) {
-        addSSHKey(container, true);
-    }
-
-    void addSSHKey (GcpComputeInstanceContainer container, boolean allowRetry) {
-        ProjectZoneInstanceName instanceName = getProjectZoneInstanceNameOfContainer(container, projectName);
-        Metadata existingMetadata = getInstanceMetadata(instanceName);
-        Map<String, String> metadataMap = itemListAsMap(existingMetadata.getItemsList());
-        String sshKeys = metadataMap.get("ssh-keys");
-        // Format keys into objects for comparison and manipulation as a LinkedHashSet
-        // This maintains order but also duplicate detection.
-        Set<GcpSSHKeyMetadata> existingKeys = new LinkedHashSet<>(GcpSSHKeyMetadata.parseMetadata(sshKeys != null ? sshKeys : ""));
-        // If the key already exists, we're done here.
-        if (!existingKeys.add(container.getGcpSSHKeyMetadata())) return;
-        Predicate<GcpSSHKeyMetadata> isNewKey = gcpSSHKeyMetadata -> gcpSSHKeyMetadata.equals(container.getGcpSSHKeyMetadata());
-        Predicate<GcpSSHKeyMetadata> isChaosKey = gcpSSHKeyMetadata -> Objects.equals(gcpSSHKeyMetadata.getUsername(),
-                CHAOS_USERNAME);
-        List<GcpSSHKeyMetadata> filteredKeys = existingKeys.stream()
-                                                           .filter(isNewKey.or(isChaosKey.negate()))
-                                                           .collect(Collectors.toList());
-        log.info("Key did not exist in container {}, adding new public key to metadata",
-                v(DATADOG_CONTAINER_KEY, container));
-        // Format the list back into a String and put it back into the Metadata Map.
-        metadataMap.put("ssh-keys", GcpSSHKeyMetadata.metadataFormat(filteredKeys));
-        Metadata newMetadata = Metadata.newBuilder()
-                                       .addAllItems(mapAsItemList(metadataMap))
-                                       .setFingerprint(existingMetadata.getFingerprint())
-                                       .build();
-        Operation operation = instanceClient.setMetadataInstance(instanceName, newMetadata);
-        waitForOperation(operation);
-        if (allowRetry) addSSHKey(container, false);
-    }
-
-    @Override
-    public void recycleContainer (GcpComputeInstanceContainer container) {
-        String operationId = recreateInstanceInInstanceGroup(container);
-        performTaskAfterOperationCompletes(operationId, container::updateUUID);
-    }
-
-    void performTaskAfterOperationCompletes (String operationSelfLink, Runnable task) {
-        ScheduledExecutorService operationWatcher = Executors.newSingleThreadScheduledExecutor();
-        ExecutorService taskRunner = Executors.newSingleThreadExecutor();
-        final Object syncLock = new Object();
-        taskRunner.submit(() -> {
-            synchronized (syncLock) {
-                try {
-                    syncLock.wait(1000L /* sec / mil */ * 60 /* min / sec */ * 5 /* minutes */);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ChaosException(GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR, e);
-                } finally {
-                    operationWatcher.shutdown();
-                }
-                task.run();
-            }
-        });
-        operationWatcher.scheduleWithFixedDelay(() -> {
-            synchronized (syncLock) {
-                if (isOperationComplete(operationSelfLink)) {
-                    syncLock.notifyAll();
-                    operationWatcher.shutdown();
-                }
-            }
-        }, 5, 1, TimeUnit.SECONDS);
     }
 }
