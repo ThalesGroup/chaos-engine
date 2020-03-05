@@ -25,7 +25,13 @@
                 <sonar.organization>thalesgroup</sonar.organization>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
                 <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+                <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+                <jacoco.reportPath>${user.dir}/chaosengine-coverage/target/jacoco-${project.artifactId}.exec</jacoco.reportPath>
+                <sonar.coverage.jacoco.xmlReportPaths>${user.dir}/chaosengine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
             </properties>
+            <modules>
+                <module>chaosengine-coverage</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -37,20 +43,9 @@
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonarsource.scanner.maven</groupId>
-                        <artifactId>sonar-maven-plugin</artifactId>
-                        <version>3.7.0.1746</version>
-                        <executions>
-                            <execution>
-                                <phase>test</phase>
-                                <id>sonar-scan</id>
-                                <goals>
-                                    <goal>sonar</goal>
-                                </goals>
+                                <configuration>
+                                    <destFile>${jacoco.reportPath}</destFile>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

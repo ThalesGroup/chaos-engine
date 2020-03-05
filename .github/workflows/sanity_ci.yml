@@ -16,7 +16,7 @@ jobs:
         with:
           java-version: 11.0.x
       - name: Run build
-        run: mvn --batch-mode clean install
+        run: mvn --batch-mode install
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
