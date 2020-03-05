@@ -80,6 +80,37 @@ public class RefreshControllerTest {
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
     }
 
+    @Test
+    @WithAdmin
+    public void doRestartAsAdmin () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(content().string("true"));
+    }
+
+    @Test
+    @WithGenericUser
+    public void doRestartAsUser () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void doRestartAnonymous () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithAdmin
+    public void doRestartFailure () throws Exception {
+        doThrow(new RuntimeException()).when(refreshManager).doRestart();
+        mvc.perform(patch("/refresh/restart").contentType(MediaType.APPLICATION_JSON))
+           .andExpect(status().is5xxServerError());
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @WithMockUser(roles = ADMIN_ROLE)
     private @interface WithAdmin {

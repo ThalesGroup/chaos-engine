@@ -17,6 +17,7 @@
 
 package com.thales.chaos.refresh.impl;
 
+import com.thales.chaos.experiment.ExperimentManager;
 import com.thales.chaos.refresh.RefreshManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +57,8 @@ public class ChaosRefreshManagerTest {
     static class ContextConfiguration {
         @Autowired
         private RefreshEndpoint refreshEndpoint;
+        @MockBean
+        private ExperimentManager experimentManager;
 
         @Bean
         public RefreshManager refreshManager () {

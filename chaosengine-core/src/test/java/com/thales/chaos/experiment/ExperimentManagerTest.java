@@ -591,6 +591,15 @@ public class ExperimentManagerTest {
         verify(platformManager, times(1)).getPlatforms();
     }
 
+    @Test
+    public void areExperimentsInProgress () {
+        doReturn(Collections.emptySet()).doReturn(Set.of(mock(Experiment.class)))
+                                        .when(experimentManager)
+                                        .getAllExperiments();
+        assertFalse(experimentManager.areExperimentsInProgress());
+        assertTrue(experimentManager.areExperimentsInProgress());
+    }
+
     @Configuration
     static class ExperimentManagerTestConfiguration {
         @Autowired

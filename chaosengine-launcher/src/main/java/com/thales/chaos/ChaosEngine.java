@@ -17,18 +17,35 @@
 
 package com.thales.chaos;
 
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication(scanBasePackages = "com.thales.chaos")
 @EnableConfigurationProperties
 public class ChaosEngine {
+    private static ConfigurableApplicationContext context;
+
     public static void main (String[] args) {
         SpringApplication app;
         app = new SpringApplication(ChaosEngine.class);
         app.setBannerMode(Banner.Mode.OFF);
-        app.run();
+        context = app.run(args);
+    }
+
+    public static void restart () {
+        ApplicationArguments args = context.getBean(ApplicationArguments.class);
+        Thread thread = new Thread(() -> {
+            context.close();
+            SpringApplication app;
+            app = new SpringApplication(ChaosEngine.class);
+            app.setBannerMode(Banner.Mode.OFF);
+            context = app.run(args.getSourceArgs());
+        });
+        thread.setDaemon(false);
+        thread.start();
     }
 }
