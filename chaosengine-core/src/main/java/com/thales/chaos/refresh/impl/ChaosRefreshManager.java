@@ -35,6 +35,8 @@ public class ChaosRefreshManager implements RefreshManager {
     private RefreshEndpoint refreshEndpoint;
     @Autowired
     private ExperimentManager experimentManager;
+    @Autowired
+    private NotificationManager notificationManager;
 
     @Override
     public Collection<String> doRefresh () {
