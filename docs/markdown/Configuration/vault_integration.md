@@ -54,6 +54,10 @@ The Java Objects are not automatically refreshed when values are changed in vaul
 
 In order to trigger the request, a **HTTP POST** request needs to be made against **http://{chaosengine}/refresh** .
 
+## Triggering a Reload
+
+If new variables that control object creation are added or removed, then the Chaos Engines application context needs to be completely reloaded. To accopmlish this, send an **HTTP POST** request to **http://{chaosengine}/refresh/all**.
+
 ## Spring Profiles
 
 The Spring Cloud Vault integration makes use of the Spring Profile option to allow for different variables to be accessible from different environments.
