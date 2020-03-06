@@ -56,7 +56,7 @@ In order to trigger the request, a **HTTP POST** request needs to be made agains
 
 ## Triggering a Reload
 
-If new variables that control object creation are added or removed, then the Chaos Engines application context needs to be completely reloaded. To accopmlish this, send an **HTTP POST** request to **http://{chaosengine}/refresh/all**.
+If new variables that control object creation are added or removed, then the Chaos Engines application context needs to be completely reloaded. To accomplish this, send an **HTTP POST** request to **http://{chaosengine}/refresh/all**.
 
 ## Spring Profiles
 
