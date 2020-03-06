@@ -7,6 +7,17 @@ on:
     
 
 jobs:
+  version:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Generate Version
+        run: echo "$GITHUB_SHA" > version
+      - name: Upload Version
+        uses: actions/upload-artifact@v1
+        with:
+          name: variables
+          path: "version"
+
   build:
     runs-on: ubuntu-latest
     steps:
