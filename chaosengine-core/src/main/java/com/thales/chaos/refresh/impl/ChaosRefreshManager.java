@@ -49,6 +49,11 @@ public class ChaosRefreshManager implements RefreshManager {
             return false;
         }
         log.info("Restart requested.");
+        notificationManager.sendNotification(ChaosMessage.builder()
+                                                         .withTitle("Engine Restarted")
+                                                         .withMessage("Chaos Engine restart has been requested.")
+                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                         .build());
         ChaosEngine.restart();
         return true;
     }
