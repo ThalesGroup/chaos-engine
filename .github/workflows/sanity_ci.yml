@@ -62,10 +62,31 @@ jobs:
 
   hadolint:
     runs-on: [ubuntu-latest]
-    container: 
+    container:
       image: hadolint/hadolint:latest-debian
     steps:
       - uses: actions/checkout@v1
       - name: Hadolint Scan
         run: hadolint Dockerfile
 
+  documentation:
+    runs-on: [ubuntu-latest]
+    container:
+      image: python:3-alpine
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download build artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: variables
+      - name: Extract Version
+        run: mv variables/version version
+      - name: Prepare Build Environment
+        run: ./ci/docs/mkdocs_pre_build.sh
+      - name: Build Documentation
+        run: ./ci/docs/mkdocs_build.sh public documentation
+      - name: Upload Documentation
+        uses: actions/upload-artifact@v1
+        with:
+          name: documentation
+          path: "documentation"
