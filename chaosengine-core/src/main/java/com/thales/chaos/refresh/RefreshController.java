@@ -54,7 +54,7 @@ public class RefreshController {
                responses = {
                        @ApiResponse(description = "Boolean value of if Application restart has been initiated.")
                })
-    @PostMapping("/restart")
+    @PostMapping("/all")
     public boolean doRestart () {
         return refreshManager.doRestart();
     }

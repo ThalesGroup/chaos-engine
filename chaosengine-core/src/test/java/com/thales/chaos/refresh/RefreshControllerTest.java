@@ -84,7 +84,7 @@ public class RefreshControllerTest {
     @WithAdmin
     public void doRestartAsAdmin () throws Exception {
         doReturn(true).when(refreshManager).doRestart();
-        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON))
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().isOk())
            .andExpect(content().string("true"));
     }
@@ -93,21 +93,21 @@ public class RefreshControllerTest {
     @WithGenericUser
     public void doRestartAsUser () throws Exception {
         doReturn(true).when(refreshManager).doRestart();
-        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
     }
 
     @Test
     @WithAnonymousUser
     public void doRestartAnonymous () throws Exception {
         doReturn(true).when(refreshManager).doRestart();
-        mvc.perform(post("/refresh/restart").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
     @WithAdmin
     public void doRestartFailure () throws Exception {
         doThrow(new RuntimeException()).when(refreshManager).doRestart();
-        mvc.perform(patch("/refresh/restart").contentType(MediaType.APPLICATION_JSON))
+        mvc.perform(patch("/refresh/all").contentType(MediaType.APPLICATION_JSON))
            .andExpect(status().is5xxServerError());
     }
 
