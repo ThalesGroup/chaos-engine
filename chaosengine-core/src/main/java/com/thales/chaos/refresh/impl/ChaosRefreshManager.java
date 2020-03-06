@@ -19,6 +19,9 @@ package com.thales.chaos.refresh.impl;
 
 import com.thales.chaos.ChaosEngine;
 import com.thales.chaos.experiment.ExperimentManager;
+import com.thales.chaos.notification.NotificationManager;
+import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosMessage;
 import com.thales.chaos.refresh.RefreshManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
