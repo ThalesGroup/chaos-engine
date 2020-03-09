@@ -129,8 +129,6 @@ jobs:
           name: variables
       - name: Extract Version
         run: mv variables/version version
-      - name: TO BE REMOVED
-        run: echo "8ef25557" > version
       - name: Initialize version variable
         run: echo "::set-env name=VERSION::$(cat version)"
       - name: Docker login
