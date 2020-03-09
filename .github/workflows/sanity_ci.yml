@@ -11,7 +11,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       - name: Generate Version
-        run: echo "$GITHUB_SHA" > version
+        run: echo "$GITHUB_SHA" | cut -c1-8  > version
       - name: Upload Version
         uses: actions/upload-artifact@v1
         with:
