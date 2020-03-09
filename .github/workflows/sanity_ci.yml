@@ -117,3 +117,45 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           tags: ${{ env.VERSION }}
           registry: docker.pkg.github.com
+
+  zap_scan:
+    runs-on: [ubuntu-latest]
+    needs: version
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download Variables
+        uses: actions/download-artifact@v1
+        with:
+          name: variables
+      - name: Extract Version
+        run: mv variables/version version
+      - name: TO BE REMOVED
+        run: echo "8ef25557" > version
+      - name: Initialize version variable
+        run: echo "::set-env name=VERSION::$(cat version)"
+      - name: Docker login
+        run: docker login $DOCKER_REPOSITORY -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Pull Chaos Engine Docker image
+        run: docker pull "$DOCKER_REPOSITORY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
+      - name: Pull ZAP proxy image
+        run: docker pull "owasp/zap2docker-weekly"
+      - name: Create a network
+        run: docker network create chaos-engine-network
+      - name: Run Chaos Engine
+        env:
+          CHAOS_SECURITY_ENABLED: "false"
+        run: docker run --rm --name chaos-engine --network chaos-engine-network -e CHAOS_SECURITY_ENABLED -d "$DOCKER_REPOSITORY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
+      - name: Create report directory
+        run: mkdir report; chmod 777 report
+      - name: Run Scan
+        env:
+          CHAOS_ENGINE_OPEN_API_URL: "http://chaos-engine:8080/v3/api-docs"
+          CHAOS_ENGINE_STARTUP_TIMEOUT: "180"
+          ZAP_WORK_DIR: "/zap/wrk/"
+          ZAP_REPORT_FILE: "zap_report.html"
+        run: docker run --rm --name zap --network chaos-engine-network -v $(pwd):/script -v $(pwd)/report:/report:rw -e CHAOS_ENGINE_OPEN_API_URL -e CHAOS_ENGINE_STARTUP_TIMEOUT -e ZAP_WORK_DIR -e ZAP_REPORT_FILE owasp/zap2docker-weekly bash -x /script/ci/dast/zap/zap_scan.sh
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v1
+        with:
+          name: zap-report
+          path: "./report/zap_report.html"
