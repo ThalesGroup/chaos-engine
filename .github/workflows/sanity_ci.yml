@@ -120,7 +120,7 @@ jobs:
 
   zap_scan:
     runs-on: [ubuntu-latest]
-    needs: version
+    needs: docker_build
     steps:
       - uses: actions/checkout@v1
       - name: Download Variables
