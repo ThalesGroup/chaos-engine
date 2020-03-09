@@ -1,10 +1,15 @@
 name: Sanity CI
 
-on: 
+on:
   push:
   pull_request:
     types: [opened]
-    
+
+env:
+  DOCKER_REPOSITORY: "docker.pkg.github.com"
+  ORGANIZATION: "gemalto"
+  CHAOS_ENGINE_REPO: "chaos-engine"
+  CHAOS_ENGINE_IMAGE_NAME: "chaos-engine"
 
 jobs:
   version:
@@ -91,3 +96,24 @@ jobs:
         with:
           name: documentation
           path: "documentation"
+
+  docker_build:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download Variables
+        uses: actions/download-artifact@v1
+        with:
+          name: variables
+      - name: Extract Version
+        run: mv variables/version version
+      - name: Initialize version variable
+        run: echo "::set-env name=VERSION::$(cat version)"
+      - name: Build and push to registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: $ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: ${{ env.VERSION }}
+          registry: docker.pkg.github.com
