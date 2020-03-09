@@ -330,7 +330,8 @@ public class ExperimentManager {
         AutoCloseableMDCCollection (Map<String, String> dataContexts) {
             messageDataContextCollection = dataContexts.entrySet()
                                                        .stream()
-                                                       .map(entrySet -> MDC.putCloseable(entrySet.getKey(), entrySet.getValue()))
+                                                       .map(entrySet -> MDC.putCloseable(entrySet.getKey(),
+                                                               entrySet.getValue()))
                                                        .collect(Collectors.toUnmodifiableSet());
         }
 
@@ -338,5 +339,9 @@ public class ExperimentManager {
         public void close () {
             messageDataContextCollection.forEach(MDC.MDCCloseable::close);
         }
+    }
+
+    public boolean areExperimentsInProgress () {
+        return !getAllExperiments().isEmpty();
     }
 }

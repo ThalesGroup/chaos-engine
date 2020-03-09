@@ -17,6 +17,8 @@
 
 package com.thales.chaos.refresh.impl;
 
+import com.thales.chaos.experiment.ExperimentManager;
+import com.thales.chaos.notification.NotificationManager;
 import com.thales.chaos.refresh.RefreshManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +43,8 @@ import static org.mockito.Mockito.*;
 public class ChaosRefreshManagerTest {
     @MockBean
     private RefreshEndpoint refreshEndpoint;
+    @MockBean
+    private NotificationManager notificationManager;
     @Autowired
     private RefreshManager refreshManager;
 
@@ -56,6 +60,8 @@ public class ChaosRefreshManagerTest {
     static class ContextConfiguration {
         @Autowired
         private RefreshEndpoint refreshEndpoint;
+        @MockBean
+        private ExperimentManager experimentManager;
 
         @Bean
         public RefreshManager refreshManager () {

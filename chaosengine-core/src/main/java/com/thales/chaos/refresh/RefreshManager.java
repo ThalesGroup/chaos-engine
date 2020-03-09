@@ -21,4 +21,6 @@ import java.util.Collection;
 
 public interface RefreshManager {
     Collection<String> doRefresh ();
+
+    boolean doRestart ();
 }

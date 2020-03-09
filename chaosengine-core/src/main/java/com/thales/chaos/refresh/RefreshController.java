@@ -48,4 +48,14 @@ public class RefreshController {
     public Collection<String> doRefresh () {
         return refreshManager.doRefresh();
     }
+
+    @Operation(summary = "Trigger an internal restart of the Chaos Engine",
+               description = "Triggers the Chaos Engine to completely restart itself. All properties and spring conditionals are reloaded and reevaluated. May return false if restart cannot be initiated because experiments are in progress.",
+               responses = {
+                       @ApiResponse(description = "Boolean value of if Application restart has been initiated.")
+               })
+    @PostMapping("/all")
+    public boolean doRestart () {
+        return refreshManager.doRestart();
+    }
 }
