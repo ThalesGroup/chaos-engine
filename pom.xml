@@ -20,7 +20,7 @@
                 </property>
             </activation>
             <properties>
-                <sonar.projectKey>gemalto_chaos-engine</sonar.projectKey>
+                <sonar.projectKey>ThalesGroup_chaos-engine</sonar.projectKey>
                 <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
                 <sonar.organization>thalesgroup</sonar.organization>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
