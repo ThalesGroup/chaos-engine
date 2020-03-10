@@ -1,0 +1,27 @@
+name: Documentation Builder
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+    container:
+      image: python:latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: '${{ secrets.PUSH_TOKEN }}'
+          persist-credentials: 'true'
+      - name: Initialize git
+        run: git fetch
+      - name: Initialize version variable
+        run: echo "::set-env name=VERSION::$(date +%F-%T)"
+      - name: Prepare build environment
+        run: bash ./ci/docs/mkdocs_pre_build.sh
+      - name: Publish
+        run:  cd docs; mkdocs gh-deploy -v
+
+
