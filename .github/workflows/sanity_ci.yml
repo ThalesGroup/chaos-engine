@@ -1,17 +1,22 @@
 name: Sanity CI
 
-on: 
+on:
   push:
   pull_request:
     types: [opened]
-    
+
+env:
+  DOCKER_REPOSITORY: "docker.pkg.github.com"
+  ORGANIZATION: "gemalto"
+  CHAOS_ENGINE_REPO: "chaos-engine"
+  CHAOS_ENGINE_IMAGE_NAME: "chaos-engine"
 
 jobs:
   version:
     runs-on: [ubuntu-latest]
     steps:
       - name: Generate Version
-        run: echo "$GITHUB_SHA" > version
+        run: echo "$GITHUB_SHA" | cut -c1-8  > version
       - name: Upload Version
         uses: actions/upload-artifact@v1
         with:
@@ -20,6 +25,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs: version
     steps:
       - uses: actions/checkout@v1
       - name: Set up JDK 11
@@ -71,6 +77,7 @@ jobs:
 
   documentation:
     runs-on: [ubuntu-latest]
+    needs: version
     container:
       image: python:3-alpine
     steps:
@@ -90,3 +97,64 @@ jobs:
         with:
           name: documentation
           path: "documentation"
+
+  docker_build:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download Variables
+        uses: actions/download-artifact@v1
+        with:
+          name: variables
+      - name: Extract Version
+        run: mv variables/version version
+      - name: Initialize version variable
+        run: echo "::set-env name=VERSION::$(cat version)"
+      - name: Build and push to registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: $ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: ${{ env.VERSION }}
+          registry: docker.pkg.github.com
+
+  zap_scan:
+    runs-on: [ubuntu-latest]
+    needs: docker_build
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download Variables
+        uses: actions/download-artifact@v1
+        with:
+          name: variables
+      - name: Extract Version
+        run: mv variables/version version
+      - name: Initialize version variable
+        run: echo "::set-env name=VERSION::$(cat version)"
+      - name: Docker login
+        run: docker login $DOCKER_REPOSITORY -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Pull Chaos Engine Docker image
+        run: docker pull "$DOCKER_REPOSITORY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
+      - name: Pull ZAP proxy image
+        run: docker pull "owasp/zap2docker-weekly"
+      - name: Create a network
+        run: docker network create chaos-engine-network
+      - name: Run Chaos Engine
+        env:
+          CHAOS_SECURITY_ENABLED: "false"
+        run: docker run --rm --name chaos-engine --network chaos-engine-network -e CHAOS_SECURITY_ENABLED -d "$DOCKER_REPOSITORY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
+      - name: Create report directory
+        run: mkdir report; chmod 777 report
+      - name: Run Scan
+        env:
+          CHAOS_ENGINE_OPEN_API_URL: "http://chaos-engine:8080/v3/api-docs"
+          CHAOS_ENGINE_STARTUP_TIMEOUT: "180"
+          ZAP_WORK_DIR: "/zap/wrk/"
+          ZAP_REPORT_FILE: "zap_report.html"
+        run: docker run --rm --name zap --network chaos-engine-network -v $(pwd):/script -v $(pwd)/report:/report:rw -e CHAOS_ENGINE_OPEN_API_URL -e CHAOS_ENGINE_STARTUP_TIMEOUT -e ZAP_WORK_DIR -e ZAP_REPORT_FILE owasp/zap2docker-weekly bash -x /script/ci/dast/zap/zap_scan.sh
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v1
+        with:
+          name: zap-report
+          path: "./report/zap_report.html"
