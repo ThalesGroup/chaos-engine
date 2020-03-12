@@ -7,7 +7,7 @@ on:
 
 env:
   DOCKER_REPOSITORY: "docker.pkg.github.com"
-  ORGANIZATION: "gemalto"
+  ORGANIZATION: "thalesgroup"
   CHAOS_ENGINE_REPO: "chaos-engine"
   CHAOS_ENGINE_IMAGE_NAME: "chaos-engine"
 
