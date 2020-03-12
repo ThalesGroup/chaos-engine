@@ -1,7 +1,12 @@
 ![Chaos Engine](/docs/markdown/images/chaos-engine-full.png)
 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=gemalto_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=gemalto_chaos-engine)
-[![Known Vulnerabilities](https://snyk.io/test/github/gemalto/chaos-engine/badge.svg)](https://snyk.io/test/github/gemalto/chaos-engine)
+![Sanity CI](https://github.com/ThalesGroup/chaos-engine/workflows/Sanity%20CI/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=alert_status)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=ncloc)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=security_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Known Vulnerabilities](https://snyk.io/test/github/thalesgroup/chaos-engine/badge.svg)](https://snyk.io/test/thalesgroup/gemalto/chaos-engine)
 
 Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the [Principles of Chaos] to create random faults (*experiments*) that could reasonably occur in a real application deployment.
 
@@ -57,7 +62,7 @@ Chaos Engine is being actively developed, but we welcome public participation. P
 You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
-[documentation]: https://gemalto.github.io/chaos-engine/
-[experiment modules documentation]: https://gemalto.github.io/chaos-engine/Experiment_Modules
+[documentation]: https://thalesgroup.github.io/chaos-engine/
+[experiment modules documentation]: https://thalesgroup.github.io/chaos-engine/Experiment_Modules
 [E-mail us]: mailto:dl_chaos_engine@gemalto.com
 [Slack]: https://join.slack.com/t/thaleschaosengine/shared_invite/enQtODY1MDk1OTY4OTgyLTZjOGI5NzM1YTA2OWE5MjgzMWYxMzkwZjIwYTE3NjBlNDM4ZTkzNzc5YmMyMTU2Zjc5ODhlMTVkZDJhMmEzMzc
