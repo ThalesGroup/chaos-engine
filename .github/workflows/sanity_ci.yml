@@ -113,7 +113,7 @@ jobs:
       - name: Build and push to registry
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: $ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME
+          name: ${{ env.ORGANIZATION }}/${{ env.CHAOS_ENGINE_REPO }}/${{ env.CHAOS_ENGINE_IMAGE_NAME }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           tags: ${{ env.VERSION }}
