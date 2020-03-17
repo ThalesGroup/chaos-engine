@@ -124,14 +124,14 @@
     </contributors>
 
     <scm>
-        <connection>scm:git:git://github.com/gemalto/chaos-engine.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/gemalto/chaos-engine.git</developerConnection>
-        <url>https://github.com/gemalto/chaos-engine.git</url>
+        <connection>scm:git:git://github.com/thalesgroup/chaos-engine.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/thalesgroup/chaos-engine.git</developerConnection>
+        <url>https://github.com/thalesgroup/chaos-engine.git</url>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/gemalto/chaos-engine/issues</url>
+        <url>https://github.com/thalesgroup/chaos-engine/issues</url>
     </issueManagement>
 
     <parent>
