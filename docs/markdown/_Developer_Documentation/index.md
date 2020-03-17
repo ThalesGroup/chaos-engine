@@ -16,7 +16,7 @@ This documentation is provided to help ensure that new contributions to the Chao
 
 ### Git
 
-Chaos Engine is managed in the [Gemalto GitHub](https://github.com/gemalto/chaos-engine) repository.
+Chaos Engine is managed in the [ThalesGroup GitHub](https://github.com/thalesgroup/chaos-engine) repository.
 
 #### Protected Branches
 
