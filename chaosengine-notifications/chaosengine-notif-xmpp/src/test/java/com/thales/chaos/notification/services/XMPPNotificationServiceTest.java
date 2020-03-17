@@ -105,7 +105,7 @@ public class XMPPNotificationServiceTest {
         service.setPassword(password);
         service.setDomain(domain);
         service.setHostname(hostname);
-        XMPPTCPConnectionConfiguration connectionConfiguration = service.getConfig();
+        XMPPTCPConnectionConfiguration connectionConfiguration = service.getConfiguration().get();
         assertEquals(connectionConfigurationExpected.getUsername(), connectionConfiguration.getUsername());
         assertEquals(connectionConfigurationExpected.getPassword(), connectionConfiguration.getPassword());
         assertEquals(connectionConfigurationExpected.getXMPPServiceDomain(),

@@ -85,13 +85,19 @@ public class XMPPNotificationService {
 
     @Bean
     @RefreshScope
-    XMPPTCPConnectionConfiguration getConfig () throws XmppStringprepException, NoSuchAlgorithmException, KeyManagementException {
-        return XMPPTCPConnectionConfiguration.builder()
-                                             .setUsernameAndPassword(user, password)
-                                             .setXmppDomain(domain)
-                                             .setHost(hostname)
-                                             .setCustomSSLContext(getSecurityContext())
-                                             .build();
+    XMPPConfiguration getConfiguration () {
+        return new XMPPConfiguration();
+    }
+
+    public class XMPPConfiguration {
+        public XMPPTCPConnectionConfiguration get () throws XmppStringprepException, KeyManagementException, NoSuchAlgorithmException {
+            return XMPPTCPConnectionConfiguration.builder()
+                                                 .setUsernameAndPassword(user, password)
+                                                 .setXmppDomain(domain)
+                                                 .setHost(hostname)
+                                                 .setCustomSSLContext(getSecurityContext())
+                                                 .build();
+        }
     }
 
     SSLContext getSecurityContext () throws NoSuchAlgorithmException, KeyManagementException {
