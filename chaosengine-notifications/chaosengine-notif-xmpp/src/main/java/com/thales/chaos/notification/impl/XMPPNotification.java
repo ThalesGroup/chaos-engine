@@ -30,7 +30,6 @@ import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.xhtmlim.XHTMLManager;
@@ -46,6 +45,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.*;
 
@@ -90,7 +91,7 @@ public class XMPPNotification implements NotificationMethods {
     }
 
     @Autowired
-    private XMPPTCPConnectionConfiguration configuration;
+    private XMPPNotificationService.XMPPConfiguration configuration;
     @Autowired
     private XMPPNotificationService.AddressBook addressBook;
 
@@ -103,11 +104,13 @@ public class XMPPNotification implements NotificationMethods {
         this.addressBook = addressBook;
     }
 
-    AbstractXMPPConnection getConnection () throws InterruptedException, XMPPException, SmackException, IOException {
-        AbstractXMPPConnection connection = new XMPPTCPConnection(configuration);
-        connection.connect();
-        connection.login();
-        return connection;
+    void sendDirectMessage (Message msg,
+                            EntityBareJid jid) throws InterruptedException, IOException, SmackException, XMPPException, KeyManagementException, NoSuchAlgorithmException {
+        AbstractXMPPConnection connection = getConnection();
+        Chat chat = getSimpleUserChat(connection, jid);
+        msg.setType(Message.Type.normal);
+        chat.send(msg);
+        connection.disconnect();
     }
 
     Chat getSimpleUserChat (AbstractXMPPConnection connection, EntityBareJid jid) {
@@ -116,13 +119,11 @@ public class XMPPNotification implements NotificationMethods {
         return chatManager.chatWith(jid);
     }
 
-    void sendDirectMessage (Message msg,
-                            EntityBareJid jid) throws InterruptedException, IOException, SmackException, XMPPException {
-        AbstractXMPPConnection connection = getConnection();
-        Chat chat = getSimpleUserChat(connection, jid);
-        msg.setType(Message.Type.normal);
-        chat.send(msg);
-        connection.disconnect();
+    AbstractXMPPConnection getConnection () throws InterruptedException, XMPPException, SmackException, IOException, NoSuchAlgorithmException, KeyManagementException {
+        AbstractXMPPConnection connection = new XMPPTCPConnection(configuration.get());
+        connection.connect();
+        connection.login();
+        return connection;
     }
 
     MultiUserChat getMultiUserChat (AbstractXMPPConnection connection,
@@ -132,7 +133,7 @@ public class XMPPNotification implements NotificationMethods {
     }
 
     void sendMultiUserMessage (Message msg,
-                               EntityBareJid jid) throws InterruptedException, IOException, SmackException, XMPPException {
+                               EntityBareJid jid) throws InterruptedException, IOException, SmackException, XMPPException, KeyManagementException, NoSuchAlgorithmException {
         AbstractXMPPConnection connection = getConnection();
         Resourcepart room = Resourcepart.from(jid.getLocalpart().asUnescapedString());
         MultiUserChat muc = getMultiUserChat(connection, jid);
