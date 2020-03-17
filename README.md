@@ -6,7 +6,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=security_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
-[![Known Vulnerabilities](https://snyk.io/test/github/thalesgroup/chaos-engine/badge.svg)](https://snyk.io/test/thalesgroup/gemalto/chaos-engine)
+[![Known Vulnerabilities](https://snyk.io/test/github/thalesgroup/chaos-engine/badge.svg)](https://snyk.io/test/github/thalesgroup/chaos-engine)
 
 Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the [Principles of Chaos] to create random faults (*experiments*) that could reasonably occur in a real application deployment.
 
