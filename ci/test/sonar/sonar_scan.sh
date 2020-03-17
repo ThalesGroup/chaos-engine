@@ -10,7 +10,7 @@ apt install -y jq curl
 
 SCAN_LOG_FILE=sonar_scan.log
 
-mvn $MAVEN_CLI_OPTS --batch-mode install \
+mvn $MAVEN_CLI_OPTS install \
   -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
   -Dsonar.host.url="$SONAR_URL" \
   -Dsonar.login="$SONAR_TOKEN" \
