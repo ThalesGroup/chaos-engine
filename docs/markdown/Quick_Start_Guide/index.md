@@ -31,7 +31,7 @@ If the command `docker-compose` fails after installation, check your path. You c
 
 ## Step 3: Download Latest Chaos Engine Sources
 ```bash
-user@host:~$ git clone https://github.com/gemalto/chaos-engine
+user@host:~$ git clone https://github.com/thalesgroup/chaos-engine
 Cloning into 'chaos-engine'...
 ...
 Checking connectivity... done.

@@ -63,6 +63,6 @@ public class OpenApiConfig {
     static final String OPENAPI_LICENSE_VERSION = "https://www.apache.org/licenses/LICENSE-2.0.txt";
     static final String API_VERSION = "1.2";
     static final String CONTACT_NAME = "Thales Digital Identity and Security Cloud Platform Licensing Chaos Engineering Team";
-    static final String CONTACT_URL = "https://github.com/gemalto/chaos-engine";
+    static final String CONTACT_URL = "https://github.com/thalesgroup/chaos-engine";
     static final String JSESSIONID = "JSESSIONID";
 }

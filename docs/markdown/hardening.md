@@ -4,7 +4,7 @@
 
 ### Chaos Engine Source Code
 
-If you build your own Chaos Engine images make sure that your source code was downloaded from official [Gemalto repository in GitHub](https://github.com/gemalto).
+If you build your own Chaos Engine images make sure that your source code was downloaded from official [ThalesGroup repository in GitHub](https://github.com/thalesgroup).
 
 ### Docker Images
 
