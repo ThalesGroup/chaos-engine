@@ -2,6 +2,9 @@
 # Description: Terminate random processes
 # Dependencies: for, kill, sleep, ps, grep, awk, readlink, set
 
+# This extra wait time is added in order to synchronize startup of parralel experiments
+sleep 5
+
 if readlink -f /proc/1/exe | grep -q -e systemd -e init; then
   ps -A -o pid,comm | grep -i \
     -e docker \
