@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.thales.chaos.calendar.HolidayManager;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentState;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.NotificationManager;
@@ -65,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(properties = "holidays=DUM")
+@SpringBootTest(properties = "holidays=NONSTOP")
 @AutoConfigureMockMvc
 public class ExperimentControllerTest {
     @Autowired
@@ -386,6 +387,70 @@ public class ExperimentControllerTest {
     @WithAnonymousUser
     public void setBackoffPeriodWithUser () throws Exception {
         setBackoffPeriodTestInner(status().isNotFound(), never());
+    }
+
+    @Test
+    @WithAdmin
+    public void getExperimentsByStateAsAdmin () throws Exception {
+        getExperimentsByStateInner();
+    }
+
+    private void getExperimentsByStateInner () throws Exception {
+        String UUID1 = randomUUID().toString();
+        String UUID2 = randomUUID().toString();
+        String UUID3 = randomUUID().toString();
+        Map<ExperimentState, List<String>> map = new HashMap<>();
+        map.put(ExperimentState.CREATED, List.of(UUID1, UUID2));
+        map.put(ExperimentState.STARTED, List.of(UUID3));
+        when(experimentManager.getExperimentsByState()).thenReturn(map);
+        mvc.perform(get("/experiment/stats/groupbystate").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("CREATED[0]", is(UUID1)))
+           .andExpect(jsonPath("CREATED[1]", is(UUID2)))
+           .andExpect(jsonPath("STARTED[0]", is(UUID3)));
+    }
+
+    @Test
+    @WithGenericUser
+    public void getExperimentsByStateAsUser () throws Exception {
+        getExperimentsByStateInner();
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void getExperimentsByStateAsAnonymous () throws Exception {
+        mvc.perform(get("/experiment/stats/groupbystate").contentType(APPLICATION_JSON))
+           .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithAdmin
+    public void getExperimentCountByStateAsAdmin () throws Exception {
+        getExperimentCountByStateInner();
+    }
+
+    private void getExperimentCountByStateInner () throws Exception {
+        Map<ExperimentState, Long> map = new HashMap<>();
+        map.put(ExperimentState.CREATED, 1L);
+        map.put(ExperimentState.STARTED, 2L);
+        when(experimentManager.getExperimentCountByState()).thenReturn(map);
+        mvc.perform(get("/experiment/stats/countbystate").contentType(APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("CREATED", is(1)))
+           .andExpect(jsonPath("STARTED", is(2)));
+    }
+
+    @Test
+    @WithGenericUser
+    public void getExperimentCountByStateAsUser () throws Exception {
+        getExperimentCountByStateInner();
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void getExperimentCountByStateAsAnonymous () throws Exception {
+        mvc.perform(get("/experiment/stats/countbystate").contentType(APPLICATION_JSON))
+           .andExpect(status().isNotFound());
     }
 
     @Retention(RetentionPolicy.RUNTIME)

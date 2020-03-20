@@ -3,7 +3,7 @@
     <parent>
         <artifactId>chaosengine-experiments</artifactId>
         <groupId>com.thales.chaos</groupId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.4.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,12 +11,6 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>com.thales.chaos</groupId>
-            <artifactId>chaosengine-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- Kubernetes Dependencies -->
         <dependency>
             <groupId>io.kubernetes</groupId>

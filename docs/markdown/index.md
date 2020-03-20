@@ -12,6 +12,18 @@ Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and 
 
 ## Supported Experiments
 
+### Google Cloud Platform
+
+#### Google Compute Engine
+
+| Experiment | Target | Description |
+| --- | --- | --- |
+| Simulate Maintenance Event | All Instances | Performs a simulated maintenance event, to either migrate the VM to another host, or delete and recreate it on another host |
+| Stop Instance | Non-Grouped Instances | Stops selected instance |
+| Restart Instance | Non-Grouped Instances | Restarts selected instance |
+| Remove Firewall Tags | Non-Grouped Instances | Removes all firewall tags from an instance |
+| Recreate Instance in Group | Grouped Instances | Triggers an instance group to delete and recreate an instance |
+
 ### Amazon Web Services
 
 #### EC2 Instances

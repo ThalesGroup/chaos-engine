@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ public class ExperimentManager {
                     if (threadPool != null) threadPool.shutdown();
                 }
                 if (log.isDebugEnabled()) {
-                    calculateExperimentStats();
+                    printExperimentStats();
                 }
                 allExperiments.removeIf(Experiment::isComplete);
                 if (allExperiments.isEmpty()) {
@@ -111,25 +111,34 @@ public class ExperimentManager {
         this.experimentBackoffPeriod = experimentBackoffPeriod;
     }
 
-    void calculateExperimentStats () {
+    void printExperimentStats () {
+        //noinspection PlaceholderCountMatchesArgumentCount
+        log.debug("Experiments count by state", v("experimentState", getExperimentCountByState()));
+        //noinspection PlaceholderCountMatchesArgumentCount
+        log.debug("Experiments by state", v("experimentState", getExperimentsByState()));
+    }
+
+    Map<ExperimentState, Long> getExperimentCountByState () {
         Map<ExperimentState, Long> experimentsInStateCount = allExperiments.stream()
-                                                                           .collect(Collectors.groupingBy(Experiment::getExperimentState, Collectors
-                                                                                   .counting()));
-        Arrays.stream(values()).filter(not(experimentsInStateCount::containsKey)).forEach(entry -> experimentsInStateCount.put(entry, 0L));
-        //noinspection PlaceholderCountMatchesArgumentCount
-        log.debug("Experiments count by state", v("experimentState", experimentsInStateCount));
-        Map<ExperimentState, List<String>> experimentsByState = allExperiments.stream()
-                                                                              .collect(Collectors.groupingBy(Experiment::getExperimentState))
-                                                                              .entrySet()
-                                                                              .stream()
-                                                                              .collect(Collectors.toMap(Map.Entry::getKey, e -> e
-                                                                                      .getValue()
-                                                                                      .stream()
-                                                                                      .map(Experiment::getId)
-                                                                                      .sorted(Comparator.naturalOrder())
-                                                                                      .collect(toList())));
-        //noinspection PlaceholderCountMatchesArgumentCount
-        log.debug("Experiments by state", v("experimentState", experimentsByState));
+                                                                           .collect(Collectors.groupingBy(Experiment::getExperimentState,
+                                                                                   Collectors.counting()));
+        Arrays.stream(values())
+              .filter(not(experimentsInStateCount::containsKey))
+              .forEach(entry -> experimentsInStateCount.put(entry, 0L));
+        return experimentsInStateCount;
+    }
+
+    Map<ExperimentState, List<String>> getExperimentsByState () {
+        return allExperiments.stream()
+                             .collect(Collectors.groupingBy(Experiment::getExperimentState))
+                             .entrySet()
+                             .stream()
+                             .collect(Collectors.toMap(Map.Entry::getKey,
+                                     e -> e.getValue()
+                                           .stream()
+                                           .map(Experiment::getId)
+                                           .sorted(Comparator.naturalOrder())
+                                           .collect(toList())));
     }
 
     void evaluateExperiments () {
@@ -321,7 +330,8 @@ public class ExperimentManager {
         AutoCloseableMDCCollection (Map<String, String> dataContexts) {
             messageDataContextCollection = dataContexts.entrySet()
                                                        .stream()
-                                                       .map(entrySet -> MDC.putCloseable(entrySet.getKey(), entrySet.getValue()))
+                                                       .map(entrySet -> MDC.putCloseable(entrySet.getKey(),
+                                                               entrySet.getValue()))
                                                        .collect(Collectors.toUnmodifiableSet());
         }
 
@@ -329,5 +339,9 @@ public class ExperimentManager {
         public void close () {
             messageDataContextCollection.forEach(MDC.MDCCloseable::close);
         }
+    }
+
+    public boolean areExperimentsInProgress () {
+        return !getAllExperiments().isEmpty();
     }
 }

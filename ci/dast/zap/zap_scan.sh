@@ -35,5 +35,14 @@ export -f wait_for_engine
 timeout $CHAOS_ENGINE_STARTUP_TIMEOUT bash -c wait_for_engine || engine_startup_timeout
 run_scan
 STATUS_CODE=$?
-cp $ZAP_WORK_DIR$ZAP_REPORT_FILE .
+
+if [[ -d "/report" ]]; then
+  #GitHub artifacts must be in directory allowing rw access to everyone
+  cp $ZAP_WORK_DIR$ZAP_REPORT_FILE /report
+else
+  #GitLab artifacts must be in a cloned repo
+  cp $ZAP_WORK_DIR$ZAP_REPORT_FILE .
+fi
+
+
 exit $STATUS_CODE

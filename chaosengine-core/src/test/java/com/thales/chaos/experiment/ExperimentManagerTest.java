@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -140,7 +140,9 @@ public class ExperimentManagerTest {
         experimentManager.updateExperimentStatus();
         logger.setLevel(Level.INFO);
         experimentManager.updateExperimentStatus();
-        verify(experimentManager).calculateExperimentStats();
+        verify(experimentManager).printExperimentStats();
+        verify(experimentManager).getExperimentCountByState();
+        verify(experimentManager).getExperimentsByState();
     }
 
     @Test
@@ -542,7 +544,7 @@ public class ExperimentManagerTest {
         experimentManager.addExperiment(firstExperiment);
         experimentManager.addExperiment(secondExperiment);
         experimentManager.addExperiment(thirdExperiment);
-        experimentManager.calculateExperimentStats();
+        experimentManager.printExperimentStats();
         verify(appender, times(2)).doAppend(iLoggingEventCaptor.capture());
         final List<ILoggingEvent> loggingEvent = iLoggingEventCaptor.getAllValues();
         ILoggingEvent countByStateEvent = loggingEvent.get(0);
@@ -587,6 +589,15 @@ public class ExperimentManagerTest {
         assertThat(experimentManager.scheduleExperiments(true), IsEmptyCollection.empty());
         verify(experimentManager, never()).inBackoffPeriod();
         verify(platformManager, times(1)).getPlatforms();
+    }
+
+    @Test
+    public void areExperimentsInProgress () {
+        doReturn(Collections.emptySet()).doReturn(Set.of(mock(Experiment.class)))
+                                        .when(experimentManager)
+                                        .getAllExperiments();
+        assertFalse(experimentManager.areExperimentsInProgress());
+        assertTrue(experimentManager.areExperimentsInProgress());
     }
 
     @Configuration

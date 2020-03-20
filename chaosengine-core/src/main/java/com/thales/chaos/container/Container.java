@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.ExperimentMethod;
 import com.thales.chaos.experiment.ExperimentalObject;
 import com.thales.chaos.experiment.annotations.ChaosExperiment;
+import com.thales.chaos.experiment.enums.ExperimentScope;
 import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
@@ -310,5 +311,9 @@ public abstract class Container implements ExperimentalObject {
 
     public void clearExperiment () {
         currentExperiment = null;
+    }
+
+    public boolean supportsExperimentScope (ExperimentScope experimentScope) {
+        return ExperimentScope.MIXED.equals(experimentScope) || (ExperimentScope.PET.equals(experimentScope) ^ isCattle());
     }
 }

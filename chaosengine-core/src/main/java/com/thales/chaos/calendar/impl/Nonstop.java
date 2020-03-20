@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.Calendar;
 
-@Repository("DUM")
-public class Dummy implements HolidayCalendar {
+@Repository("NONSTOP")
+public class Nonstop implements HolidayCalendar {
     @Override
     public boolean isHoliday (Calendar day) {
         return false;

@@ -44,7 +44,7 @@ The vault endpoint is configured through environment variables.
 export VAULT_ADDR='http://$VAULT_HOST:8200'
 export VAULT_DEV_ROOT_TOKEN_ID=00000000-0000-0000-0000-000000000000
 vault auth $VAULT_DEV_ROOT_TOKEN_ID
-vault kv put secret/chaosengine aws.accessKeyId=$AWS_ACCESS_KEY_ID aws.secretAccessKey=$AWS_SECRET_ACCESS_KEY aws.region=eu-west-1  AWS_FILTER_KEYS='Chaos Victim' AWS_FILTER_VALUES=true holidays=DUM aws.ec2=true
+vault kv put secret/chaosengine aws.accessKeyId=$AWS_ACCESS_KEY_ID aws.secretAccessKey=$AWS_SECRET_ACCESS_KEY aws.region=eu-west-1  AWS_FILTER_KEYS='Chaos Victim' AWS_FILTER_VALUES=true holidays=NONSTOP aws.ec2=true
 vault kv get secret/chaosengine
 ```
 
@@ -53,6 +53,10 @@ vault kv get secret/chaosengine
 The Java Objects are not automatically refreshed when values are changed in vault. Instead, an API must be called to trigger a reload. This should be done after ALL values have changed, as calling it with only some values changed may have unpredictable errors (i.e., Access Key ID changed but Secret Key is unchanged may cause errors).
 
 In order to trigger the request, a **HTTP POST** request needs to be made against **http://{chaosengine}/refresh** .
+
+## Triggering a Reload
+
+If new variables that control object creation are added or removed, then the Chaos Engines application context needs to be completely reloaded. To accomplish this, send an **HTTP POST** request to **http://{chaosengine}/refresh/all**.
 
 ## Spring Profiles
 

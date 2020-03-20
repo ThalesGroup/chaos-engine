@@ -4,7 +4,7 @@
 
     <groupId>com.thales.chaos</groupId>
     <artifactId>chaosengine</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <profiles>
         <profile>
             <id>openapi</id>
@@ -25,7 +25,13 @@
                 <sonar.organization>thalesgroup</sonar.organization>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
                 <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+                <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+                <jacoco.reportPath>${user.dir}/chaosengine-coverage/target/jacoco-${project.artifactId}.exec</jacoco.reportPath>
+                <sonar.coverage.jacoco.xmlReportPaths>${user.dir}/chaosengine-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
             </properties>
+            <modules>
+                <module>chaosengine-coverage</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -37,20 +43,9 @@
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonarsource.scanner.maven</groupId>
-                        <artifactId>sonar-maven-plugin</artifactId>
-                        <version>3.7.0.1746</version>
-                        <executions>
-                            <execution>
-                                <phase>test</phase>
-                                <id>sonar-scan</id>
-                                <goals>
-                                    <goal>sonar</goal>
-                                </goals>
+                                <configuration>
+                                    <destFile>${jacoco.reportPath}</destFile>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -70,7 +65,7 @@
 
     <name>chaos-engine</name>
     <description>Implement Chaos in various environments</description>
-    <url>https://gemalto.github.io/chaos-engine/</url>
+    <url>https://thalesgroup.github.io/chaos-engine/</url>
 
     <licenses>
         <license>
@@ -129,14 +124,14 @@
     </contributors>
 
     <scm>
-        <connection>scm:git:git://github.com/gemalto/chaos-engine.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/gemalto/chaos-engine.git</developerConnection>
-        <url>https://github.com/gemalto/chaos-engine.git</url>
+        <connection>scm:git:git://github.com/thalesgroup/chaos-engine.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/thalesgroup/chaos-engine.git</developerConnection>
+        <url>https://github.com/thalesgroup/chaos-engine.git</url>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/gemalto/chaos-engine/issues</url>
+        <url>https://github.com/thalesgroup/chaos-engine/issues</url>
     </issueManagement>
 
     <parent>
@@ -151,6 +146,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <aws.sdk.version>1.11.357</aws.sdk.version>
+        <gcp.sdk.version>3.0.0</gcp.sdk.version>
         <spring-cloud.version>2.1.3.RELEASE</spring-cloud.version>
     </properties>
 
@@ -253,6 +249,13 @@
                 <type>pom</type>
             </dependency>
             <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>${gcp.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-vault-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
@@ -265,6 +268,13 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <rerunFailingTestsCount>2</rerunFailingTestsCount>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <executions>

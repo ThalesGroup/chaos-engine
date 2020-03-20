@@ -1,0 +1,25 @@
+<assembly xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+
+    <id>assembler</id>
+    <formats>
+        <format>dir</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>org.igniterealtime.smack:smack-tcp</include>
+                <include>org.igniterealtime.smack:smack-im</include>
+                <include>org.igniterealtime.smack:smack-extensions</include>
+                <include>org.igniterealtime.smack:smack-java7</include>
+                <include>eu.geekplace.javapinning:java-pinning-core</include>
+            </includes>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+        </dependencySet>
+    </dependencySets>
+
+</assembly>

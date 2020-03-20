@@ -1,3 +1,20 @@
+/*
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
 package com.thales.chaos.swagger;
 
 import com.thales.chaos.admin.AdminController;
@@ -30,18 +47,12 @@ import static com.thales.chaos.swagger.OpenApiConfig.*;
                                 contact = @Contact(name = CONTACT_NAME, url = CONTACT_URL)),
                    security = @SecurityRequirement(name = JSESSIONID),
                    tags = {
-                           @Tag(name = AdminController.ADMIN,
-                                description = "Controls the administrative state of the Chaos Engine"),
-                           @Tag(name = ExperimentController.EXPERIMENT,
-                                description = "Create or retrieve information about Chaos Experiments"),
-                           @Tag(name = LoggingController.LOGGING,
-                                description = "Control the real time logging level of Chaos Engine classes"),
-                           @Tag(name = PlatformController.PLATFORM,
-                                description = "Retrieve information about platforms include for Chaos Experiments"),
-                           @Tag(name = RefreshController.REFRESH,
-                                description = "Refresh Spring Beans based on new information in Vault"),
-                           @Tag(name = ChaosLoginEndpoints.SECURITY,
-                                description = "Provide endpoints for controlling User Session for security")
+                           @Tag(name = AdminController.ADMIN, description = "Controls the administrative state of the Chaos Engine"),
+                           @Tag(name = ExperimentController.EXPERIMENT, description = "Create or retrieve information about Chaos Experiments"),
+                           @Tag(name = LoggingController.LOGGING, description = "Control the real time logging level of Chaos Engine classes"),
+                           @Tag(name = PlatformController.PLATFORM, description = "Retrieve information about platforms include for Chaos Experiments"),
+                           @Tag(name = RefreshController.REFRESH, description = "Refresh Spring Beans based on new information in Vault"),
+                           @Tag(name = ChaosLoginEndpoints.SECURITY, description = "Provide endpoints for controlling User Session for security")
                    },
                    servers = @Server(),
                    externalDocs = @ExternalDocumentation(description = "Packaged Help Documentation", url = "/help/"))
@@ -52,6 +63,6 @@ public class OpenApiConfig {
     static final String OPENAPI_LICENSE_VERSION = "https://www.apache.org/licenses/LICENSE-2.0.txt";
     static final String API_VERSION = "1.2";
     static final String CONTACT_NAME = "Thales Digital Identity and Security Cloud Platform Licensing Chaos Engineering Team";
-    static final String CONTACT_URL = "https://github.com/gemalto/chaos-engine";
+    static final String CONTACT_URL = "https://github.com/thalesgroup/chaos-engine";
     static final String JSESSIONID = "JSESSIONID";
 }

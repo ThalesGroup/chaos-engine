@@ -1,7 +1,12 @@
 ![Chaos Engine](/docs/markdown/images/chaos-engine-full.png)
 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=gemalto_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=gemalto_chaos-engine)
-[![Known Vulnerabilities](https://snyk.io/test/github/gemalto/chaos-engine/badge.svg)](https://snyk.io/test/github/gemalto/chaos-engine)
+![Sanity CI](https://github.com/ThalesGroup/chaos-engine/workflows/Sanity%20CI/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=alert_status)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=ncloc)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=coverage)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=security_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ThalesGroup_chaos-engine&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=ThalesGroup_chaos-engine)
+[![Known Vulnerabilities](https://snyk.io/test/github/thalesgroup/chaos-engine/badge.svg)](https://snyk.io/test/github/thalesgroup/chaos-engine)
 
 Chaos Engine is an application for creating random Chaos Events in cloud applications to test resiliency. It follows the [Principles of Chaos] to create random faults (*experiments*) that could reasonably occur in a real application deployment.
 
@@ -9,7 +14,7 @@ Chaos Engine makes intelligent decisions in how and when to create experiments. 
 
 ## Supported Platforms
 
-Chaos Engine currently supports Amazon Web Services, Pivotal Cloud Foundry, and Kubernetes. We have future plans to add support for Google Cloud Platform.
+Chaos Engine currently supports Amazon Web Services, Google Cloud Platform, Pivotal Cloud Foundry, and Kubernetes. 
 
 ### :warning: Warning
 
@@ -23,7 +28,7 @@ Running chaos experiments in a non-resilient system can result in significant fa
 | Cloud Foundry | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | AWS EC2 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | AWS RDS | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x: |
-| GCP Compute | :construction: | :construction: | :construction: |
+| GCP Compute | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 #### Legend
 :heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support
@@ -47,12 +52,17 @@ Please see our [documentation] for configuration instructions.
 
 Chaos Engine is being actively developed, but we welcome public participation. Please note that we have internal processes that may slow down or require alterations to any pull requests. We may also have internal development on similar features. You can contact us for more information.
 
+
+## Demo Video
+
+[![Chaos Engine Introduction](https://img.youtube.com/vi/IX-gNYBLyDM/0.jpg)](https://www.youtube.com/watch?v=IX-gNYBLyDM) 
+
 ## Contact
 
 You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
-[documentation]: https://gemalto.github.io/chaos-engine/
-[experiment modules documentation]: https://gemalto.github.io/chaos-engine/Experiment_Modules
+[documentation]: https://thalesgroup.github.io/chaos-engine/
+[experiment modules documentation]: https://thalesgroup.github.io/chaos-engine/Experiment_Modules
 [E-mail us]: mailto:dl_chaos_engine@gemalto.com
 [Slack]: https://join.slack.com/t/thaleschaosengine/shared_invite/enQtODY1MDk1OTY4OTgyLTZjOGI5NzM1YTA2OWE5MjgzMWYxMzkwZjIwYTE3NjBlNDM4ZTkzNzc5YmMyMTU2Zjc5ODhlMTVkZDJhMmEzMzc

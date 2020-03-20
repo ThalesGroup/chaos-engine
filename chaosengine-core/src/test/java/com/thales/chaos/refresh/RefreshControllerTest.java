@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(properties = "holidays=DUM")
+@SpringBootTest(properties = "holidays=NONSTOP")
 @AutoConfigureMockMvc
 public class RefreshControllerTest {
     @MockBean
@@ -78,6 +78,37 @@ public class RefreshControllerTest {
     public void doRefreshFailure () throws Exception {
         doThrow(new RuntimeException()).when(refreshManager).doRefresh();
         mvc.perform(patch("/refresh").contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    @WithAdmin
+    public void doRestartAsAdmin () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON))
+           .andExpect(status().isOk())
+           .andExpect(content().string("true"));
+    }
+
+    @Test
+    @WithGenericUser
+    public void doRestartAsUser () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void doRestartAnonymous () throws Exception {
+        doReturn(true).when(refreshManager).doRestart();
+        mvc.perform(post("/refresh/all").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithAdmin
+    public void doRestartFailure () throws Exception {
+        doThrow(new RuntimeException()).when(refreshManager).doRestart();
+        mvc.perform(patch("/refresh/all").contentType(MediaType.APPLICATION_JSON))
+           .andExpect(status().is5xxServerError());
     }
 
     @Retention(RetentionPolicy.RUNTIME)

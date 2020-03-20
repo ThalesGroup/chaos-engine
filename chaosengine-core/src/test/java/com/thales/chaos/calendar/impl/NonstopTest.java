@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import java.util.Calendar;
 
 import static org.junit.Assert.*;
 
-public class DummyTest {
-    Dummy calendar = new Dummy();
+public class NonstopTest {
+    Nonstop calendar = new Nonstop();
 
     private Calendar getDate (int year, int month, int day) {
         Calendar c = Calendar.getInstance();

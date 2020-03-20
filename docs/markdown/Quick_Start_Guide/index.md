@@ -31,7 +31,7 @@ If the command `docker-compose` fails after installation, check your path. You c
 
 ## Step 3: Download Latest Chaos Engine Sources
 ```bash
-user@host:~$ git clone https://github.com/gemalto/chaos-engine
+user@host:~$ git clone https://github.com/thalesgroup/chaos-engine
 Cloning into 'chaos-engine'...
 ...
 Checking connectivity... done.
@@ -50,7 +50,7 @@ user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 ### Basic Framework Setup
 
 ```bash
-user@host:~/chaos-engine$ echo "holidays=DUM
+user@host:~/chaos-engine$ echo "holidays=NONSTOP
 VAULT_TOKEN=00000000-0000-0000-0000-000000000000
 VAULT_SCHEME=http
 VAULT_HOST=vault

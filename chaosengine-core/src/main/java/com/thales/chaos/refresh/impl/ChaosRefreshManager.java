@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,11 @@
 
 package com.thales.chaos.refresh.impl;
 
+import com.thales.chaos.ChaosEngine;
+import com.thales.chaos.experiment.ExperimentManager;
+import com.thales.chaos.notification.NotificationManager;
+import com.thales.chaos.notification.enums.NotificationLevel;
+import com.thales.chaos.notification.message.ChaosMessage;
 import com.thales.chaos.refresh.RefreshManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +34,32 @@ import java.util.Collection;
 @Component
 public class ChaosRefreshManager implements RefreshManager {
     private static final Logger log = LoggerFactory.getLogger(ChaosRefreshManager.class);
-
     @Autowired
     private RefreshEndpoint refreshEndpoint;
+    @Autowired
+    private ExperimentManager experimentManager;
+    @Autowired
+    private NotificationManager notificationManager;
 
     @Override
     public Collection<String> doRefresh () {
         log.debug("Refresh of Spring Properties initiated");
         return refreshEndpoint.refresh();
+    }
+
+    @Override
+    public boolean doRestart () {
+        if (experimentManager.areExperimentsInProgress()) {
+            log.info("Restart requested, but experiments are in progress.");
+            return false;
+        }
+        log.info("Restart requested.");
+        notificationManager.sendNotification(ChaosMessage.builder()
+                                                         .withTitle("Engine Restarted")
+                                                         .withMessage("Chaos Engine restart has been requested.")
+                                                         .withNotificationLevel(NotificationLevel.WARN)
+                                                         .build());
+        ChaosEngine.restart();
+        return true;
     }
 }

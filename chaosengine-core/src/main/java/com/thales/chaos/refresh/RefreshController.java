@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -47,5 +47,15 @@ public class RefreshController {
     @PostMapping
     public Collection<String> doRefresh () {
         return refreshManager.doRefresh();
+    }
+
+    @Operation(summary = "Trigger an internal restart of the Chaos Engine",
+               description = "Triggers the Chaos Engine to completely restart itself. All properties and spring conditionals are reloaded and reevaluated. May return false if restart cannot be initiated because experiments are in progress.",
+               responses = {
+                       @ApiResponse(description = "Boolean value of if Application restart has been initiated.")
+               })
+    @PostMapping("/all")
+    public boolean doRestart () {
+        return refreshManager.doRestart();
     }
 }

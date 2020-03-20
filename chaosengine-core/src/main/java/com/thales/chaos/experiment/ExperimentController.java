@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package com.thales.chaos.experiment;
 
+import com.thales.chaos.experiment.enums.ExperimentState;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,5 +159,27 @@ public class ExperimentController {
                                                description = "New minimum backoff period between experiments. Formatted as \"PT[nH][nM][nS]\".",
                                                example = "PT1H15M45S") @RequestParam Duration backoffDuration) {
         experimentManager.setExperimentBackoffPeriod(backoffDuration);
+    }
+
+    @Operation(summary = "Get Experiments By State",
+               description = "Returns a list of IDs of all active experiments grouped by experiment state",
+               responses = {
+                       @ApiResponse(description = "List of IDs aggregated by experiment state",
+                                    content = @Content(schema = @Schema(implementation = String.class)))
+               })
+    @GetMapping("/stats/groupbystate")
+    public Map<ExperimentState, List<String>> getExperimentsByState () {
+        return experimentManager.getExperimentsByState();
+    }
+
+    @Operation(summary = "Count Experiments By State ",
+               description = "Counts all active experiments by experiment state",
+               responses = {
+                       @ApiResponse(description = "List of counters",
+                                    content = @Content(schema = @Schema(implementation = String.class)))
+               })
+    @GetMapping("/stats/countbystate")
+    public Map<ExperimentState, Long> getExperimentCountByState () {
+        return experimentManager.getExperimentCountByState();
     }
 }

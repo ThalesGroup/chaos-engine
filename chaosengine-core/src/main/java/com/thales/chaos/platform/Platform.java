@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -39,9 +39,11 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.constants.ExperimentConstants.DEFAULT_SELF_HEALING_INTERVAL_MINUTES;
 import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 public abstract class Platform implements ExperimentalObject {
     private static final Duration ROSTER_CACHE_DURATION = Duration.ofHours(1);
@@ -135,7 +137,30 @@ public abstract class Platform implements ExperimentalObject {
     }
 
     public List<Container> generateExperimentRoster () {
-        return getRoster();
+        Map<String, List<Container>> groupedContainers = getRoster().stream()
+                                                                    .collect(Collectors.groupingBy(container -> Optional
+                                                                            .of(container)
+                                                                            .map(Container::getAggregationIdentifier)
+                                                                            .orElse(getDefaultUngroupedAggregationIdentifier())));
+        List<Container> ungrouped = groupedContainers.remove(getDefaultUngroupedAggregationIdentifier());
+        List<Container> experimentContainers = new ArrayList<>(ungrouped != null ? ungrouped : Collections.emptyList());
+        groupedContainers.forEach((k, v) -> {
+            int size = v.size();
+            if (size < 2) {
+                log.warn("Group {} does not have redundancy. It is not protected from experiments.", k);
+                experimentContainers.addAll(v);
+                return;
+            }
+            int excludedElement = new Random().nextInt(size);
+            Container removedContainer = v.remove(excludedElement);
+            log.info("Protected container {} from experiment", v(DATADOG_CONTAINER_KEY, removedContainer));
+            experimentContainers.addAll(v);
+        });
+        return experimentContainers;
+    }
+
+    protected String getDefaultUngroupedAggregationIdentifier () {
+        return "ungrouped";
     }
 
     public abstract boolean isContainerRecycled (Container container);

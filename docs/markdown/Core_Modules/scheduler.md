@@ -5,7 +5,7 @@ The Chaos Engine uses an advanced scheduler to ensure sufficiently random time b
 ## Configuration
 | Key Names | Description | Default | Notes |
 | :---: | --- | :---: | --- |
-| holidays | Configures which country's Holidays and Working Hours to follow. Available: CAN, CZE, FRA, USA | `CAN` | ISO-3166-Alpha-3 country codes are used |
+| holidays | Configures which country's Holidays and Working Hours to follow. Available: `CAN`, `CZE`, `FRA`, `USA`. For test purpose there is a calendar called `NONSTOP` which allows experiment execution at any time.| `CAN` | ISO-3166-Alpha-3 country codes are used |
 | automatedMode | Configures if experiments should be run automatically (*true*), or only by API (*false*) | `true` | | 
 
 ## Behaviour

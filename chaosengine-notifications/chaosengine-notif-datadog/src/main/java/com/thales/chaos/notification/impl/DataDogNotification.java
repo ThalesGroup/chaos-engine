@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class DataDogNotification implements NotificationMethods {
 
     void send (Event evt, Collection<String> tags) {
         try {
-            log.debug("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
+            log.info("Sending DataDog notification: {}, {}", v("notice", evt.getText()), v("tags", tags));
             statsDClient.recordEvent(evt, tags.toArray(String[]::new));
             log.debug("DataDog notification sent: {}, {}", v("notice", evt.getText()), v("tags", tags));
         } catch (StatsDClientException ex) {

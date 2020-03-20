@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019 Thales Group
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -208,29 +208,8 @@ public class AwsEC2Platform extends Platform implements SshBasedExperiment<AwsEC
     }
 
     @Override
-    public List<Container> generateExperimentRoster () {
-        List<Container> roster = getRoster();
-        Map<String, List<AwsEC2Container>> groupedRoster = roster.stream().map(AwsEC2Container.class::cast).collect(Collectors.groupingBy(AwsEC2Container::getGroupIdentifier));
-        List<Container> eligibleExperimentTargets = new ArrayList<>();
-        groupedRoster.forEach((k, v) -> {
-            // Anything that isn't in a managed group is eligible for experiments
-            if (k.equals(AwsEC2Constants.NO_GROUPING_IDENTIFIER)) {
-                eligibleExperimentTargets.addAll(v);
-                return;
-            }
-            // If you set up an autoscaling group are scaled down to 1, you don't get a designated survivor.
-            if (v.size() < 2) {
-                log.warn("A scaled group contains less than 2 members. All will be eligible for experiments. {}", v("containers", v));
-                eligibleExperimentTargets.addAll(v);
-                return;
-            }
-            int designatedSurvivorIndex = new Random().nextInt(v.size());
-            AwsEC2Container survivor = v.remove(designatedSurvivorIndex);
-            log.debug("The container {} will be a designated survivor for this experiment", v(DataDogConstants.DATADOG_CONTAINER_KEY, survivor));
-            eligibleExperimentTargets.addAll(v);
-        });
-        log.info("The following containers will be eligible for experiments: {}", v("experimentRoster", eligibleExperimentTargets));
-        return eligibleExperimentTargets;
+    protected String getDefaultUngroupedAggregationIdentifier () {
+        return AwsEC2Constants.NO_GROUPING_IDENTIFIER;
     }
 
     @Override
