@@ -38,7 +38,7 @@
     
     
       
-        <title>Kubernetes Module - Chaos Engine</title>
+        <title>Google Cloud Compute Engine Experiments - Chaos Engine</title>
       
     
     
@@ -87,7 +87,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#kubernetes-module" tabindex="1" class="md-skip">
+      <a href="#google-cloud-compute-engine-experiments" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -113,7 +113,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Kubernetes Module
+                Google Cloud Compute Engine Experiments
               
             </span>
           
@@ -595,18 +595,6 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-nav__link">
-      Google Cloud Compute Engine Experiments
-    </a>
-  </li>
-
-        
-          
-          
-          
-
   
 
 
@@ -618,11 +606,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Kubernetes Module
+        Google Cloud Compute Engine Experiments
       </label>
     
-    <a href="./" title="Kubernetes Module" class="md-nav__link md-nav__link--active">
-      Kubernetes Module
+    <a href="./" title="Google Cloud Compute Engine Experiments" class="md-nav__link md-nav__link--active">
+      Google Cloud Compute Engine Experiments
     </a>
     
       
@@ -636,16 +624,22 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#supported-versions" title="Supported Versions" class="md-nav__link">
-    Supported Versions
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sdk" title="SDK" class="md-nav__link">
     SDK
   </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version" title="Version" class="md-nav__link">
+    Version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -654,12 +648,18 @@
     Configuration
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#required-kubernetes-cluster-configuration" title="Required Kubernetes Cluster Configuration" class="md-nav__link">
-    Required Kubernetes Cluster Configuration
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#required-permissions" title="Required Permissions" class="md-nav__link">
+    Required Permissions
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -672,8 +672,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mechanism" title="Mechanism" class="md-nav__link">
-    Mechanism
+  <a href="#filtering" title="Filtering" class="md-nav__link">
+    Filtering
   </a>
   
 </li>
@@ -691,27 +691,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#experiments" title="Experiments" class="md-nav__link">
-    Experiments
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#delete-pod" title="Delete Pod" class="md-nav__link">
-    Delete Pod
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
-    Mechanism
+  <a href="#ssh-experiment-support" title="SSH Experiment Support" class="md-nav__link">
+    SSH Experiment Support
   </a>
   
 </li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-methods" title="Experiment Methods" class="md-nav__link">
+    Experiment Methods
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulate-maintenance-event" title="Simulate Maintenance Event" class="md-nav__link">
+    Simulate Maintenance Event
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#health-check" title="Health Check" class="md-nav__link">
@@ -732,16 +740,21 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#shell-based-experiments" title="Shell based experiments" class="md-nav__link">
-    Shell based experiments
+  <a href="#stop-instance" title="Stop Instance" class="md-nav__link">
+    Stop Instance
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
     Mechanism
   </a>
   
@@ -761,9 +774,111 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#list-of-experiments" title="List of experiments" class="md-nav__link">
-    List of experiments
+  <a href="#reset-instance" title="Reset Instance" class="md-nav__link">
+    Reset Instance
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_2" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_2" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recreate-instance-in-instance-group" title="Recreate Instance in Instance Group" class="md-nav__link">
+    Recreate Instance in Instance Group
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_3" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_3" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finalization" title="Finalization" class="md-nav__link">
+    Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-firewall-tags-from-instance" title="Remove Firewall Tags from Instance" class="md-nav__link">
+    Remove Firewall Tags from Instance
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_4" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_4" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_4" title="Self Healing" class="md-nav__link">
+    Self Healing
   </a>
   
 </li>
@@ -786,6 +901,18 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
   </li>
 
         
@@ -1163,16 +1290,22 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#supported-versions" title="Supported Versions" class="md-nav__link">
-    Supported Versions
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sdk" title="SDK" class="md-nav__link">
     SDK
   </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version" title="Version" class="md-nav__link">
+    Version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1181,12 +1314,18 @@
     Configuration
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#required-kubernetes-cluster-configuration" title="Required Kubernetes Cluster Configuration" class="md-nav__link">
-    Required Kubernetes Cluster Configuration
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#required-permissions" title="Required Permissions" class="md-nav__link">
+    Required Permissions
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1199,8 +1338,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mechanism" title="Mechanism" class="md-nav__link">
-    Mechanism
+  <a href="#filtering" title="Filtering" class="md-nav__link">
+    Filtering
   </a>
   
 </li>
@@ -1218,27 +1357,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#experiments" title="Experiments" class="md-nav__link">
-    Experiments
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#delete-pod" title="Delete Pod" class="md-nav__link">
-    Delete Pod
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
-    Mechanism
+  <a href="#ssh-experiment-support" title="SSH Experiment Support" class="md-nav__link">
+    SSH Experiment Support
   </a>
   
 </li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-methods" title="Experiment Methods" class="md-nav__link">
+    Experiment Methods
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulate-maintenance-event" title="Simulate Maintenance Event" class="md-nav__link">
+    Simulate Maintenance Event
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#health-check" title="Health Check" class="md-nav__link">
@@ -1259,16 +1406,21 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#shell-based-experiments" title="Shell based experiments" class="md-nav__link">
-    Shell based experiments
+  <a href="#stop-instance" title="Stop Instance" class="md-nav__link">
+    Stop Instance
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+  <a href="#mechanism_1" title="Mechanism" class="md-nav__link">
     Mechanism
   </a>
   
@@ -1288,9 +1440,111 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#list-of-experiments" title="List of experiments" class="md-nav__link">
-    List of experiments
+  <a href="#reset-instance" title="Reset Instance" class="md-nav__link">
+    Reset Instance
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_2" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_2" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_2" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recreate-instance-in-instance-group" title="Recreate Instance in Instance Group" class="md-nav__link">
+    Recreate Instance in Instance Group
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_3" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_3" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_3" title="Self Healing" class="md-nav__link">
+    Self Healing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finalization" title="Finalization" class="md-nav__link">
+    Finalization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-firewall-tags-from-instance" title="Remove Firewall Tags from Instance" class="md-nav__link">
+    Remove Firewall Tags from Instance
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mechanism_4" title="Mechanism" class="md-nav__link">
+    Mechanism
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check_4" title="Health Check" class="md-nav__link">
+    Health Check
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-healing_4" title="Self Healing" class="md-nav__link">
+    Self Healing
   </a>
   
 </li>
@@ -1321,196 +1575,136 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/thalesgroup/chaos-engine/edit/master/docs/Experiment_Modules/kubernetes_experiments.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/thalesgroup/chaos-engine/edit/master/docs/Experiment_Modules/gcp_compute_experiments.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="kubernetes-module">Kubernetes Module</h1>
-<p>The Chaos Engine Kubernetes Module is able to connect to a Kubernetes cluster and interact with deployed PODs.</p>
-<h2 id="supported-versions">Supported Versions</h2>
-<p>Chaos Engine supports minimum Kubernetes version 1.9 and currently supports up to version 1.15. Support is driven by the Kubernetes Client SDK version compatibility.</p>
+                <h1 id="google-cloud-compute-engine-experiments">Google Cloud Compute Engine Experiments</h1>
 <h2 id="sdk">SDK</h2>
-<p>The official Kubernetes Java Client is used to interact with the cluster.</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Resource</td>
-<td><a href="https://github.com/kubernetes-client/java">https://github.com/kubernetes-client/java</a></td>
-</tr>
-<tr>
-<td>Version</td>
-<td>7.0.0</td>
-</tr>
-<tr>
-<td>Maven Repositories</td>
-<td><a href="https://mvnrepository.com/artifact/io.kubernetes/client-java">https://mvnrepository.com/artifact/io.kubernetes/client-java</a></td>
-</tr>
-</tbody>
-</table>
+<p>The GCP Compute Engine module uses the Official <a href="https://github.com/googleapis/google-cloud-java">GCP Compute SDK for Java</a> from Google.</p>
+<h3 id="version">Version</h3>
+<p>All Google SDKs are included via the Google Cloud <code>libraries-bom</code> Maven package. The current version of the package is 3.0.0.</p>
 <h2 id="configuration">Configuration</h2>
-<p>Environment variables that control how the Chaos Engine interacts with Kubernetes.</p>
 <table>
 <thead>
 <tr>
 <th>Key Name</th>
 <th>Description</th>
-<th>Default Value</th>
+<th align="center">Default</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>kubernetes</td>
-<td>The presence of this key enables Kubernetes module.</td>
-<td>N/A</td>
+<td><code>gcp.compute</code></td>
+<td>The presence of this key enables the module.</td>
+<td align="center">N/A</td>
 </tr>
 <tr>
-<td>kubernetes.url</td>
-<td>Kubernetes server API url e.g.</td>
-<td>None</td>
+<td><code>gcp.compute.project-id</code></td>
+<td>This key controls which GCP Project the module will experiment on.</td>
+<td align="center">N/A</td>
 </tr>
 <tr>
-<td>kubernetes.token</td>
-<td>JWT token assigned to service account. You can get the value by running <code>kubectl describe secret name_of_your_secret</code></td>
-<td>None</td>
+<td><code>gcp.compute.json-key</code></td>
+<td>This key should be the JSON Key of the Service Account the module is to use.</td>
+<td align="center">N/A</td>
 </tr>
 <tr>
-<td>kubernetes.namespace</td>
-<td>K8S namespace where experiments should be performed</td>
-<td><code>default</code></td>
+<td><code>gcp.compute.include-filter.&lt;metadata-key-name&gt;</code></td>
+<td>Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See <a href="#filtering">Filtering</a> for more information.</td>
+<td align="center">N/A</td>
 </tr>
 <tr>
-<td>kubernetes.debug</td>
-<td>Enables debug log of Kubernetes java client</td>
-<td><code>false</code></td>
+<td><code>gcp.compute.exclude-filter.&lt;metadata-key-name&gt;</code></td>
+<td>Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See <a href="#filtering">Filtering</a> for more information.</td>
+<td align="center">N/A</td>
 </tr>
 <tr>
-<td>kubernetes.validateSSL</td>
-<td>Enables validation of sever side certificates</td>
-<td><code>false</code></td>
+<td><code>gcp.compute.routableCidrBlocks</code></td>
+<td>A comma separated list of private CIDR Blocks that should be considered Routable for SSH Access</td>
+<td align="center">N/A</td>
 </tr>
 </tbody>
 </table>
-<h2 id="required-kubernetes-cluster-configuration">Required Kubernetes Cluster Configuration</h2>
-<p>A service account with a role binding needs to be created in order to access the specific API endpoints required for Kubernetes Experiments</p>
-<p>Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.</p>
-<p>You can retrieve the token by running <code>kubectl describe secret chaos-engine -n {{namespace}}</code></p>
-<p><strong>chaos-engine-service-account.yaml</strong></p>
-<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
-<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Role</span>
-<span class="nt">metadata</span><span class="p">:</span>
-  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-role</span>
-  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
-<span class="nt">rules</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">apps</span>
-  <span class="nt">resources</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">daemonsets</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">daemonsets/status</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deployments</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deployments/status</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicasets</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicasets/status</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">statefulsets</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">statefulsets/status</span>
-  <span class="nt">verbs</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">list</span>
-<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
-  <span class="nt">resources</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods</span>
-  <span class="nt">verbs</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">delete</span>
-
-
-<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
-  <span class="nt">resources</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods/status</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicationcontrollers/status</span>
-  <span class="nt">verbs</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">list</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
-  <span class="nt">resources</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods/exec</span>
-  <span class="nt">verbs</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">create</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
-
-<span class="nn">---</span>
-
-<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
-<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ServiceAccount</span>
-<span class="nt">metadata</span><span class="p">:</span>
-  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-serviceaccount</span>
-  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
-
-<span class="nn">---</span>
-
-<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
-<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">RoleBinding</span>
-<span class="nt">metadata</span><span class="p">:</span>
-  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-rolebinding</span>
-  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
-<span class="nt">roleRef</span><span class="p">:</span>
-  <span class="nt">apiGroup</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io</span>
-  <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Role</span>
-  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-role</span>
-<span class="nt">subjects</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ServiceAccount</span>
-  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-serviceaccount</span>
-  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
-</pre></div>
-
-<h2 id="node-discovery">Node Discovery</h2>
-<h3 id="mechanism">Mechanism</h3>
-<p>API: <a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#listNamespacedPod">listNamespacedPod</a></p>
-<p>The Kubernetes Platform generates list of available containers by calling listNamespacedPod API. Filtering is done according to namespace name provided as a platform configuration parameter. Only one namespace can be targeted right now.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><strong><em>Job</em></strong> and <strong><em>Cron Job</em></strong> controllers are <strong>not</strong> supported by the Engine. Containers managed by those controllers are considered unhealthy and they are automatically skipped by scheduler.</p>
+<p class="admonition-title">Credential Sharing Across GCP Modules</p>
+<p>Enabled GCP Modules can share credentials amongst each other. If the specific module does not have any credentials configured, it will attempt to use credentials from another enabled module.
+If multiple other modules hold credentials, there is no specific preference for which module it will inherit. It is recommended to provide credentials for either all modules, or exactly one module.</p>
+<p>If credentials are supplied for a specific GCP Module, that module will always use its specifically configured credentials.</p>
 </div>
+<h3 id="required-permissions">Required Permissions</h3>
+<p>Each experiment below lists the specific API calls it makes. These API calls map 1-to-1 with individual IAM permissions. </p>
+<p>If you do not wish to manage maintaining a role for Chaos Engine, the <code>roles.editor</code> role can be used instead, but be aware that this role contains many powerful permissions that are unnecessary for the Chaos Engine to operate.</p>
+<h2 id="node-discovery">Node Discovery</h2>
+<p>Nodes are discovered using the <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/list">Compute instances.list</a> API. The results are parsed in all zones and converted into Java objects.</p>
+<h3 id="filtering">Filtering</h3>
+<p>The GCP Compute platform supports both inclusive and exclusive filtering based on instance metadata key/value pairs.
+If any include-filters are specified, all must exist in the metadata of the instance.
+Similarly, if any exclude-filters are specified, none must exist in the metadata of the instance.</p>
+<p>The filter values are case-sensitive.</p>
 <h3 id="self-awareness">Self Awareness</h3>
-<p>Not yet implemented</p>
-<h2 id="experiments">Experiments</h2>
-<h3 id="delete-pod">Delete Pod</h3>
+<p>The GCP Compute platform uses the <a href="https://cloud.google.com/compute/docs/storing-retrieving-metadata">Google Cloud Instance Metadata Server</a> to discover its own Google Cloud Resource ID.
+Instances are evaluated against that resource ID and removed from the pool of potential experiments. </p>
+<h2 id="ssh-experiment-support">SSH Experiment Support</h2>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">Compute instances.setMetadata</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a></p>
+<p>A Google Compute instance is considered SSH Accessible if it either has a Public NAT on nic0, or if the private address on nic0 is a member of the CIDR Blocks in the <code>gcp.compute.routableCidrBlocks</code> configuration parameter.</p>
+<p>On connection of any instance, Chaos Engine will create a new SSH Key and append it to the <code>ssh-keys</code> metadata field of the instance. The private key is never transmitted outside of Chaos Engine. This is accomplished with the <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">Compute instances.setMetadata</a> and <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a> API, to retrieve the old metadata, alter the specific field, and set it back. The previous fingerprint is sent for consistency purposes, allowing one retry.</p>
+<p>The <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a> API is polled until the <code>setMetadata</code> operation is complete. A verification is made and then an SSH Connection is initiated.</p>
+<h2 id="experiment-methods">Experiment Methods</h2>
+<h3 id="simulate-maintenance-event">Simulate Maintenance Event</h3>
+<p>Google Cloud Compute regularly performs <a href="https://cloud.google.com/compute/docs/instances/setting-instance-scheduling-options#maintenanceevents">Maintenance Events</a> on their physical hosts, for operations such as kernel upgrades, or hardware maintenance. When they perform these tasks, they take actions on all Virtual Machines on that host. A Compute Engine VM may be live-migrated to another host, or it may be terminated and recreated (requires configuration). This experiment tests to validate that no unforeseen problems occur as a result of these maintenance events, which may happen at any time. </p>
+<h4 id="mechanism">Mechanism</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/simulateMaintenanceEvent">Compute instances.simulateMaintenanceEvent</a></p>
+<p>The <code>simulateMaintenanceEvent</code> API is called against the Instance UUID. This operation performs the real action of either live-migrating or replacing the VM.</p>
+<h5 id="health-check">Health Check</h5>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a></p>
+<p>The operation status is called and checked. The experiment is considered finished when the operation returns Progress &gt;= 100.</p>
+<h5 id="self-healing">Self Healing</h5>
+<p>Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. </p>
+<h3 id="stop-instance">Stop Instance</h3>
+<p>Instances that are not part of instance groups can be stopped. A VM can be configured to be automatically restarted if it is in an unexpected stopped state, but this takes time to recognize and accomplish. </p>
 <h4 id="mechanism_1">Mechanism</h4>
-<p>The Engine invokes deleteNamespacedPod API call with zero graceful period. That leads to immediate POD termination. In theory all containers should be backed by a controller so the deleted container should be replaced by brand new container instance created by the controller.</p>
-<p>API: <a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#deleteNamespacedPod">deleteNamespacedPod</a></p>
-<h4 id="health-check">Health Check</h4>
-<p>Experiment is finished when originally targeted container is no more present on the platform and the controller is back to desired number of replicas.</p>
-<p>API Check pod: <a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#listNamespacedPod">listNamespacedPod</a></p>
-<p>API Controllers:</p>
-<ul>
-<li><a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#readNamespacedReplicationControllerStatus">readNamespacedReplicationControllerStatus</a></li>
-<li><a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/AppsV1Api.md#readNamespacedReplicaSetStatus">readNamespacedReplicaSetStatus</a></li>
-<li><a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/AppsV1Api.md#readNamespacedStatefulSetStatus">readNamespacedStatefulSetStatus</a></li>
-<li><a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/AppsV1Api.md#readNamespacedDaemonSetStatus">readNamespacedDaemonSetStatus</a></li>
-<li><a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/AppsV1Api.md#readNamespacedDeploymentStatus">readNamespacedDeploymentStatus</a></li>
-</ul>
-<h4 id="self-healing">Self Healing</h4>
-<p>None</p>
-<h3 id="shell-based-experiments">Shell based experiments</h3>
-<h4 id="mechanism_2">Mechanism</h4>
-<p>Shell base experiments is a suite of shell scripts that are randomly selected and transferred to the targeted Kubernetes container and executed.</p>
-<p>API: <a href="https://github.com/kubernetes-client/java/blob/master/kubernetes/docs/CoreV1Api.md#connectGetNamespacedPodExec">connectGetNamespacedPodExec</a></p>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/stop">Compute instances.stop</a></p>
+<p>The <code>stop</code> API is called against the instance. </p>
 <h4 id="health-check_1">Health Check</h4>
-<p>Same as Delete Pod experiment, actual replicas count and container
-existence is checked.</p>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a></p>
+<p>The operation for the <code>stop</code> is polled until complete. Then, the instance is specifically called using the <code>get</code> API, and the <code>status</code> field compared. If the <code>status</code> is not "RUNNING", then the experiment is still in progress. If the <code>get</code> call returns an HTTP 404, the instance no longer exists and the experiment is considered failed.</p>
 <h4 id="self-healing_1">Self Healing</h4>
-<p>Target container is deleted with no graceful period.</p>
-<p>API: <a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#listNamespacedPod">listNamespacedPod</a></p>
-<h4 id="list-of-experiments">List of experiments</h4>
-<p>See <a href="../Script_Experiments/included_script_experiments/">Included Script Experiments</a> for a list of experiments included with the engine.</p>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/start">Compute instances.start</a></p>
+<p>The <code>start</code> API is called to self-heal the instance after the experiment duration.</p>
+<h3 id="reset-instance">Reset Instance</h3>
+<p>Instances that are not part of instance groups can be reset. The VM is restarted, and temporarily unavailable. If the startup sequence is extensive, it may result in full application stack issues.</p>
+<h4 id="mechanism_2">Mechanism</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/reset">Compute instances.reset</a></p>
+<p>The <code>reset</code> API is called against the instance. </p>
+<h4 id="health-check_2">Health Check</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a></p>
+<p>The operation for the <code>stop</code> is polled until complete. Then, the instance is specifically called using the <code>get</code> API, and the <code>status</code> field compared. If the <code>status</code> is not "RUNNING", then the experiment is still in progress. If the <code>get</code> call returns an HTTP 404, the instance no longer exists and the experiment is considered failed.</p>
+<h4 id="self-healing_2">Self Healing</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/start">Compute instances.start</a></p>
+<p>The <code>start</code> API is called to self-heal the instance after the experiment duration.</p>
+<h3 id="recreate-instance-in-instance-group">Recreate Instance in Instance Group</h3>
+<p>Recreating an instance that is part of an instance group replaces and reinitializes a VM. This operation is similar to how Google Cloud will heal an instance that is failing health checks. This experiment may find errors in how an instance group behaves when it is below capacity by one instance, or issues with rolling out an old image after an update in <a href="https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups#starting_an_opportunistic_or_proactive_update">opportunistic mode</a> has started.</p>
+<h4 id="mechanism_3">Mechanism</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroupManagers/recreateInstances">Compute instanceGroupManagers.recreateInstances</a></p>
+<p>The <code>recreateInstances</code> API is called against the managed instance group, passing the specific instance as a parameter. </p>
+<h4 id="health-check_3">Health Check</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroups/get">Compute instanceGroup.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroupManagers/get">Compute instanceGroupManager.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroups/get">Compute regionInstanceGroup.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/regionInstanceGroupManagers/get">Compute regionInstanceGroupManager.get</a></p>
+<p>The operation status is called and checked. If the operation is completed, additionally the instance group size and target size are called via the (region)InstanceGroup and associated Manager API's. If the target and actual size are equal, then the instance group manager has properly resolved the capacity.</p>
+<h4 id="self-healing_3">Self Healing</h4>
+<p>Because this is an entirely cloud managed operation, Self Healing is not possible. Once the operation has been started, it cannot be stopped. </p>
+<h4 id="finalization">Finalization</h4>
+<p>After the experiment is finished, Chaos Engine will perform a <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a> operation against the specific instance name it experimented upon. While most other metadata will remain the same, the new version of the instance will have a new unique identifier that needs to be updated locally for future experiments. </p>
+<h3 id="remove-firewall-tags-from-instance">Remove Firewall Tags from Instance</h3>
+<p>Removing firewall tags from an instance will block the flow of traffic into the instance. This can simulate a network availability issue for the one specific instance. This experiment is only applicable to instances that are not part of instance groups.</p>
+<h4 id="mechanism_4">Mechanism</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags">Compute instances.setTags</a></p>
+<p>The latest tags and their fingerprint are fetched using the <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a> API. The fingerprint is used along with an empty set of tags in the <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags">Compute instances.setTags</a> API.</p>
+<h4 id="health-check_4">Health Check</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/get">Compute zoneOperations.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a></p>
+<p>The operation status from the original <code>setTags</code> operation is checked. If the operation is completed, the instance data is retrieved and the contents of the tags are compared. If the original tags that were fetched during the experiment startup match the current tags, the experiment is considered complete. Tag order is irrelevant in this comparison.</p>
+<h4 id="self-healing_4">Self Healing</h4>
+<p>API: <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a>, <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags">Compute instances.setTags</a></p>
+<p>The new tag fingerprint is retrieved using <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">Compute instances.get</a>, and the original tags from setup are pushed back using <a href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags">Compute instances.setTags</a>. </p>
                 
                   
                 
@@ -1531,7 +1725,7 @@ existence is checked.</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1540,19 +1734,19 @@ existence is checked.</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Google Cloud Compute Engine Experiments
+                Cattle/Pet Distinction
               </span>
             </div>
           </a>
         
         
-          <a href="../pcf_experiments/" title="PCF Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                PCF Experiments
+                Kubernetes Module
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

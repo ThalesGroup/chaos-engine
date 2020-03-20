@@ -155,7 +155,7 @@
 
   
 
-<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
   
     <div class="md-source__icon">
       <svg viewBox="0 0 24 24" width="24" height="24">
@@ -312,7 +312,7 @@
 
   
 
-<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
   
     <div class="md-source__icon">
       <svg viewBox="0 0 24 24" width="24" height="24">
@@ -359,6 +359,26 @@
   
     <label class="md-nav__title" for="__toc">Table of contents</label>
     <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#google-cloud-platform" title="Google Cloud Platform" class="md-nav__link">
+    Google Cloud Platform
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#google-compute-engine" title="Google Compute Engine" class="md-nav__link">
+    Google Compute Engine
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#amazon-web-services" title="Amazon Web Services" class="md-nav__link">
@@ -482,6 +502,18 @@
   <li class="md-nav__item">
     <a href="Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
       Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Configuration/proxy/" title="Proxy Configuration" class="md-nav__link">
+      Proxy Configuration
     </a>
   </li>
 
@@ -660,6 +692,18 @@
 
 
   <li class="md-nav__item">
+    <a href="Experiment_Modules/gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-nav__link">
+      Google Cloud Compute Engine Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
       Kubernetes Module
     </a>
@@ -697,13 +741,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-9" type="checkbox" id="nav-7-9">
     
-    <label class="md-nav__link" for="nav-7-8">
+    <label class="md-nav__link" for="nav-7-9">
       Script Experiments
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-7-8">
+      <label class="md-nav__title" for="nav-7-9">
         Script Experiments
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -801,6 +845,18 @@
   <li class="md-nav__item">
     <a href="Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
       Slack Notifications
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Logging_and_Reporting/Notifications/xmpp/" title="XMPP Notifications" class="md-nav__link">
+      XMPP Notifications
     </a>
   </li>
 
@@ -1028,6 +1084,26 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#google-cloud-platform" title="Google Cloud Platform" class="md-nav__link">
+    Google Cloud Platform
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#google-compute-engine" title="Google Compute Engine" class="md-nav__link">
+    Google Compute Engine
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#amazon-web-services" title="Amazon Web Services" class="md-nav__link">
     Amazon Web Services
   </a>
@@ -1091,7 +1167,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/thalesgroup/chaos-engine/edit/master/docs/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
                 <h1 id="_1"></h1>
@@ -1104,6 +1180,44 @@
 <p>Running chaos experiments in a non-resilient system can result in significant faults. We highly recommend you use a graduated approach to chaos implementation, and build confidence in your development and staging environments before attempting the same in your production environment.</p>
 </div>
 <h2 id="supported-experiments">Supported Experiments</h2>
+<h3 id="google-cloud-platform">Google Cloud Platform</h3>
+<h4 id="google-compute-engine">Google Compute Engine</h4>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simulate Maintenance Event</td>
+<td>All Instances</td>
+<td>Performs a simulated maintenance event, to either migrate the VM to another host, or delete and recreate it on another host</td>
+</tr>
+<tr>
+<td>Stop Instance</td>
+<td>Non-Grouped Instances</td>
+<td>Stops selected instance</td>
+</tr>
+<tr>
+<td>Restart Instance</td>
+<td>Non-Grouped Instances</td>
+<td>Restarts selected instance</td>
+</tr>
+<tr>
+<td>Remove Firewall Tags</td>
+<td>Non-Grouped Instances</td>
+<td>Removes all firewall tags from an instance</td>
+</tr>
+<tr>
+<td>Recreate Instance in Group</td>
+<td>Grouped Instances</td>
+<td>Triggers an instance group to delete and recreate an instance</td>
+</tr>
+</tbody>
+</table>
 <h3 id="amazon-web-services">Amazon Web Services</h3>
 <h4 id="ec2-instances">EC2 Instances</h4>
 <table>
@@ -1339,7 +1453,7 @@
         
           <div class="md-footer-copyright__highlight">
             &copy; 2019 Thales Group<br />
-<!-- version -->
+2020-03-20-15:13:50
           </div>
         
         powered by

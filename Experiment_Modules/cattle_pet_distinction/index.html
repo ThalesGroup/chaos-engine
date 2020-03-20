@@ -155,7 +155,7 @@
 
   
 
-<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
   
     <div class="md-source__icon">
       <svg viewBox="0 0 24 24" width="24" height="24">
@@ -314,7 +314,7 @@
 
   
 
-<a href="https://github.com/gemalto/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
   
     <div class="md-source__icon">
       <svg viewBox="0 0 24 24" width="24" height="24">
@@ -405,6 +405,18 @@
   <li class="md-nav__item">
     <a href="../../Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
       Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/proxy/" title="Proxy Configuration" class="md-nav__link">
+      Proxy Configuration
     </a>
   </li>
 
@@ -600,8 +612,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#description" title="Description" class="md-nav__link">
-    Description
+  <a href="#definition" title="Definition" class="md-nav__link">
+    Definition
   </a>
   
 </li>
@@ -614,8 +626,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#defining-experiments-as-cattle-only" title="Defining Experiments as Cattle-only" class="md-nav__link">
-    Defining Experiments as Cattle-only
+  <a href="#defining-experiment-scopes" title="Defining Experiment Scopes" class="md-nav__link">
+    Defining Experiment Scopes
   </a>
   
     <nav class="md-nav">
@@ -648,6 +660,18 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-nav__link">
+      Google Cloud Compute Engine Experiments
+    </a>
   </li>
 
         
@@ -694,13 +718,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-8" type="checkbox" id="nav-7-8">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-9" type="checkbox" id="nav-7-9">
     
-    <label class="md-nav__link" for="nav-7-8">
+    <label class="md-nav__link" for="nav-7-9">
       Script Experiments
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-7-8">
+      <label class="md-nav__title" for="nav-7-9">
         Script Experiments
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -798,6 +822,18 @@
   <li class="md-nav__item">
     <a href="../../Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
       Slack Notifications
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/xmpp/" title="XMPP Notifications" class="md-nav__link">
+      XMPP Notifications
     </a>
   </li>
 
@@ -1025,8 +1061,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#description" title="Description" class="md-nav__link">
-    Description
+  <a href="#definition" title="Definition" class="md-nav__link">
+    Definition
   </a>
   
 </li>
@@ -1039,8 +1075,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#defining-experiments-as-cattle-only" title="Defining Experiments as Cattle-only" class="md-nav__link">
-    Defining Experiments as Cattle-only
+  <a href="#defining-experiment-scopes" title="Defining Experiment Scopes" class="md-nav__link">
+    Defining Experiment Scopes
   </a>
   
     <nav class="md-nav">
@@ -1081,19 +1117,26 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/gemalto/chaos-engine/edit/master/docs/Experiment_Modules/cattle_pet_distinction.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/thalesgroup/chaos-engine/edit/master/docs/Experiment_Modules/cattle_pet_distinction.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
                 <h1 id="cattlepet-distinction">Cattle/Pet Distinction</h1>
-<h2 id="description">Description</h2>
-<p>Some experiments may be destructive in nature. These experiments should only ever be applied to Cattle, and not to Pets. Both Containers and Experiments need to be appropriately tagged.</p>
+<h2 id="definition">Definition</h2>
+<p>There are two inherit types of objects in cloud platforms.
+Pets are objects that were created by hand and are meticulously managed.
+The process for replacing a pet is intensive.
+Conversely, Cattle are objects that are created by some form of automation. 
+It is expected that if a Cattle container is unhealthy, rather than repair, it is replaced. </p>
+<p>Some experiments may be destructive in nature. These experiments should only ever be applied to Cattle, and not to Pets. 
+Conversely, some cloud providers may prevent actions on objects they consider "managed", meaning some experiments can only be done to Pets.
+Both Containers and Experiments need to be appropriately tagged.</p>
 <h2 id="defining-containers-as-cattle">Defining Containers as Cattle</h2>
 <p>The base Container class has a method called <strong>isCattle()</strong>. The default value for this is false. This can be Overriden in any Container class to be evaluated according to the nature of the specific container.</p>
 <p>For example, an EC2 container may evaluate if it is part of an Autoscaling Group, while a Kubernetes Pod Container may evaluate if it is backed by a Replica Set.</p>
-<h2 id="defining-experiments-as-cattle-only">Defining Experiments as Cattle-only</h2>
-<p>Experiments are assumed to be Pet-Friendly unless otherwise specified. There are two ways of denoting experiments to be cattle-only.</p>
+<h2 id="defining-experiment-scopes">Defining Experiment Scopes</h2>
+<p>Experiments are assumed to be compatible with both ways of running experiments unless otherwise specified. There are two ways of denoting experiment scope.</p>
 <h3 id="method-based-experiments">Method-Based Experiments</h3>
-<p>Experiments defined in the Container classes can be annotated with the annotation <strong>@CattleExperiment</strong> to denote that they are reserved for Cattle.</p>
+<p>Method Based experiments use the <strong>@ChaosExperiment</strong> annotation for discovery. The <strong>experimentScope</strong> field of this annotation controls the targeting criteria.</p>
 <h3 id="script-based-experiments">Script-Based Experiments</h3>
 <p>Experiments from Scripts require a Header block that defines them as Cattle. See <a href="../Script_Experiments/script_header/">Chaos Engine Script Header</a> for more information.</p>
                 
@@ -1131,13 +1174,13 @@
           </a>
         
         
-          <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Kubernetes Module
+                Google Cloud Compute Engine Experiments
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
@@ -1154,7 +1197,7 @@
         
           <div class="md-footer-copyright__highlight">
             &copy; 2019 Thales Group<br />
-<!-- version -->
+2020-03-20-15:13:50
           </div>
         
         powered by
