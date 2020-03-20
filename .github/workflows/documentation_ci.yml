@@ -18,7 +18,7 @@ jobs:
       - name: Initialize git
         run: git fetch
       - name: Initialize version variable
-        run: echo "::set-env name=VERSION::$(date +%F-%T)"
+        run: echo "$(date +%F-%T)" > version
       - name: Prepare build environment
         run: bash ./ci/docs/mkdocs_pre_build.sh
       - name: Publish
