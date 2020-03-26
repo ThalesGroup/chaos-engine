@@ -1616,6 +1616,7 @@
 <th>Key Name</th>
 <th>Description</th>
 <th align="center">Default</th>
+<th align="center">Mandatory</th>
 </tr>
 </thead>
 <tbody>
@@ -1623,46 +1624,55 @@
 <td><code>aws.ec2</code></td>
 <td>The presence of this key enables the EC2 Module</td>
 <td align="center">N/A</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td><code>aws.accessKeyId</code></td>
 <td>The Access Key ID for an AWS API Key</td>
 <td align="center">None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td><code>aws.secretAccessKey</code></td>
 <td>The Access Key Secret for the given Access Key ID</td>
 <td align="center">None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td><code>aws.region</code></td>
 <td>The AWS Region to run experiments on.</td>
 <td align="center"><strong>us-east-2</strong></td>
+<td align="center">yes</td>
 </tr>
 <tr>
 <td><code>aws.ec2.groupingTags</code></td>
 <td>A comma separated list of tag names to use as a shared resource identifier. See <a href="#autoscaling-support">Autoscaling Support</a> for more information.</td>
 <td align="center">None</td>
+<td align="center">No</td>
 </tr>
 <tr>
 <td><code>aws.ec2.filter.&lt;key&gt;</code></td>
 <td>Each key/value pair will be used to restrict the scope of Experiment targets. See <a href="#filtering">Filtering</a> for more information.</td>
 <td align="center">None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td><code>aws.ec2.sshprivatekeys.&lt;key&gt;</code></td>
 <td>Each key/value pair will be used to associate an EC2 SSH Key and confirm SSH access. See <a href="#ssh-experiment-support">SSH Based Experiments</a> for more information.</td>
 <td align="center">None</td>
+<td align="center">No</td>
 </tr>
 <tr>
 <td><code>aws.ec2.imageIdToUsernameMap.&lt;image-id&gt;</code></td>
 <td>Associate EC2 AMI Image IDs to the username used for SSH Access</td>
 <td align="center"><strong>ec2-user</strong></td>
+<td align="center">No</td>
 </tr>
 <tr>
 <td><code>aws.ec2.routableCidrBlocks</code></td>
 <td>A comma separated list of CIDR Blocks that should be considered Routable for SSH Access.</td>
 <td align="center">None</td>
+<td align="center">No</td>
 </tr>
 </tbody>
 </table>
@@ -1807,7 +1817,7 @@
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-03-24-09:23:49
+2020-03-26-19:34:46
           </div>
         
         powered by

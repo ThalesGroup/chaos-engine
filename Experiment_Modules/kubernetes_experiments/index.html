@@ -1360,6 +1360,7 @@
 <th>Key Name</th>
 <th>Description</th>
 <th>Default Value</th>
+<th align="center">Mandatory</th>
 </tr>
 </thead>
 <tbody>
@@ -1367,31 +1368,37 @@
 <td>kubernetes</td>
 <td>The presence of this key enables Kubernetes module.</td>
 <td>N/A</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>kubernetes.url</td>
 <td>Kubernetes server API url e.g.</td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>kubernetes.token</td>
 <td>JWT token assigned to service account. You can get the value by running <code>kubectl describe secret name_of_your_secret</code></td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>kubernetes.namespace</td>
 <td>K8S namespace where experiments should be performed</td>
 <td><code>default</code></td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>kubernetes.debug</td>
 <td>Enables debug log of Kubernetes java client</td>
 <td><code>false</code></td>
+<td align="center">No</td>
 </tr>
 <tr>
 <td>kubernetes.validateSSL</td>
 <td>Enables validation of sever side certificates</td>
 <td><code>false</code></td>
+<td align="center">No</td>
 </tr>
 </tbody>
 </table>
@@ -1569,7 +1576,7 @@ existence is checked.</p>
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-03-24-09:23:49
+2020-03-26-19:34:46
           </div>
         
         powered by

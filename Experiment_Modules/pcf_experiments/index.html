@@ -1572,6 +1572,7 @@
 <th>Key Name</th>
 <th>Description</th>
 <th>Default Value</th>
+<th align="center">Mandatory</th>
 </tr>
 </thead>
 <tbody>
@@ -1579,41 +1580,49 @@
 <td>cf.apiHost</td>
 <td>The FQDN of the API Host to connect to.</td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.port</td>
 <td>The port used to communicate with the API Host</td>
 <td>443</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.username</td>
 <td>The username to connect to the API Host with.</td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.password</td>
 <td>The password for the associated username.</td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.organization</td>
 <td>The Organization within Cloud Foundry to connect to.</td>
 <td>None</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.space</td>
 <td>The Space within the Organization to connect to.</td>
 <td>default</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.applicationChaos</td>
 <td>The presence of this key enables the application level experiments.<br /><br />Please note that at least one of <em>cf.applicationChaos</em> or <em>cf.containerChaos</em> must be set</td>
 <td>N/A</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
 <td>cf.containerChaos</td>
 <td>The presence of this key enables the container level experiments.</td>
 <td>N/A</td>
+<td align="center">Yes</td>
 </tr>
 </tbody>
 </table>
@@ -1783,7 +1792,7 @@ With the above example, you ssh into the container hosting the first instance of
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-03-24-09:23:49
+2020-03-26-19:34:46
           </div>
         
         powered by
