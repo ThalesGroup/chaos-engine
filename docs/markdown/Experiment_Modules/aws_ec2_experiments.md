@@ -7,17 +7,17 @@ The AWS Module makes use of the Official [AWS SDK for Java] from Amazon.
 The current SDK Version in use is 1.11.357.
 
 ## Configuration
-|	 Key Name 	|	 Description 	|	 Default 	|	
-|	 --- 	|	 --- 	|	 :---: 	|	
-|	`aws.ec2`	|	The presence of this key enables the EC2 Module	|	N/A	|	
-|	`aws.accessKeyId`	|	The Access Key ID for an AWS API Key	|	None	|	
-|	`aws.secretAccessKey`	|	The Access Key Secret for the given Access Key ID	|	None	|	
-|	`aws.region`	|	The AWS Region to run experiments on.	|	**us-east-2**	|	
-|	`aws.ec2.groupingTags`	|	A comma separated list of tag names to use as a shared resource identifier. See [Autoscaling Support](#autoscaling-support) for more information.	|	None	|	
-|	`aws.ec2.filter.<key>`	|	Each key/value pair will be used to restrict the scope of Experiment targets. See [Filtering](#filtering) for more information.	|	None	|	
-|	`aws.ec2.sshprivatekeys.<key>`	|	Each key/value pair will be used to associate an EC2 SSH Key and confirm SSH access. See [SSH Based Experiments](#ssh-experiment-support) for more information.	|	None	|	
-|	`aws.ec2.imageIdToUsernameMap.<image-id>`	|	 Associate EC2 AMI Image IDs to the username used for SSH Access 	|	**ec2-user**	|	
-|	`aws.ec2.routableCidrBlocks`	|	 A comma separated list of CIDR Blocks that should be considered Routable for SSH Access. 	|	 None 	|	
+|	 Key Name 	|	 Description 	|	 Default 	|	Mandatory |
+|	 --- 	|	 --- 	|	 :---: 	|	:---: 	|
+|	`aws.ec2`	|	The presence of this key enables the EC2 Module	|	N/A	|	Yes  |
+|	`aws.accessKeyId`	|	The Access Key ID for an AWS API Key	|	None	|	Yes  |
+|	`aws.secretAccessKey`	|	The Access Key Secret for the given Access Key ID	|	None	|	Yes  |
+|	`aws.region`	|	The AWS Region to run experiments on.	|	**us-east-2**	|	yes  |
+|	`aws.ec2.groupingTags`	|	A comma separated list of tag names to use as a shared resource identifier. See [Autoscaling Support](#autoscaling-support) for more information.	|	None	|	No  |
+|	`aws.ec2.filter.<key>`	|	Each key/value pair will be used to restrict the scope of Experiment targets. See [Filtering](#filtering) for more information.	|	None	|	Yes  |
+|	`aws.ec2.sshprivatekeys.<key>`	|	Each key/value pair will be used to associate an EC2 SSH Key and confirm SSH access. See [SSH Based Experiments](#ssh-experiment-support) for more information.	|	None	|	No  |
+|	`aws.ec2.imageIdToUsernameMap.<image-id>`	|	 Associate EC2 AMI Image IDs to the username used for SSH Access 	|	**ec2-user**	|	No  |
+|	`aws.ec2.routableCidrBlocks`	|	 A comma separated list of CIDR Blocks that should be considered Routable for SSH Access. 	|	 None 	|	No  |
 
 !!! note
     The `aws.accessKeyId`, `aws.secretAccessKey`, and `aws.region` keys are shared with other AWS Modules.

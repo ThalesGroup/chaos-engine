@@ -21,16 +21,16 @@ Maven Repositories:
 
 Several environment variables control how the Chaos Engine creates a connection to the Cloud Foundry manager.
 
-| Key Name                | Description                                                                               | Default Value |
-|-------------------------|-------------------------------------------------------------------------------------------|---------------|
-| cf.apiHost              | The FQDN of the API Host to connect to.                                                   | None          |
-| cf.port                 | The port used to communicate with the API Host                                            | 443           |
-| cf.username             | The username to connect to the API Host with.                                             | None          |
-| cf.password             | The password for the associated username.                                                 | None          |
-| cf.organization         | The Organization within Cloud Foundry to connect to.                                      | None          |
-| cf.space                | The Space within the Organization to connect to.                                          | default       |
-| cf.applicationChaos     | The presence of this key enables the application level experiments.<br /><br />Please note that at least one of *cf.applicationChaos* or *cf.containerChaos* must be set  | N/A           |
-| cf.containerChaos       | The presence of this key enables the container level experiments.                         | N/A           |
+| Key Name                | Description                                                                               | Default Value | Mandatory |
+|-------------------------|-------------------------------------------------------------------------------------------|---------------| :---: |
+| cf.apiHost              | The FQDN of the API Host to connect to.                                                   | None          | Yes |
+| cf.port                 | The port used to communicate with the API Host                                            | 443           | Yes |
+| cf.username             | The username to connect to the API Host with.                                             | None          | Yes |
+| cf.password             | The password for the associated username.                                                 | None          | Yes |
+| cf.organization         | The Organization within Cloud Foundry to connect to.                                      | None          | Yes |
+| cf.space                | The Space within the Organization to connect to.                                          | default       | Yes |
+| cf.applicationChaos     | The presence of this key enables the application level experiments.<br /><br />Please note that at least one of *cf.applicationChaos* or *cf.containerChaos* must be set  | N/A           | Yes |
+| cf.containerChaos       | The presence of this key enables the container level experiments.                         | N/A           | Yes |
 
 ## Node Discovery
 
