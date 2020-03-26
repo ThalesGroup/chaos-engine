@@ -38,7 +38,7 @@ import java.io.IOException;
 @Configuration
 @ConfigurationProperties("gcp")
 @ConditionalOnProperty("gcp.json-key")
-public class GcpService implements CloudService {
+public class GcpCredentialsProviderService implements CloudService {
     public static final String GCP_CREDENTIALS = "gcp-credentials";
     private String jsonKey;
 
