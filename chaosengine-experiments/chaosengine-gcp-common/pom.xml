@@ -12,5 +12,11 @@
     <artifactId>chaosengine-gcp-common</artifactId>
     <version>1.5.0-SNAPSHOT</version>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-compute</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

@@ -36,17 +36,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 @Configuration
-@ConfigurationProperties("gcp.compute")
-@ConditionalOnProperty("gcp.compute")
-public class GcpComputeService implements CloudService {
-    public static final String COMPUTE_CREDENTIALS = "compute-credentials";
+@ConfigurationProperties("gcp")
+@ConditionalOnProperty("gcp.json-key")
+public class GcpService implements CloudService {
+    public static final String GCP_CREDENTIALS = "gcp-credentials";
     private String jsonKey;
 
     public void setJsonKey (String jsonKey) {
         this.jsonKey = jsonKey;
     }
 
-    @Bean(COMPUTE_CREDENTIALS)
+    @Bean(GCP_CREDENTIALS)
     @RefreshScope
     @JsonIgnore
     public GoogleCredentials googleCredentials () throws IOException {
@@ -57,16 +57,15 @@ public class GcpComputeService implements CloudService {
     @Bean
     @RefreshScope
     @JsonIgnore
-    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
-    public CredentialsProvider computeCredentialsProvider (
-            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials credentials) {
+    @ConditionalOnBean(value = GoogleCredentials.class, name = GCP_CREDENTIALS)
+    public CredentialsProvider computeCredentialsProvider (@Qualifier(GCP_CREDENTIALS) GoogleCredentials credentials) {
         return () -> credentials;
     }
 
     @Bean
     @RefreshScope
     @JsonIgnore
-    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = GCP_CREDENTIALS)
     public CredentialsProvider genericCredentialsProvider (GoogleCredentials credentials) {
         return () -> credentials;
     }
