@@ -26,7 +26,7 @@ import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.containers.impl.GcpMemorystoreInstanceContainer;
+import com.thales.chaos.container.impl.GcpMemorystoreInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.thales.chaos.exceptions.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_GENERIC_ERROR;
+import static com.thales.chaos.exception.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_GENERIC_ERROR;
 import static java.util.Collections.emptySet;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
