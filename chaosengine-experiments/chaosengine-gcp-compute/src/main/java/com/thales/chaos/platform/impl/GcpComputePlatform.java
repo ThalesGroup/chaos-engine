@@ -35,6 +35,7 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
 import com.thales.chaos.shellclient.ssh.SSHCredentials;
 import org.apache.commons.net.util.SubnetUtils;
@@ -67,11 +68,12 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class GcpComputePlatform extends Platform implements SshBasedExperiment<GcpComputeInstanceContainer> {
     @Autowired
     private CredentialsProvider computeCredentialsProvider;
-    private String projectId;
     @Autowired
     private GcpComputeSelfAwareness selfAwareness;
     @Autowired
     private ContainerManager containerManager;
+    @Autowired
+    private GcpCredentialsMetadata gcpCredentialsMetadata;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
     @JsonProperty
@@ -285,7 +287,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     }
 
     private ProjectName getProjectName () {
-        return ProjectName.of(projectId);
+        return ProjectName.of(gcpCredentialsMetadata.getProjectId());
     }
 
     public String stopInstance (GcpComputeInstanceContainer container) {
@@ -481,9 +483,9 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
     }
 
-    public void setProjectId (String projectId) {
+    /*public void setProjectId (String projectId) {
         this.projectId = projectId;
-    }
+    }*/
 
     private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
         return getInstanceClient().getInstance(instanceName).getMetadata();

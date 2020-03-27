@@ -31,6 +31,7 @@ import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
+import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -54,20 +55,18 @@ public class GcpMemorystorePlatform extends Platform {
     private CredentialsProvider computeCredentialsProvider;
     @Autowired
     private ContainerManager containerManager;
-    private String projectId;
+    @Autowired
+    private GcpCredentialsMetadata gcpCredentialsMetadata;
 
     private GcpMemorystorePlatform () {
         log.info("GCP Memorystore Platform created");
     }
 
-    public void setProjectId (String projectId) {
-        this.projectId = projectId;
-    }
-
     @Override
     public ApiStatus getApiStatus () {
         try {
-            LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
             getInstanceClient().listInstances(parent).iterateAll();
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
@@ -95,7 +94,8 @@ public class GcpMemorystorePlatform extends Platform {
     @Override
     public PlatformHealth getPlatformHealth () {
         try {
-            LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
             return getInstanceClient().listInstances(parent)
                                       .iterateAll()
                                       .iterator()
@@ -108,7 +108,8 @@ public class GcpMemorystorePlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
-        LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+        LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
         Iterable<Instance> instanceIterable = getInstanceClient().listInstances(parent).iterateAll();
         return StreamSupport.stream(instanceIterable.spliterator(), false)
                             .filter(Objects::nonNull)
