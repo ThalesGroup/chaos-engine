@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.thales.chaos.exceptions.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_GENERIC_ERROR;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @ConditionalOnProperty("gcp.memorystore")
@@ -81,8 +82,7 @@ public class GcpMemorystorePlatform extends Platform {
                                                              .setCredentialsProvider(computeCredentialsProvider)
                                                              .build());
         } catch (IOException e) {
-            // TODO: Create redis specific message
-            throw new ChaosException("GCP_REDIS_GENERIC_ERROR", e);
+            throw new ChaosException(GCP_MEMORYSTORE_GENERIC_ERROR, e);
         }
     }
 
