@@ -23,6 +23,7 @@ import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.ApiExceptionFactory;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.compute.v1.*;
+import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -30,6 +31,7 @@ import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +62,7 @@ import static org.mockito.Mockito.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GcpComputePlatformTest {
     private static final String MY_AWESOME_PROJECT = "my-awesome-project";
+    private static final String EMAIL = "user@example.com";
     private static final ProjectName projectName = ProjectName.of(MY_AWESOME_PROJECT);
     @Mock
     private InstanceClient instanceClient;
@@ -84,7 +87,6 @@ public class GcpComputePlatformTest {
 
     @Before
     public void setUp () {
-        gcpComputePlatform.setProjectId(MY_AWESOME_PROJECT);
         doReturn(instanceClient).when(gcpComputePlatform).getInstanceClient();
         doReturn(instanceGroupClient).when(gcpComputePlatform).getInstanceGroupClient();
         doReturn(instanceGroupManagerClient).when(gcpComputePlatform).getInstanceGroupManagerClient();
@@ -967,6 +969,11 @@ public class GcpComputePlatformTest {
         @Bean
         public GcpComputePlatform gcpComputePlatform () {
             return spy(new GcpComputePlatform());
+        }
+
+        @Bean
+        public GcpCredentialsMetadata gcpCredentialsMetadata () {
+            return new GcpCredentialsMetadata(MY_AWESOME_PROJECT, EMAIL);
         }
     }
 }
