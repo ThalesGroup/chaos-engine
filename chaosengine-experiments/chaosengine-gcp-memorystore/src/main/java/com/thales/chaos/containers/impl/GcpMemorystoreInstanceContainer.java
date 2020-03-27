@@ -34,6 +34,8 @@ import com.thales.chaos.platform.impl.GcpMemorystorePlatform;
 import javax.validation.constraints.NotNull;
 import java.util.concurrent.ExecutionException;
 
+import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
+
 public class GcpMemorystoreInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 0)
@@ -86,7 +88,7 @@ public class GcpMemorystoreInstanceContainer extends Container {
 
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
-        return null;
+        return dataDogIdentifier().withValue(getSimpleName());
     }
 
     @Override
