@@ -50,7 +50,9 @@ public class GcpCredentialsProviderService implements CloudService {
     @RefreshScope
     @JsonIgnore
     public GcpCredentialsMetadata credentialsMetadata () throws IOException {
-        return new GcpCredentialsMetadata(getServiceAccountCredentials());
+        ServiceAccountCredentials serviceAccountCredentials = getServiceAccountCredentials();
+        return new GcpCredentialsMetadata(serviceAccountCredentials.getProjectId(),
+                serviceAccountCredentials.getClientEmail());
     }
 
     private ServiceAccountCredentials getServiceAccountCredentials () throws IOException {

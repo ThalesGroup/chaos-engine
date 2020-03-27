@@ -17,15 +17,13 @@
 
 package com.thales.chaos.services.impl;
 
-import com.google.auth.oauth2.ServiceAccountCredentials;
-
 public class GcpCredentialsMetadata {
     private String projectId;
     private String clientEmail;
 
-    public GcpCredentialsMetadata (ServiceAccountCredentials serviceAccountCredentials) {
-        this.projectId = serviceAccountCredentials.getProjectId();
-        this.clientEmail = serviceAccountCredentials.getClientEmail();
+    public GcpCredentialsMetadata (String projectId, String clientEmail) {
+        this.projectId = projectId;
+        this.clientEmail = clientEmail;
     }
 
     public String getProjectId () {
