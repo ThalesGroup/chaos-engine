@@ -1,0 +1,67 @@
+/*
+ *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ *
+ */
+
+package com.thales.chaos.health.impl;
+
+import com.thales.chaos.health.enums.SystemHealthState;
+import com.thales.chaos.platform.enums.ApiStatus;
+import com.thales.chaos.platform.impl.GcpMemorystorePlatform;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+
+@RunWith(SpringRunner.class)
+@ContextConfiguration
+public class GcpMemorystoreHealthTest {
+    @MockBean
+    private GcpMemorystorePlatform gcpMemorystorePlatform;
+    @Autowired
+    private GcpMemorystoreHealth gcpMemorystoreHealth;
+
+    @Test
+    public void getHealth () {
+        doReturn(ApiStatus.OK).doReturn(ApiStatus.ERROR)
+                              .doReturn(null)
+                              .doThrow(new RuntimeException())
+                              .when(gcpMemorystorePlatform)
+                              .getApiStatus();
+        assertEquals(SystemHealthState.OK, gcpMemorystoreHealth.getHealth());
+        assertEquals(SystemHealthState.ERROR, gcpMemorystoreHealth.getHealth());
+        assertEquals(SystemHealthState.UNKNOWN, gcpMemorystoreHealth.getHealth());
+        assertEquals(SystemHealthState.UNKNOWN, gcpMemorystoreHealth.getHealth());
+    }
+
+    @Configuration
+    public static class GcpMemorystoreHealthTestConfiguration {
+        @Autowired
+        private GcpMemorystorePlatform gcpMemorystorePlatform;
+
+        @Bean
+        public GcpMemorystoreHealth gcpMemorystoreHealth () {
+            return spy(new GcpMemorystoreHealth());
+        }
+    }
+}
