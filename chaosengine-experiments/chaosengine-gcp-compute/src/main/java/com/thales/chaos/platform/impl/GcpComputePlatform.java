@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
+import static com.thales.chaos.exception.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
 import static com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey.CHAOS_USERNAME;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;

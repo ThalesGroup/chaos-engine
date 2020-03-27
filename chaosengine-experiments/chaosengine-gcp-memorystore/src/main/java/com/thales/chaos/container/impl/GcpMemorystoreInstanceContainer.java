@@ -15,7 +15,7 @@
  *
  */
 
-package com.thales.chaos.containers.impl;
+package com.thales.chaos.container.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.redis.v1.FailoverInstanceRequest;

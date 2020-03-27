@@ -15,7 +15,7 @@
  *
  */
 
-package com.thales.chaos.exceptions.enums;
+package com.thales.chaos.exception.enums;
 
 import com.thales.chaos.exception.ErrorCode;
 
@@ -24,14 +24,15 @@ import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public enum GcpMemorystoreChaosErrorCode implements ErrorCode {
-    GCP_MEMORYSTORE_GENERIC_ERROR(61000);
+public enum GcpComputeChaosErrorCode implements ErrorCode {
+    GCP_COMPUTE_GENERIC_ERROR(51000),
+    GCP_COMPUTE_KEY_CREATION_ERROR(55101);
     private final int errorCode;
     private final String shortName;
     private final String message;
     private ResourceBundle translationBundle;
 
-    GcpMemorystoreChaosErrorCode (int errorCode) {
+    GcpComputeChaosErrorCode (int errorCode) {
         this.errorCode = errorCode;
         this.shortName = "errorCode." + errorCode + ".name";
         this.message = "errorCode." + errorCode + ".message";

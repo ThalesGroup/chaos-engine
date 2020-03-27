@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.security.*;
 import java.util.Base64;
 
-import static com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_KEY_CREATION_ERROR;
+import static com.thales.chaos.exception.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_KEY_CREATION_ERROR;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 public class GcpRuntimeSSHKey extends ChaosSSHCredentials {
