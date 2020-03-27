@@ -96,7 +96,19 @@
         </dependency>
         <dependency>
             <groupId>com.thales.chaos</groupId>
+            <artifactId>chaosengine-gcp-common</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thales.chaos</groupId>
             <artifactId>chaosengine-gcp-compute</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thales.chaos</groupId>
+            <artifactId>chaosengine-gcp-memorystore</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
