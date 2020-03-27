@@ -94,7 +94,16 @@ public class GcpMemorystorePlatform extends Platform {
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        return null;
+        try {
+            LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+            return getInstanceClient().listInstances(parent)
+                                      .iterateAll()
+                                      .iterator()
+                                      .hasNext() ? PlatformHealth.OK : PlatformHealth.DEGRADED;
+        } catch (RuntimeException e) {
+            log.error("Memorystore Platform health check failed", e);
+            return PlatformHealth.FAILED;
+        }
     }
 
     @Override
