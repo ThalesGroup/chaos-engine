@@ -4,11 +4,11 @@
     <parent>
         <artifactId>chaosengine</artifactId>
         <groupId>com.thales.chaos</groupId>
-        <version>1.4.0-SNAPSHOT</version>
+        <version>1.5.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>chaosengine-schedule</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>chaosengine-schedule</name>
