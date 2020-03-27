@@ -114,17 +114,17 @@ public class GcpMemorystorePlatform extends Platform {
     @Override
     protected List<Container> generateRoster () {
         List<Container> roster = new ArrayList<>();
-        for (String location : getLocationsToList()) {
-            LocationName parent = LocationName.of(projectId, location);
-            for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
-                GcpMemorystoreInstanceContainer container = GcpMemorystoreInstanceContainer.builder()
-                                                                                           .withPlatform(this)
-                                                                                           .fromInstance(instance)
-                                                                                           .build();
-                roster.add(container);
-                log.info("{}", container);
-            }
+        //for (String location : getLocationsToList()) {
+        LocationName parent = LocationName.of(projectId, "-");
+        for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
+            GcpMemorystoreInstanceContainer container = GcpMemorystoreInstanceContainer.builder()
+                                                                                       .withPlatform(this)
+                                                                                       .fromInstance(instance)
+                                                                                       .build();
+            roster.add(container);
+            log.info("{}", container);
         }
+        //  }
         return roster;
     }
 
