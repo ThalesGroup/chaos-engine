@@ -21,6 +21,7 @@ import com.google.api.gax.core.CredentialsProvider;
 import com.google.cloud.redis.v1.*;
 import com.google.longrunning.Operation;
 import com.google.longrunning.OperationsClient;
+import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -36,9 +37,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -52,14 +53,9 @@ public class GcpMemorystorePlatform extends Platform {
     @Autowired
     private ContainerManager containerManager;
     private String projectId;
-    private String locations;
 
     private GcpMemorystorePlatform () {
         log.info("GCP Memorystore Platform created");
-    }
-
-    public void setLocations (String locations) {
-        this.locations = locations;
     }
 
     public void setProjectId (String projectId) {
@@ -69,25 +65,15 @@ public class GcpMemorystorePlatform extends Platform {
     @Override
     public ApiStatus getApiStatus () {
         try {
-            for (String location : getLocationsToList()) {
-                LocationName parent = LocationName.of(projectId, location);
+            LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
                 for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
                     log.info(instance.getHost());
                 }
-            }
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
         }
         return ApiStatus.OK;
-    }
-
-    private Collection<String> getLocationsToList () {
-        if (locations == null || locations.isBlank()) {
-            log.warn("Empty locations");
-            return Collections.emptySet();
-        }
-        return Arrays.stream(locations.split(",")).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     CloudRedisClient getInstanceClient () {
@@ -114,8 +100,7 @@ public class GcpMemorystorePlatform extends Platform {
     @Override
     protected List<Container> generateRoster () {
         List<Container> roster = new ArrayList<>();
-        //for (String location : getLocationsToList()) {
-        LocationName parent = LocationName.of(projectId, "-");
+        LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
         for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
             GcpMemorystoreInstanceContainer container = GcpMemorystoreInstanceContainer.builder()
                                                                                        .withPlatform(this)
@@ -124,7 +109,6 @@ public class GcpMemorystorePlatform extends Platform {
             roster.add(container);
             log.info("{}", container);
         }
-        //  }
         return roster;
     }
 

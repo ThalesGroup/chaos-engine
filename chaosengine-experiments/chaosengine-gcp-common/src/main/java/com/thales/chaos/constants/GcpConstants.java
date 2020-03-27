@@ -19,4 +19,5 @@ package com.thales.chaos.constants;
 
 public class GcpConstants {
     public static final String CREATED_BY_METADATA_KEY = "created-by";
+    public static final String MEMORYSTORE_LOCATION_WILDCARD = "-";
 }
