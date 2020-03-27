@@ -18,6 +18,7 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.api.gax.core.CredentialsProvider;
+import com.google.cloud.compute.v1.Items;
 import com.google.cloud.redis.v1.*;
 import com.google.longrunning.Operation;
 import com.google.longrunning.OperationsClient;
@@ -38,14 +39,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.exceptions.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_GENERIC_ERROR;
+import static java.util.Collections.emptySet;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @ConditionalOnProperty("gcp.memorystore")
@@ -58,9 +60,68 @@ public class GcpMemorystorePlatform extends Platform {
     private ContainerManager containerManager;
     @Autowired
     private GcpCredentialsMetadata gcpCredentialsMetadata;
+    private Map<String, String> includeFilter = Collections.emptyMap();
+    private Map<String, String> excludeFilter = Collections.emptyMap();
 
     private GcpMemorystorePlatform () {
         log.info("GCP Memorystore Platform created");
+    }
+
+    @Override
+    protected List<Container> generateRoster () {
+        log.debug("Generating roster of GCP Memorystore instances");
+        LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+        Iterable<Instance> instanceIterable = getInstanceClient().listInstances(parent).iterateAll();
+        return StreamSupport.stream(instanceIterable.spliterator(), false)
+                            .filter(Objects::nonNull)
+                            .filter(this::isNotFiltered)
+                            .filter(this::isReady)
+                            .filter(this::isHA)
+                            .map(this::createContainerFromInstance)
+                            .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
+                            .collect(Collectors.toList());
+    }
+
+    boolean isNotFiltered (Instance instance) {
+        Collection<Items> itemsList = Optional.of(instance)
+                                              .map(Instance::getLabelsMap)
+                                              .map(GcpMemorystorePlatform::asItemCollection)
+                                              .orElse(emptySet());
+        Collection<Items> includeFilter = getIncludeFilter();
+        Collection<Items> excludeFilter = getExcludeFilter();
+        boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream().anyMatch(includeFilter::contains);
+        boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilter::contains);
+        final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
+        if (!isNotFiltered) {
+            log.info("Instance {} filtered because of {}, {}",
+                    instance.getName(),
+                    kv("includeFilter", hasAllMustIncludes),
+                    kv("excludeFilter", hasNoMustNotIncludes));
+        }
+        return isNotFiltered;
+    }
+
+    private static Collection<Items> asItemCollection (Map<String, String> itemMap) {
+        return itemMap.entrySet()
+                      .stream()
+                      .map(entrySet -> Items.newBuilder()
+                                            .setKey(entrySet.getKey())
+                                            .setValue(entrySet.getValue())
+                                            .build())
+                      .collect(Collectors.toSet());
+    }
+
+    public Collection<Items> getIncludeFilter () {
+        return asItemCollection(includeFilter);
+    }
+
+    public void setIncludeFilter (Map<String, String> includeFilter) {
+        this.includeFilter = includeFilter;
+    }
+
+    public Collection<Items> getExcludeFilter () {
+        return asItemCollection(excludeFilter);
     }
 
     @Override
@@ -106,18 +167,8 @@ public class GcpMemorystorePlatform extends Platform {
         }
     }
 
-    @Override
-    protected List<Container> generateRoster () {
-        LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
-                GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-        Iterable<Instance> instanceIterable = getInstanceClient().listInstances(parent).iterateAll();
-        return StreamSupport.stream(instanceIterable.spliterator(), false)
-                            .filter(Objects::nonNull)
-                            .filter(this::isReady)
-                            .filter(this::isHA)
-                            .map(this::createContainerFromInstance)
-                            .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
-                            .collect(Collectors.toList());
+    public void setExcludeFilter (Map<String, String> excludeFilter) {
+        this.excludeFilter = excludeFilter;
     }
 
     private boolean isReady (Instance instance) {
