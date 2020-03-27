@@ -37,9 +37,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -66,9 +68,7 @@ public class GcpMemorystorePlatform extends Platform {
     public ApiStatus getApiStatus () {
         try {
             LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-                for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
-                    log.info(instance.getHost());
-                }
+            getInstanceClient().listInstances(parent).iterateAll();
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
@@ -99,17 +99,27 @@ public class GcpMemorystorePlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
-        List<Container> roster = new ArrayList<>();
         LocationName parent = LocationName.of(projectId, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-        for (Instance instance : getInstanceClient().listInstances(parent).iterateAll()) {
-            GcpMemorystoreInstanceContainer container = GcpMemorystoreInstanceContainer.builder()
-                                                                                       .withPlatform(this)
-                                                                                       .fromInstance(instance)
-                                                                                       .build();
-            roster.add(container);
-            log.info("{}", container);
-        }
-        return roster;
+        Iterable<Instance> instanceIterable = getInstanceClient().listInstances(parent).iterateAll();
+        return StreamSupport.stream(instanceIterable.spliterator(), false)
+                            .filter(Objects::nonNull)
+                            .filter(this::isReady)
+                            .filter(this::isHA)
+                            .map(this::createContainerFromInstance)
+                            .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
+                            .collect(Collectors.toList());
+    }
+
+    private boolean isReady (Instance instance) {
+        return instance.getState() == Instance.State.READY;
+    }
+
+    private boolean isHA (Instance instance) {
+        return instance.getTier() == Instance.Tier.STANDARD_HA;
+    }
+
+    private GcpMemorystoreInstanceContainer createContainerFromInstance (Instance instance) {
+        return GcpMemorystoreInstanceContainer.builder().withPlatform(this).fromInstance(instance).build();
     }
 
     @Override
@@ -136,7 +146,6 @@ public class GcpMemorystorePlatform extends Platform {
 
     public ContainerHealth isContainerRunning (GcpMemorystoreInstanceContainer container) {
         Instance instance = getInstanceClient().getInstance(container.getName());
-        return instance != null && getInstanceClient().getInstance(container.getName())
-                                                      .getState() == Instance.State.READY ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        return instance != null && isReady(getInstanceClient().getInstance(container.getName())) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 }
