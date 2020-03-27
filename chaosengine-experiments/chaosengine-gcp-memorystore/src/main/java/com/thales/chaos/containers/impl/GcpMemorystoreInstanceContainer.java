@@ -95,8 +95,14 @@ public class GcpMemorystoreInstanceContainer extends Container {
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
-    public void failover (Experiment experiment) throws ExecutionException, InterruptedException {
+    public void forceFailover (Experiment experiment) throws ExecutionException, InterruptedException {
         String operationName = platform.failover(this, FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS);
+        experiment.setCheckContainerHealth(() -> platform.isOperationCompleted(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
+    }
+
+    @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
+    public void failover (Experiment experiment) throws ExecutionException, InterruptedException {
+        String operationName = platform.failover(this, FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS);
         experiment.setCheckContainerHealth(() -> platform.isOperationCompleted(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 
