@@ -12,13 +12,13 @@ Version: 1.11.357
 
 Several environment variables control how AWS EC2 is instantiated. ** The presence of *Some Variables* control whether or not the module is loaded.
 
-| Key Name | Description | Default |
-| --- | --- | --- |
-| `aws.accessKeyId` | The Access Key ID for an AWS API key. This key is shared with other AWS Modules. | None |
-| `aws.secretAccessKey` | The Access Key Secret associated to the same AWS API Key. This key is shared with other AWS Modules. | None |
-| `aws.region` | The AWS Region to run experiments in. Formatted like: **eu-central-1**. This key is shared with other AWS Modules. | us-east-2 |
-| `aws.rds` | The presence of this key controls if this module is loaded. | N/A |
-| `aws.rds.filter.<tag_name>` | Each key will be used for filtering nodes. See Node Discovery for more information. e.g. *aws.rds.filter.ChaosVictim*=*true* | N/A |
+| Key Name | Description | Default | Mandatory |
+| --- | --- | --- |	:---: 	|
+| `aws.rds` | The presence of this key controls if this module is loaded. | N/A | Yes |
+| `aws.accessKeyId` | The Access Key ID for an AWS API key. This key is shared with other AWS Modules. | None | Yes |
+| `aws.secretAccessKey` | The Access Key Secret associated to the same AWS API Key. This key is shared with other AWS Modules. | None | Yes |
+| `aws.region` | The AWS Region to run experiments in. Formatted like: **eu-central-1**. This key is shared with other AWS Modules. | us-east-2 | Yes |
+| `aws.rds.filter.<tag_name>` | Each key will be used for filtering nodes. See Node Discovery for more information. e.g. *aws.rds.filter.ChaosVictim*=*true* | N/A | Yes |
 
 ## Node Discovery
 

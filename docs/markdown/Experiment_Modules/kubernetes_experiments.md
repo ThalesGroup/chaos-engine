@@ -21,14 +21,14 @@ The official Kubernetes Java Client is used to interact with the cluster.
 
 Environment variables that control how the Chaos Engine interacts with Kubernetes.
 
-| Key Name | Description | Default Value |
-| --- | --- | --- |
-| kubernetes | The presence of this key enables Kubernetes module. | N/A |
-| kubernetes.url | Kubernetes server API url e.g. | None |
-| kubernetes.token | JWT token assigned to service account. You can get the value by running `kubectl describe secret name_of_your_secret` | None |
-| kubernetes.namespace | K8S namespace where experiments should be performed | `default` |
-| kubernetes.debug | Enables debug log of Kubernetes java client | `false` |
-| kubernetes.validateSSL | Enables validation of sever side certificates | `false` |
+| Key Name | Description | Default Value | Mandatory |
+| --- | --- | --- | :---: |
+| kubernetes | The presence of this key enables Kubernetes module. | N/A |  Yes |
+| kubernetes.url | Kubernetes server API url e.g. | None | Yes |
+| kubernetes.token | JWT token assigned to service account. You can get the value by running `kubectl describe secret name_of_your_secret` | None | Yes |
+| kubernetes.namespace | K8S namespace where experiments should be performed | `default` | Yes |
+| kubernetes.debug | Enables debug log of Kubernetes java client | `false` | No |
+| kubernetes.validateSSL | Enables validation of sever side certificates | `false` | No |
 
 ## Required Kubernetes Cluster Configuration
 
