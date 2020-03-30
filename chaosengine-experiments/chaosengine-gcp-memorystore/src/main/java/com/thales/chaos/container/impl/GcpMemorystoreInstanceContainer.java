@@ -52,13 +52,22 @@ public class GcpMemorystoreInstanceContainer extends Container {
     @JsonProperty
     @Identifier(order = 4)
     private String locationId;
-    @JsonProperty
-    @Identifier(order = 5)
-    private Instance.State state;
     private GcpMemorystorePlatform platform;
 
     public static GcpMemorystoreInstanceContainerBuilder builder () {
         return new GcpMemorystoreInstanceContainerBuilder();
+    }
+
+    String getDisplayName () {
+        return displayName;
+    }
+
+    String getHost () {
+        return host;
+    }
+
+    int getPort () {
+        return port;
     }
 
     public String getName () {
@@ -114,7 +123,6 @@ public class GcpMemorystoreInstanceContainer extends Container {
         private String displayName;
         private int port;
         private String locationId;
-        private Instance.State state;
         private GcpMemorystorePlatform platform;
 
         private GcpMemorystoreInstanceContainerBuilder () {
@@ -125,17 +133,11 @@ public class GcpMemorystoreInstanceContainer extends Container {
                        .withDisplayName(instance.getDisplayName())
                        .withName(instance.getName())
                        .withLocationId(instance.getLocationId())
-                       .withState(instance.getState())
                        .withPort(instance.getPort());
         }
 
         public GcpMemorystoreInstanceContainerBuilder withPort (int port) {
             this.port = port;
-            return this;
-        }
-
-        public GcpMemorystoreInstanceContainerBuilder withState (Instance.State state) {
-            this.state = state;
             return this;
         }
 
@@ -171,7 +173,6 @@ public class GcpMemorystoreInstanceContainer extends Container {
             gcpMemorystoreInstanceContainer.name = this.name;
             gcpMemorystoreInstanceContainer.displayName = this.displayName;
             gcpMemorystoreInstanceContainer.port = this.port;
-            gcpMemorystoreInstanceContainer.state = this.state;
             gcpMemorystoreInstanceContainer.platform = this.platform;
             return gcpMemorystoreInstanceContainer;
         }
