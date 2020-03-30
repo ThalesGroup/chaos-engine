@@ -102,7 +102,7 @@ public class GcpMemorystoreInstanceContainer extends Container {
 
     @Override
     protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
-        return false;
+        return uniqueIdentifier != null && uniqueIdentifier.equals(this.getAggregationIdentifier());
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
