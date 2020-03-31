@@ -196,6 +196,10 @@ public class GcpMemorystorePlatform extends Platform {
         log.info("Failover triggered for instance {}", v(DATADOG_CONTAINER_KEY, container));
         FailoverInstanceRequest failoverInstanceRequest = FailoverInstanceRequest.newBuilder().
                 setName(container.getName()).setDataProtectionMode(mode).build();
+        return executeFailover(failoverInstanceRequest);
+    }
+
+    String executeFailover (FailoverInstanceRequest failoverInstanceRequest) throws ExecutionException, InterruptedException {
         return getInstanceClient().failoverInstanceAsync(failoverInstanceRequest).getName();
     }
 
@@ -209,7 +213,14 @@ public class GcpMemorystorePlatform extends Platform {
     }
 
     public ContainerHealth isContainerRunning (GcpMemorystoreInstanceContainer container) {
-        Instance instance = getInstanceClient().getInstance(container.getName());
-        return instance != null && isReady(getInstanceClient().getInstance(container.getName())) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        Instance instance = getInstance(container);
+        if (instance == null) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
+        return isReady(instance) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
+    Instance getInstance (GcpMemorystoreInstanceContainer container) {
+        return getInstanceClient().getInstance(container.getName());
     }
 }
