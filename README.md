@@ -29,6 +29,7 @@ Running chaos experiments in a non-resilient system can result in significant fa
 | AWS EC2 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | AWS RDS | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x: |
 | GCP Compute | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| GCP Memorystore | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x: |
 
 #### Legend
 :heavy_check_mark: - Fully Supported | :white_check_mark: - Some Support
