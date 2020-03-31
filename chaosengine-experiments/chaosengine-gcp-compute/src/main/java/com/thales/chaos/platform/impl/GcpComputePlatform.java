@@ -483,10 +483,6 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
     }
 
-    /*public void setProjectId (String projectId) {
-        this.projectId = projectId;
-    }*/
-
     private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
         return getInstanceClient().getInstance(instanceName).getMetadata();
     }
