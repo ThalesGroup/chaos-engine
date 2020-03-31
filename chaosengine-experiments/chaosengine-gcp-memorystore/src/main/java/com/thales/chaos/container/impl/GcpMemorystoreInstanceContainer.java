@@ -50,7 +50,6 @@ public class GcpMemorystoreInstanceContainer extends Container {
     @Identifier(order = 3)
     private int port;
     @JsonProperty
-    @Identifier(order = 4)
     private String locationId;
     private GcpMemorystorePlatform platform;
 
@@ -102,7 +101,7 @@ public class GcpMemorystoreInstanceContainer extends Container {
 
     @Override
     protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
-        return uniqueIdentifier != null && uniqueIdentifier.equals(this.getAggregationIdentifier());
+        return uniqueIdentifier.equals(this.getAggregationIdentifier());
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
