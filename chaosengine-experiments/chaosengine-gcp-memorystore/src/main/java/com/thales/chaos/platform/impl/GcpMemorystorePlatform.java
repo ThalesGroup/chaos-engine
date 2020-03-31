@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.thales.chaos.exception.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_DOES_NOT_SUPPORT_RECYCLING;
 import static com.thales.chaos.exception.enums.GcpMemorystoreChaosErrorCode.GCP_MEMORYSTORE_GENERIC_ERROR;
 import static java.util.Collections.emptySet;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -63,8 +64,33 @@ public class GcpMemorystorePlatform extends Platform {
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
 
-    private GcpMemorystorePlatform () {
+    public GcpMemorystorePlatform () {
         log.info("GCP Memorystore Platform created");
+    }
+
+    @Override
+    public ApiStatus getApiStatus () {
+        try {
+            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+            getInstances(parent);
+        } catch (RuntimeException e) {
+            log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
+            return ApiStatus.ERROR;
+        }
+        return ApiStatus.OK;
+    }
+
+    @Override
+    public PlatformHealth getPlatformHealth () {
+        try {
+            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
+                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+            return getInstances(parent).iterator().hasNext() ? PlatformHealth.OK : PlatformHealth.DEGRADED;
+        } catch (RuntimeException e) {
+            log.error("Memorystore Platform health check failed", e);
+            return PlatformHealth.FAILED;
+        }
     }
 
     @Override
@@ -72,7 +98,7 @@ public class GcpMemorystorePlatform extends Platform {
         log.debug("Generating roster of GCP Memorystore instances");
         LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
                 GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-        Iterable<Instance> instanceIterable = getInstanceClient().listInstances(parent).iterateAll();
+        Iterable<Instance> instanceIterable = getInstances(parent);
         return StreamSupport.stream(instanceIterable.spliterator(), false)
                             .filter(Objects::nonNull)
                             .filter(this::isNotFiltered)
@@ -81,25 +107,6 @@ public class GcpMemorystorePlatform extends Platform {
                             .map(this::createContainerFromInstance)
                             .peek(container -> log.info("Created container {}", v(DATADOG_CONTAINER_KEY, container)))
                             .collect(Collectors.toList());
-    }
-
-    boolean isNotFiltered (Instance instance) {
-        Collection<Items> itemsList = Optional.of(instance)
-                                              .map(Instance::getLabelsMap)
-                                              .map(GcpMemorystorePlatform::asItemCollection)
-                                              .orElse(emptySet());
-        Collection<Items> includeFilter = getIncludeFilter();
-        Collection<Items> excludeFilter = getExcludeFilter();
-        boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream().anyMatch(includeFilter::contains);
-        boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilter::contains);
-        final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
-        if (!isNotFiltered) {
-            log.info("Instance {} filtered because of {}, {}",
-                    instance.getName(),
-                    kv("includeFilter", hasAllMustIncludes),
-                    kv("excludeFilter", hasNoMustNotIncludes));
-        }
-        return isNotFiltered;
     }
 
     private static Collection<Items> asItemCollection (Map<String, String> itemMap) {
@@ -124,17 +131,24 @@ public class GcpMemorystorePlatform extends Platform {
         return asItemCollection(excludeFilter);
     }
 
-    @Override
-    public ApiStatus getApiStatus () {
-        try {
-            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
-                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-            getInstanceClient().listInstances(parent).iterateAll();
-        } catch (RuntimeException e) {
-            log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
-            return ApiStatus.ERROR;
+    boolean isNotFiltered (Instance instance) {
+        Collection<Items> itemsList = Optional.of(instance)
+                                              .map(Instance::getLabelsMap)
+                                              .map(GcpMemorystorePlatform::asItemCollection)
+                                              .orElse(emptySet());
+        Collection<Items> includeFilterItems = getIncludeFilter();
+        Collection<Items> excludeFilterItems = getExcludeFilter();
+        boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream()
+                                                                         .anyMatch(includeFilterItems::contains);
+        boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilterItems::contains);
+        final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
+        if (!isNotFiltered) {
+            log.info("Instance {} filtered because of {}, {}",
+                    instance.getName(),
+                    kv("includeFilter", hasAllMustIncludes),
+                    kv("excludeFilter", hasNoMustNotIncludes));
         }
-        return ApiStatus.OK;
+        return isNotFiltered;
     }
 
     CloudRedisClient getInstanceClient () {
@@ -153,18 +167,8 @@ public class GcpMemorystorePlatform extends Platform {
     }
 
     @Override
-    public PlatformHealth getPlatformHealth () {
-        try {
-            LocationName parent = LocationName.of(gcpCredentialsMetadata.getProjectId(),
-                    GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-            return getInstanceClient().listInstances(parent)
-                                      .iterateAll()
-                                      .iterator()
-                                      .hasNext() ? PlatformHealth.OK : PlatformHealth.DEGRADED;
-        } catch (RuntimeException e) {
-            log.error("Memorystore Platform health check failed", e);
-            return PlatformHealth.FAILED;
-        }
+    public boolean isContainerRecycled (Container container) {
+        throw new ChaosException(GCP_MEMORYSTORE_DOES_NOT_SUPPORT_RECYCLING);
     }
 
     public void setExcludeFilter (Map<String, String> excludeFilter) {
@@ -183,9 +187,8 @@ public class GcpMemorystorePlatform extends Platform {
         return GcpMemorystoreInstanceContainer.builder().withPlatform(this).fromInstance(instance).build();
     }
 
-    @Override
-    public boolean isContainerRecycled (Container container) {
-        return false;
+    Iterable<Instance> getInstances (LocationName parent) {
+        return getInstanceClient().listInstances(parent).iterateAll();
     }
 
     public String failover (GcpMemorystoreInstanceContainer container,
