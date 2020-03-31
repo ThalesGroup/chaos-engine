@@ -41,13 +41,13 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(SpringRunner.class)
 public class GcpMemorystoreInstanceContainerTest {
-    private static String DISPLAY_NAME = "Display name";
-    private static String INSTANCE_ID = "redis-instance-test";
-    private static String LOCATION_ID = "us-central1";
-    private static String NAME = "projects/gemalto-cspeng/locations/" + LOCATION_ID + "/instances/" + INSTANCE_ID;
-    private static String HOST = "localhost";
-    private static String AGGREGATION_IDENTIFIER = INSTANCE_ID + "-" + LOCATION_ID;
-    private static int PORT = 6379;
+    private static final String DISPLAY_NAME = "Display name";
+    private static final String INSTANCE_ID = "redis-instance-test";
+    private static final String LOCATION_ID = "us-central1";
+    private static final String NAME = "projects/gemalto-cspeng/locations/" + LOCATION_ID + "/instances/" + INSTANCE_ID;
+    private static final String HOST = "localhost";
+    private static final String AGGREGATION_IDENTIFIER = INSTANCE_ID + "-" + LOCATION_ID;
+    private static final int PORT = 6379;
     private GcpMemorystoreInstanceContainer container;
     @Mock
     private GcpMemorystorePlatform platform;
@@ -56,8 +56,7 @@ public class GcpMemorystoreInstanceContainerTest {
 
     @Before
     public void setUp () {
-        instance = Instance.newBuilder()
-                           .setDisplayName(DISPLAY_NAME)
+        instance = Instance.newBuilder().setDisplayName(DISPLAY_NAME)
                            .setName(NAME)
                            .setLocationId(LOCATION_ID)
                            .setHost(HOST)
