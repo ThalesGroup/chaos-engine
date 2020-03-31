@@ -22,10 +22,6 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-redis</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.google.api.grpc</groupId>
-            <artifactId>proto-google-cloud-container-v1</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
