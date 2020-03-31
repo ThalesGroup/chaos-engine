@@ -39,7 +39,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +70,7 @@ public class GcpMemorystorePlatformTest {
     private Map<String, String> labels = new HashMap<>();
 
     @Before
-    public void setUp () throws IOException {
+    public void setUp () {
         labels.put("chaos", "yes");
         eligibleInstance = Instance.newBuilder()
                                    .putAllLabels(labels)
