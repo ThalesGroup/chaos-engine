@@ -14,6 +14,7 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
 | --- | --- | :---: | :---: |
 | `gcp.memorystore` | The presence of this key enables the module. | N/A | Yes |
 | `gcp.json-key` | This key should be the JSON Key of the Service Account the module is to use. | N/A | Yes |
+| `gcp.project-id` | This key controls which GCP Project the module will experiment on. | N/A | Yes |
 | `gcp.memorystore.include-filter.<label-key-name>` | Used for filtering the inclusion of GCP Memorystore Instances based on the presence of a specific key/value pair of label. See [Filtering](#filtering) for more information. | N/A | No |
 | `gcp.memorystore.exclude-filter.<label-key-name>` | Used for filtering the inclusion of GCP Memorystore Instances based on the presence of a specific key/value pair of label. See [Filtering](#filtering) for more information. | N/A | No |
 

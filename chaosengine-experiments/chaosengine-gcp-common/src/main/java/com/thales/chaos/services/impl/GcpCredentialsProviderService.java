@@ -41,6 +41,11 @@ import java.io.IOException;
 public class GcpCredentialsProviderService implements CloudService {
     public static final String GCP_CREDENTIALS = "gcp-credentials";
     private String jsonKey;
+    private String projectId;
+
+    public void setProjectId (String projectId) {
+        this.projectId = projectId;
+    }
 
     public void setJsonKey (String jsonKey) {
         this.jsonKey = jsonKey;
@@ -51,8 +56,7 @@ public class GcpCredentialsProviderService implements CloudService {
     @JsonIgnore
     public GcpCredentialsMetadata credentialsMetadata () throws IOException {
         ServiceAccountCredentials serviceAccountCredentials = getServiceAccountCredentials();
-        return new GcpCredentialsMetadata(serviceAccountCredentials.getProjectId(),
-                serviceAccountCredentials.getClientEmail());
+        return new GcpCredentialsMetadata(projectId, serviceAccountCredentials.getClientEmail());
     }
 
     private ServiceAccountCredentials getServiceAccountCredentials () throws IOException {
