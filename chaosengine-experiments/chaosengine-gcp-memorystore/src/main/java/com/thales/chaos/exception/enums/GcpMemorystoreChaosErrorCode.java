@@ -25,8 +25,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public enum GcpMemorystoreChaosErrorCode implements ErrorCode {
-    GCP_MEMORYSTORE_GENERIC_ERROR(61000),
-    GCP_MEMORYSTORE_DOES_NOT_SUPPORT_RECYCLING(61001);
+    GCP_MEMORYSTORE_GENERIC_ERROR(51200),
+    GCP_MEMORYSTORE_DOES_NOT_SUPPORT_RECYCLING(51201);
     private final int errorCode;
     private final String shortName;
     private final String message;
