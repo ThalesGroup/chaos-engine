@@ -29,6 +29,7 @@
         <dependencySet>
             <includes>
                 <include>com.google.cloud:*</include>
+                <include>com.google.apis:*</include>
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
