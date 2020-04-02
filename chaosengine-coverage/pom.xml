@@ -114,6 +114,12 @@
         </dependency>
         <dependency>
             <groupId>com.thales.chaos</groupId>
+            <artifactId>chaosengine-gcp-sql</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thales.chaos</groupId>
             <artifactId>chaosengine-kubernetes</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

@@ -20,6 +20,7 @@
         <module>chaosengine-pcf</module>
         <module>chaosengine-gcp-memorystore</module>
         <module>chaosengine-gcp-common</module>
+        <module>chaosengine-gcp-sql</module>
     </modules>
 
     <dependencies>
