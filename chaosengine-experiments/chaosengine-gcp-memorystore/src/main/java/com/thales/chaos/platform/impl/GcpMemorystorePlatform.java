@@ -18,7 +18,6 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.api.gax.core.CredentialsProvider;
-import com.google.cloud.compute.v1.Items;
 import com.google.cloud.redis.v1.*;
 import com.google.longrunning.Operation;
 import com.google.longrunning.OperationsClient;
@@ -109,35 +108,13 @@ public class GcpMemorystorePlatform extends Platform {
                             .collect(Collectors.toList());
     }
 
-    private static Collection<Items> asItemCollection (Map<String, String> itemMap) {
-        return itemMap.entrySet()
-                      .stream()
-                      .map(entrySet -> Items.newBuilder()
-                                            .setKey(entrySet.getKey())
-                                            .setValue(entrySet.getValue())
-                                            .build())
-                      .collect(Collectors.toSet());
-    }
-
-    public Collection<Items> getIncludeFilter () {
-        return asItemCollection(includeFilter);
-    }
-
-    public void setIncludeFilter (Map<String, String> includeFilter) {
-        this.includeFilter = includeFilter;
-    }
-
-    public Collection<Items> getExcludeFilter () {
-        return asItemCollection(excludeFilter);
-    }
-
     boolean isNotFiltered (Instance instance) {
-        Collection<Items> itemsList = Optional.of(instance)
-                                              .map(Instance::getLabelsMap)
-                                              .map(GcpMemorystorePlatform::asItemCollection)
-                                              .orElse(emptySet());
-        Collection<Items> includeFilterItems = getIncludeFilter();
-        Collection<Items> excludeFilterItems = getExcludeFilter();
+        Collection<Map.Entry<String, String>> itemsList = Optional.of(instance)
+                                                                  .map(Instance::getLabelsMap)
+                                                                  .map(GcpMemorystorePlatform::asItemCollection)
+                                                                  .orElse(emptySet());
+        Collection<Map.Entry<String, String>> includeFilterItems = getIncludeFilter();
+        Collection<Map.Entry<String, String>> excludeFilterItems = getExcludeFilter();
         boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream()
                                                                          .anyMatch(includeFilterItems::contains);
         boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilterItems::contains);
@@ -149,6 +126,22 @@ public class GcpMemorystorePlatform extends Platform {
                     kv("excludeFilter", hasNoMustNotIncludes));
         }
         return isNotFiltered;
+    }
+
+    private static Collection<Map.Entry<String, String>> asItemCollection (Map<String, String> itemMap) {
+        return itemMap.entrySet();
+    }
+
+    public void setIncludeFilter (Map<String, String> includeFilter) {
+        this.includeFilter = includeFilter;
+    }
+
+    public Collection<Map.Entry<String, String>> getIncludeFilter () {
+        return asItemCollection(includeFilter);
+    }
+
+    public Collection<Map.Entry<String, String>> getExcludeFilter () {
+        return asItemCollection(excludeFilter);
     }
 
     CloudRedisClient getInstanceClient () {
