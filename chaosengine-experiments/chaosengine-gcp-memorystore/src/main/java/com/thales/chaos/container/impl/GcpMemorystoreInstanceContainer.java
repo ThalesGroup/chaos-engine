@@ -18,7 +18,6 @@
 package com.thales.chaos.container.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.cloud.redis.v1.FailoverInstanceRequest;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -105,13 +104,13 @@ public class GcpMemorystoreInstanceContainer extends Container {
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
     public void forceFailover (Experiment experiment) throws ExecutionException, InterruptedException {
-        String operationName = platform.failover(this, FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS);
+        String operationName = platform.forcedFailover(this);
         experiment.setCheckContainerHealth(() -> platform.isOperationCompleted(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
     public void failover (Experiment experiment) throws ExecutionException, InterruptedException {
-        String operationName = platform.failover(this, FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS);
+        String operationName = platform.failover(this);
         experiment.setCheckContainerHealth(() -> platform.isOperationCompleted(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 

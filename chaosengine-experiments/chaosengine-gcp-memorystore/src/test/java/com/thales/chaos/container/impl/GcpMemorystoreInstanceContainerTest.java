@@ -17,7 +17,6 @@
 
 package com.thales.chaos.container.impl;
 
-import com.google.cloud.redis.v1.FailoverInstanceRequest;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.platform.impl.GcpMemorystorePlatform;
@@ -68,7 +67,7 @@ public class GcpMemorystoreInstanceContainerTest {
     @Test
     public void forceFailover () throws ExecutionException, InterruptedException {
         container.forceFailover(experiment);
-        verify(platform).failover(container, FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS);
+        verify(platform).forcedFailover(container);
         verify(experiment, Mockito.never()).setSelfHealingMethod(any());
         verify(experiment).setCheckContainerHealth(any());
     }
@@ -76,7 +75,7 @@ public class GcpMemorystoreInstanceContainerTest {
     @Test
     public void failover () throws ExecutionException, InterruptedException {
         container.failover(experiment);
-        verify(platform).failover(container, FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS);
+        verify(platform).failover(container);
         verify(experiment, Mockito.never()).setSelfHealingMethod(any());
         verify(experiment).setCheckContainerHealth(any());
     }

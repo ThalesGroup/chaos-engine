@@ -162,12 +162,27 @@ public class GcpMemorystorePlatformTest {
                                                                                                  setName(eligibleContainer
                                                                                                          .getName())
                                                                                          .setDataProtectionMode(
+                                                                                                 FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS)
+                                                                                         .build();
+        ArgumentCaptor<FailoverInstanceRequest> captor = ArgumentCaptor.forClass(FailoverInstanceRequest.class);
+        doReturn(opId).when(platform).executeFailover(captor.capture());
+        assertThat(platform.failover(eligibleContainer), is(opId));
+        assertThat(captor.getValue(), is(expectedFailoverInstanceRequest));
+    }
+
+    @Test
+    public void forcedFailover () throws ExecutionException, InterruptedException {
+        String opId = "id12345";
+        FailoverInstanceRequest expectedFailoverInstanceRequest = FailoverInstanceRequest.newBuilder()
+                                                                                         .
+                                                                                                 setName(eligibleContainer
+                                                                                                         .getName())
+                                                                                         .setDataProtectionMode(
                                                                                                  FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS)
                                                                                          .build();
         ArgumentCaptor<FailoverInstanceRequest> captor = ArgumentCaptor.forClass(FailoverInstanceRequest.class);
         doReturn(opId).when(platform).executeFailover(captor.capture());
-        assertThat(platform.failover(eligibleContainer, FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS),
-                is(opId));
+        assertThat(platform.forcedFailover(eligibleContainer), is(opId));
         assertThat(captor.getValue(), is(expectedFailoverInstanceRequest));
     }
 

@@ -198,11 +198,25 @@ public class GcpMemorystorePlatform extends Platform {
         return getInstanceClient().listInstances(parent).iterateAll();
     }
 
-    public String failover (GcpMemorystoreInstanceContainer container,
-                            FailoverInstanceRequest.DataProtectionMode mode) throws ExecutionException, InterruptedException {
+    public String failover (GcpMemorystoreInstanceContainer container) throws ExecutionException, InterruptedException {
         log.info("Failover triggered for instance {}", v(DATADOG_CONTAINER_KEY, container));
-        FailoverInstanceRequest failoverInstanceRequest = FailoverInstanceRequest.newBuilder().
-                setName(container.getName()).setDataProtectionMode(mode).build();
+        FailoverInstanceRequest failoverInstanceRequest = FailoverInstanceRequest.newBuilder()
+                                                                                 .
+                                                                                         setName(container.getName())
+                                                                                 .setDataProtectionMode(
+                                                                                         FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS)
+                                                                                 .build();
+        return executeFailover(failoverInstanceRequest);
+    }
+
+    public String forcedFailover (GcpMemorystoreInstanceContainer container) throws ExecutionException, InterruptedException {
+        log.info("Forced failover triggered for instance {}", v(DATADOG_CONTAINER_KEY, container));
+        FailoverInstanceRequest failoverInstanceRequest = FailoverInstanceRequest.newBuilder()
+                                                                                 .
+                                                                                         setName(container.getName())
+                                                                                 .setDataProtectionMode(
+                                                                                         FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS)
+                                                                                 .build();
         return executeFailover(failoverInstanceRequest);
     }
 
