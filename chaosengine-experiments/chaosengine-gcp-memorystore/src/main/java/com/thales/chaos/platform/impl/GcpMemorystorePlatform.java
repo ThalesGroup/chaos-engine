@@ -183,8 +183,15 @@ public class GcpMemorystorePlatform extends Platform {
         return instance.getTier() == Instance.Tier.STANDARD_HA;
     }
 
-    private GcpMemorystoreInstanceContainer createContainerFromInstance (Instance instance) {
-        return GcpMemorystoreInstanceContainer.builder().withPlatform(this).fromInstance(instance).build();
+    GcpMemorystoreInstanceContainer createContainerFromInstance (Instance instance) {
+        return GcpMemorystoreInstanceContainer.builder()
+                                              .withHost(instance.getHost())
+                                              .withDisplayName(instance.getDisplayName())
+                                              .withName(instance.getName())
+                                              .withLocationId(instance.getLocationId())
+                                              .withPort(instance.getPort())
+                                              .withPlatform(this)
+                                              .build();
     }
 
     Iterable<Instance> getInstances (LocationName parent) {

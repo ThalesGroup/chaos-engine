@@ -19,7 +19,6 @@ package com.thales.chaos.container.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.redis.v1.FailoverInstanceRequest;
-import com.google.cloud.redis.v1.Instance;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.annotations.Identifier;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -125,14 +124,6 @@ public class GcpMemorystoreInstanceContainer extends Container {
         private GcpMemorystorePlatform platform;
 
         private GcpMemorystoreInstanceContainerBuilder () {
-        }
-
-        public GcpMemorystoreInstanceContainerBuilder fromInstance (Instance instance) {
-            return this.withHost(instance.getHost())
-                       .withDisplayName(instance.getDisplayName())
-                       .withName(instance.getName())
-                       .withLocationId(instance.getLocationId())
-                       .withPort(instance.getPort());
         }
 
         public GcpMemorystoreInstanceContainerBuilder withPort (int port) {

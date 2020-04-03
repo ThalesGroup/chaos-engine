@@ -82,8 +82,8 @@ public class GcpMemorystorePlatformTest {
                                    .setState(Instance.State.CREATING)
                                    .setTier(Instance.Tier.STANDARD_HA)
                                    .build();
-        eligibleContainer = GcpMemorystoreInstanceContainer.builder().fromInstance(eligibleInstance).build();
-        startingContainer = GcpMemorystoreInstanceContainer.builder().fromInstance(startingInstance).build();
+        eligibleContainer = platform.createContainerFromInstance(eligibleInstance);
+        startingContainer = platform.createContainerFromInstance(startingInstance);
     }
 
     @Test
@@ -102,10 +102,7 @@ public class GcpMemorystorePlatformTest {
                 nonEligibleInstance,
                 untaggedInstance);
         doReturn(instanceList).when(platform).getInstances(any());
-        GcpMemorystoreInstanceContainer untaggedContainer = GcpMemorystoreInstanceContainer.builder()
-                                                                                           .fromInstance(
-                                                                                                   untaggedInstance)
-                                                                                           .build();
+        GcpMemorystoreInstanceContainer untaggedContainer = platform.createContainerFromInstance(untaggedInstance);
         //No filter set
         assertThat(platform.generateRoster(), containsInAnyOrder(eligibleContainer, untaggedContainer));
         assertThat(platform.generateRoster().size(), is(2));
@@ -154,7 +151,7 @@ public class GcpMemorystorePlatformTest {
 
     @Test
     public void getPlatformLevel () {
-        assertThat(platform.getPlatformLevel(), is(PlatformLevel.IAAS));
+        assertThat(platform.getPlatformLevel(), is(PlatformLevel.SAAS));
     }
 
     @Test

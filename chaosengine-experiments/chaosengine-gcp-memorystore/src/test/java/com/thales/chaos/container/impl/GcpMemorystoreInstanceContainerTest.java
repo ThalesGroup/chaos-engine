@@ -18,7 +18,6 @@
 package com.thales.chaos.container.impl;
 
 import com.google.cloud.redis.v1.FailoverInstanceRequest;
-import com.google.cloud.redis.v1.Instance;
 import com.thales.chaos.experiment.Experiment;
 import com.thales.chaos.experiment.impl.GenericContainerExperiment;
 import com.thales.chaos.platform.impl.GcpMemorystorePlatform;
@@ -52,19 +51,15 @@ public class GcpMemorystoreInstanceContainerTest {
     @Mock
     private GcpMemorystorePlatform platform;
     private Experiment experiment;
-    private Instance instance;
 
     @Before
     public void setUp () {
-        instance = Instance.newBuilder().setDisplayName(DISPLAY_NAME)
-                           .setName(NAME)
-                           .setLocationId(LOCATION_ID)
-                           .setHost(HOST)
-                           .setPort(PORT)
-                           .setState(Instance.State.READY)
-                           .build();
         container = spy(GcpMemorystoreInstanceContainer.builder()
-                                                       .fromInstance(instance)
+                                                       .withName(NAME)
+                                                       .withLocationId(LOCATION_ID)
+                                                       .withHost(HOST)
+                                                       .withPort(PORT)
+                                                       .withDisplayName(DISPLAY_NAME)
                                                        .withPlatform(platform)
                                                        .build());
         experiment = spy(GenericContainerExperiment.builder().withContainer(container).build());
@@ -87,19 +82,13 @@ public class GcpMemorystoreInstanceContainerTest {
     }
 
     @Test
-    public void buildFromInstance () {
-        GcpMemorystoreInstanceContainer gcpMemorystoreInstanceContainer = GcpMemorystoreInstanceContainer.builder()
-                                                                                                         .fromInstance(
-                                                                                                                 instance)
-                                                                                                         .withPlatform(
-                                                                                                                 platform)
-                                                                                                         .build();
-        assertThat(gcpMemorystoreInstanceContainer.getDisplayName(), equalTo(DISPLAY_NAME));
-        assertThat(gcpMemorystoreInstanceContainer.getName(), equalTo(NAME));
-        assertThat(gcpMemorystoreInstanceContainer.getHost(), equalTo(HOST));
-        assertThat(gcpMemorystoreInstanceContainer.getPort(), equalTo(PORT));
-        assertThat(gcpMemorystoreInstanceContainer.getPlatform(), equalTo(platform));
-        assertThat(gcpMemorystoreInstanceContainer.getAggregationIdentifier(), equalTo(AGGREGATION_IDENTIFIER));
+    public void verifyContainer () {
+        assertThat(container.getDisplayName(), equalTo(DISPLAY_NAME));
+        assertThat(container.getName(), equalTo(NAME));
+        assertThat(container.getHost(), equalTo(HOST));
+        assertThat(container.getPort(), equalTo(PORT));
+        assertThat(container.getPlatform(), equalTo(platform));
+        assertThat(container.getAggregationIdentifier(), equalTo(AGGREGATION_IDENTIFIER));
     }
 
     @Test
