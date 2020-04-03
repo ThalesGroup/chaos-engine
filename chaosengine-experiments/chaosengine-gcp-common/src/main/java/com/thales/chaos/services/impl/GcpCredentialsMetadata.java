@@ -19,18 +19,12 @@ package com.thales.chaos.services.impl;
 
 public class GcpCredentialsMetadata {
     private String projectId;
-    private String clientEmail;
 
-    public GcpCredentialsMetadata (String projectId, String clientEmail) {
+    public GcpCredentialsMetadata (String projectId) {
         this.projectId = projectId;
-        this.clientEmail = clientEmail;
     }
 
     public String getProjectId () {
         return projectId;
-    }
-
-    public String getClientEmail () {
-        return clientEmail;
     }
 }

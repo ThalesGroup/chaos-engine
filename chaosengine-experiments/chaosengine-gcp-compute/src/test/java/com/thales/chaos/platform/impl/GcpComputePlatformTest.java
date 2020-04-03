@@ -973,7 +973,7 @@ public class GcpComputePlatformTest {
 
         @Bean
         public GcpCredentialsMetadata gcpCredentialsMetadata () {
-            return new GcpCredentialsMetadata(MY_AWESOME_PROJECT, EMAIL);
+            return new GcpCredentialsMetadata(MY_AWESOME_PROJECT);
         }
     }
 }

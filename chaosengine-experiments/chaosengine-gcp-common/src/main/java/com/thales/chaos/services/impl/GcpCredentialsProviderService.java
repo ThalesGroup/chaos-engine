@@ -56,7 +56,7 @@ public class GcpCredentialsProviderService implements CloudService {
     @JsonIgnore
     public GcpCredentialsMetadata credentialsMetadata () throws IOException {
         ServiceAccountCredentials serviceAccountCredentials = getServiceAccountCredentials();
-        return new GcpCredentialsMetadata(projectId, serviceAccountCredentials.getClientEmail());
+        return new GcpCredentialsMetadata(projectId);
     }
 
     private ServiceAccountCredentials getServiceAccountCredentials () throws IOException {
