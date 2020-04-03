@@ -44,7 +44,7 @@ public class GcpMemorystoreInstanceContainerTest {
     private static final String DISPLAY_NAME = "Display name";
     private static final String INSTANCE_ID = "redis-instance-test";
     private static final String LOCATION_ID = "us-central1";
-    private static final String NAME = "projects/gemalto-cspeng/locations/" + LOCATION_ID + "/instances/" + INSTANCE_ID;
+    private static final String NAME = "projects/project-name/locations/" + LOCATION_ID + "/instances/" + INSTANCE_ID;
     private static final String HOST = "localhost";
     private static final String AGGREGATION_IDENTIFIER = INSTANCE_ID + "-" + LOCATION_ID;
     private static final int PORT = 6379;
