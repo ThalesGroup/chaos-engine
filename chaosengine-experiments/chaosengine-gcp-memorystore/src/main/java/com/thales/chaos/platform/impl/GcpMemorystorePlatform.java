@@ -163,7 +163,7 @@ public class GcpMemorystorePlatform extends Platform {
 
     @Override
     public PlatformLevel getPlatformLevel () {
-        return PlatformLevel.IAAS;
+        return PlatformLevel.SAAS;
     }
 
     @Override
