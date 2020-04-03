@@ -174,9 +174,7 @@ public class GcpMemorystorePlatformTest {
     public void forcedFailover () throws ExecutionException, InterruptedException {
         String opId = "id12345";
         FailoverInstanceRequest expectedFailoverInstanceRequest = FailoverInstanceRequest.newBuilder()
-                                                                                         .
-                                                                                                 setName(eligibleContainer
-                                                                                                         .getName())
+                                                                                         .setName(eligibleContainer.getName())
                                                                                          .setDataProtectionMode(
                                                                                                  FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS)
                                                                                          .build();
