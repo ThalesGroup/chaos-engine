@@ -35,7 +35,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,6 +62,7 @@ public class GcpSqlPlatformTest {
     private DatabaseInstance haInstanceNoReplicas;
     private DatabaseInstance haInstanceWithReplicas;
     private DatabaseInstance replicaInstance;
+    private DatabaseInstance startingReplicaInstance;
     private List<DatabaseInstance> allInstances;
 
     @Before
@@ -79,28 +79,33 @@ public class GcpSqlPlatformTest {
                                                      .setReplicaNames(Collections.emptyList());
         haInstanceWithReplicas = new DatabaseInstance().setName("HaInstanceWithReplicas")
                                                        .setFailoverReplica(new DatabaseInstance.FailoverReplica())
-                                                       .setState(GcpSqlPlatform.INSTANCE_RUNNING)
-                                                       .setReplicaNames(List.of("ReplicaInstance"));
+                                                       .setState(GcpSqlPlatform.INSTANCE_RUNNING);
         replicaInstance = new DatabaseInstance().setName("ReplicaInstance")
                                                 .setFailoverReplica(null)
                                                 .setMasterInstanceName(haInstanceWithReplicas.getName())
                                                 .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+        startingReplicaInstance = new DatabaseInstance().setName("StartingReplica")
+                                                        .setFailoverReplica(null)
+                                                        .setMasterInstanceName(haInstanceWithReplicas.getName())
+                                                        .setState("STARTING");
+        haInstanceWithReplicas.setReplicaNames(List.of(replicaInstance.getName(), startingReplicaInstance.getName()));
         allInstances = List.of(nonEligibleInstance,
                 noHaInstance,
                 haInstanceNoReplicas,
                 haInstanceWithReplicas,
-                replicaInstance);
+                replicaInstance,
+                startingReplicaInstance);
     }
 
     @Test
-    public void getApiStatus () throws IOException, GeneralSecurityException {
+    public void getApiStatus () throws IOException {
         doReturn(null).doThrow(RuntimeException.class).when(platform).getInstances();
         assertThat(platform.getApiStatus(), is(ApiStatus.OK));
         assertThat(platform.getApiStatus(), is(ApiStatus.ERROR));
     }
 
     @Test
-    public void getPlatformHealth () throws IOException, GeneralSecurityException {
+    public void getPlatformHealth () throws IOException {
         List<DatabaseInstance> instanceList = List.of(new DatabaseInstance());
         doReturn(instanceList).doReturn(List.of()).doThrow(RuntimeException.class).when(platform).getInstances();
         assertThat(platform.getPlatformHealth(), is(PlatformHealth.OK));
@@ -118,8 +123,9 @@ public class GcpSqlPlatformTest {
     @Test
     public void getReadReplicas () throws IOException {
         doReturn(allInstances).when(platform).getInstances();
-        List<DatabaseInstance> instances = platform.getReadReplicas();
-        assertThat(instances, containsInAnyOrder(replicaInstance));
+        List<DatabaseInstance> instances = platform.getReadReplicas(haInstanceWithReplicas);
+        assertThat(instances, containsInAnyOrder(replicaInstance, startingReplicaInstance));
+        assertThat(platform.getReadReplicas(haInstanceNoReplicas), is(Collections.emptyList()));
     }
 
     @Test

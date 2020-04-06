@@ -31,6 +31,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.impl.GcpSqlClusterContainer;
+import com.thales.chaos.container.impl.GcpSqlContainer;
 import com.thales.chaos.container.impl.GcpSqlInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.Platform;
@@ -101,7 +102,6 @@ public class GcpSqlPlatform extends Platform {
     protected List<Container> generateRoster () {
         log.debug("Generating roster of GCP SQL instances");
         List<DatabaseInstance> masterInstances = getMasterInstances();
-        List<DatabaseInstance> readReplicas = getReadReplicas();
         return masterInstances.stream().map(this::createContainerFromInstance).collect(Collectors.toList());
     }
 
@@ -119,12 +119,12 @@ public class GcpSqlPlatform extends Platform {
         }
     }
 
-    List<DatabaseInstance> getReadReplicas () {
+    List<DatabaseInstance> getReadReplicas (DatabaseInstance masterInstance) {
         try {
             return getInstances().stream()
                                  .filter(Objects::nonNull)
-                                 .filter(this::isReady)
                                  .filter(this::isReadReplica)
+                                 .filter(replica -> replica.getMasterInstanceName() == masterInstance.getName())
                                  .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Cannot get read replicas", e);
@@ -132,17 +132,13 @@ public class GcpSqlPlatform extends Platform {
         }
     }
 
-    GcpSqlInstanceContainer createContainerFromInstance (DatabaseInstance masterInstance) {
+    GcpSqlContainer createContainerFromInstance (DatabaseInstance masterInstance) {
         if (hasReadReplicas(masterInstance)) {
             log.debug("Creating new SQL cluster container {}", masterInstance.getName());
-            List<DatabaseInstance> readReplicas = getReadReplicas().stream()
-                                                                   .filter(replica -> replica.getMasterInstanceName() == masterInstance
-                                                                           .getName())
-                                                                   .collect(Collectors.toList());
-            return new GcpSqlClusterContainer();
+            return GcpSqlClusterContainer.builder().withName(masterInstance.getName()).withPlatform(this).build();
         }
         log.debug("Creating new SQL instance container {}", masterInstance.getName());
-        return new GcpSqlInstanceContainer();
+        return GcpSqlInstanceContainer.builder().withName(masterInstance.getName()).withPlatform(this).build();
     }
 
     private boolean isHA (DatabaseInstance databaseInstance) {
