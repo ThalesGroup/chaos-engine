@@ -24,10 +24,14 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sqladmin.SQLAdmin;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
+import com.google.api.services.sqladmin.model.FailoverContext;
+import com.google.api.services.sqladmin.model.InstancesFailoverRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
+import com.thales.chaos.container.impl.GcpSqlClusterContainer;
+import com.thales.chaos.container.impl.GcpSqlInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.enums.ApiStatus;
@@ -45,6 +49,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.function.Predicate.not;
 
 @ConditionalOnProperty("gcp.sql")
 @ConfigurationProperties("gcp.sql")
@@ -58,7 +65,7 @@ public class GcpSqlPlatform extends Platform {
     private GcpCredentialsMetadata gcpCredentialsMetadata;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
-    private static final String INSTANCE_RUNNING = "RUNNABLE";
+    static final String INSTANCE_RUNNING = "RUNNABLE";
 
     public GcpSqlPlatform () {
         log.info("GCP SQL Platform created");
@@ -92,31 +99,75 @@ public class GcpSqlPlatform extends Platform {
 
     @Override
     protected List<Container> generateRoster () {
+        log.debug("Generating roster of GCP SQL instances");
+        List<DatabaseInstance> masterInstances = getMasterInstances();
+        List<DatabaseInstance> readReplicas = getReadReplicas();
+        return masterInstances.stream().map(this::createContainerFromInstance).collect(Collectors.toList());
+    }
+
+    List<DatabaseInstance> getMasterInstances () {
         try {
-            getInstances().stream().filter(Objects::nonNull).filter(this::isReady).forEach(i -> {
-                System.out.println(i.getName());
-                System.out.println(i.getKind());
-                System.out.println("HA " + hasFailoverReplica(i));
-                System.out.println("Replicas " + hasReadReplicas(i));
-                System.out.println(i.getBackendType());
-                System.out.println("====");
-            });
+            return getInstances().stream()
+                                 .filter(Objects::nonNull)
+                                 .filter(this::isReady)
+                                 .filter(this::isHA)
+                                 .filter(not(this::isReadReplica))
+                                 .collect(Collectors.toList());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Cannot get master instances", e);
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+    }
+
+    List<DatabaseInstance> getReadReplicas () {
+        try {
+            return getInstances().stream()
+                                 .filter(Objects::nonNull)
+                                 .filter(this::isReady)
+                                 .filter(this::isReadReplica)
+                                 .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Cannot get read replicas", e);
+            return Collections.emptyList();
+        }
+    }
+
+    GcpSqlInstanceContainer createContainerFromInstance (DatabaseInstance masterInstance) {
+        if (hasReadReplicas(masterInstance)) {
+            log.debug("Creating new SQL cluster container {}", masterInstance.getName());
+            List<DatabaseInstance> readReplicas = getReadReplicas().stream()
+                                                                   .filter(replica -> replica.getMasterInstanceName() == masterInstance
+                                                                           .getName())
+                                                                   .collect(Collectors.toList());
+            return new GcpSqlClusterContainer();
+        }
+        log.debug("Creating new SQL instance container {}", masterInstance.getName());
+        return new GcpSqlInstanceContainer();
+    }
+
+    private boolean isHA (DatabaseInstance databaseInstance) {
+        return databaseInstance.getFailoverReplica() != null;
     }
 
     private boolean isReady (DatabaseInstance databaseInstance) {
         return INSTANCE_RUNNING.equals(databaseInstance.getState());
     }
 
-    private boolean hasFailoverReplica (DatabaseInstance databaseInstance) {
-        return databaseInstance.getFailoverReplica() != null;
+    private boolean isReadReplica (DatabaseInstance databaseInstance) {
+        return databaseInstance.getMasterInstanceName() != null;
     }
 
-    private List<String> hasReadReplicas (DatabaseInstance databaseInstance) {
-        return databaseInstance.getReplicaNames();
+    private boolean hasReadReplicas (DatabaseInstance databaseInstance) {
+        return databaseInstance.getReplicaNames() != null && !databaseInstance.getReplicaNames().isEmpty();
+    }
+
+    void failover (DatabaseInstance instance) throws IOException {
+        InstancesFailoverRequest instancesFailoverRequest = new InstancesFailoverRequest();
+        instancesFailoverRequest.setFailoverContext(new FailoverContext().setSettingsVersion(instance.getSettings()
+                                                                                                     .getSettingsVersion()));
+        getSQLAdmin().instances()
+                     .failover(gcpCredentialsMetadata.getProjectId(), instance.getName(), instancesFailoverRequest)
+                     .execute();
     }
 
     @Override

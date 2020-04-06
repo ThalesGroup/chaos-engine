@@ -36,8 +36,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -56,9 +58,38 @@ public class GcpSqlPlatformTest {
     private GcpSqlPlatform platform;
     @Autowired
     private GcpCredentialsMetadata gcpCredentialsMetadata;
+    private DatabaseInstance nonEligibleInstance;
+    private DatabaseInstance noHaInstance;
+    private DatabaseInstance haInstanceNoReplicas;
+    private DatabaseInstance haInstanceWithReplicas;
+    private DatabaseInstance replicaInstance;
+    private List<DatabaseInstance> allInstances;
 
     @Before
     public void setUp () {
+        nonEligibleInstance = new DatabaseInstance().setName("nonEligibleInstance")
+                                                    .setState("FAILED")
+                                                    .setFailoverReplica(new DatabaseInstance.FailoverReplica());
+        noHaInstance = new DatabaseInstance().setName("NoHaInstance")
+                                             .setFailoverReplica(null)
+                                             .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+        haInstanceNoReplicas = new DatabaseInstance().setName("HaInstanceNoReplicas")
+                                                     .setFailoverReplica(new DatabaseInstance.FailoverReplica())
+                                                     .setState(GcpSqlPlatform.INSTANCE_RUNNING)
+                                                     .setReplicaNames(Collections.emptyList());
+        haInstanceWithReplicas = new DatabaseInstance().setName("HaInstanceWithReplicas")
+                                                       .setFailoverReplica(new DatabaseInstance.FailoverReplica())
+                                                       .setState(GcpSqlPlatform.INSTANCE_RUNNING)
+                                                       .setReplicaNames(List.of("ReplicaInstance"));
+        replicaInstance = new DatabaseInstance().setName("ReplicaInstance")
+                                                .setFailoverReplica(null)
+                                                .setMasterInstanceName(haInstanceWithReplicas.getName())
+                                                .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+        allInstances = List.of(nonEligibleInstance,
+                noHaInstance,
+                haInstanceNoReplicas,
+                haInstanceWithReplicas,
+                replicaInstance);
     }
 
     @Test
@@ -75,6 +106,26 @@ public class GcpSqlPlatformTest {
         assertThat(platform.getPlatformHealth(), is(PlatformHealth.OK));
         assertThat(platform.getPlatformHealth(), is(PlatformHealth.DEGRADED));
         assertThat(platform.getPlatformHealth(), is(PlatformHealth.FAILED));
+    }
+
+    @Test
+    public void getMasterInstances () throws IOException {
+        doReturn(allInstances).when(platform).getInstances();
+        List<DatabaseInstance> instances = platform.getMasterInstances();
+        assertThat(instances, containsInAnyOrder(haInstanceNoReplicas, haInstanceWithReplicas));
+    }
+
+    @Test
+    public void getReadReplicas () throws IOException {
+        doReturn(allInstances).when(platform).getInstances();
+        List<DatabaseInstance> instances = platform.getReadReplicas();
+        assertThat(instances, containsInAnyOrder(replicaInstance));
+    }
+
+    @Test
+    public void generateRoster () throws IOException {
+        doReturn(allInstances).when(platform).getInstances();
+        platform.generateRoster();
     }
 
     @Test
