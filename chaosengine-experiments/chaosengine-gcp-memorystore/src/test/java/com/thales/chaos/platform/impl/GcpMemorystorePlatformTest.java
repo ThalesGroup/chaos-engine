@@ -19,10 +19,8 @@ package com.thales.chaos.platform.impl;
 
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.longrunning.OperationFuture;
-import com.google.cloud.redis.v1.CloudRedisClient;
-import com.google.cloud.redis.v1.FailoverInstanceRequest;
-import com.google.cloud.redis.v1.Instance;
-import com.google.cloud.redis.v1.OperationMetadata;
+import com.google.cloud.redis.v1.*;
+import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpMemorystoreInstanceContainer;
@@ -197,6 +195,28 @@ public class GcpMemorystorePlatformTest {
         assertThat(platform.forcedFailover(eligibleContainer), is(opId));
         verify(platform).executeFailover(any());
         assertThat(captor.getValue(), is(expectedFailoverInstanceRequest));
+    }
+
+    @Test
+    public void getInstance () {
+        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        doReturn(cloudRedisClient).when(platform).getInstanceClient();
+        doReturn(null).when(cloudRedisClient).getInstance(captor.capture());
+        platform.getInstance(eligibleContainer);
+        assertThat(captor.getValue(), is(eligibleContainer.getName()));
+    }
+
+    @Test
+    public void getInstances () {
+        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
+        CloudRedisClient.ListInstancesPagedResponse response = mock(CloudRedisClient.ListInstancesPagedResponse.class);
+        ArgumentCaptor<LocationName> captor = ArgumentCaptor.forClass(LocationName.class);
+        LocationName locationName = LocationName.of(PROJECT_NAME, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
+        doReturn(cloudRedisClient).when(platform).getInstanceClient();
+        doReturn(response).when(cloudRedisClient).listInstances(captor.capture());
+        platform.getInstances(locationName);
+        assertThat(captor.getValue(), is(locationName));
     }
 
     @Configuration
