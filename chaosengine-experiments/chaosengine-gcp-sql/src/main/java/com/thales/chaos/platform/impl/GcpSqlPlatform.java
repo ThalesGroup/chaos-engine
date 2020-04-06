@@ -30,6 +30,7 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpSqlClusterContainer;
 import com.thales.chaos.container.impl.GcpSqlContainer;
 import com.thales.chaos.container.impl.GcpSqlInstanceContainer;
@@ -151,6 +152,23 @@ public class GcpSqlPlatform extends Platform {
 
     private boolean isReadReplica (DatabaseInstance databaseInstance) {
         return databaseInstance.getMasterInstanceName() != null;
+    }
+
+    ContainerHealth isContainerRunning (GcpSqlContainer container) {
+        DatabaseInstance instance = getInstance(container);
+        if (instance == null) {
+            return ContainerHealth.DOES_NOT_EXIST;
+        }
+        return isReady(instance) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+    }
+
+    public DatabaseInstance getInstance (GcpSqlContainer container) {
+        try {
+            return getSQLAdmin().instances().get(gcpCredentialsMetadata.getProjectId(), container.getName()).execute();
+        } catch (IOException e) {
+            log.error("Cannot get GCP SQL instance {}", container.getName(), e);
+            return null;
+        }
     }
 
     private boolean hasReadReplicas (DatabaseInstance databaseInstance) {

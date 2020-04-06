@@ -153,7 +153,7 @@ public class GcpSqlPlatformTest {
 
         @Bean
         public GcpCredentialsMetadata gcpCredentialsMetadata () {
-            return new GcpCredentialsMetadata(PROJECT_NAME, EMAIL);
+            return new GcpCredentialsMetadata(PROJECT_NAME);
         }
     }
 }
