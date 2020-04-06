@@ -20,6 +20,8 @@ package com.thales.chaos.platform.impl;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.longrunning.OperationFuture;
 import com.google.cloud.redis.v1.*;
+import com.google.longrunning.Operation;
+import com.google.longrunning.OperationsClient;
 import com.thales.chaos.constants.GcpConstants;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
@@ -33,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -66,6 +69,8 @@ public class GcpMemorystorePlatformTest {
     private GcpMemorystorePlatform platform;
     @Autowired
     private GcpCredentialsMetadata gcpCredentialsMetadata;
+    @Mock
+    CloudRedisClient cloudRedisClient;
     private Instance eligibleInstance;
     private Instance startingInstance;
     private GcpMemorystoreInstanceContainer eligibleContainer;
@@ -87,6 +92,7 @@ public class GcpMemorystorePlatformTest {
                                    .build();
         eligibleContainer = platform.createContainerFromInstance(eligibleInstance);
         startingContainer = platform.createContainerFromInstance(startingInstance);
+        doReturn(cloudRedisClient).when(platform).getInstanceClient();
     }
 
     @Test
@@ -168,10 +174,8 @@ public class GcpMemorystorePlatformTest {
                                                                                                  FailoverInstanceRequest.DataProtectionMode.LIMITED_DATA_LOSS)
                                                                                          .build();
         ArgumentCaptor<FailoverInstanceRequest> captor = ArgumentCaptor.forClass(FailoverInstanceRequest.class);
-        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
         OperationFuture<Instance, OperationMetadata> operationFuture = mock(OperationFuture.class);
         doReturn(opId).when(operationFuture).getName();
-        doReturn(cloudRedisClient).when(platform).getInstanceClient();
         doReturn(operationFuture).when(cloudRedisClient).failoverInstanceAsync(captor.capture());
         assertThat(platform.failover(eligibleContainer), is(opId));
         verify(platform).executeFailover(any());
@@ -187,10 +191,8 @@ public class GcpMemorystorePlatformTest {
                                                                                                  FailoverInstanceRequest.DataProtectionMode.FORCE_DATA_LOSS)
                                                                                          .build();
         ArgumentCaptor<FailoverInstanceRequest> captor = ArgumentCaptor.forClass(FailoverInstanceRequest.class);
-        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
         OperationFuture<Instance, OperationMetadata> operationFuture = mock(OperationFuture.class);
         doReturn(opId).when(operationFuture).getName();
-        doReturn(cloudRedisClient).when(platform).getInstanceClient();
         doReturn(operationFuture).when(cloudRedisClient).failoverInstanceAsync(captor.capture());
         assertThat(platform.forcedFailover(eligibleContainer), is(opId));
         verify(platform).executeFailover(any());
@@ -199,9 +201,7 @@ public class GcpMemorystorePlatformTest {
 
     @Test
     public void getInstance () {
-        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        doReturn(cloudRedisClient).when(platform).getInstanceClient();
         doReturn(null).when(cloudRedisClient).getInstance(captor.capture());
         platform.getInstance(eligibleContainer);
         assertThat(captor.getValue(), is(eligibleContainer.getName()));
@@ -209,14 +209,25 @@ public class GcpMemorystorePlatformTest {
 
     @Test
     public void getInstances () {
-        CloudRedisClient cloudRedisClient = mock(CloudRedisClient.class);
         CloudRedisClient.ListInstancesPagedResponse response = mock(CloudRedisClient.ListInstancesPagedResponse.class);
         ArgumentCaptor<LocationName> captor = ArgumentCaptor.forClass(LocationName.class);
         LocationName locationName = LocationName.of(PROJECT_NAME, GcpConstants.MEMORYSTORE_LOCATION_WILDCARD);
-        doReturn(cloudRedisClient).when(platform).getInstanceClient();
         doReturn(response).when(cloudRedisClient).listInstances(captor.capture());
         platform.getInstances(locationName);
         assertThat(captor.getValue(), is(locationName));
+    }
+
+    @Test
+    public void isOperationCompleted () {
+        String opID = "id123";
+        OperationsClient operationsClient = mock(OperationsClient.class);
+        Operation operation = mock(Operation.class);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        doReturn(operationsClient).when(cloudRedisClient).getOperationsClient();
+        doReturn(operation).when(operationsClient).getOperation(captor.capture());
+        platform.isOperationCompleted(opID);
+        assertThat(captor.getValue(), is(opID));
+        verify(platform).getInstanceClient();
     }
 
     @Configuration
