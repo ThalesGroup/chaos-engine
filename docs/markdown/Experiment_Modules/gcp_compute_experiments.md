@@ -13,19 +13,16 @@ All Google SDKs are included via the Google Cloud `libraries-bom` Maven package.
 | Key Name | Description | Default | Mandatory |
 | --- | --- | :---: | :---: |
 | `gcp.compute` | The presence of this key enables the module. | N/A | Yes |
-| `gcp.compute.project-id` | This key controls which GCP Project the module will experiment on. | N/A | Yes |
-| `gcp.compute.json-key` | This key should be the JSON Key of the Service Account the module is to use. | N/A | Yes |
-| `gcp.compute.include-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A | Yes |
+| `gcp.json-key` | This key should be the JSON Key of the Service Account the module is to use. | N/A | Yes |
+| `gcp.project-id` | This key controls which GCP Project the module will experiment on. | N/A | Yes |
+| `gcp.compute.include-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A | No |
 | `gcp.compute.exclude-filter.<metadata-key-name>` | Used for filtering the inclusion of GCP Compute Engine Instances based on the presence of a specific key/value pair of Metadata. See [Filtering](#filtering) for more information. | N/A | No |
 | `gcp.compute.routableCidrBlocks` | A comma separated list of private CIDR Blocks that should be considered Routable for SSH Access | N/A | No |
 
 
 
 !!! note "Credential Sharing Across GCP Modules"
-    Enabled GCP Modules can share credentials amongst each other. If the specific module does not have any credentials configured, it will attempt to use credentials from another enabled module.
-    If multiple other modules hold credentials, there is no specific preference for which module it will inherit. It is recommended to provide credentials for either all modules, or exactly one module.
-    
-    If credentials are supplied for a specific GCP Module, that module will always use its specifically configured credentials.
+    Enabled GCP Modules share credentials amongst each other. 
 
 ### Required Permissions
 

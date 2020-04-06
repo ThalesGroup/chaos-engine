@@ -18,6 +18,8 @@
         <module>chaosengine-aws-ec2</module>
         <module>chaosengine-aws-rds</module>
         <module>chaosengine-pcf</module>
+        <module>chaosengine-gcp-memorystore</module>
+        <module>chaosengine-gcp-common</module>
     </modules>
 
     <dependencies>

@@ -36,37 +36,52 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 @Configuration
-@ConfigurationProperties("gcp.compute")
-@ConditionalOnProperty("gcp.compute")
-public class GcpComputeService implements CloudService {
-    public static final String COMPUTE_CREDENTIALS = "compute-credentials";
+@ConfigurationProperties("gcp")
+@ConditionalOnProperty("gcp.json-key")
+public class GcpCredentialsProviderService implements CloudService {
+    public static final String GCP_CREDENTIALS = "gcp-credentials";
     private String jsonKey;
+    private String projectId;
+
+    public void setProjectId (String projectId) {
+        this.projectId = projectId;
+    }
 
     public void setJsonKey (String jsonKey) {
         this.jsonKey = jsonKey;
     }
 
-    @Bean(COMPUTE_CREDENTIALS)
+    @Bean
+    @RefreshScope
+    @JsonIgnore
+    public GcpCredentialsMetadata credentialsMetadata () throws IOException {
+        ServiceAccountCredentials serviceAccountCredentials = getServiceAccountCredentials();
+        return new GcpCredentialsMetadata(projectId);
+    }
+
+    private ServiceAccountCredentials getServiceAccountCredentials () throws IOException {
+        return ServiceAccountCredentials.fromStream(new ByteArrayInputStream(jsonKey.getBytes()));
+    }
+
+    @Bean(GCP_CREDENTIALS)
     @RefreshScope
     @JsonIgnore
     public GoogleCredentials googleCredentials () throws IOException {
-        return ServiceAccountCredentials.fromStream(new ByteArrayInputStream(jsonKey.getBytes()))
-                                        .createScoped(ComputeScopes.CLOUD_PLATFORM);
+        return getServiceAccountCredentials().createScoped(ComputeScopes.CLOUD_PLATFORM);
     }
 
     @Bean
     @RefreshScope
     @JsonIgnore
-    @ConditionalOnBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
-    public CredentialsProvider computeCredentialsProvider (
-            @Qualifier(COMPUTE_CREDENTIALS) GoogleCredentials credentials) {
+    @ConditionalOnBean(value = GoogleCredentials.class, name = GCP_CREDENTIALS)
+    public CredentialsProvider computeCredentialsProvider (@Qualifier(GCP_CREDENTIALS) GoogleCredentials credentials) {
         return () -> credentials;
     }
 
     @Bean
     @RefreshScope
     @JsonIgnore
-    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = COMPUTE_CREDENTIALS)
+    @ConditionalOnMissingBean(value = GoogleCredentials.class, name = GCP_CREDENTIALS)
     public CredentialsProvider genericCredentialsProvider (GoogleCredentials credentials) {
         return () -> credentials;
     }

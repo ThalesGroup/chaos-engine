@@ -28,8 +28,8 @@ The following numbers are reserved. **0** is not valid, as the number range is 1
 | 2 | Amazon Web Services |
 | 3 | Cloud Foundry |
 | 4 | Kubernetes |
-| 5 | GCP Compute |
-| 6 | GCP Memorystore |
+| 5 | Google Cloud Platform |
+| 6 | - |
 | 7 | - |
 | 8 | - |
 | 9 | - |

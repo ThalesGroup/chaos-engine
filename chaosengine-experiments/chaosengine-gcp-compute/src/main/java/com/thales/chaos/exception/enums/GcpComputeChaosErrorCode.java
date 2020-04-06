@@ -15,7 +15,7 @@
  *
  */
 
-package com.thales.chaos.exceptions.enums;
+package com.thales.chaos.exception.enums;
 
 import com.thales.chaos.exception.ErrorCode;
 
