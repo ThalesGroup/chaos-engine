@@ -87,4 +87,4 @@ Because this is an entirely cloud managed operation, Self Healing is not possibl
 [Memorystore operations.get]: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.operations/get
 [ListOperationsResponse]:https://cloud.google.com/memorystore/docs/redis/reference/rest/Shared.Types/ListOperationsResponse#Operation
 [Memorystore instances.failover]: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/failover
-[Data protection mode]: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/failover#DataProtectionMode
+[Data protection mode]: https://cloud.google.com/memorystore/docs/redis/manual-failover-overview#how_data_protection_modes_work
