@@ -48,7 +48,6 @@ import static org.mockito.Mockito.spy;
 @ContextConfiguration
 public class GcpSqlPlatformTest {
     private static final String PROJECT_NAME = "gcp-project";
-    private static final String EMAIL = "user@example.com";
     @MockBean
     private GoogleCredentials googleCredentials;
     @MockBean
