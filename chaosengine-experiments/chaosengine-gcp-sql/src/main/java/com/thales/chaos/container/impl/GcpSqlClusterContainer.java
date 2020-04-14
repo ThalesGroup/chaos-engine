@@ -19,7 +19,6 @@ package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.experiment.enums.ExperimentType;
-import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
 
 import javax.validation.constraints.NotNull;
@@ -31,21 +30,6 @@ public class GcpSqlClusterContainer extends GcpSqlContainer {
 
     @Override
     protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-        return null;
-    }
-
-    @Override
-    public String getSimpleName () {
-        return null;
-    }
-
-    @Override
-    public String getAggregationIdentifier () {
-        return null;
-    }
-
-    @Override
-    public DataDogIdentifier getDataDogIdentifier () {
         return null;
     }
 

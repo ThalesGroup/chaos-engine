@@ -18,8 +18,11 @@
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
+
+import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public abstract class GcpSqlContainer extends Container {
     protected String name;
@@ -32,5 +35,20 @@ public abstract class GcpSqlContainer extends Container {
     @Override
     public Platform getPlatform () {
         return platform;
+    }
+
+    @Override
+    public String getSimpleName () {
+        return getName();
+    }
+
+    @Override
+    public String getAggregationIdentifier () {
+        return getName();
+    }
+
+    @Override
+    public DataDogIdentifier getDataDogIdentifier () {
+        return dataDogIdentifier().withValue(getName());
     }
 }
