@@ -68,6 +68,7 @@ public class GcpSqlPlatform extends Platform {
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
     static final String INSTANCE_RUNNING = "RUNNABLE";
+    private static final String SQL_SERVICE_PATH = "sql/v1beta4/";
 
     public GcpSqlPlatform () {
         log.info("GCP SQL Platform created");
@@ -198,12 +199,11 @@ public class GcpSqlPlatform extends Platform {
     }
 
     SQLAdmin getSQLAdmin () {
-        HttpTransport httpTransport = null;
         try {
-            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(googleCredentials);
-            return new SQLAdmin.Builder(httpTransport, jsonFactory, requestInitializer).setServicePath("sql/v1beta4/")
+            return new SQLAdmin.Builder(httpTransport, jsonFactory, requestInitializer).setServicePath(SQL_SERVICE_PATH)
                                                                                        .build();
         } catch (IOException | GeneralSecurityException e) {
             throw new ChaosException("GCP_SQL_GENERIC_ERROR", e);
