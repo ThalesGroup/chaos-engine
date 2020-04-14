@@ -125,7 +125,7 @@ public class GcpSqlPlatform extends Platform {
             return getInstances().stream()
                                  .filter(Objects::nonNull)
                                  .filter(this::isReadReplica)
-                                 .filter(replica -> replica.getMasterInstanceName() == masterInstance.getName())
+                                 .filter(replica -> masterInstance.getName().equals(replica.getMasterInstanceName()))
                                  .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Cannot get read replicas", e);
