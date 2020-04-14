@@ -69,6 +69,7 @@ public class GcpSqlPlatform extends Platform {
     private Map<String, String> excludeFilter = Collections.emptyMap();
     static final String INSTANCE_RUNNING = "RUNNABLE";
     private static final String SQL_SERVICE_PATH = "sql/v1beta4/";
+    private static final String OPERATION_COMPLETE = "DONE";
 
     public GcpSqlPlatform () {
         log.info("GCP SQL Platform created");
@@ -196,6 +197,19 @@ public class GcpSqlPlatform extends Platform {
 
     List<DatabaseInstance> getInstances () throws IOException {
         return getSQLAdmin().instances().list(gcpCredentialsMetadata.getProjectId()).execute().getItems();
+    }
+
+    boolean isOperationComplete (String operationID) {
+        try {
+            String status = getSQLAdmin().operations()
+                                         .get(gcpCredentialsMetadata.getProjectId(), operationID)
+                                         .execute()
+                                         .getStatus();
+            return OPERATION_COMPLETE.equals(status);
+        } catch (IOException e) {
+            log.error("Cannot fetch operation", e);
+        }
+        return false;
     }
 
     SQLAdmin getSQLAdmin () {
