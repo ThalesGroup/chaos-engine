@@ -24,6 +24,8 @@ import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
 
+import javax.validation.constraints.NotNull;
+
 import static com.thales.chaos.notification.datadog.DataDogIdentifier.dataDogIdentifier;
 
 public abstract class GcpSqlContainer extends Container {
@@ -57,5 +59,10 @@ public abstract class GcpSqlContainer extends Container {
     @Override
     protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
         return platform.isContainerRunning(this);
+    }
+
+    @Override
+    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
+        return uniqueIdentifier.equals(this.getName());
     }
 }

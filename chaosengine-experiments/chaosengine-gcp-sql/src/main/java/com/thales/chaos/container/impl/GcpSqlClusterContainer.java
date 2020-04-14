@@ -19,16 +19,9 @@ package com.thales.chaos.container.impl;
 
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
 
-import javax.validation.constraints.NotNull;
-
 public class GcpSqlClusterContainer extends GcpSqlContainer {
     public static GcpSqlClusterContainerBuilder builder () {
         return new GcpSqlClusterContainerBuilder();
-    }
-
-    @Override
-    protected boolean compareUniqueIdentifierInner (@NotNull String uniqueIdentifier) {
-        return false;
     }
 
     public static class GcpSqlClusterContainerBuilder {
