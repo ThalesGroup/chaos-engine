@@ -17,8 +17,6 @@
 
 package com.thales.chaos.container.impl;
 
-import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
 
 import javax.validation.constraints.NotNull;
@@ -26,11 +24,6 @@ import javax.validation.constraints.NotNull;
 public class GcpSqlInstanceContainer extends GcpSqlContainer {
     public static GcpSqlInstanceContainerBuilder builder () {
         return new GcpSqlInstanceContainerBuilder();
-    }
-
-    @Override
-    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
-        return null;
     }
 
     @Override

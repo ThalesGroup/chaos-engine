@@ -18,6 +18,8 @@
 package com.thales.chaos.container.impl;
 
 import com.thales.chaos.container.Container;
+import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.notification.datadog.DataDogIdentifier;
 import com.thales.chaos.platform.Platform;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
@@ -50,5 +52,10 @@ public abstract class GcpSqlContainer extends Container {
     @Override
     public DataDogIdentifier getDataDogIdentifier () {
         return dataDogIdentifier().withValue(getName());
+    }
+
+    @Override
+    protected ContainerHealth updateContainerHealthImpl (ExperimentType experimentType) {
+        return platform.isContainerRunning(this);
     }
 }

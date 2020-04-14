@@ -154,21 +154,25 @@ public class GcpSqlPlatform extends Platform {
         return databaseInstance.getMasterInstanceName() != null;
     }
 
-    ContainerHealth isContainerRunning (GcpSqlContainer container) {
-        DatabaseInstance instance = getInstance(container);
-        if (instance == null) {
+    public ContainerHealth isContainerRunning (GcpSqlContainer container) {
+        DatabaseInstance masterInstance = getInstance(container.getName());
+        if (masterInstance == null) {
             return ContainerHealth.DOES_NOT_EXIST;
         }
-        return isReady(instance) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        return isReady(masterInstance) && replicasRunning(masterInstance) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
-    public DatabaseInstance getInstance (GcpSqlContainer container) {
+    public DatabaseInstance getInstance (String instanceID) {
         try {
-            return getSQLAdmin().instances().get(gcpCredentialsMetadata.getProjectId(), container.getName()).execute();
+            return getSQLAdmin().instances().get(gcpCredentialsMetadata.getProjectId(), instanceID).execute();
         } catch (IOException e) {
-            log.error("Cannot get GCP SQL instance {}", container.getName(), e);
+            log.error("Cannot get GCP SQL instance {}", instanceID, e);
             return null;
         }
+    }
+
+    private boolean replicasRunning (DatabaseInstance masterInstance) {
+        return getReadReplicas(masterInstance).stream().allMatch(this::isReady);
     }
 
     private boolean hasReadReplicas (DatabaseInstance databaseInstance) {

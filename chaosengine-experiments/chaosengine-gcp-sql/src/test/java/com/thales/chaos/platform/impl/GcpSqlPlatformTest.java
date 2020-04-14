@@ -21,6 +21,7 @@ import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
+import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
@@ -28,6 +29,7 @@ import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +44,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -136,6 +139,34 @@ public class GcpSqlPlatformTest {
                 containsInAnyOrder(platform.createContainerFromInstance(haInstanceNoReplicas),
                         platform.createContainerFromInstance(haInstanceWithReplicas)));
         assertThat(roster.size(), is(2));
+    }
+
+    @Test
+    public void isContainerRunning () {
+        doReturn(null).doReturn(haInstanceNoReplicas)
+                      .doReturn(haInstanceWithReplicas)
+                      .doReturn(haInstanceWithReplicas)
+                      .doReturn(nonEligibleInstance)
+                      .when(platform)
+                      .getInstance(anyString());
+        // Instance not found
+        assertThat(platform.isContainerRunning(platform.createContainerFromInstance(haInstanceNoReplicas)),
+                is(ContainerHealth.DOES_NOT_EXIST));
+        // OK instance with no read replicas
+        assertThat(platform.isContainerRunning(platform.createContainerFromInstance(haInstanceNoReplicas)),
+                is(ContainerHealth.NORMAL));
+        doReturn(List.of(replicaInstance)).doReturn(List.of(replicaInstance, startingReplicaInstance))
+                                          .when(platform)
+                                          .getReadReplicas(ArgumentMatchers.any(DatabaseInstance.class));
+        // Cluster with read a replica
+        assertThat(platform.isContainerRunning(platform.createContainerFromInstance(haInstanceWithReplicas)),
+                is(ContainerHealth.NORMAL));
+        // Cluster with one starting replica
+        assertThat(platform.isContainerRunning(platform.createContainerFromInstance(haInstanceWithReplicas)),
+                is(ContainerHealth.RUNNING_EXPERIMENT));
+        // Master is not running
+        assertThat(platform.isContainerRunning(platform.createContainerFromInstance(nonEligibleInstance)),
+                is(ContainerHealth.RUNNING_EXPERIMENT));
     }
 
     @Test
