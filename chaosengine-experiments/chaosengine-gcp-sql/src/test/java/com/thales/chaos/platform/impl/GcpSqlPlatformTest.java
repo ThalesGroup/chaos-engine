@@ -75,18 +75,18 @@ public class GcpSqlPlatformTest {
                                                     .setFailoverReplica(new DatabaseInstance.FailoverReplica());
         noHaInstance = new DatabaseInstance().setName("NoHaInstance")
                                              .setFailoverReplica(null)
-                                             .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+                                             .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING);
         haInstanceNoReplicas = new DatabaseInstance().setName("HaInstanceNoReplicas")
                                                      .setFailoverReplica(new DatabaseInstance.FailoverReplica())
-                                                     .setState(GcpSqlPlatform.INSTANCE_RUNNING)
+                                                     .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING)
                                                      .setReplicaNames(Collections.emptyList());
         haInstanceWithReplicas = new DatabaseInstance().setName("HaInstanceWithReplicas")
                                                        .setFailoverReplica(new DatabaseInstance.FailoverReplica())
-                                                       .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+                                                       .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING);
         replicaInstance = new DatabaseInstance().setName("ReplicaInstance")
                                                 .setFailoverReplica(null)
                                                 .setMasterInstanceName(haInstanceWithReplicas.getName())
-                                                .setState(GcpSqlPlatform.INSTANCE_RUNNING);
+                                                .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING);
         startingReplicaInstance = new DatabaseInstance().setName("StartingReplica")
                                                         .setFailoverReplica(null)
                                                         .setMasterInstanceName(haInstanceWithReplicas.getName())

@@ -67,9 +67,10 @@ public class GcpSqlPlatform extends Platform {
     private GcpCredentialsMetadata gcpCredentialsMetadata;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
-    static final String INSTANCE_RUNNING = "RUNNABLE";
+    static final String SQL_INSTANCE_RUNNING = "RUNNABLE";
     private static final String SQL_SERVICE_PATH = "sql/v1beta4/";
-    private static final String OPERATION_COMPLETE = "DONE";
+    private static final String SQL_FAILOVER_CONTEXT = "sql#failoverContext";
+    private static final String SQL_OPERATION_COMPLETE = "DONE";
 
     public GcpSqlPlatform () {
         log.info("GCP SQL Platform created");
@@ -149,7 +150,7 @@ public class GcpSqlPlatform extends Platform {
     }
 
     private boolean isReady (DatabaseInstance databaseInstance) {
-        return INSTANCE_RUNNING.equals(databaseInstance.getState());
+        return SQL_INSTANCE_RUNNING.equals(databaseInstance.getState());
     }
 
     private boolean isReadReplica (DatabaseInstance databaseInstance) {
@@ -181,13 +182,20 @@ public class GcpSqlPlatform extends Platform {
         return databaseInstance.getReplicaNames() != null && !databaseInstance.getReplicaNames().isEmpty();
     }
 
-    void failover (DatabaseInstance instance) throws IOException {
+    public String failover (GcpSqlContainer container) throws IOException {
+        DatabaseInstance instance = getInstance(container.getName());
         InstancesFailoverRequest instancesFailoverRequest = new InstancesFailoverRequest();
         instancesFailoverRequest.setFailoverContext(new FailoverContext().setSettingsVersion(instance.getSettings()
-                                                                                                     .getSettingsVersion()));
-        getSQLAdmin().instances()
-                     .failover(gcpCredentialsMetadata.getProjectId(), instance.getName(), instancesFailoverRequest)
-                     .execute();
+                                                                                                     .getSettingsVersion())
+                                                                         .setKind(SQL_FAILOVER_CONTEXT));
+        log.debug("Failover request {}", instancesFailoverRequest);
+        log.debug("Failover triggered for {}", instance.getName());
+        return getSQLAdmin().instances()
+                            .failover(gcpCredentialsMetadata.getProjectId(),
+                                    instance.getName(),
+                                    instancesFailoverRequest)
+                            .execute()
+                            .getName();
     }
 
     @Override
@@ -199,13 +207,13 @@ public class GcpSqlPlatform extends Platform {
         return getSQLAdmin().instances().list(gcpCredentialsMetadata.getProjectId()).execute().getItems();
     }
 
-    boolean isOperationComplete (String operationID) {
+    public boolean isOperationComplete (String operationName) {
         try {
             String status = getSQLAdmin().operations()
-                                         .get(gcpCredentialsMetadata.getProjectId(), operationID)
+                                         .get(gcpCredentialsMetadata.getProjectId(), operationName)
                                          .execute()
                                          .getStatus();
-            return OPERATION_COMPLETE.equals(status);
+            return SQL_OPERATION_COMPLETE.equals(status);
         } catch (IOException e) {
             log.error("Cannot fetch operation", e);
         }
