@@ -19,6 +19,7 @@ package com.thales.chaos.platform.impl;
 
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
@@ -130,7 +131,11 @@ public class GcpSqlPlatformTest {
     @Test
     public void generateRoster () throws IOException {
         doReturn(allInstances).when(platform).getInstances();
-        platform.generateRoster();
+        List<Container> roster = platform.generateRoster();
+        assertThat(roster,
+                containsInAnyOrder(platform.createContainerFromInstance(haInstanceNoReplicas),
+                        platform.createContainerFromInstance(haInstanceWithReplicas)));
+        assertThat(roster.size(), is(2));
     }
 
     @Test
