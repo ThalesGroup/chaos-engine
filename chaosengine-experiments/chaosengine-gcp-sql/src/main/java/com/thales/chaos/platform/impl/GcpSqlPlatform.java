@@ -69,7 +69,7 @@ public class GcpSqlPlatform extends Platform {
     private Map<String, String> excludeFilter = Collections.emptyMap();
     static final String SQL_INSTANCE_RUNNING = "RUNNABLE";
     private static final String SQL_SERVICE_PATH = "sql/v1beta4/";
-    private static final String SQL_FAILOVER_CONTEXT = "sql#failoverContext";
+    static final String SQL_FAILOVER_CONTEXT = "sql#failoverContext";
     private static final String SQL_OPERATION_COMPLETE = "DONE";
 
     public GcpSqlPlatform () {
@@ -111,7 +111,9 @@ public class GcpSqlPlatform extends Platform {
 
     List<DatabaseInstance> getMasterInstances () {
         try {
-            return getInstances().stream().filter(Objects::nonNull).filter(this::isNotFiltered)
+            return getInstances().stream()
+                                 .filter(Objects::nonNull)
+                                 .filter(this::isNotFiltered)
                                  .filter(this::isReady)
                                  .filter(this::isHA)
                                  .filter(not(this::isReadReplica))
@@ -228,7 +230,6 @@ public class GcpSqlPlatform extends Platform {
         instancesFailoverRequest.setFailoverContext(new FailoverContext().setSettingsVersion(instance.getSettings()
                                                                                                      .getSettingsVersion())
                                                                          .setKind(SQL_FAILOVER_CONTEXT));
-        log.debug("Failover request {}", instancesFailoverRequest);
         log.debug("Failover triggered for {}", instance.getName());
         return getSQLAdmin().instances()
                             .failover(gcpCredentialsMetadata.getProjectId(),

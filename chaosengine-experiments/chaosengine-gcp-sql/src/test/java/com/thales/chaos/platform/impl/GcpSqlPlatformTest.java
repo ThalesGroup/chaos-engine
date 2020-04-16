@@ -17,12 +17,13 @@
 
 package com.thales.chaos.platform.impl;
 
-import com.google.api.services.sqladmin.model.DatabaseInstance;
-import com.google.api.services.sqladmin.model.Settings;
+import com.google.api.services.sqladmin.SQLAdmin;
+import com.google.api.services.sqladmin.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
+import com.thales.chaos.container.impl.GcpSqlContainer;
 import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
@@ -30,6 +31,7 @@ import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -43,12 +45,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.thales.chaos.platform.impl.GcpSqlPlatform.SQL_FAILOVER_CONTEXT;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration
@@ -198,6 +200,34 @@ public class GcpSqlPlatformTest {
         // Master is not running
         assertThat(platform.isContainerRunning(platform.createContainerFromInstance(nonEligibleInstance)),
                 is(ContainerHealth.RUNNING_EXPERIMENT));
+    }
+
+    @Test
+    public void failover () throws IOException {
+        GcpSqlContainer gcpSqlContainer = platform.createContainerFromInstance(haInstanceWithReplicas);
+        SQLAdmin sqlAdmin = mock(SQLAdmin.class);
+        SQLAdmin.Instances instances = mock(SQLAdmin.Instances.class);
+        SQLAdmin.Instances.Failover failover = mock(SQLAdmin.Instances.Failover.class);
+        Operation operation = mock(Operation.class);
+        ArgumentCaptor<InstancesFailoverRequest> instancesFailoverRequestArgumentCaptor = ArgumentCaptor.forClass(
+                InstancesFailoverRequest.class);
+        ArgumentCaptor<String> instanceNameCaptor = ArgumentCaptor.forClass(String.class);
+        InstancesFailoverRequest instancesFailoverRequest = new InstancesFailoverRequest();
+        instancesFailoverRequest.setFailoverContext(new FailoverContext().setSettingsVersion(haInstanceWithReplicas.getSettings()
+                                                                                                                   .getSettingsVersion())
+                                                                         .setKind(SQL_FAILOVER_CONTEXT));
+        doReturn(haInstanceWithReplicas).when(platform).getInstance(haInstanceWithReplicas.getName());
+        doReturn(sqlAdmin).when(platform).getSQLAdmin();
+        doReturn(instances).when(sqlAdmin).instances();
+        doReturn(failover).when(instances)
+                          .failover(any(),
+                                  instanceNameCaptor.capture(),
+                                  instancesFailoverRequestArgumentCaptor.capture());
+        doReturn(operation).when(failover).execute();
+        platform.failover(gcpSqlContainer);
+        verify(failover).execute();
+        assertThat(instanceNameCaptor.getValue(), is(haInstanceWithReplicas.getName()));
+        assertThat(instancesFailoverRequestArgumentCaptor.getValue(), is(instancesFailoverRequest));
     }
 
     @Test
