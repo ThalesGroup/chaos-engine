@@ -18,6 +18,7 @@
 package com.thales.chaos.platform.impl;
 
 import com.google.api.services.sqladmin.model.DatabaseInstance;
+import com.google.api.services.sqladmin.model.Settings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
 import com.thales.chaos.container.ContainerManager;
@@ -40,6 +41,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -64,12 +66,19 @@ public class GcpSqlPlatformTest {
     private DatabaseInstance noHaInstance;
     private DatabaseInstance haInstanceNoReplicas;
     private DatabaseInstance haInstanceWithReplicas;
+    private DatabaseInstance haInstanceExcludeLabels;
     private DatabaseInstance replicaInstance;
     private DatabaseInstance startingReplicaInstance;
     private List<DatabaseInstance> allInstances;
+    private Map<String, String> includeFilterLabels = Map.of("chaos", "yes");
+    private Map<String, String> excludeFilterLabels = Map.of("chaos", "no");
 
     @Before
     public void setUp () {
+        Settings includeSettings = new Settings();
+        includeSettings.setUserLabels(includeFilterLabels);
+        Settings excludeSettings = new Settings();
+        excludeSettings.setUserLabels(excludeFilterLabels);
         nonEligibleInstance = new DatabaseInstance().setName("nonEligibleInstance")
                                                     .setState("FAILED")
                                                     .setFailoverReplica(new DatabaseInstance.FailoverReplica());
@@ -79,10 +88,16 @@ public class GcpSqlPlatformTest {
         haInstanceNoReplicas = new DatabaseInstance().setName("HaInstanceNoReplicas")
                                                      .setFailoverReplica(new DatabaseInstance.FailoverReplica())
                                                      .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING)
+                                                     .setSettings(includeSettings)
                                                      .setReplicaNames(Collections.emptyList());
         haInstanceWithReplicas = new DatabaseInstance().setName("HaInstanceWithReplicas")
                                                        .setFailoverReplica(new DatabaseInstance.FailoverReplica())
-                                                       .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING);
+                                                       .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING)
+                                                       .setSettings(includeSettings);
+        haInstanceExcludeLabels = new DatabaseInstance().setName("haInstanceExcludeLabels")
+                                                        .setFailoverReplica(new DatabaseInstance.FailoverReplica())
+                                                        .setState(GcpSqlPlatform.SQL_INSTANCE_RUNNING)
+                                                        .setSettings(excludeSettings);
         replicaInstance = new DatabaseInstance().setName("ReplicaInstance")
                                                 .setFailoverReplica(null)
                                                 .setMasterInstanceName(haInstanceWithReplicas.getName())
@@ -96,6 +111,7 @@ public class GcpSqlPlatformTest {
                 noHaInstance,
                 haInstanceNoReplicas,
                 haInstanceWithReplicas,
+                haInstanceExcludeLabels,
                 replicaInstance,
                 startingReplicaInstance);
     }
@@ -120,7 +136,8 @@ public class GcpSqlPlatformTest {
     public void getMasterInstances () throws IOException {
         doReturn(allInstances).when(platform).getInstances();
         List<DatabaseInstance> instances = platform.getMasterInstances();
-        assertThat(instances, containsInAnyOrder(haInstanceNoReplicas, haInstanceWithReplicas));
+        assertThat(instances,
+                containsInAnyOrder(haInstanceNoReplicas, haInstanceWithReplicas, haInstanceExcludeLabels));
     }
 
     @Test
@@ -135,6 +152,20 @@ public class GcpSqlPlatformTest {
     public void generateRoster () throws IOException {
         doReturn(allInstances).when(platform).getInstances();
         List<Container> roster = platform.generateRoster();
+        assertThat(roster,
+                containsInAnyOrder(platform.createContainerFromInstance(haInstanceNoReplicas),
+                        platform.createContainerFromInstance(haInstanceWithReplicas),
+                        platform.createContainerFromInstance(haInstanceExcludeLabels)));
+        assertThat(roster.size(), is(3));
+    }
+
+    @Test
+    public void generateRosterFiltersSet () throws IOException {
+        GcpSqlPlatform gcpSqlPlatform = spy(new GcpSqlPlatform());
+        gcpSqlPlatform.setIncludeFilter(includeFilterLabels);
+        gcpSqlPlatform.setExcludeFilter(excludeFilterLabels);
+        doReturn(allInstances).when(gcpSqlPlatform).getInstances();
+        List<Container> roster = gcpSqlPlatform.generateRoster();
         assertThat(roster,
                 containsInAnyOrder(platform.createContainerFromInstance(haInstanceNoReplicas),
                         platform.createContainerFromInstance(haInstanceWithReplicas)));

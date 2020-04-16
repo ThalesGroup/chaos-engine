@@ -26,6 +26,7 @@ import com.google.api.services.sqladmin.SQLAdmin;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.api.services.sqladmin.model.FailoverContext;
 import com.google.api.services.sqladmin.model.InstancesFailoverRequest;
+import com.google.api.services.sqladmin.model.Settings;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
@@ -47,13 +48,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptySet;
 import static java.util.function.Predicate.not;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @ConditionalOnProperty("gcp.sql")
 @ConfigurationProperties("gcp.sql")
@@ -111,8 +111,7 @@ public class GcpSqlPlatform extends Platform {
 
     List<DatabaseInstance> getMasterInstances () {
         try {
-            return getInstances().stream()
-                                 .filter(Objects::nonNull)
+            return getInstances().stream().filter(Objects::nonNull).filter(this::isNotFiltered)
                                  .filter(this::isReady)
                                  .filter(this::isHA)
                                  .filter(not(this::isReadReplica))
@@ -174,6 +173,47 @@ public class GcpSqlPlatform extends Platform {
         }
     }
 
+    boolean isNotFiltered (DatabaseInstance instance) {
+        Collection<Map.Entry<String, String>> itemsList = Optional.of(instance)
+                                                                  .map(DatabaseInstance::getSettings)
+                                                                  .map(Settings::getUserLabels)
+                                                                  .map(GcpSqlPlatform::asItemCollection)
+                                                                  .orElse(emptySet());
+        Collection<Map.Entry<String, String>> includeFilterItems = getIncludeFilter();
+        Collection<Map.Entry<String, String>> excludeFilterItems = getExcludeFilter();
+        boolean hasAllMustIncludes = includeFilter.isEmpty() || itemsList.stream()
+                                                                         .anyMatch(includeFilterItems::contains);
+        boolean hasNoMustNotIncludes = itemsList.stream().noneMatch(excludeFilterItems::contains);
+        final boolean isNotFiltered = hasAllMustIncludes && hasNoMustNotIncludes;
+        if (!isNotFiltered) {
+            log.info("Instance {} filtered because of {}, {}",
+                    instance.getName(),
+                    kv("includeFilter", hasAllMustIncludes),
+                    kv("excludeFilter", hasNoMustNotIncludes));
+        }
+        return isNotFiltered;
+    }
+
+    static Collection<Map.Entry<String, String>> asItemCollection (Map<String, String> itemMap) {
+        return itemMap.entrySet();
+    }
+
+    public Collection<Map.Entry<String, String>> getIncludeFilter () {
+        return asItemCollection(includeFilter);
+    }
+
+    public void setIncludeFilter (Map<String, String> includeFilter) {
+        this.includeFilter = includeFilter;
+    }
+
+    public Collection<Map.Entry<String, String>> getExcludeFilter () {
+        return asItemCollection(excludeFilter);
+    }
+
+    public void setExcludeFilter (Map<String, String> excludeFilter) {
+        this.excludeFilter = excludeFilter;
+    }
+
     private boolean replicasRunning (DatabaseInstance masterInstance) {
         return getReadReplicas(masterInstance).stream().allMatch(this::isReady);
     }
@@ -200,7 +240,7 @@ public class GcpSqlPlatform extends Platform {
 
     @Override
     public boolean isContainerRecycled (Container container) {
-        return false;
+        throw new ChaosException("SQL_DOES_NOT_SUPPORT_RECYCLING");
     }
 
     List<DatabaseInstance> getInstances () throws IOException {
