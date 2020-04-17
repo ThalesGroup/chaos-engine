@@ -23,10 +23,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sqladmin.SQLAdmin;
-import com.google.api.services.sqladmin.model.DatabaseInstance;
-import com.google.api.services.sqladmin.model.FailoverContext;
-import com.google.api.services.sqladmin.model.InstancesFailoverRequest;
-import com.google.api.services.sqladmin.model.Settings;
+import com.google.api.services.sqladmin.model.*;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.thales.chaos.container.Container;
@@ -250,15 +247,23 @@ public class GcpSqlPlatform extends Platform {
 
     public boolean isOperationComplete (String operationName) {
         try {
-            String status = getSQLAdmin().operations()
-                                         .get(gcpCredentialsMetadata.getProjectId(), operationName)
-                                         .execute()
-                                         .getStatus();
-            return SQL_OPERATION_COMPLETE.equals(status);
+            Operation operation = getSQLAdmin().operations()
+                                               .get(gcpCredentialsMetadata.getProjectId(), operationName)
+                                               .execute();
+            String status = operation.getStatus();
+            return SQL_OPERATION_COMPLETE.equals(status) && operationSuccessful(operation);
         } catch (IOException e) {
             log.error("Cannot fetch operation", e);
         }
         return false;
+    }
+
+    boolean operationSuccessful (Operation operation) {
+        if (operation.getError() != null) {
+            log.debug("Operation completed with error {}", operation.getError());
+            return false;
+        }
+        return true;
     }
 
     SQLAdmin getSQLAdmin () {
