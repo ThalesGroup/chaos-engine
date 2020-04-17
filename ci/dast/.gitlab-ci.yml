@@ -1,3 +1,2 @@
 include:
-  - local: /ci/dast/anchore/.gitlab-ci.yml
   - local: /ci/dast/zap/.gitlab-ci.yml
