@@ -57,6 +57,7 @@ import static com.thales.chaos.experiment.enums.ExperimentState.*;
 import static com.thales.chaos.experiment.enums.ExperimentType.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -148,6 +149,16 @@ public class ExperimentTest {
         experiment.callSelfHealing();
         verify(experiment).evaluateRunningExperiment();
         assertTrue(selfHealingMethodCalled.get());
+    }
+
+    @Test
+    public void callSelfHealingNoMethodSet () {
+        final AtomicBoolean selfHealingMethodCalled = new AtomicBoolean(false);
+        experiment.setExperimentState(SELF_HEALING);
+        experiment.setSelfHealingMethod(null);
+        experiment.callSelfHealing();
+        verify(experiment, never()).evaluateRunningExperiment();
+        assertThat(experiment.getExperimentState(), is(FAILED));
     }
 
     @Test
