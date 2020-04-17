@@ -48,6 +48,7 @@ import java.util.Map;
 import static com.thales.chaos.platform.impl.GcpSqlPlatform.SQL_FAILOVER_CONTEXT;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -143,11 +144,27 @@ public class GcpSqlPlatformTest {
     }
 
     @Test
+    public void getMasterInstancesFailed () throws IOException {
+        GcpSqlPlatform gcpSqlPlatform = spy(new GcpSqlPlatform());
+        doThrow(IOException.class).when(gcpSqlPlatform).getInstances();
+        List<DatabaseInstance> instances = gcpSqlPlatform.getMasterInstances();
+        assertThat(instances, is(empty()));
+    }
+
+    @Test
     public void getReadReplicas () throws IOException {
         doReturn(allInstances).when(platform).getInstances();
         List<DatabaseInstance> instances = platform.getReadReplicas(haInstanceWithReplicas);
         assertThat(instances, containsInAnyOrder(replicaInstance, startingReplicaInstance));
         assertThat(platform.getReadReplicas(haInstanceNoReplicas), is(Collections.emptyList()));
+    }
+
+    @Test
+    public void getReadReplicasFailed () throws IOException {
+        GcpSqlPlatform gcpSqlPlatform = spy(new GcpSqlPlatform());
+        doThrow(IOException.class).when(gcpSqlPlatform).getInstances();
+        List<DatabaseInstance> instances = gcpSqlPlatform.getReadReplicas(haInstanceWithReplicas);
+        assertThat(instances, is(empty()));
     }
 
     @Test
