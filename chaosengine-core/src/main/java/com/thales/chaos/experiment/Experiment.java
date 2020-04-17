@@ -72,8 +72,7 @@ public abstract class Experiment {
     private ScriptManager scriptManager;
     @Autowired
     private HolidayManager holidayManager;
-    private Runnable selfHealingMethod = () -> {
-    };
+    private Runnable selfHealingMethod;
     private Callable<ContainerHealth> checkContainerHealth;
     private Runnable finalizeMethod;
     private Instant startTime = Instant.now();
@@ -306,24 +305,31 @@ public abstract class Experiment {
     }
 
     void callSelfHealing () {
-        int selfHealingAttempts = getSelfHealingCounter().get();
-        try {
-            if (canRunSelfHealing()) {
-                selfHealingAttempts = getSelfHealingCounter().incrementAndGet();
-                log.info("Running self healing for the {} time", selfHealingAttempts);
-                sendNotification(NotificationLevel.WARN, "Running self healing for the " + selfHealingAttempts + " time.");
-                lastSelfHealingTime = Instant.now();
-                selfHealingMethod.run();
+        if (selfHealingMethod != null) {
+            int selfHealingAttempts = getSelfHealingCounter().get();
+            try {
+                if (canRunSelfHealing()) {
+                    selfHealingAttempts = getSelfHealingCounter().incrementAndGet();
+                    log.info("Running self healing for the {} time", selfHealingAttempts);
+                    sendNotification(NotificationLevel.WARN,
+                            "Running self healing for the " + selfHealingAttempts + " time.");
+                    lastSelfHealingTime = Instant.now();
+                    selfHealingMethod.run();
+                }
+            } catch (Exception e) {
+                sendNotification(NotificationLevel.ERROR, AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING);
+                log.error("An error occurred while calling self healing method", e);
+            } finally {
+                evaluateRunningExperiment();
+                if (selfHealingAttempts >= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES && getExperimentState().equals(
+                        ExperimentState.SELF_HEALING)) {
+                    sendNotification(NotificationLevel.ERROR, MAXIMUM_SELF_HEALING_RETRIES_REACHED);
+                    setExperimentState(ExperimentState.FAILED);
+                }
             }
-        } catch (Exception e) {
-            sendNotification(NotificationLevel.ERROR, AN_EXCEPTION_OCCURRED_WHILE_RUNNING_SELF_HEALING);
-            log.error("An error occurred while calling self healing method", e);
-        } finally {
-            evaluateRunningExperiment();
-            if (selfHealingAttempts >= DEFAULT_MAXIMUM_SELF_HEALING_RETRIES && getExperimentState().equals(ExperimentState.SELF_HEALING)) {
-                sendNotification(NotificationLevel.ERROR, MAXIMUM_SELF_HEALING_RETRIES_REACHED);
-                setExperimentState(ExperimentState.FAILED);
-            }
+        } else {
+            log.info("Experiment has no self healing method, finalizing experiment.");
+            setExperimentState(ExperimentState.FAILED);
         }
     }
 
