@@ -17,25 +17,9 @@
 
 package com.thales.chaos.container.impl;
 
-import com.thales.chaos.container.enums.ContainerHealth;
-import com.thales.chaos.experiment.Experiment;
-import com.thales.chaos.experiment.annotations.ChaosExperiment;
-import com.thales.chaos.experiment.enums.ExperimentScope;
-import com.thales.chaos.experiment.enums.ExperimentType;
 import com.thales.chaos.platform.impl.GcpSqlPlatform;
 
-import java.io.IOException;
-
 public class GcpSqlInstanceContainer extends GcpSqlContainer {
-    @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
-    public void failover (Experiment experiment) {
-        try {
-            String operationName = platform.failover(this);
-            experiment.setCheckContainerHealth(() -> platform.isOperationComplete(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static GcpSqlInstanceContainerBuilder builder () {
         return new GcpSqlInstanceContainerBuilder();
