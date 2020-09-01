@@ -71,12 +71,8 @@ public abstract class GcpSqlContainer extends Container {
     }
 
     @ChaosExperiment(experimentType = ExperimentType.STATE, experimentScope = ExperimentScope.PET)
-    public void failover (Experiment experiment) {
-        try {
-            String operationName = platform.failover(this);
-            experiment.setCheckContainerHealth(() -> platform.isOperationComplete(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void failover (Experiment experiment) throws IOException {
+        String operationName = platform.failover(this);
+        experiment.setCheckContainerHealth(() -> platform.isOperationComplete(operationName) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT);
     }
 }

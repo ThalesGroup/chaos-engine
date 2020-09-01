@@ -236,6 +236,13 @@ public class GcpSqlPlatform extends Platform {
                             .getName();
     }
 
+    public String restartInstance (String instanceName) throws IOException {
+        return getSQLAdmin().instances()
+                            .restart(gcpCredentialsMetadata.getProjectId(), instanceName)
+                            .execute()
+                            .getName();
+    }
+
     @Override
     public boolean isContainerRecycled (Container container) {
         throw new ChaosException("SQL_DOES_NOT_SUPPORT_RECYCLING");
