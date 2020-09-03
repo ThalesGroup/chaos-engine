@@ -56,7 +56,7 @@ VAULT_SCHEME=http
 VAULT_HOST=vault
 VAULT_PORT=8200
 VAULT_10=true
-spring_profiles_active=PRODUCTION
+SPRING_PROFILES_ACTIVE=DEVELOPMENT
 
 automatedMode=false
 CHAOS_SECURITY_ENABLED=false" > .env
