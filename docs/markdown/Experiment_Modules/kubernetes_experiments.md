@@ -14,7 +14,7 @@ The official Kubernetes Java Client is used to interact with the cluster.
 | | |
 | --- | --- |
 | Resource | <https://github.com/kubernetes-client/java> |
-| Version | 7.0.0 |
+| Version | 9.0.2 |
 |  Maven Repositories | <https://mvnrepository.com/artifact/io.kubernetes/client-java> |
 
 ## Configuration
@@ -32,11 +32,9 @@ Environment variables that control how the Chaos Engine interacts with Kubernete
 
 ## Required Kubernetes Cluster Configuration
 
-A service account with a role binding needs to be created in order to access the specific API endpoints required for Kubernetes Experiments
+A service account with a role binding needs to be created in order to access specific API endpoints required for Kubernetes Experiments
 
 Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.
-
-You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
 
 **chaos-engine-service-account.yaml**
 
@@ -110,6 +108,32 @@ subjects:
 - kind: ServiceAccount
   name: chaos-engine-serviceaccount
   namespace: {{namespace}}
+```
+
+You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
+
+### Verify Service Account Setting
+
+Run the following sequence of commands to verify service account permissions.
+
+```bash
+NAMESPACE={{namespace}}
+TOKEN=$(kubectl describe secret chaos-engine -n $NAMESPACE)
+SERVER_ENDPOINT=https//example.com
+kubectl config set-credentials chaos-engine-token --token="$TOKEN"
+kubectl config set-cluster chaos-engine-target-cluster --server=$SERVER_ENDPOINT --insecure-skip-tls-verify
+kubectl config set-context --cluster=chaos-engine-target-cluster --namespace=$NAMESPACE chaos-engine-context
+kubectl config use-context chaos-engine-context 
+kubectl --token="$TOKEN" get pods
+```
+
+If the output of the `get pods` is similar to what you see below. Your configuration is not valid.
+Please check role binding from the previous section was done properly.
+
+```bash
+Error from server (Forbidden): pods is forbidden: User "system:serviceaccount:{{SERVICE_ACCOUNT_NAME}}:{{NAMESPACE}}"
+ cannot list resource "pods" in API group "" in the namespace "{{NAMESPACE}}"
+
 ```
 
 ## Node Discovery
