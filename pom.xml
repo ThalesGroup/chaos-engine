@@ -146,7 +146,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <aws.sdk.version>1.11.854</aws.sdk.version>
-        <gcp.sdk.version>10.0.0</gcp.sdk.version>
+        <gcp.sdk.version>10.1.0</gcp.sdk.version>
         <spring-cloud.version>2.1.3.RELEASE</spring-cloud.version>
     </properties>
 
