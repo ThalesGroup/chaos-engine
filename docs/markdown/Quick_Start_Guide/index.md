@@ -99,6 +99,22 @@ When you see `Experiments total count: 0` your Chaos Engine instance is up and r
 chaosengine_1   | {"@timestamp":"2019-11-28T18:07:36.491Z","@version":"1","message":"Experiments total count: 0","logger_name":"com.thales.chaos.experiment.ExperimentManager","thread_name":"chaos-10","level":"INFO","level_value":20000,"count":0,"env":"DEVELOPMENT","chaos-host":"b4bd5f0829d6@172.18.0.4"}
 
 ```
+
+If you see error like bellow, create a `/opt/datadog-agent/run` file on you host machine and rerun `docker-compose`.
+
+```bash
+Status: Downloaded newer image for datadog/agent:latest
+Creating chaos-engine_vault_1 ... 
+Creating chaos-engine_datadog_1 ... error
+Creating chaos-engine_vault_1   ... done
+ERROR: for chaos-engine_datadog_1  Cannot create container for service datadog: invalid mount config for type "bind": bind source path does not exist: /opt/datadog-agent/run
+Creating chaos-engine_vault-loader_1 ... done
+
+ERROR: for datadog  Cannot create container for service datadog: invalid mount config for type "bind": bind source path does not exist: /opt/datadog-agent/run
+ERROR: Encountered errors while bringing up the project.
+
+```
+
 ## Step 7: Enjoy
 Manualy trigger experiment execution by running
 ```bash
