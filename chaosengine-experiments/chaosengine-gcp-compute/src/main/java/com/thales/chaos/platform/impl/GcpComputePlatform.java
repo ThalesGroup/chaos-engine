@@ -52,6 +52,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
@@ -89,7 +90,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     public ApiStatus getApiStatus () {
         try {
-            getInstanceClient().aggregatedListInstances(getProjectName());
+            getInstanceClient().aggregatedListInstances(true, getProjectName());
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
@@ -110,7 +111,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     protected List<Container> generateRoster () {
         log.debug("Generating roster of GCP Compute instances");
-        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(
+        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(true,
                 getProjectName());
         return StreamSupport.stream(instances.iterateAll().spliterator(), false)
                             .map(InstancesScopedList::getInstancesList)
@@ -198,6 +199,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                        .flatMap(Collection::stream)
                        .filter(GcpComputePlatform::isPrimaryNic)
                        .map(NetworkInterface::getAccessConfigsList)
+                       .flatMap(Stream::ofNullable)
                        .flatMap(Collection::stream)
                        .map(AccessConfig::getNatIP)
                        .findFirst()
@@ -671,8 +673,8 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     }
 
     public static class Fingerprint<T> {
-        private String fingerprint;
-        private T object;
+        private final String fingerprint;
+        private final T object;
 
         public Fingerprint (String fingerprint, T object) {
             this.fingerprint = Objects.requireNonNull(fingerprint);
