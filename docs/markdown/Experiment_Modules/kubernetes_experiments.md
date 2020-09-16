@@ -36,8 +36,6 @@ A service account with a role binding needs to be created in order to access spe
 
 Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.
 
-You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
-
 **chaos-engine-service-account.yaml**
 
 ```yaml
@@ -111,6 +109,8 @@ subjects:
   name: chaos-engine-serviceaccount
   namespace: {{namespace}}
 ```
+
+You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
 
 ### Verify Service Account Setting
 
