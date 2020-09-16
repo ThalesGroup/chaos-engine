@@ -1292,11 +1292,11 @@
 </tbody>
 </table>
 <p><strong>Feeding Vault With Data Example</strong>
-<div class="codehilite"><pre><span></span><span class="err">export VAULT_ADDR=&#39;http://$VAULT_HOST:8200&#39;</span>
-<span class="err">export VAULT_DEV_ROOT_TOKEN_ID=00000000-0000-0000-0000-000000000000</span>
-<span class="err">vault auth $VAULT_DEV_ROOT_TOKEN_ID</span>
-<span class="err">vault kv put secret/chaosengine aws.accessKeyId=$AWS_ACCESS_KEY_ID aws.secretAccessKey=$AWS_SECRET_ACCESS_KEY aws.region=eu-west-1  AWS_FILTER_KEYS=&#39;Chaos Victim&#39; AWS_FILTER_VALUES=true holidays=NONSTOP aws.ec2=true</span>
-<span class="err">vault kv get secret/chaosengine</span>
+<div class="codehilite"><pre><span></span><span class="k">export</span> <span class="n">VAULT_ADDR</span><span class="o">=</span><span class="s1">&#39;http://$VAULT_HOST:8200&#39;</span>
+<span class="k">export</span> <span class="n">VAULT_DEV_ROOT_TOKEN_ID</span><span class="o">=</span><span class="mi">00000000</span><span class="o">-</span><span class="mi">0000</span><span class="o">-</span><span class="mi">0000</span><span class="o">-</span><span class="mi">0000</span><span class="o">-</span><span class="mi">000000000000</span>
+<span class="n">vault</span> <span class="n">auth</span> <span class="o">$</span><span class="n">VAULT_DEV_ROOT_TOKEN_ID</span>
+<span class="n">vault</span> <span class="n">kv</span> <span class="n">put</span> <span class="n">secret</span><span class="o">/</span><span class="n">chaosengine</span> <span class="n">aws</span><span class="o">.</span><span class="n">accessKeyId</span><span class="o">=$</span><span class="n">AWS_ACCESS_KEY_ID</span> <span class="n">aws</span><span class="o">.</span><span class="n">secretAccessKey</span><span class="o">=$</span><span class="n">AWS_SECRET_ACCESS_KEY</span> <span class="n">aws</span><span class="o">.</span><span class="n">region</span><span class="o">=</span><span class="n">eu</span><span class="o">-</span><span class="n">west</span><span class="o">-</span><span class="mi">1</span>  <span class="n">AWS_FILTER_KEYS</span><span class="o">=</span><span class="s1">&#39;Chaos Victim&#39;</span> <span class="n">AWS_FILTER_VALUES</span><span class="o">=</span><span class="bp">true</span> <span class="n">holidays</span><span class="o">=</span><span class="n">NONSTOP</span> <span class="n">aws</span><span class="o">.</span><span class="n">ec2</span><span class="o">=</span><span class="bp">true</span>
+<span class="n">vault</span> <span class="n">kv</span> <span class="n">get</span> <span class="n">secret</span><span class="o">/</span><span class="n">chaosengine</span>
 </pre></div></p>
 <h2 id="triggering-a-refresh">Triggering a Refresh</h2>
 <p>The Java Objects are not automatically refreshed when values are changed in vault. Instead, an API must be called to trigger a reload. This should be done after ALL values have changed, as calling it with only some values changed may have unpredictable errors (i.e., Access Key ID changed but Secret Key is unchanged may cause errors).</p>
@@ -1397,7 +1397,7 @@
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-04-13-15:26:11
+2020-09-16-10:01:51
           </div>
         
         powered by
