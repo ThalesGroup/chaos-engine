@@ -122,13 +122,15 @@ Example content of EC2 instance for `vault-secrets.json`
 
 ### Configure DataDog Integration
 #### Enable DataDog
-First of all, you have to sign up with data-dog to enable the integration with chaos-engine. Kindly go to the below URL to create your account in data-dog. 
+First of all, you have to sign up with data-dog to enable the integration with chaos-engine. 
+
+Kindly go to the below URL to create your account in data-dog. 
 [Data Dog sign up](https://www.datadoghq.com/)
 You will get 14 days free trial account. Please sign up for free account for now to test it. 
 
 Once you have account setup you, login to datadog portal -> API’s -> hover the mouse on key and your API Key will be displayed. 
 
-datadog_apieky.JPG
+<img src=datadog_apieky.JPG>
 
 If you are going to ship data to DataDog run following command where `$YOUR_API_KEY` will be replaced by your real DataDog API key.
 
@@ -154,7 +156,6 @@ chaosengine_1   | {"@timestamp":"2019-11-28T18:07:36.491Z","@version":"1","messa
 Once you are able to see the above logs in chaos host that means you are ready for chaos engine experiments. You can looks for the logs related to Chaos engine host in data dog as well. Following is snippet from the data dog. 
 
 # Chaos Engine Experiments
-
 Each Experiment Module is responsible for interacting with the API endpoint of its appropriate Cloud Platform or Orchestration tool. The Experiment Modules discover nodes that can be experimented upon, ensuring experiments keep a minimum blast radius, and performing the API calls necessary to create an experiment. Kindly refer the below URL for the same. 
 
 [Experiment Modules](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
@@ -165,7 +166,7 @@ In automated mode experiment selection as well as platform is done randomly.
 2.	User defined mode.
 In user define experiment you can run shell and API experiments. In user define experiments you can choose the platform as well as the experiment type. In user define experiments you need to provide input in order to run the experiments.
 
-<b> Note: </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by ASG. In K8S resource case the pod must have a deployment with more than one replicas etc.
+<b> <u> Note: </u> </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by ASG. In K8S resource case the pod must have a deployment with more than one replicas etc.
 
 [User define experiments](https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments)
 The parameter for a User Defined Experiment is a single object with two variables. The platformType variable should be the name of the Platform you wish to experiment on. The experimentCriteria variable requires an object of <b> <u> containerIdentifier, experimentMethods[], and optional specificContainerTargets[]</u> ,</b>, to identify the aggregate container group, the type of experiments to run, and any specific targets which may not be identical (i.e., a MongoDB Primary node).
@@ -206,7 +207,6 @@ Following is the sample JSON for user defined experiments. You may find more inf
 ```
 
 # Experiment Modules
-
 Following are the list of experiments are available in chaos engine. Kindly refer the below url for list of available experiments.
 
 [Experiments Moudle](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
@@ -276,13 +276,13 @@ Next go the Experiments section and run the experiments. <b> POST /experiments/s
 Now I am going to start the experiment by clicking on /experiment/start (Start Random Experiment)
 Click on /experiment/start -> try it out -> Execute. 
 
-<img src=exepriment1.JPG>
+<img src=experiment1.JPG>
 
 <img src=responsecode.JPG>
  
 The chaos engine has chosen <b> “removeSecurityGroups” </b> experiment randomly.  It will remove the security group for an EC2 instance. Kindly refer the below screen shot from the AWS console. 
 
-<img src=removesg.JPG>
+<img src=removsg.JPG>
 
 Logs from chaos engine host. 
 ```bash
@@ -290,9 +290,9 @@ chaosengine_1   | {"@timestamp":"2020-09-09T06:36:24.124Z","@version":"1","messa
 ```
 Logs from Data dog. 
 
-<img src=datadoglog.JPG>
+<img src=datadaoglog.JPG>
 
-<img src=datadoglog1.JPG>
+<img src=datadaoglog1.JPG>
  
 After completion of experiment you can see chaos engine has reverted Security Group. Below is the snippet for the same. 
  
@@ -318,10 +318,10 @@ Best wishes and have fun unleashing the chaos engine! :)
 
 
 # References 
-1.	https://thalesgroup.github.io/chaos-engine/
-2.	https://thalesgroup.github.io/chaos-engine/Experiment_Modules/
-3.	https://www.datadoghq.com/
-4.	https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html
-5.	https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments
-6.	https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration
-7.	Chaos Engine's Slack support forum
+* <a> https://thalesgroup.github.io/chaos-engine/ </a>
+* <a> https://thalesgroup.github.io/chaos-engine/Experiment_Modules/ </a>
+* <a> https://www.datadoghq.com/ </a>
+* <a> https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html </a>
+* <a> https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments
+* <a> https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration </a>
+* <a> https://app.slack.com/client/TFJUJDNN9/CFJ10E27J </a>
