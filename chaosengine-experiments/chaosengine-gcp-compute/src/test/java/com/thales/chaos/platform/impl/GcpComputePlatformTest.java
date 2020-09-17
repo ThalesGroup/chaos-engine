@@ -971,16 +971,21 @@ public class GcpComputePlatformTest {
     @Test
     public void getPlatformHealth () {
         InstanceClient.AggregatedListInstancesPagedResponse response = mock(InstanceClient.AggregatedListInstancesPagedResponse.class);
-        Instance instance = Instance.newBuilder().setId("12345678901234567890").build();
+        Instance runningInstance = Instance.newBuilder().setStatus("RUNNING").setId("12345678901234567890").build();
+        Instance stoppedInstance = Instance.newBuilder().setStatus("STOPPED").setId("23456789123456789123").build();
         Iterable<InstancesScopedList> iterableInstances = List.of(InstancesScopedList.newBuilder()
-                                                                                     .addInstances(instance)
+                                                                                     .addInstances(runningInstance)
                                                                                      .build());
-        doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
-        assertEquals(PlatformHealth.OK, gcpComputePlatform.getPlatformHealth());
         doReturn(List.of()).when(response).iterateAll();
-        assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
-        doReturn(null).when(response).iterateAll();
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
+        assertEquals(PlatformHealth.FAILED, gcpComputePlatform.getPlatformHealth());
+        doReturn(iterableInstances).when(response).iterateAll();
+        assertEquals(PlatformHealth.OK, gcpComputePlatform.getPlatformHealth());
+        iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                       .addInstances(runningInstance)
+                                                       .addInstances(stoppedInstance)
+                                                       .build());
+        doReturn(iterableInstances).when(response).iterateAll();
         assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
     }
 
