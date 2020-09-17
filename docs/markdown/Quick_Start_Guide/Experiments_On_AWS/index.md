@@ -92,7 +92,7 @@ CHAOS_SECURITY_ENABLED=false" > .env
 
 ### Configure Experiment Modules
 Let's say you want to execute experiments targeting a Kubernetes cluster.
-First check [experiment modules documentation](../Experiment_Modules/kubernetes_experiments.md) to see what config options are available then add all configuration properties into `vault-secrets.json` file located in `~/developer-tools/vault-loader`.
+First check [experiment modules documentation](../../Experiment_Modules/kubernetes_experiments.md) to see what config options are available then add all configuration properties into `vault-secrets.json` file located in `~/developer-tools/vault-loader`.
 Example content of `vault-secrets.json `
 ```JSON
 {
