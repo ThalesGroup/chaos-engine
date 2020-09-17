@@ -1,4 +1,4 @@
-# Quick Start Guide 
+# AWS Experiments
 
 In this quick start guide we will be demonstrating an experimets with AWS cloud platform.
 
