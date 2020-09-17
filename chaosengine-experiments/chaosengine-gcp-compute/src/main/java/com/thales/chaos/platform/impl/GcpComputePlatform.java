@@ -114,7 +114,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                                                    .flatMap(Collection::stream)
                                                    .map(Instance::getStatus)
                                                    .collect(Collectors.toList());
-        if (!statuses.stream().allMatch(GCP_COMPUTE_RUNNING::equals)) {
+        if (!statuses.stream().allMatch(GCP_COMPUTE_RUNNING::equals) || statuses.isEmpty()) {
             if (statuses.stream().anyMatch(GCP_COMPUTE_RUNNING::equals)) {
                 return PlatformHealth.DEGRADED;
             }
