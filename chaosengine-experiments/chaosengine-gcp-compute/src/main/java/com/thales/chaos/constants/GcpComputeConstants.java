@@ -17,10 +17,11 @@
 
 package com.thales.chaos.constants;
 
-public class GcpConstants {
-    public static final String CREATED_BY_METADATA_KEY = "created-by";
-    public static final String MEMORYSTORE_LOCATION_WILDCARD = "-";
+public class GcpComputeConstants {
+    public static final String GCP_COMPUTE_INSTANCE_RUNNING = "RUNNING";
+    public static final String GCP_COMPUTE_INSTANCE_STOPPED = "STOPPED";
+    public static final String GCP_COMPUTE_INSTANCE_TERMINATED = "TERMINATED";
 
-    private GcpConstants () {
+    private GcpComputeConstants () {
     }
 }
