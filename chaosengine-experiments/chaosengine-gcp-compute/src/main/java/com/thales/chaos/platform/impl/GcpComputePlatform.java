@@ -79,6 +79,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     private Map<String, String> excludeFilter = Collections.emptyMap();
     @JsonProperty
     private Collection<SubnetUtils.SubnetInfo> routableCIDRBlocks = Collections.emptySet();
+    public static final String GCP_COMPUTE_RUNNING = "RUNNING";
 
     public void setRoutableCIDRBlocks (Collection<String> routableCIDRBlocks) {
         this.routableCIDRBlocks = routableCIDRBlocks.stream()
@@ -105,7 +106,21 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        return null;
+        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(true,
+                getProjectName());
+        Collection<String> statuses = StreamSupport.stream(instances.iterateAll().spliterator(), false)
+                                                   .map(InstancesScopedList::getInstancesList)
+                                                   .filter(Objects::nonNull)
+                                                   .flatMap(Collection::stream)
+                                                   .map(Instance::getStatus)
+                                                   .collect(Collectors.toList());
+        if (!statuses.stream().allMatch(GCP_COMPUTE_RUNNING::equals)) {
+            if (statuses.stream().anyMatch(GCP_COMPUTE_RUNNING::equals)) {
+                return PlatformHealth.DEGRADED;
+            }
+            return PlatformHealth.FAILED;
+        }
+        return PlatformHealth.OK;
     }
 
     @Override

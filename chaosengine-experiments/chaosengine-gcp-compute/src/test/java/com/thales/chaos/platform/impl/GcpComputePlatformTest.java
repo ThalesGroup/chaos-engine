@@ -29,6 +29,7 @@ import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import com.thales.chaos.services.impl.GcpCredentialsMetadata;
@@ -965,6 +966,22 @@ public class GcpComputePlatformTest {
                 false);
         doThrow(exception).when(instanceClient).getInstance(instanceName);
         gcpComputePlatform.isContainerRecycled(container);
+    }
+
+    @Test
+    public void getPlatformHealth () {
+        InstanceClient.AggregatedListInstancesPagedResponse response = mock(InstanceClient.AggregatedListInstancesPagedResponse.class);
+        Instance instance = Instance.newBuilder().setId("12345678901234567890").build();
+        Iterable<InstancesScopedList> iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                                                     .addInstances(instance)
+                                                                                     .build());
+        doReturn(iterableInstances).when(response).iterateAll();
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
+        assertEquals(PlatformHealth.OK, gcpComputePlatform.getPlatformHealth());
+        doReturn(List.of()).when(response).iterateAll();
+        assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
+        doReturn(null).when(response).iterateAll();
+        assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
     }
 
     @Configuration
