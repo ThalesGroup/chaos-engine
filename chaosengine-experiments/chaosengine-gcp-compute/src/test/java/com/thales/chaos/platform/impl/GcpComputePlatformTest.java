@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -120,6 +121,15 @@ public class GcpComputePlatformTest {
     }
 
     @Test
+    public void createContainerFromInstanceWithNoInternetAccess () {
+        NetworkInterface networkInterface = Mockito.spy(NetworkInterface.newBuilder().build());
+        doReturn(null).when(networkInterface).getAccessConfigsList();
+        Instance instance = Instance.newBuilder().addNetworkInterfaces(networkInterface).build();
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder().build();
+        assertEquals(container, gcpComputePlatform.createContainerFromInstanceInner(instance));
+    }
+
+    @Test
     public void createContainerFromInstanceWithDetails () {
         String createdByValue = "My-VM-Instance-Group";
         Metadata metadata = Metadata.newBuilder()
@@ -163,7 +173,7 @@ public class GcpComputePlatformTest {
                                                                                      .addInstances(instance)
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
         verify(gcpComputePlatform).isNotFiltered(instance);
     }
@@ -181,7 +191,7 @@ public class GcpComputePlatformTest {
                                                                                      .addInstances(chaosEngineHost)
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
         doReturn(true).when(selfAwareness).isMe(31415926535897L);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
         verify(gcpComputePlatform).isNotFiltered(instance);
