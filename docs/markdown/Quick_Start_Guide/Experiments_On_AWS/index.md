@@ -130,7 +130,7 @@ You will get 14 days free trial account. Please sign up for free account for now
 
 Once you have account setup you, login to datadog portal -> API’s -> hover the mouse on key and your API Key will be displayed. 
 
-<img src=datadog_apieky.JPG>
+<img src=datadog_apikey.JPG>
 
 If you are going to ship data to DataDog run following command where `$YOUR_API_KEY` will be replaced by your real DataDog API key.
 
@@ -318,10 +318,10 @@ Best wishes and have fun unleashing the chaos engine! :)
 
 
 # References 
-* <a> https://thalesgroup.github.io/chaos-engine/ </a>
-* <a> https://thalesgroup.github.io/chaos-engine/Experiment_Modules/ </a>
-* <a> https://www.datadoghq.com/ </a>
-* <a> https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html </a>
-* <a> https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments
-* <a> https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration </a>
-* <a> https://app.slack.com/client/TFJUJDNN9/CFJ10E27J </a>
+* [Chaos Engie](https://thalesgroup.github.io/chaos-engine/)
+* [Experiment Module](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
+* [Data Dog](https://www.datadoghq.com/)
+* [Ec2 Resource creation](https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html)
+* [User defined experiments](https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments)
+* [Kubernetes Experiments](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration)
+* [Chaos Engines slack support forum](https://app.slack.com/client/TFJUJDNN9/CFJ10E27J)
