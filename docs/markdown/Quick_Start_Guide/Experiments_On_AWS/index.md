@@ -6,9 +6,9 @@ In this quick start guide we will be demonstrating an experimets with AWS cloud 
 Choas engine runs container based technology. Please use the Linux OS to configure chaos engine host. When you complete the setup of chaos engine host and run it successfully. 
 
 It will create run 3 contianers
-1 Chaos engine
-2 HCL Vault
-3 HCL valut loader
+1. Chaos engine
+2. HCL Vault
+3. HCL valut loader
 
 ### Pre-requisites. 
 Please provision EC2 linux instace. In this scenario we will be provising an Ubuntu 18.04 EC2 instance on which you need to install Docker and Docker compose. Which will be used as chaos engine host machine. 
@@ -119,7 +119,7 @@ Example content of EC2 instance for `vault-secrets.json`
 "aws.ec2.sshprivatekeys.<your_Key_Name>":"<private_key>”  
 }
 ```
-!!! Importance Note:- 
+### Importance Note:- 
 
 *	Please make sure you grant access to your IAM user to have FullEC2 access
 *	The “ChaosVictim” = “true” tag must be existing in the target EC2 instances
