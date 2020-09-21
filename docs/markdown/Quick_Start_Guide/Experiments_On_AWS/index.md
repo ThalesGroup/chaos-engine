@@ -492,14 +492,30 @@ Once you update the secrets go ahead and run get platform from Swagger UI.
 
 Now you can initiate the experiments using Automated or user defined method. 
 After running the experiments, you should have a monitoring configured or enable for your K8 nodes so that you will be able to get the real data. 
-In this case we have executed the experiments.
 
+We are going to run the experiments on AWS EKS cluster. Once we executed the run experiment API from Swagger UI you will see the following response. 
 
-## Step 7: Enjoy
-Manualy trigger experiment execution by running
+<img src=experimentk8response.JPG>
+
+You can see in the above experiment response code output that choas engin is going to run the experiments on AWS EKS. Please see the above highlight section of a response code, where in you can see experiment platform as a <b> EKS pods </b> and experiment name is <b> memoryConsumer.sh </b>. 
+
+Logs caputered from the data dog for this experiment. Here are the logs from chaos engine host which says that experiments started. 
+
 ```bash
-user@host:~/chaos-engine$ curl -X POST "http://localhost:8080/experiment/start" -H  "accept: */*"
+chaosengine_1   | {"@timestamp":"2020-09-09T06:57:12.614Z","@version":"1","message":"Evaluated experiment: Experiment of memoryConsumer.sh against nginx-deployment-574b87c764-7wp8h (default)","logger_name":"com.thales.chaos.experiment.ExperimentManager","thread_name":"ForkJoinPool-42-worker-3","level":"INFO","level_value":20000,"experimentMethod":"memoryConsumer.sh","host":"nginx-deployment-574b87c764-7wp8h","experimentid":"df244f9a-85f6-4bad-80b5-5787c64a43ec","platform":"KubernetesPlatform","experiment":{"id":"df244f9a-85f6-4bad-80b5-5787c64a43ec","experimentState":"STARTED","container":{"shellCapabilities":{"sleep":true,"dd":true,"awk":true,"/bin/sh":true,"grep":true,"cat":true},"uuid":"a6eb617c-39e9-4fc3-a333-e400f335f95c","podName":"nginx-deployment-574b87c764-7wp8h","namespace":"default","ownerKind":"REPLICA_SET","ownerName":"nginx-deployment-574b87c764","targetedSubcontainer":"nginx","simpleName":"nginx-deployment-574b87c764-7wp8h (default)","aggregationIdentifier":"nginx-deployment-574b87c764","cattle":true,"containerType":"KubernetesPodContainer","experimentStartTime":1599634333.020662000,"identity":3504227930,"knownMissingCapabilities":[]},"experimentType":"STATE","selfHealingMethod":{},"startTime":1599634333.020662000,"lastSelfHealingTime":null,"selfHealingCounter":0,"experimentMethodName":"memoryConsumer.sh","experimentLayerName":"KubernetesPodContainer","wasSelfHealingRequired":null},"env":"PROD","chaos-host":"bb8c3770c057@aws:i-086601e7b0a84aa54:257969174391:us-east-1"}
 ```
+
+This experiment will spike up the memory on the container. You can check the memory utilization in monitoring tool or in the nodes using the following.
+
+```bash
+kubectl top nodes
+```
+
+Or else, you can SSH to the EKS nods and run TOP command see the memory useage. 
+
+Here I can see the experiment has been finishd in the data dog logs. 
+
+<img src=k8datadog.JPG>
 
 # Summary
 Congratulations, you just ran your first chaos engine experiment! Feel free to run the experiment many times, varying parameters and seeing how that impacts your instance. Next steps could be to add a full monitoring solution to the instance for better data. (we recommend doing that with a non-production, non-vital server at this stage, should you go this route).
