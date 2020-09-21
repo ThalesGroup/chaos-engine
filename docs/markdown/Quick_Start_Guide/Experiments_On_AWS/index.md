@@ -225,46 +225,6 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 
 [Experiments Moudle](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 
-<b> AWS EC2 instance </b>
-
-* Stop 
-* Restart
-*	Deletion of Security Group. 
-*	Instance termination only in Auto Scaling Group. 
-*	Shell experiments.
-
-<b> Kubernetes </b>
-
-* Delete at POD layer.
-* Shell experiments at container layer. 
-
-<b> AWS RDS </b>
-
-
-* Take a snapshot
-* Restart
-* Deletion of security group. 
-* Random restart of cluster nodes.
-* Failover.
-
-<b> Pivotal Cloud foundry </b>
-
-* Rescale 
-* Restart 
-* Restage
-* Shell Experiments
-
-<b> Shell based experiments. </b>
-
-* BurnIO 
-* CPUBurn
-* DNS Block
-* Fill disk
-* Forkbomb
-* Ram Consumer
-* Null route
-* Generator starvation
-* Process killer
 
 
 | AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments 
@@ -275,6 +235,9 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 | Instance termination only in Auto Scaling Group | | Random restart of cluster nodes | Shell Experiments | Fill Disk |
 | Shell experiments | | Failover | | Formbomb
 | | | | | | Ram consumer | 
+| | | | | | Null route |
+| | | | | | Generator starvation |
+| | | | | | Process killer |
 
 # Run Experiments 
 In order to run the experiments, make sure that docker-compose is up and running on chaos engine host. 
