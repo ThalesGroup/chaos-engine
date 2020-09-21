@@ -18,7 +18,7 @@ Once you have signed up, log in to your account.
 
 Following is the snippet from AWS console on EC2 instance. 
 
-instance_list.JPG
+<img src=instance_list.JPG>
 
 ```bash
 $ ssh -i "YourKeyName.pem" ubuntu@publicDNSname
@@ -249,13 +249,15 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 
 # Run Experiments 
 In order to run the experiments, make sure the at docker-compose is up and running on chaos engine host. 
-After that you can login to Swagger UI to run the experiments. Following is the URL for swagger UI you need to replace IP address of you host. 
-[Swagger UI](http://34.229.67.150:8080/swagger-ui.html#/)
+After that you can login to Swagger UI to run the experiments.
+
+Following is the URL for swagger UI you need to replace IP address of you host. 
+http://<yourpublicIP>:8080/swagger-ui.html#/
 
 <img src=swaggerui.JPG> 
  
 To check the available targets/platform for the experiments you can execute following from swagger UI. 
-Look for the platform section and click on Get /Platform  try it out. 
+Look for the platform section and click on Get /Platform. 
  
 <img src=getplatform.JPG>
 
@@ -263,7 +265,7 @@ Click on execute.
 
 <img src=execute.JPG>
 
-Refer the response body section. In the below screen shot you can see instance name details, which we have created as a targets to perform the experiments. There are total 2 instance or targets are available for experiments. 
+Refer the response body section. In the below screen shot you can see instance details such as name, id and tags, which we have created as a targets to perform the experiments. There are total 2 instance or targets are available for experiments. 
 
 <img src=response.JPG>
  
@@ -294,12 +296,198 @@ Logs from Data dog.
 
 <img src=datadaoglog1.JPG>
  
-After completion of experiment you can see chaos engine has reverted Security Group. Below is the snippet for the same. 
+After completion of experiment you can see chaos engine has reverted Security Group as part of the experiment. Below is the snippet for the same. 
  
 <img src=revertsg.JPG>
 
-Note: - you can configure/enable monitoring tool to get the real time analysis of a targets. 
+<b> Note: </b> - you can configure/enable monitoring tool to get the real time analysis of a targets. 
 
+
+# Vault Secret modification. 
+
+In Chaos Engine experiments we are using a HCL Valut to store the crednatils. As you see that we need to update the <b>"vault-secerets.json"</b> file to maintain the AWS Access and Secret key to access the AWS resources. 
+If you would to to add new experiments or update the extisting information of a valut you can make those changs. 
+
+There are two ways to do the modifications in vault secerets. 
+
+1 Updating the <b> vault-secrets.json </b> file
+
+Once you update the vault-secret.json you need to run the following command to take the changes effect.
+
+```bash
+$ docker-compose build vault vault-loader
+```
+2 Update using Valut GUI.
+
+To login to the vault GUI please use the following URL and just update the IP address of chaos engine Host. 
+
+ http://<your_IP>:8200/ui
+
+ Once you hit the above URL you will be ask for credentials. You can choose method is “Token” and token value is <b> “00000000-0000-0000-0000-00000000000” </b>
+
+<img src=vaultlogin.JPG>
+
+Go to secret update the changes and save it.
+
+<img src=seceret.JPG>
+
+<img src=seceret1.JPG>
+
+Make the changes/modification to the above parameters and then run the Refresh from Swagger UI.  To take the changes affect. 
+
+<img src=swagger.JPG>
+
+
+# Experiments on AWS Elastic Kubernetes Services EKS. 
+
+We will performing an experiment on AWS EKS cluster. As part of the pre-requisite please create an AWS EKS. 
+Kindly refer [Kubernetes configuration](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html)
+
+In this scenario we have created a EKS with 2 nodes and 1 Nginx deployment. Following the is the screenshot for EKS from AWS. 
+
+<img src=k8.JPG>
+
+Once you have EKS cluster ready. Proceed with Nginx deployement.
+
+```bash
+kubectl apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+
+$ kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-574b87c764-jlgwr   1/1     Running   0          19h
+nginx-deployment-574b87c764-kbmqh   1/1     Running   0          3h18m
+nginx-deployment-574b87c764-rlv6f   1/1     Running   0          19h
+
+$ kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           19h
+
+$ kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-574b87c764   3         3         3       19h
+```
+
+Now, get the secret information by executing the following command to connect using chaos engine. You need to have token, namespace values to update the secrets. 
+
+```bash
+$ kubectl describe secret
+Name:         chaos-engine-serviceaccount-token-r6ptr
+Namespace:    default
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: chaos-engine-serviceaccount
+              kubernetes.io/service-account.uid: 7ec6da4a-a006-49e3-ac5e-16735be3853c
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+ca.crt:     1025 bytes
+namespace:  7 bytes
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ
+```
+
+Once you have the above information. Now you need to update vault-secrets.json or update the same information in vault. 
+
+Please make sure that updated information should take effect. Kindly refer Vault Secret modification. 
+```JSON
+{
+"kubernetes": "",
+  "kubernetes.url": "https://F14806126C9620A678A237F7C4AFE7AF.gr7.us-east-2.eks.amazonaws.com", -> you can get this from AWS EKS console API server endpoint. 
+  "kubernetes.token":  -> can be taken from kubectl describe secrets command. "eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ",
+  "kubernetes.averageMillisPerExperiment": "30000"
+}
+```
+
+Then create a file called chaos-engine-service-account.yaml for role binding and make the modification in your file. Replace {{namespace}} with actual namespace and then execute it. 
+
+You may refer following for EKS cluster configuration for Chaos Engine. 
+[EKS configuration for Chaos Engine](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration)
+
+```JSON
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: chaos-engine-role
+  namespace: {{namespace}}
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - daemonsets/status
+  - deployments
+  - deployments/status
+  - replicasets
+  - replicasets/status
+  - statefulsets
+  - statefulsets/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+
+
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  - replicationcontrollers/status
+  verbs:
+  - get
+  - list
+
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+  - get
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: chaos-engine-rolebinding
+  namespace: {{namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: chaos-engine-role
+subjects:
+- kind: ServiceAccount
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+```
+
+Execute the YMAL file. 
+
+```bash
+kubectl apply -f chaos-engine-service-account.yaml
+```
+
+Once you update the secrets go ahead and run get platform from Swagger UI. 
+
+<img src=k8response.JPG>
+
+Now you can initiate the experiments using Automated or user defined method. 
+After running the experiments, you should have a monitoring configured or enable for your K8 nodes so that you will be able to get the real data. 
+In this case we have executed the experiments.
 
 
 ## Step 7: Enjoy
@@ -307,7 +495,6 @@ Manualy trigger experiment execution by running
 ```bash
 user@host:~/chaos-engine$ curl -X POST "http://localhost:8080/experiment/start" -H  "accept: */*"
 ```
-
 
 # Summary
 Congratulations, you just ran your first chaos engine experiment! Feel free to run the experiment many times, varying parameters and seeing how that impacts your instance. Next steps could be to add a full monitoring solution to the instance for better data. (we recommend doing that with a non-production, non-vital server at this stage, should you go this route).
@@ -318,10 +505,11 @@ Best wishes and have fun unleashing the chaos engine! :)
 
 
 # References 
-* [Chaos Engie](https://thalesgroup.github.io/chaos-engine/)
+* [Chaos Engine](https://thalesgroup.github.io/chaos-engine/)
 * [Experiment Module](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 * [Data Dog](https://www.datadoghq.com/)
 * [Ec2 Resource creation](https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html)
+* [Kubernetes Cluster setup](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html)
 * [User defined experiments](https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments)
 * [Kubernetes Experiments](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration)
 * [Chaos Engines slack support forum](https://app.slack.com/client/TFJUJDNN9/CFJ10E27J)
