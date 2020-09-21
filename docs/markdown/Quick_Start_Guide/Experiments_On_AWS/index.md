@@ -121,13 +121,12 @@ Example content of EC2 instance for `vault-secrets.json`
 ```
 ### Importance Note:- 
 
+| :exclamation:  This is very important   |
+|-----------------------------------------|
+
 *	Please make sure you grant access to your IAM user to have **FullEC2access**
 *	The **“ChaosVictim”** = “true” tag must be existing in the target EC2 instances
 *	Please allow all the required ports **80, 8080, 8200 and 22**. 
-
-{{< notice note >}}
-VMs are completely stopped (deallocated) instead of just shut down so that no cost is incurred.
-{{< /notice >}}
 
 
 ### Configure DataDog Integration
