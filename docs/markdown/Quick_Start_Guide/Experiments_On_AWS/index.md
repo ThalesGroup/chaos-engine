@@ -119,10 +119,7 @@ Example content of EC2 instance for `vault-secrets.json`
 "aws.ec2.sshprivatekeys.<your_Key_Name>":"<private_key>”  
 }
 ```
-### Importance Note:- 
-
->[!WARNING]
->This is a warning
+### :warning: Importance Note:- 
 
 *	Please make sure you grant access to your IAM user to have **FullEC2access**
 *	The **“ChaosVictim”** = “true” tag must be existing in the target EC2 instances
