@@ -3,7 +3,12 @@
 In this quick start guide we will be demonstrating an experimets with AWS cloud platform.
 
 ## Chaos engine host configuration on AWS EC2 instance.
-Choas engine run based on container. Please use the Linux OS to configure chaos engine host.  
+Choas engine runs container based technology. Please use the Linux OS to configure chaos engine host. When you complete the setup of Chaos Engine host and run it successfully. 
+
+It will actually run 3 contianers
+1. Chaos engine
+2. HCL Vault
+3. HCL valut loader
 
 ### Pre-requisites. 
 Please provision EC2 linux instace. In this scenario we will be provising an Ubuntu 18.04 EC2 instance on which you need to install Docker and Docker compose. Which will be used as Chaos engine host machine. 
