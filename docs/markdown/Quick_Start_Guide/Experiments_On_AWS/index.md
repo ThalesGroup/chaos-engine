@@ -269,7 +269,8 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 
 | AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments 
 | --- | --- | --- | --- | --- |
-
+| Stop | Delete at POD layer | Take a snapshot | Restrt | BurnIO |
+| Restart | Shell experiment at Container layer | Restart | Rescale | CPUBurn |
 
 
 # Run Experiments 
