@@ -119,7 +119,7 @@ Example content of EC2 instance for `vault-secrets.json`
 "aws.ec2.sshprivatekeys.<your_Key_Name>":"<private_key>”  
 }
 ```
-### :warning: Importance Note:- 
+### Importance Note:- 
 
 *	Please make sure you grant access to your IAM user to have **FullEC2access**
 *	The **“ChaosVictim”** = “true” tag must be existing in the target EC2 instances
@@ -243,8 +243,9 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 In order to run the experiments, make sure that docker-compose is up and running on chaos engine host. 
 After that you can login to Swagger UI to run the experiments.
 
-Following is the URL for swagger UI you need to replace IP address of you host. 
-http://**<yourpublicIP>**:8080/swagger-ui.html#/
+Following is the URL for swagger UI you need to replace IP address of you host.
+ 
+http://<yourpublicIP>:8080/swagger-ui.html#/
 
 <img src=swaggerui.JPG> 
  
