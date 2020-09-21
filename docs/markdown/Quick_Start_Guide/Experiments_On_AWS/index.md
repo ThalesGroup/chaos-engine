@@ -233,7 +233,7 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 | Restart | Shell experiment at Container layer | Restart | Rescale | CPUBurn |
 | Deletion of Security Group |  | Deletion of Security Group | Restage | DNS Block |
 | Instance termination only in Auto Scaling Group | | Random restart of cluster nodes | Shell Experiments | Fill Disk |
-| Shell experiments | | Failover | | Formbomb
+| Shell experiments | | Failover | | Formbomb |
 | | | | | | Ram consumer | 
 | | | | | | Null route |
 | | | | | | Generator starvation |
