@@ -121,8 +121,8 @@ Example content of EC2 instance for `vault-secrets.json`
 ```
 ### Importance Note:- 
 
-| :exclamation:  This is very important   |
-|-----------------------------------------|
+>[!WARNING]
+>This is a warning
 
 *	Please make sure you grant access to your IAM user to have **FullEC2access**
 *	The **“ChaosVictim”** = “true” tag must be existing in the target EC2 instances
