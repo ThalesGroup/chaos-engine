@@ -169,10 +169,13 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
 [Experiment Modules](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 
 There are two modes of experiments in chaos engine. 
-1 <b> Automated mode </b>
+
+<b> 1 Automated mode </b>
+
 In automated mode experiment selection as well as platform is done randomly.
 
-2 User defined mode.
+<b> 2 User defined mode. <b>
+
 In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
 
 <b> <u> Note: </u> </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by AutoScalingGroup. 
@@ -222,6 +225,7 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 [Experiments Moudle](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 
 <b> AWS EC2 instance </b>
+
 * Stop 
 * Restart
 *	Deletion of Security Group. 
@@ -229,10 +233,12 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 *	Shell experiments.
 
 <b> Kubernetes </b>
+
 * Delete at POD layer.
 * Shell experiments at container layer. 
 
 <b> AWS RDS </b>
+
 * Take a snapshot
 * Restart
 * Deletion of security group. 
@@ -240,12 +246,14 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 * Failover.
 
 <b> Pivotal Cloud foundry </b>
+
 * Rescale 
 * Restart 
 * Restage
 * Shell Experiments
 
 <b> Shell based experiments. </b>
+
 * BurnIO 
 * CPUBurn
 * DNS Block
