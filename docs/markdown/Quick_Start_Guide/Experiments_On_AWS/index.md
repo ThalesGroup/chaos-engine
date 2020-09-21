@@ -3,12 +3,12 @@
 In this quick start guide we will be demonstrating an experimets with AWS cloud platform.
 
 ## Chaos engine host configuration on AWS EC2 instance.
-Choas engine runs container based technology. Please use the Linux OS to configure chaos engine host. When you complete the setup of chaos engine host and run it successfully. It will create/run 3 contianers.
+Choas engine is a container based service. Please use the Linux OS to configure chaos engine host. When you complete the setup of chaos engine host and run it successfully. It will create three contianers.
 
 
 1. Chaos engine
 2. HCL Vault
-3. HCL valut loader
+3. HCL vaultt loader
 
 ### Pre-requisites. 
 Please provision EC2 linux instace. In this scenario we will be provising an Ubuntu 18.04 EC2 instance on which you need to install Docker and Docker compose. Which will be used as chaos engine host machine. 
@@ -121,9 +121,13 @@ Example content of EC2 instance for `vault-secrets.json`
 ```
 ### Importance Note:- 
 
-*	Please make sure you grant access to your IAM user to have FullEC2 access
-*	The “ChaosVictim” = “true” tag must be existing in the target EC2 instances
-*	Please allow all the required ports 80, 8080, 8200 and 22. 
+*	Please make sure you grant access to your IAM user to have **FullEC2access**
+*	The **“ChaosVictim”** = “true” tag must be existing in the target EC2 instances
+*	Please allow all the required ports **80, 8080, 8200 and 22**. 
+
+{{< notice note >}}
+VMs are completely stopped (deallocated) instead of just shut down so that no cost is incurred.
+{{< /notice >}}
 
 
 ### Configure DataDog Integration
@@ -170,20 +174,20 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
 
 There are two modes of experiments in chaos engine. 
 
-1. Automated mode 
+1. **Automated mode**
 
 In automated mode experiment selection as well as platform is done randomly.
 
 
-2. User defined mode
+2. **User defined mode**
 
 In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
 
-<b> <u> Note: </u> </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by AutoScalingGroup. 
+**Note:-** Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by AutoScalingGroup. 
 In AWS EKS resource case the pod must have a deployment with more than one replicas etc.
 
 [User define experiments](https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments)
-The parameter for a User Defined Experiment is a single object with two variables. The platformType variable should be the name of the Platform you wish to experiment on. The experimentCriteria variable requires an object of <b> <u> containerIdentifier, experimentMethods[], and optional specificContainerTargets[]</u> ,</b>, to identify the aggregate container group, the type of experiments to run, and any specific targets which may not be identical (i.e., a MongoDB Primary node).
+The parameter for a User Defined Experiment is a single object with two variables. The platformType variable should be the name of the Platform you wish to experiment on. The experimentCriteria variable requires an object of **containerIdentifier, experimentMethods[], and optional specificContainerTargets[]**, to identify the aggregate container group, the type of experiments to run, and any specific targets which may not be identical (i.e., a MongoDB Primary node).
 
 The Experiment Structure object can be sent as the data stream of a POST request to /experiment/build to create the experiments. The server expects a Content-Type of application/json. See the REST API for more information.
 Following is the sample JSON for user defined experiments. You may find more information about this at 
@@ -229,7 +233,7 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 
 | AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments 
 | --- | --- | --- | --- | --- |
-| Stop | Delete at POD layer | Take a snapshot | Restrt | BurnIO |
+| Stop | Delete at POD layer | Take a snapshot | Restart | BurnIO |
 | Restart | Shell experiment at Container layer | Restart | Rescale | CPUBurn |
 | Deletion of Security Group |  | Deletion of Security Group | Restage | DNS Block |
 | Instance termination only in Auto Scaling Group | | Random restart of cluster nodes | Shell Experiments | Fill Disk |
@@ -244,7 +248,7 @@ In order to run the experiments, make sure that docker-compose is up and running
 After that you can login to Swagger UI to run the experiments.
 
 Following is the URL for swagger UI you need to replace IP address of you host. 
-http://<yourpublicIP>:8080/swagger-ui.html#/
+http://**<yourpublicIP>**:8080/swagger-ui.html#/
 
 <img src=swaggerui.JPG> 
  
@@ -263,18 +267,18 @@ Refer the response body section. In the below screen shot you can see instance d
  
 <img src=response1.JPG> 
 
-Next go the Experiments section and run the experiments. <b> POST /experiments/start. </b> 
+Next go the Experiments section and run the experiments. **POST /experiments/start**. 
 
 <img src=experiment.JPG>
  
-Now I am going to start the experiment by clicking on /experiment/start (Start Random Experiment)
+Now we are going to start the experiment by clicking on /experiment/start (Start Random Experiment)
 Click on /experiment/start -> try it out -> Execute. 
 
 <img src=experiment1.JPG>
 
 <img src=responsecode.JPG>
  
-The chaos engine has chosen <b> “removeSecurityGroups” </b> experiment randomly.  It will remove the security group for an EC2 instance. Kindly refer the below screen shot from the AWS console. 
+The chaos engine has chosen **“removeSecurityGroups”** experiment randomly.  It will remove the security group for an EC2 instance. Kindly refer the below screen shot from the AWS console. 
 
 <img src=removsg.JPG>
 
@@ -297,12 +301,12 @@ After completion of experiment you can see chaos engine has reverted Security Gr
 
 # Vault Secret modification. 
 
-In Chaos Engine experiments we are using a HCL Valut to store the crednatils. As you see that we need to update the <b>"vault-secerets.json"</b> file to maintain the AWS Access and Secret key to access the AWS resources. 
+In Chaos Engine experiments we are using a HCL Valut to store the crednatils. As you see that we need to update the **"vault-secerets.json"** file to maintain the AWS Access and Secret key to access the AWS resources. 
 If you would to to add new experiments or update the extisting information of a valut you can make those changs. 
 
 There are two ways to do the modifications in vault secerets. 
 
-1 Updating the <b> vault-secrets.json </b> file
+1 Updating the **vault-secrets.json** file
 
 Once you update the vault-secret.json you need to run the following command to take the changes effect.
 
@@ -313,9 +317,9 @@ $ docker-compose build vault vault-loader
 
 To login to the vault GUI please use the following URL and just update the IP address of chaos engine Host. 
 
- http://<your_IP>:8200/ui
+ http://**<your_IP>**:8200/ui
 
- Once you hit the above URL you will be ask for credentials. You can choose method is “Token” and token value is <b> “00000000-0000-0000-0000-00000000000” </b>
+ Once you hit the above URL you will be ask for credentials. You can choose method is “Token” and token value is **“00000000-0000-0000-0000-00000000000”**
 
 <img src=vaultlogin.JPG>
 
@@ -381,6 +385,7 @@ token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9W
 Once you have the above information. Now you need to update vault-secrets.json or update the same information in vault. 
 
 Please make sure that updated information should take effect. Kindly refer Vault Secret modification. 
+
 ```JSON
 {
 "kubernetes": "",
