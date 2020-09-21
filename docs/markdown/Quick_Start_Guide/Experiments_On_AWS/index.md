@@ -271,7 +271,10 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 | --- | --- | --- | --- | --- |
 | Stop | Delete at POD layer | Take a snapshot | Restrt | BurnIO |
 | Restart | Shell experiment at Container layer | Restart | Rescale | CPUBurn |
-
+| Deletion of Security Group |  | Deletion of Security Group | Restage | DNS Block |
+| Instance termination only in Auto Scaling Group | | Random restart of cluster nodes | Shell Experiments | Fill Disk |
+| Shell experiments | | Failover | | Formbomb
+| | | | | | Ram consumer | 
 
 # Run Experiments 
 In order to run the experiments, make sure that docker-compose is up and running on chaos engine host. 
