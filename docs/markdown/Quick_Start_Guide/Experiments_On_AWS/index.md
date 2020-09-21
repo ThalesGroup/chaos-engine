@@ -3,15 +3,15 @@
 In this quick start guide we will be demonstrating an experimets with AWS cloud platform.
 
 ## Chaos engine host configuration on AWS EC2 instance.
-Choas engine runs container based technology. Please use the Linux OS to configure chaos engine host. When you complete the setup of Chaos Engine host and run it successfully. 
+Choas engine runs container based technology. Please use the Linux OS to configure chaos engine host. When you complete the setup of chaos engine host and run it successfully. 
 
-It will actually run 3 contianers
-1. Chaos engine
-2. HCL Vault
-3. HCL valut loader
+It will create run 3 contianers
+1 Chaos engine
+2 HCL Vault
+3 HCL valut loader
 
 ### Pre-requisites. 
-Please provision EC2 linux instace. In this scenario we will be provising an Ubuntu 18.04 EC2 instance on which you need to install Docker and Docker compose. Which will be used as Chaos engine host machine. 
+Please provision EC2 linux instace. In this scenario we will be provising an Ubuntu 18.04 EC2 instance on which you need to install Docker and Docker compose. Which will be used as chaos engine host machine. 
 
 * We will have to first create AWS EC2 instance. 
 * If you have an AWS Account login to AWS management consol. If not, set up a free tier instance in Amazon’s * EC2. From the link, click Try Amazon EC2 for Free and enter the requested details to create your account.
@@ -120,9 +120,10 @@ Example content of EC2 instance for `vault-secrets.json`
 }
 ```
 ## Importance Note:- 
-•	Please make sure you grant access to your IAM user to have FullEC2 access. 
-•	The “ChaosVictim” = “true” tag must be existing in the target EC2 instances.
-•	Please allow all the required ports 80, 8080, 8200 and 22. 
+
+*	Please make sure you grant access to your IAM user to have FullEC2 access
+*	The “ChaosVictim” = “true” tag must be existing in the target EC2 instances
+*	Please allow all the required ports 80, 8080, 8200 and 22. 
 
 
 ### Configure DataDog Integration
@@ -160,18 +161,22 @@ chaosengine_1   | {"@timestamp":"2019-11-28T18:07:36.491Z","@version":"1","messa
 ```
 Once you are able to see the above logs in chaos host that means you are ready for chaos engine experiments. You can looks for the logs related to Chaos engine host in data dog as well. Following is snippet from the data dog. 
 
+<img src=log_datadog.JPG>
+
 # Chaos Engine Experiments
 Each Experiment Module is responsible for interacting with the API endpoint of its appropriate Cloud Platform or Orchestration tool. The Experiment Modules discover nodes that can be experimented upon, ensuring experiments keep a minimum blast radius, and performing the API calls necessary to create an experiment. Kindly refer the below URL for the same. 
 
 [Experiment Modules](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 
 There are two modes of experiments in chaos engine. 
-1.	Automated mode
+1 <b> Automated mode </b>
 In automated mode experiment selection as well as platform is done randomly.
-2.	User defined mode.
-In user define experiment you can run shell and API experiments. In user define experiments you can choose the platform as well as the experiment type. In user define experiments you need to provide input in order to run the experiments.
 
-<b> <u> Note: </u> </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by ASG. In K8S resource case the pod must have a deployment with more than one replicas etc.
+2 User defined mode.
+In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
+
+<b> <u> Note: </u> </b> - Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by AutoScalingGroup. 
+In AWS EKS resource case the pod must have a deployment with more than one replicas etc.
 
 [User define experiments](https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments)
 The parameter for a User Defined Experiment is a single object with two variables. The platformType variable should be the name of the Platform you wish to experiment on. The experimentCriteria variable requires an object of <b> <u> containerIdentifier, experimentMethods[], and optional specificContainerTargets[]</u> ,</b>, to identify the aggregate container group, the type of experiments to run, and any specific targets which may not be identical (i.e., a MongoDB Primary node).
@@ -217,43 +222,43 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 [Experiments Moudle](https://thalesgroup.github.io/chaos-engine/Experiment_Modules/)
 
 <b> AWS EC2 instance </b>
-•	Stop 
-•	Restart
-•	Deletion of Security Group. 
-•	Instance termination only in Auto Scaling Group. 
-•	Shell experiments.
+* Stop 
+* Restart
+*	Deletion of Security Group. 
+*	Instance termination only in Auto Scaling Group. 
+*	Shell experiments.
 
 <b> Kubernetes </b>
-•	Delete at POD layer.
-•	Shell experiments at container layer. 
+* Delete at POD layer.
+* Shell experiments at container layer. 
 
 <b> AWS RDS </b>
-•	Take a snapshot
-•	Restart
-•	Deletion of security group. 
-•	Random restart of cluster nodes.
-•	Failover.
+* Take a snapshot
+* Restart
+* Deletion of security group. 
+* Random restart of cluster nodes.
+* Failover.
 
 <b> Pivotal Cloud foundry </b>
-•	Rescale 
-•	Restart 
-•	Restage
-•	Shell Experiments
+* Rescale 
+* Restart 
+* Restage
+* Shell Experiments
 
 <b> Shell based experiments. </b>
-•	BurnIO 
-•	CPUBurn
-•	DNS Block
-•	Fill disk
-•	Forkbomb
-•	Ram Consumer
-•	Null route
-•	Generator starvation
-•	Process killer
+* BurnIO 
+* CPUBurn
+* DNS Block
+* Fill disk
+* Forkbomb
+* Ram Consumer
+* Null route
+* Generator starvation
+* Process killer
 
 
 # Run Experiments 
-In order to run the experiments, make sure the at docker-compose is up and running on chaos engine host. 
+In order to run the experiments, make sure that docker-compose is up and running on chaos engine host. 
 After that you can login to Swagger UI to run the experiments.
 
 Following is the URL for swagger UI you need to replace IP address of you host. 
