@@ -237,12 +237,14 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 * Delete at POD layer.
 * Shell experiments at container layer. 
 
-AWS RDS 
-- Take a snapshot
-- Restart
-- Deletion of security group. 
-- Random restart of cluster nodes.
-- Failover.
+<b> AWS RDS </b>
+
+
+* Take a snapshot
+* Restart
+* Deletion of security group. 
+* Random restart of cluster nodes.
+* Failover.
 
 <b> Pivotal Cloud foundry </b>
 
