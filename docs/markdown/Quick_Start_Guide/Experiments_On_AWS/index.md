@@ -266,7 +266,7 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 * Generator starvation
 * Process killer
 
-| AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments |
+| AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments 
 | --- | --- | --- |
 | Header | Event Prefix | Chaos Experiment Event |
 | Notification Level | Event severity | ERROR, WARN, GOOD
