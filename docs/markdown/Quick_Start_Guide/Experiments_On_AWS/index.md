@@ -119,7 +119,7 @@ Example content of EC2 instance for `vault-secrets.json`
 "aws.ec2.sshprivatekeys.<your_Key_Name>":"<private_key>”  
 }
 ```
-## Importance Note:- 
+!!! Importance Note:- 
 
 *	Please make sure you grant access to your IAM user to have FullEC2 access
 *	The “ChaosVictim” = “true” tag must be existing in the target EC2 instances
@@ -170,11 +170,11 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
 
 There are two modes of experiments in chaos engine. 
 
-<b> 1 Automated mode </b>
+1. Automated mode 
 
 In automated mode experiment selection as well as platform is done randomly.
 
-<b> 2 User defined mode. <b>
+2. User defined mode
 
 In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
 
@@ -237,13 +237,12 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 * Delete at POD layer.
 * Shell experiments at container layer. 
 
-<b> AWS RDS </b>
-
-* Take a snapshot
-* Restart
-* Deletion of security group. 
-* Random restart of cluster nodes.
-* Failover.
+AWS RDS 
+- Take a snapshot
+- Restart
+- Deletion of security group. 
+- Random restart of cluster nodes.
+- Failover.
 
 <b> Pivotal Cloud foundry </b>
 
