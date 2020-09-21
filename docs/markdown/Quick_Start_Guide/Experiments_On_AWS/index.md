@@ -174,6 +174,7 @@ There are two modes of experiments in chaos engine.
 
 In automated mode experiment selection as well as platform is done randomly.
 
+
 2. User defined mode
 
 In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
@@ -264,6 +265,18 @@ Following are the list of experiments are available in chaos engine. Kindly refe
 * Null route
 * Generator starvation
 * Process killer
+
+| AWS EC2 instance | Kubernetes | AWS RDS | Pivotal Cloud foundry | Shell Experiments |
+| --- | --- | --- |
+| Header | Event Prefix | Chaos Experiment Event |
+| Notification Level | Event severity | ERROR, WARN, GOOD
+| Message | Event description | Starting new experiment |
+| Experiment ID | UUID of an experiment | 505ec298-d4c6-4be0-b209-7f4aae78b359 |
+| Experiment Method | Experiment implementation | nullRoute.sh |
+| Experiment Type | Type of an experiment | state, resource, network |
+| Aggregation Identifier | Resource group identifier | nginx (k8s deployment name)|
+| Container Type | Type of targeted container | CloudFoundryContainer, KubernetesPodContainer,.. |
+| Simple Name | Container simple name |  ngnix-hm5d2 (k8s container name)  |
 
 
 # Run Experiments 
