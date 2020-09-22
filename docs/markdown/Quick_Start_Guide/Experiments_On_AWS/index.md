@@ -244,8 +244,8 @@ In order to run the experiments, make sure that docker-compose is up and running
 After that you can login to Swagger UI to run the experiments.
 
 Following is the URL for swagger UI you need to replace IP address of you host.
- 
-http://<yourpublicIP>:8080/swagger-ui.html#/
+
+http://yourpublicIP:8080/swagger-ui.html#/
 
 <img src=swaggerui.JPG> 
  
@@ -314,7 +314,7 @@ $ docker-compose build vault vault-loader
 
 To login to the vault GUI please use the following URL and just update the IP address of chaos engine Host. 
 
- http://**<your_IP>**:8200/ui
+ http://yourpublicIP:8200/ui
 
  Once you hit the above URL you will be ask for credentials. You can choose method is “Token” and token value is **“00000000-0000-0000-0000-00000000000”**
 
