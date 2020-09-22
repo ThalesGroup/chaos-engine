@@ -170,12 +170,12 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
 
 There are two modes of experiments in chaos engine. 
 
-1. **Automated mode**
+1 **Automated mode**
 
 In automated mode experiment selection as well as platform is done randomly.
 
 
-2. **User defined mode**
+2 **User defined mode**
 
 In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.
 
