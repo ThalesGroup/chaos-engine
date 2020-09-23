@@ -29,6 +29,7 @@ import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
 import com.thales.chaos.services.impl.GcpCredentialsMetadata;
@@ -53,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.thales.chaos.constants.GcpComputeConstants.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -596,7 +598,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("TERMINATED").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_TERMINATED).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
     }
@@ -615,7 +617,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("STOPPED").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_STOPPED).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
     }
@@ -634,7 +636,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("RUNNING").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_RUNNING).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.NORMAL, gcpComputePlatform.isContainerRunning(container));
     }
@@ -965,6 +967,33 @@ public class GcpComputePlatformTest {
                 false);
         doThrow(exception).when(instanceClient).getInstance(instanceName);
         gcpComputePlatform.isContainerRecycled(container);
+    }
+
+    @Test
+    public void getPlatformHealth () {
+        InstanceClient.AggregatedListInstancesPagedResponse response = mock(InstanceClient.AggregatedListInstancesPagedResponse.class);
+        Instance runningInstance = Instance.newBuilder()
+                                           .setStatus(GCP_COMPUTE_INSTANCE_RUNNING)
+                                           .setId("12345678901234567890")
+                                           .build();
+        Instance stoppedInstance = Instance.newBuilder()
+                                           .setStatus(GCP_COMPUTE_INSTANCE_STOPPED)
+                                           .setId("23456789123456789123")
+                                           .build();
+        Iterable<InstancesScopedList> iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                                                     .addInstances(runningInstance)
+                                                                                     .build());
+        doReturn(List.of()).when(response).iterateAll();
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
+        assertEquals(PlatformHealth.FAILED, gcpComputePlatform.getPlatformHealth());
+        doReturn(iterableInstances).when(response).iterateAll();
+        assertEquals(PlatformHealth.OK, gcpComputePlatform.getPlatformHealth());
+        iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                       .addInstances(runningInstance)
+                                                       .addInstances(stoppedInstance)
+                                                       .build());
+        doReturn(iterableInstances).when(response).iterateAll();
+        assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
     }
 
     @Configuration

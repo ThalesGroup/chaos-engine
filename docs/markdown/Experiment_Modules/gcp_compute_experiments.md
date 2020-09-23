@@ -6,7 +6,7 @@ The GCP Compute Engine module uses the Official [GCP Compute SDK for Java] from 
 
 ### Version
 
-All Google SDKs are included via the Google Cloud `libraries-bom` Maven package. The current version of the package is 3.0.0.
+All Google SDKs are included via the Google Cloud `libraries-bom` Maven package. The current version of the package is 10.1.0.
 
 ## Configuration
 

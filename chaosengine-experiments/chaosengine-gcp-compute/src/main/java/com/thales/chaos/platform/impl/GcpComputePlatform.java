@@ -56,6 +56,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
+import static com.thales.chaos.constants.GcpComputeConstants.GCP_COMPUTE_INSTANCE_RUNNING;
 import static com.thales.chaos.exception.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
 import static com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey.CHAOS_USERNAME;
 import static java.util.Collections.emptyList;
@@ -79,6 +80,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     private Map<String, String> excludeFilter = Collections.emptyMap();
     @JsonProperty
     private Collection<SubnetUtils.SubnetInfo> routableCIDRBlocks = Collections.emptySet();
+
 
     public void setRoutableCIDRBlocks (Collection<String> routableCIDRBlocks) {
         this.routableCIDRBlocks = routableCIDRBlocks.stream()
@@ -105,7 +107,21 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        return null;
+        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(true,
+                getProjectName());
+        Collection<String> statuses = StreamSupport.stream(instances.iterateAll().spliterator(), false)
+                                                   .map(InstancesScopedList::getInstancesList)
+                                                   .filter(Objects::nonNull)
+                                                   .flatMap(Collection::stream)
+                                                   .map(Instance::getStatus)
+                                                   .collect(Collectors.toList());
+        if (!statuses.stream().allMatch(GCP_COMPUTE_INSTANCE_RUNNING::equals) || statuses.isEmpty()) {
+            if (statuses.stream().anyMatch(GCP_COMPUTE_INSTANCE_RUNNING::equals)) {
+                return PlatformHealth.DEGRADED;
+            }
+            return PlatformHealth.FAILED;
+        }
+        return PlatformHealth.OK;
     }
 
     @Override
