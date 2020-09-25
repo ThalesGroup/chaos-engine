@@ -1,6 +1,6 @@
 #!/bin/sh
 # Description: Tie up memory in other processes for some time, allowing
-# Dependencies: cat, dd, sleep, grep, awk
+# Dependencies: cat, dd, sleep, grep, awk, sleep
 
 MEM_TOTAL=$(grep MemTotal /proc/meminfo  | awk ' { print $2 } ')
 MEM_TOTAL=$((${MEM_TOTAL}*1024))
@@ -19,5 +19,8 @@ if [ -f $CMEMLIMITS ] && [ -f $CMEMUSAGE ]; then
 else
     MEM_FREE=${MEM_AVAILABLE}
 fi
+
+# This extra wait time is added in order to synchronize startup of parralel experiments
+sleep 5
 
 dd if=/dev/zero of=/dev/stdout bs=${MEM_FREE} count=1 | sleep 99999

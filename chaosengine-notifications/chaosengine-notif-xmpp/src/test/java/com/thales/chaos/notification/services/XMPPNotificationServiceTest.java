@@ -72,12 +72,19 @@ public class XMPPNotificationServiceTest {
         assertEquals(1, book.getConferenceRooms().size());
         assertEquals(0, book.getRecipients().size());
         assertThat(book.getConferenceRooms(), hasItems(JidCreate.entityBareFrom(ROOM_1)));
+        service.setRecipients("");
+        book = service.getAddressBook();
+        assertEquals(1, book.getConferenceRooms().size());
+        assertEquals(0, book.getRecipients().size());
+        assertThat(book.getConferenceRooms(), hasItems(JidCreate.entityBareFrom(ROOM_1)));
     }
 
     @Test
     public void getSecurityContext () throws Exception {
         String certFingerPrint = "CERTSHA256:F9:16:59:0B:93:72:66:A4:9A:DB:DF:2A:7F:8B:A3:CF:44:2B:A2:31:A8:1A:72:F5:7D:43:76:21:C6:2C:B3:81";
         XMPPNotificationService service = new XMPPNotificationService();
+        assertEquals(SSLContext.getDefault(), service.getSecurityContext());
+        service.setServerCertFingerprint("");
         assertEquals(SSLContext.getDefault(), service.getSecurityContext());
         service.setServerCertFingerprint(certFingerPrint);
         assertNotEquals(SSLContext.getDefault(), service.getSecurityContext());

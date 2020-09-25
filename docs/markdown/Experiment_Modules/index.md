@@ -18,3 +18,4 @@ Each Experiment Module is responsible for interacting with the API endpoint of i
   | aws.rds    | AWS RDS experiments       |
   | cf         | Cloud Foundry experiments |
   | kubernetes | Kubernetes experiments    |
+  | gcp | Google cloud platform experiments |

@@ -35,6 +35,7 @@ import com.thales.chaos.platform.enums.ApiStatus;
 import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import com.thales.chaos.shellclient.ssh.GcpSSHKeyMetadata;
 import com.thales.chaos.shellclient.ssh.SSHCredentials;
 import org.apache.commons.net.util.SubnetUtils;
@@ -51,10 +52,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
-import static com.thales.chaos.exceptions.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
+import static com.thales.chaos.exception.enums.GcpComputeChaosErrorCode.GCP_COMPUTE_GENERIC_ERROR;
 import static com.thales.chaos.shellclient.ssh.GcpRuntimeSSHKey.CHAOS_USERNAME;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
@@ -67,11 +69,12 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class GcpComputePlatform extends Platform implements SshBasedExperiment<GcpComputeInstanceContainer> {
     @Autowired
     private CredentialsProvider computeCredentialsProvider;
-    private String projectId;
     @Autowired
     private GcpComputeSelfAwareness selfAwareness;
     @Autowired
     private ContainerManager containerManager;
+    @Autowired
+    private GcpCredentialsMetadata gcpCredentialsMetadata;
     private Map<String, String> includeFilter = Collections.emptyMap();
     private Map<String, String> excludeFilter = Collections.emptyMap();
     @JsonProperty
@@ -87,7 +90,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     public ApiStatus getApiStatus () {
         try {
-            getInstanceClient().aggregatedListInstances(getProjectName());
+            getInstanceClient().aggregatedListInstances(true, getProjectName());
         } catch (RuntimeException e) {
             log.error("Caught error when evaluating API Status of Google Cloud Platform", e);
             return ApiStatus.ERROR;
@@ -108,7 +111,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     @Override
     protected List<Container> generateRoster () {
         log.debug("Generating roster of GCP Compute instances");
-        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(
+        InstanceClient.AggregatedListInstancesPagedResponse instances = getInstanceClient().aggregatedListInstances(true,
                 getProjectName());
         return StreamSupport.stream(instances.iterateAll().spliterator(), false)
                             .map(InstancesScopedList::getInstancesList)
@@ -196,6 +199,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
                        .flatMap(Collection::stream)
                        .filter(GcpComputePlatform::isPrimaryNic)
                        .map(NetworkInterface::getAccessConfigsList)
+                       .flatMap(Stream::ofNullable)
                        .flatMap(Collection::stream)
                        .map(AccessConfig::getNatIP)
                        .findFirst()
@@ -285,7 +289,7 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     }
 
     private ProjectName getProjectName () {
-        return ProjectName.of(projectId);
+        return ProjectName.of(gcpCredentialsMetadata.getProjectId());
     }
 
     public String stopInstance (GcpComputeInstanceContainer container) {
@@ -481,10 +485,6 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
         return new Fingerprint<>(tags.getFingerprint(), List.copyOf(tags.getItemsList()));
     }
 
-    public void setProjectId (String projectId) {
-        this.projectId = projectId;
-    }
-
     private Metadata getInstanceMetadata (ProjectZoneInstanceName instanceName) {
         return getInstanceClient().getInstance(instanceName).getMetadata();
     }
@@ -673,8 +673,8 @@ public class GcpComputePlatform extends Platform implements SshBasedExperiment<G
     }
 
     public static class Fingerprint<T> {
-        private String fingerprint;
-        private T object;
+        private final String fingerprint;
+        private final T object;
 
         public Fingerprint (String fingerprint, T object) {
             this.fingerprint = Objects.requireNonNull(fingerprint);
