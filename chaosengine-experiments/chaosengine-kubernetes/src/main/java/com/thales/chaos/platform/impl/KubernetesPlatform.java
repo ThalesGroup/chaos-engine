@@ -59,7 +59,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     private ContainerManager containerManager;
 
     @Autowired
-    private ApiClient apiClient;
+    private final ApiClient apiClient;
     private String namespace = "default";
 
     @Autowired
@@ -195,11 +195,11 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                                               .withKubernetesPlatform(this)
                                               .isBackedByController(CollectionUtils.isNotEmpty(pod.getMetadata()
                                                                                                   .getOwnerReferences()))
-                                              .withOwnerKind(Optional.of(pod.getMetadata().getOwnerReferences())
+                                              .withOwnerKind(Optional.ofNullable(pod.getMetadata().getOwnerReferences())
                                                                      .flatMap(list -> list.stream().findFirst())
                                                                      .map(V1OwnerReference::getKind)
                                                                      .orElse(""))
-                                              .withOwnerName(Optional.of(pod.getMetadata().getOwnerReferences())
+                                              .withOwnerName(Optional.ofNullable(pod.getMetadata().getOwnerReferences())
                                                                      .flatMap(list -> list.stream().findFirst())
                                                                      .map(V1OwnerReference::getName)
                                                                      .orElse(""))

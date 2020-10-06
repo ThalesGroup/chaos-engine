@@ -506,8 +506,9 @@ public class KubernetesPlatformTest {
     }
 
     private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
-        List<V1OwnerReference> ownerReferences = new ArrayList<>();
+        List<V1OwnerReference> ownerReferences = null;
         if (isBackedByController) {
+            ownerReferences = new ArrayList<>();
             ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
         }
         V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
@@ -966,7 +967,7 @@ public class KubernetesPlatformTest {
     }
 
     private class TestProcess extends Process {
-        private InputStream is;
+        private final InputStream is;
 
         public TestProcess (InputStream is) {
             this.is = is;
