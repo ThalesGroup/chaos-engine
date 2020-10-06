@@ -14,7 +14,7 @@ The official Kubernetes Java Client is used to interact with the cluster.
 | | |
 | --- | --- |
 | Resource | <https://github.com/kubernetes-client/java> |
-| Version | 9.0.2 |
+| Version | 10.0.0 |
 |  Maven Repositories | <https://mvnrepository.com/artifact/io.kubernetes/client-java> |
 
 ## Configuration
