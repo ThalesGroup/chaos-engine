@@ -57,10 +57,18 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 public class KubernetesPlatform extends Platform implements ShellBasedExperiment<KubernetesPodContainer> {
     @Autowired
     private ContainerManager containerManager;
-
     @Autowired
     private final ApiClient apiClient;
-    private String namespace = "default";
+    private final String DEFAULT_NAMESPACE = "default";
+    private Collection<String> namespaces = List.of(DEFAULT_NAMESPACE);
+
+    public void setNamespaces (String namespaces) {
+        this.namespaces = Optional.of(Arrays.stream(namespaces.split(","))
+                                            .filter(Objects::nonNull)
+                                            .collect(Collectors.toList()))
+                                  .filter(l -> !l.isEmpty())
+                                  .orElse(List.of(DEFAULT_NAMESPACE));
+    }
 
     @Autowired
     KubernetesPlatform (ApiClient apiClient) {
@@ -68,20 +76,10 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         log.info("Kubernetes Platform created");
     }
 
-    public String getNamespace () {
-        return namespace;
-    }
-
-    public void setNamespace (String namespace) {
-        this.namespace = namespace;
-    }
-
     public ContainerHealth checkHealth (KubernetesPodContainer kubernetesPodContainer) {
         try {
-            Optional<Boolean> podExists = podExists(kubernetesPodContainer);
-            if (podExists.isEmpty()) {
-                return ContainerHealth.RUNNING_EXPERIMENT;
-            } else if (!podExists.get()) {
+            boolean podExists = podExists(kubernetesPodContainer);
+            if (!podExists) {
                 return ContainerHealth.DOES_NOT_EXIST;
             }
             V1Pod result = getCoreV1Api().readNamespacedPodStatus(kubernetesPodContainer.getPodName(),
@@ -103,22 +101,19 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         return ContainerHealth.RUNNING_EXPERIMENT;
     }
 
-    Optional<Boolean> podExists (KubernetesPodContainer kubernetesPodContainer) {
+    boolean podExists (KubernetesPodContainer kubernetesPodContainer) {
         String podUuid = kubernetesPodContainer.getUuid();
-        if (podUuid == null) return Optional.empty();
-        try {
-            Boolean podExists = listAllPodsInNamespace().getItems()
-                                                        .stream()
-                                                        .map(V1Pod::getMetadata)
-                                                        .filter(Objects::nonNull)
-                                                        .map(V1ObjectMeta::getUid)
-                                                        .anyMatch(podUuid::equals);
-            log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
-            return Optional.of(podExists);
-        } catch (ApiException e) {
-            log.debug("Exception when checking container existence", e);
-            return Optional.empty();
+        if (podUuid == null) {
+            return false;
         }
+        boolean podExists = listAllPodsInNamespace(kubernetesPodContainer.getNamespace()).getItems()
+                                                                                         .stream()
+                                                                                         .map(V1Pod::getMetadata)
+                                                                                         .filter(Objects::nonNull)
+                                                                                         .map(V1ObjectMeta::getUid)
+                                                                                         .anyMatch(podUuid::equals);
+        log.debug("Kubernetes POD {} exists = {}", kubernetesPodContainer.getPodName(), podExists);
+        return podExists;
     }
 
     @JsonIgnore
@@ -126,8 +121,13 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         return new CoreV1Api(apiClient);
     }
 
-    private V1PodList listAllPodsInNamespace () throws ApiException {
-        return getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
+    private V1PodList listAllPodsInNamespace (String namespace) {
+        try {
+            return getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
+        } catch (ApiException e) {
+            log.error("Cannot list pods in namespace {}: {} ", namespace, e.getMessage(), e);
+            return new V1PodList();
+        }
     }
 
     @Override
@@ -153,23 +153,30 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        try {
-            V1PodList pods = listAllPodsInNamespace();
-            return (!pods.getItems().isEmpty()) ? PlatformHealth.OK : PlatformHealth.DEGRADED;
-        } catch (ApiException e) {
-            log.error("Kubernetes Platform health check failed", e);
-            return PlatformHealth.FAILED;
+        if (namespaces.stream()
+                      .map(this::listAllPodsInNamespace)
+                      .map(V1PodList::getItems)
+                      .flatMap(List::stream)
+                      .collect(Collectors.toList())
+                      .isEmpty()) {
+            log.warn("No PODs detected in specified namespaces {}", namespaces);
+            return PlatformHealth.DEGRADED;
         }
+        return PlatformHealth.OK;
     }
 
     @Override
     protected List<Container> generateRoster () {
         final List<Container> containerList = new ArrayList<>();
         try {
-            V1PodList pods = listAllPodsInNamespace();
-            containerList.addAll(pods.getItems().stream().map(this::fromKubernetesAPIPod).collect(Collectors.toSet()));
+            List<V1Pod> pods = namespaces.stream()
+                                         .map(this::listAllPodsInNamespace)
+                                         .map(V1PodList::getItems)
+                                         .flatMap(List::stream)
+                                         .collect(Collectors.toList());
+            containerList.addAll(pods.stream().map(this::fromKubernetesAPIPod).collect(Collectors.toSet()));
             return containerList;
-        } catch (ApiException e) {
+        } catch (Exception e) {
             log.error("Could not generate Kubernetes roster", e);
             return containerList;
         }
@@ -178,7 +185,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Override
     public boolean isContainerRecycled (Container container) {
         KubernetesPodContainer kubernetesPodContainer = (KubernetesPodContainer) container;
-        if (podExists(kubernetesPodContainer).orElse(false)) return isContainerRestarted(kubernetesPodContainer,
+        if (podExists(kubernetesPodContainer)) return isContainerRestarted(kubernetesPodContainer,
                 ((KubernetesPodContainer) container).getTargetedSubcontainer());
         return isDesiredReplicas(kubernetesPodContainer);
     }
@@ -247,7 +254,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
-        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer).orElse(false) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
+        return isDesiredReplicas(kubernetesPodContainer) && !podExists(kubernetesPodContainer) ? ContainerHealth.NORMAL : ContainerHealth.RUNNING_EXPERIMENT;
     }
 
     /**
