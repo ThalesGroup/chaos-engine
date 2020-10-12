@@ -34,6 +34,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import junit.framework.TestCase;
 import org.apache.http.HttpStatus;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
@@ -923,7 +924,18 @@ public class KubernetesPlatformTest {
     public void testGetConnectedShellClient () throws IOException, ApiException {
         KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
         platform.getConnectedShellClient(kubernetesPodContainer);
+    }
 
+    @Test
+    public void testSetNamespaces () {
+        assertThat(platform.getNamespaces(),
+                IsIterableContainingInAnyOrder.containsInAnyOrder(KubernetesPlatform.DEFAULT_NAMESPACE));
+        platform.setNamespaces("");
+        assertThat(platform.getNamespaces(),
+                IsIterableContainingInAnyOrder.containsInAnyOrder(KubernetesPlatform.DEFAULT_NAMESPACE));
+        platform.setNamespaces("default,application");
+        assertThat(platform.getNamespaces(),
+                IsIterableContainingInAnyOrder.containsInAnyOrder("default", "application"));
     }
 
     @Configuration

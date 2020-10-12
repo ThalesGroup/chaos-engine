@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 
 import static com.thales.chaos.constants.DataDogConstants.DATADOG_CONTAINER_KEY;
 import static com.thales.chaos.exception.enums.KubernetesChaosErrorCode.K8S_API_ERROR;
+import static java.util.function.Predicate.not;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 @Component
@@ -59,12 +60,17 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     private ContainerManager containerManager;
     @Autowired
     private final ApiClient apiClient;
-    private final String DEFAULT_NAMESPACE = "default";
+    static final String DEFAULT_NAMESPACE = "default";
     private Collection<String> namespaces = List.of(DEFAULT_NAMESPACE);
+
+    public Collection<String> getNamespaces () {
+        return namespaces;
+    }
 
     public void setNamespaces (String namespaces) {
         this.namespaces = Optional.of(Arrays.stream(namespaces.split(","))
                                             .filter(Objects::nonNull)
+                                            .filter(not(String::isEmpty))
                                             .collect(Collectors.toList()))
                                   .filter(l -> !l.isEmpty())
                                   .orElse(List.of(DEFAULT_NAMESPACE));
