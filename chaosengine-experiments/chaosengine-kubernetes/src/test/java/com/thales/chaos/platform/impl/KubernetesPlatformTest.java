@@ -189,6 +189,21 @@ public class KubernetesPlatformTest {
     }
 
     @Test
+    public void testPlatformHealthCannotListPods () throws ApiException {
+        when(coreV1Api.listNamespacedPod(anyString(),
+                anyString(),
+                anyBoolean(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyInt(),
+                anyString(),
+                anyInt(),
+                anyBoolean())).thenThrow(new ApiException());
+        assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
+    }
+
+    @Test
     public void testPodWithOwnerCanBeTested () throws Exception {
         when(coreV1Api.listNamespacedPod(anyString(),
                 anyString(),
