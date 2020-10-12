@@ -139,7 +139,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     @Override
     public PlatformHealth getPlatformHealth () {
-        if (namespaces.stream().map(this::canListPodsInNamespace).anyMatch(Boolean -> Boolean.equals(false))) {
+        if (namespaces.stream().map(this::canListPodsInNamespace).anyMatch(canList -> canList.equals(false))) {
             return PlatformHealth.FAILED;
         }
         if (namespaces.stream()
