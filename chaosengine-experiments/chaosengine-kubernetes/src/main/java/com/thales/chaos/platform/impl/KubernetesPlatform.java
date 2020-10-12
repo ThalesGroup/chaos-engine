@@ -138,6 +138,23 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     }
 
     @Override
+    public PlatformHealth getPlatformHealth () {
+        if (namespaces.stream().map(this::canListPodsInNamespace).anyMatch(Boolean -> Boolean.equals(false))) {
+            return PlatformHealth.FAILED;
+        }
+        if (namespaces.stream()
+                      .map(this::listAllPodsInNamespace)
+                      .map(V1PodList::getItems)
+                      .flatMap(List::stream)
+                      .collect(Collectors.toList())
+                      .isEmpty()) {
+            log.warn("No PODs detected in specified namespaces {}", namespaces);
+            return PlatformHealth.DEGRADED;
+        }
+        return PlatformHealth.OK;
+    }
+
+    @Override
     public ApiStatus getApiStatus () {
         try {
             getCoreApi().getAPIVersions().getVersions();
@@ -158,18 +175,14 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
         return PlatformLevel.PAAS;
     }
 
-    @Override
-    public PlatformHealth getPlatformHealth () {
-        if (namespaces.stream()
-                      .map(this::listAllPodsInNamespace)
-                      .map(V1PodList::getItems)
-                      .flatMap(List::stream)
-                      .collect(Collectors.toList())
-                      .isEmpty()) {
-            log.warn("No PODs detected in specified namespaces {}", namespaces);
-            return PlatformHealth.DEGRADED;
+    private boolean canListPodsInNamespace (String namespace) {
+        try {
+            getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
+        } catch (Exception e) {
+            log.error("Cannot list pods in namespace {}: {} ", namespace, e.getMessage(), e);
+            return false;
         }
-        return PlatformHealth.OK;
+        return true;
     }
 
     @Override
