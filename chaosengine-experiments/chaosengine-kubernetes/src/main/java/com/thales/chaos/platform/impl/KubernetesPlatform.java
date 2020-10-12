@@ -61,6 +61,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     @Autowired
     private final ApiClient apiClient;
     static final String DEFAULT_NAMESPACE = "default";
+    static final String UNKNOWN_PARENT_NODE = "UNKNOWN";
     private Collection<String> namespaces = List.of(DEFAULT_NAMESPACE);
 
     public Collection<String> getNamespaces () {
@@ -223,6 +224,8 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                                                                          .flatMap(Collection::stream)
                                                                          .map(V1Container::getName)
                                                                          .collect(Collectors.toList()))
+                                              .withParentNode(Optional.ofNullable(pod.getSpec().getNodeName())
+                                                                      .orElse(UNKNOWN_PARENT_NODE))
                                               .build();
             log.info("Found new Kubernetes Pod Container {}", v(DATADOG_CONTAINER_KEY, container));
             containerManager.offer(container);
