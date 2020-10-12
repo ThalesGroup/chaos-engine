@@ -928,8 +928,6 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testSetNamespaces () {
-        assertThat(platform.getNamespaces(),
-                IsIterableContainingInAnyOrder.containsInAnyOrder(KubernetesPlatform.DEFAULT_NAMESPACE));
         platform.setNamespaces("");
         assertThat(platform.getNamespaces(),
                 IsIterableContainingInAnyOrder.containsInAnyOrder(KubernetesPlatform.DEFAULT_NAMESPACE));
