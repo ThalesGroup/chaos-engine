@@ -14,7 +14,7 @@ The official Kubernetes Java Client is used to interact with the cluster.
 | | |
 | --- | --- |
 | Resource | <https://github.com/kubernetes-client/java> |
-| Version | 9.0.2 |
+| Version | 10.0.0 |
 |  Maven Repositories | <https://mvnrepository.com/artifact/io.kubernetes/client-java> |
 
 ## Configuration
@@ -26,7 +26,7 @@ Environment variables that control how the Chaos Engine interacts with Kubernete
 | kubernetes | The presence of this key enables Kubernetes module. | N/A |  Yes |
 | kubernetes.url | Kubernetes server API url e.g. | None | Yes |
 | kubernetes.token | JWT token assigned to service account. You can get the value by running `kubectl describe secret name_of_your_secret` | None | Yes |
-| kubernetes.namespace | K8S namespace where experiments should be performed | `default` | Yes |
+| kubernetes.namespaces | Comma-separated list of namespaces where experiments should be performed | `default` | Yes |
 | kubernetes.debug | Enables debug log of Kubernetes java client | `false` | No |
 | kubernetes.validateSSL | Enables validation of sever side certificates | `false` | No |
 
@@ -36,6 +36,7 @@ A service account with a role binding needs to be created in order to access spe
 
 Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.
 
+### Experiments on single namespace
 **chaos-engine-service-account.yaml**
 
 ```yaml
@@ -110,7 +111,86 @@ subjects:
   namespace: {{namespace}}
 ```
 
-You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
+You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
+
+### Experiments on multiple namespaces
+
+When your experiment targets are located in multiple namespaces, 
+you need to bind roles allowing access to appropriate namespace to your service account.
+Or you can simply create a cluster role and binding by running below yaml.
+
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: chaos-engine-crole
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - daemonsets/status
+  - deployments
+  - deployments/status
+  - replicasets
+  - replicasets/status
+  - statefulsets
+  - statefulsets/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+
+
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  - replicationcontrollers/status
+  verbs:
+  - get
+  - list
+
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+  - get
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: chaos-engine-rolebinding
+roleRef:
+  kind: ClusterRole
+  name: chaos-engine-crole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+
+```
+
 
 ### Verify Service Account Setting
 
