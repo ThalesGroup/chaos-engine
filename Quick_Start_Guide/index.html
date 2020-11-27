@@ -607,6 +607,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../Experiment_Modules/gcp_memorystore_experiments/" title="Google Cloud Memorystore Experiments" class="md-nav__link">
+      Google Cloud Memorystore Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
       Kubernetes Module
     </a>
@@ -644,13 +656,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-9" type="checkbox" id="nav-7-9">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-10" type="checkbox" id="nav-7-10">
     
-    <label class="md-nav__link" for="nav-7-9">
+    <label class="md-nav__link" for="nav-7-10">
       Script Experiments
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-7-9">
+      <label class="md-nav__title" for="nav-7-10">
         Script Experiments
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -984,6 +996,42 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9-4" type="checkbox" id="nav-9-4">
+    
+    <label class="md-nav__link" for="nav-9-4">
+      Experiments On AWS
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-9-4">
+        Experiments On AWS
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="Experiments_On_AWS/" title="Chaos Engine experiments with AWS" class="md-nav__link">
+      Chaos Engine experiments with AWS
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1062,6 +1110,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../_Developer_Documentation/error_codes_numbering_convention/" title="Error Codes Numbering Convention" class="md-nav__link">
+      Error Codes Numbering Convention
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
       Multi Module Structure
     </a>
@@ -1087,13 +1147,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-8" type="checkbox" id="nav-10-8">
     
-    <label class="md-nav__link" for="nav-10-7">
+    <label class="md-nav__link" for="nav-10-8">
       Design Philosophy
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-10-7">
+      <label class="md-nav__title" for="nav-10-8">
         Design Philosophy
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1301,7 +1361,6 @@ Got permission denied <span class="k">while</span> trying to connect to the Dock
 <div class="codehilite"><pre><span></span>user@host:~$ docker-compose -v
 docker-compose version <span class="m">1</span>.25.0, build 0a186604
 </pre></div>
-
 <p>If the command <code>docker-compose</code> fails after installation, check your path. You can also create a symbolic link to <code>/usr/bin</code> or any other directory in your <code>path</code>.</p>
 <h2 id="step-3-download-latest-chaos-engine-sources">Step 3: Download Latest Chaos Engine Sources</h2>
 <div class="codehilite"><pre><span></span>user@host:~$ git clone https://github.com/thalesgroup/chaos-engine
@@ -1309,13 +1368,11 @@ Cloning into <span class="s1">&#39;chaos-engine&#39;</span>...
 ...
 Checking connectivity... <span class="k">done</span>.
 </pre></div>
-
 <h2 id="step-4-pull-chaos-engine-image">Step 4: Pull Chaos Engine Image</h2>
 <p>Pull latest Chaos Engine image from DockerHub.</p>
 <div class="codehilite"><pre><span></span>user@host:~$ <span class="nb">cd</span> chaos-engine/
 user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 </pre></div>
-
 <h2 id="step-5-configure">Step 5: Configure</h2>
 <h3 id="basic-framework-setup">Basic Framework Setup</h3>
 <div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ <span class="nb">echo</span> <span class="s2">&quot;holidays=NONSTOP</span>
@@ -1324,12 +1381,11 @@ user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
 <span class="s2">VAULT_HOST=vault</span>
 <span class="s2">VAULT_PORT=8200</span>
 <span class="s2">VAULT_10=true</span>
-<span class="s2">spring_profiles_active=PRODUCTION</span>
+<span class="s2">SPRING_PROFILES_ACTIVE=DEVELOPMENT</span>
 
 <span class="s2">automatedMode=false</span>
 <span class="s2">CHAOS_SECURITY_ENABLED=false&quot;</span> &gt; .env
 </pre></div>
-
 <h3 id="configure-experiment-modules">Configure Experiment Modules</h3>
 <p>Let's say you want to execute experiments targeting a Kubernetes cluster.
 First check <a href="../Experiment_Modules/kubernetes_experiments/">experiment modules documentation</a> to see what config options are available then add all configuration properties into <code>vault-secrets.json</code> file located in <code>~/developer-tools/vault-loader</code>.
@@ -1346,7 +1402,6 @@ Example content of <code>vault-secrets.json</code>
 <p>If you are going to ship data to DataDog run following command where <code>$YOUR_API_KEY</code> will be replaced by your real DataDog API key.</p>
 <div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ <span class="nb">echo</span> <span class="s2">&quot;DD_API_KEY=</span><span class="nv">$YOUR_API_KEY</span><span class="s2">&quot;</span> &gt; .datadog_api_key 
 </pre></div>
-
 <h4 id="disable-datadog">Disable DataDog</h4>
 <p>If you don't need DataDog integration keep <code>.datadog_api_key</code> empty 
 <div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ touch .datadog_api_key 
@@ -1358,6 +1413,17 @@ Example content of <code>vault-secrets.json</code>
 When you see <code>Experiments total count: 0</code> your Chaos Engine instance is up and ready
 <div class="codehilite"><pre><span></span><span class="err">chaosengine_</span><span class="mi">1</span>   <span class="err">|</span> <span class="p">{</span><span class="nt">&quot;@timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2019-11-28T18:07:36.491Z&quot;</span><span class="p">,</span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;Experiments total count: 0&quot;</span><span class="p">,</span><span class="nt">&quot;logger_name&quot;</span><span class="p">:</span><span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span><span class="p">,</span><span class="nt">&quot;thread_name&quot;</span><span class="p">:</span><span class="s2">&quot;chaos-10&quot;</span><span class="p">,</span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span><span class="nt">&quot;level_value&quot;</span><span class="p">:</span><span class="mi">20000</span><span class="p">,</span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="s2">&quot;DEVELOPMENT&quot;</span><span class="p">,</span><span class="nt">&quot;chaos-host&quot;</span><span class="p">:</span><span class="s2">&quot;b4bd5f0829d6@172.18.0.4&quot;</span><span class="p">}</span>
 </pre></div></p>
+<p>If you see error like bellow, create a <code>/opt/datadog-agent/run</code> file on you host machine and rerun <code>docker-compose</code>.</p>
+<div class="codehilite"><pre><span></span>Status: Downloaded newer image <span class="k">for</span> datadog/agent:latest
+Creating chaos-engine_vault_1 ... 
+Creating chaos-engine_datadog_1 ... error
+Creating chaos-engine_vault_1   ... <span class="k">done</span>
+ERROR: <span class="k">for</span> chaos-engine_datadog_1  Cannot create container <span class="k">for</span> service datadog: invalid mount config <span class="k">for</span> <span class="nb">type</span> <span class="s2">&quot;bind&quot;</span>: <span class="nb">bind</span> <span class="nb">source</span> path does not exist: /opt/datadog-agent/run
+Creating chaos-engine_vault-loader_1 ... <span class="k">done</span>
+
+ERROR: <span class="k">for</span> datadog  Cannot create container <span class="k">for</span> service datadog: invalid mount config <span class="k">for</span> <span class="nb">type</span> <span class="s2">&quot;bind&quot;</span>: <span class="nb">bind</span> <span class="nb">source</span> path does not exist: /opt/datadog-agent/run
+ERROR: Encountered errors <span class="k">while</span> bringing up the project.
+</pre></div>
 <h2 id="step-7-enjoy">Step 7: Enjoy</h2>
 <p>Manualy trigger experiment execution by running
 <div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ curl -X POST <span class="s2">&quot;http://localhost:8080/experiment/start&quot;</span> -H  <span class="s2">&quot;accept: */*&quot;</span>
@@ -1420,7 +1486,7 @@ When you see <code>Experiments total count: 0</code> your Chaos Engine instance 
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-09-16-10:01:51
+2020-11-27-20:24:13
           </div>
         
         powered by

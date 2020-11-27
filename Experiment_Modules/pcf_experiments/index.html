@@ -609,6 +609,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../gcp_memorystore_experiments/" title="Google Cloud Memorystore Experiments" class="md-nav__link">
+      Google Cloud Memorystore Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
       Kubernetes Module
     </a>
@@ -934,13 +946,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-9" type="checkbox" id="nav-7-9">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-10" type="checkbox" id="nav-7-10">
     
-    <label class="md-nav__link" for="nav-7-9">
+    <label class="md-nav__link" for="nav-7-10">
       Script Experiments
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-7-9">
+      <label class="md-nav__title" for="nav-7-10">
         Script Experiments
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1119,6 +1131,42 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9-4" type="checkbox" id="nav-9-4">
+    
+    <label class="md-nav__link" for="nav-9-4">
+      Experiments On AWS
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-9-4">
+        Experiments On AWS
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/Experiments_On_AWS/" title="Chaos Engine experiments with AWS" class="md-nav__link">
+      Chaos Engine experiments with AWS
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1197,6 +1245,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/error_codes_numbering_convention/" title="Error Codes Numbering Convention" class="md-nav__link">
+      Error Codes Numbering Convention
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
       Multi Module Structure
     </a>
@@ -1222,13 +1282,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-8" type="checkbox" id="nav-10-8">
     
-    <label class="md-nav__link" for="nav-10-7">
+    <label class="md-nav__link" for="nav-10-8">
       Design Philosophy
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-10-7">
+      <label class="md-nav__title" for="nav-10-8">
         Design Philosophy
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1660,7 +1720,6 @@
 <div class="codehilite"><pre><span></span>$ cf app MY-AWESOME-APP --guid
 abcdefab-1234-5678-abcd-1234abcd1234
 </pre></div>
-
 <p>Query the <em>/v2/info</em> endpoint of the Cloud Controller in your deployment. Record the domain name and port of the <em>app_ssh_endpoint</em> field.</p>
 <div class="codehilite"><pre><span></span>$ cf curl /v2/info
 <span class="o">{</span>
@@ -1670,17 +1729,14 @@ abcdefab-1234-5678-abcd-1234abcd1234
 ...
 <span class="o">}</span>
 </pre></div>
-
 <p>Run <em>cf ssh-code</em> to obtain a one-time authorization code that substitutes for an SSH password.</p>
 <div class="codehilite"><pre><span></span>$ cf ssh-code
 E1x89n
 </pre></div>
-
 <p>Run your ssh or other command to connect to the app instance. For the username, use a string of the form <em>cf:APP-GUID/APP-INSTANCE-INDEX@SSH-ENDPOINT</em>, where <em>APP-GUID</em> and <em>SSH-ENDPOINT</em> come from the previous steps. For the port number, use the <em>SSH-PORT</em> recorded above. <em>APP-INSTANCE-INDEX</em> is the index of the instance you want to access.
 With the above example, you ssh into the container hosting the first instance of your app by running the following command:</p>
 <div class="codehilite"><pre><span></span>$ ssh -p <span class="m">2222</span> cf:abcdefab-1234-5678-abcd-1234abcd1234/0@ssh.MY-DOMAIN.com
 </pre></div>
-
 <h4 id="health-check-mechanism_1">Health Check Mechanism</h4>
 <p>API: <a href="https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html">https://apidocs.cloudfoundry.org/4.5.0/apps/get_the_instance_information_for_a_started_app.html</a></p>
 <p>SSH base experiments use two phase health check mechanism:</p>
@@ -1792,7 +1848,7 @@ With the above example, you ssh into the container hosting the first instance of
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-09-16-10:01:51
+2020-11-27-20:24:13
           </div>
         
         powered by

@@ -607,6 +607,18 @@
           
           
 
+
+  <li class="md-nav__item">
+    <a href="../gcp_memorystore_experiments/" title="Google Cloud Memorystore Experiments" class="md-nav__link">
+      Google Cloud Memorystore Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
   
 
 
@@ -660,6 +672,33 @@
   <a href="#required-kubernetes-cluster-configuration" title="Required Kubernetes Cluster Configuration" class="md-nav__link">
     Required Kubernetes Cluster Configuration
   </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiments-on-single-namespace" title="Experiments on single namespace" class="md-nav__link">
+    Experiments on single namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experiments-on-multiple-namespaces" title="Experiments on multiple namespaces" class="md-nav__link">
+    Experiments on multiple namespaces
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-service-account-setting" title="Verify Service Account Setting" class="md-nav__link">
+    Verify Service Account Setting
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -820,13 +859,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-9" type="checkbox" id="nav-7-9">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-10" type="checkbox" id="nav-7-10">
     
-    <label class="md-nav__link" for="nav-7-9">
+    <label class="md-nav__link" for="nav-7-10">
       Script Experiments
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-7-9">
+      <label class="md-nav__title" for="nav-7-10">
         Script Experiments
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1005,6 +1044,42 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9-4" type="checkbox" id="nav-9-4">
+    
+    <label class="md-nav__link" for="nav-9-4">
+      Experiments On AWS
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-9-4">
+        Experiments On AWS
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Quick_Start_Guide/Experiments_On_AWS/" title="Chaos Engine experiments with AWS" class="md-nav__link">
+      Chaos Engine experiments with AWS
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1083,6 +1158,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/error_codes_numbering_convention/" title="Error Codes Numbering Convention" class="md-nav__link">
+      Error Codes Numbering Convention
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
       Multi Module Structure
     </a>
@@ -1108,13 +1195,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-7" type="checkbox" id="nav-10-7">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-8" type="checkbox" id="nav-10-8">
     
-    <label class="md-nav__link" for="nav-10-7">
+    <label class="md-nav__link" for="nav-10-8">
       Design Philosophy
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-10-7">
+      <label class="md-nav__title" for="nav-10-8">
         Design Philosophy
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1187,6 +1274,33 @@
   <a href="#required-kubernetes-cluster-configuration" title="Required Kubernetes Cluster Configuration" class="md-nav__link">
     Required Kubernetes Cluster Configuration
   </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiments-on-single-namespace" title="Experiments on single namespace" class="md-nav__link">
+    Experiments on single namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experiments-on-multiple-namespaces" title="Experiments on multiple namespaces" class="md-nav__link">
+    Experiments on multiple namespaces
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-service-account-setting" title="Verify Service Account Setting" class="md-nav__link">
+    Verify Service Account Setting
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1344,7 +1458,7 @@
 </tr>
 <tr>
 <td>Version</td>
-<td>7.0.0</td>
+<td>10.0.0</td>
 </tr>
 <tr>
 <td>Maven Repositories</td>
@@ -1383,8 +1497,8 @@
 <td align="center">Yes</td>
 </tr>
 <tr>
-<td>kubernetes.namespace</td>
-<td>K8S namespace where experiments should be performed</td>
+<td>kubernetes.namespaces</td>
+<td>Comma-separated list of namespaces where experiments should be performed</td>
 <td><code>default</code></td>
 <td align="center">Yes</td>
 </tr>
@@ -1403,9 +1517,9 @@
 </tbody>
 </table>
 <h2 id="required-kubernetes-cluster-configuration">Required Kubernetes Cluster Configuration</h2>
-<p>A service account with a role binding needs to be created in order to access the specific API endpoints required for Kubernetes Experiments</p>
+<p>A service account with a role binding needs to be created in order to access specific API endpoints required for Kubernetes Experiments</p>
 <p>Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.</p>
-<p>You can retrieve the token by running <code>kubectl describe secret chaos-engine -n {{namespace}}</code></p>
+<h3 id="experiments-on-single-namespace">Experiments on single namespace</h3>
 <p><strong>chaos-engine-service-account.yaml</strong></p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
 <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Role</span>
@@ -1477,7 +1591,95 @@
   <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-serviceaccount</span>
   <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
 </pre></div>
+<p>You can retrieve the token by running <code>kubectl describe secret chaos-engine -n {{namespace}}</code></p>
+<h3 id="experiments-on-multiple-namespaces">Experiments on multiple namespaces</h3>
+<p>When your experiment targets are located in multiple namespaces, 
+you need to bind roles allowing access to appropriate namespace to your service account.
+Or you can simply create a cluster role and binding by running below yaml.</p>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ClusterRole</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-crole</span>
+<span class="nt">rules</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">apps</span>
+  <span class="nt">resources</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">daemonsets</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">daemonsets/status</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deployments</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">deployments/status</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicasets</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicasets/status</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">statefulsets</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">statefulsets/status</span>
+  <span class="nt">verbs</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">list</span>
+<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
+  <span class="nt">resources</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods</span>
+  <span class="nt">verbs</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">delete</span>
 
+
+<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
+  <span class="nt">resources</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods/status</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">replicationcontrollers/status</span>
+  <span class="nt">verbs</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">list</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">apiGroups</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;&quot;</span>
+  <span class="nt">resources</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pods/exec</span>
+  <span class="nt">verbs</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">create</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">get</span>
+
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ClusterRoleBinding</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-rolebinding</span>
+<span class="nt">roleRef</span><span class="p">:</span>
+  <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ClusterRole</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-crole</span>
+  <span class="nt">apiGroup</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io</span>
+<span class="nt">subjects</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ServiceAccount</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-serviceaccount</span>
+  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
+
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ServiceAccount</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chaos-engine-serviceaccount</span>
+  <span class="nt">namespace</span><span class="p">:</span> <span class="p p-Indicator">{{</span><span class="nv">namespace</span><span class="p p-Indicator">}}</span>
+</pre></div>
+<h3 id="verify-service-account-setting">Verify Service Account Setting</h3>
+<p>Run the following sequence of commands to verify service account permissions.</p>
+<div class="codehilite"><pre><span></span><span class="nv">NAMESPACE</span><span class="o">={{</span>namespace<span class="o">}}</span>
+<span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>kubectl describe secret chaos-engine -n <span class="nv">$NAMESPACE</span><span class="k">)</span>
+<span class="nv">SERVER_ENDPOINT</span><span class="o">=</span>https//example.com
+kubectl config set-credentials chaos-engine-token --token<span class="o">=</span><span class="s2">&quot;</span><span class="nv">$TOKEN</span><span class="s2">&quot;</span>
+kubectl config set-cluster chaos-engine-target-cluster --server<span class="o">=</span><span class="nv">$SERVER_ENDPOINT</span> --insecure-skip-tls-verify
+kubectl config set-context --cluster<span class="o">=</span>chaos-engine-target-cluster --namespace<span class="o">=</span><span class="nv">$NAMESPACE</span> chaos-engine-context
+kubectl config use-context chaos-engine-context 
+kubectl --token<span class="o">=</span><span class="s2">&quot;</span><span class="nv">$TOKEN</span><span class="s2">&quot;</span> get pods
+</pre></div>
+<p>If the output of the <code>get pods</code> is similar to what you see below. Your configuration is not valid.
+Please check role binding from the previous section was done properly.</p>
+<div class="codehilite"><pre><span></span>Error from server <span class="o">(</span>Forbidden<span class="o">)</span>: pods is forbidden: User <span class="s2">&quot;system:serviceaccount:{{SERVICE_ACCOUNT_NAME}}:{{NAMESPACE}}&quot;</span>
+ cannot list resource <span class="s2">&quot;pods&quot;</span> in API group <span class="s2">&quot;&quot;</span> in the namespace <span class="s2">&quot;{{NAMESPACE}}&quot;</span>
+</pre></div>
 <h2 id="node-discovery">Node Discovery</h2>
 <h3 id="mechanism">Mechanism</h3>
 <p>API: <a href="https://github.com/kubernetes-client/java/blob/release-4.0.0/kubernetes/docs/CoreV1Api.md#listNamespacedPod">listNamespacedPod</a></p>
@@ -1538,7 +1740,7 @@ existence is checked.</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../gcp_memorystore_experiments/" title="Google Cloud Memorystore Experiments" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1547,7 +1749,7 @@ existence is checked.</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Google Cloud Compute Engine Experiments
+                Google Cloud Memorystore Experiments
               </span>
             </div>
           </a>
@@ -1576,7 +1778,7 @@ existence is checked.</p>
         
           <div class="md-footer-copyright__highlight">
             &copy; 2018 - 2020 Thales Group<br />
-2020-09-16-10:01:51
+2020-11-27-20:24:13
           </div>
         
         powered by

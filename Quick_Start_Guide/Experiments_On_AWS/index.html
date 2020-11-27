@@ -1,0 +1,1921 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A tool for automated Chaos Experimentation">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.0">
+    
+    
+      
+        <title>Chaos Engine experiments with AWS - Chaos Engine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.0284f74d.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.01803549.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300,400,400i,700|Fira+Code&display=fallback">
+        <style>body,input{font-family:"Fira Sans Condensed","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Fira Code","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="light-blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#chaos-engine-experiments-with-aws" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Chaos Engine" class="md-header-nav__button md-logo">
+          
+            <img src="../../images/icon.png" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Chaos Engine
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Chaos Engine experiments with AWS
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="../.." title="Home" class="md-tabs__link">
+        Home
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Configuration/" title="Configuration" class="md-tabs__link">
+          Configuration
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Core_Modules/administrative_state/" title="Core Modules" class="md-tabs__link">
+          Core Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Experiment_Modules/" title="Experiment Modules" class="md-tabs__link">
+          Experiment Modules
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Logging and Reporting" class="md-tabs__link">
+          Logging and Reporting
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../" title="Quick Start Guide" class="md-tabs__link md-tabs__link--active">
+          Quick Start Guide
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../../_Developer_Documentation/" title=" Developer Documentation" class="md-tabs__link">
+           Developer Documentation
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Chaos Engine" class="md-nav__button md-logo">
+      
+        <img src="../../images/icon.png" width="48" height="48">
+      
+    </a>
+    Chaos Engine
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/thalesgroup/chaos-engine/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    chaos-engine @ GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../architecture/" title="Architecture" class="md-nav__link">
+      Architecture
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../configuration/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../hardening/" title="Hardening Guidelines" class="md-nav__link">
+      Hardening Guidelines
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/" title="Chaos Engine Configuration" class="md-nav__link">
+      Chaos Engine Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/proxy/" title="Proxy Configuration" class="md-nav__link">
+      Proxy Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/security/" title="REST Security" class="md-nav__link">
+      REST Security
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Configuration/vault_integration/" title="Vault Integration" class="md-nav__link">
+      Vault Integration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Core Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Core Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/administrative_state/" title="Administrative State" class="md-nav__link">
+      Administrative State
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/container_manager/" title="Container Manager" class="md-nav__link">
+      Container Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/experiment_manager/" title="Experiment Manager" class="md-nav__link">
+      Experiment Manager
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Core_Modules/scheduler/" title="Scheduler" class="md-nav__link">
+      Scheduler
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7">
+    
+    <label class="md-nav__link" for="nav-7">
+      Experiment Modules
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-7">
+        Experiment Modules
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/" title="Experiment Modules" class="md-nav__link">
+      Experiment Modules
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/aws_ec2_experiments/" title="AWS EC2 Experiments" class="md-nav__link">
+      AWS EC2 Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/aws_rds_experiments/" title="AWS RDS Experiments" class="md-nav__link">
+      AWS RDS Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/cattle_pet_distinction/" title="Cattle/Pet Distinction" class="md-nav__link">
+      Cattle/Pet Distinction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/gcp_compute_experiments/" title="Google Cloud Compute Engine Experiments" class="md-nav__link">
+      Google Cloud Compute Engine Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/gcp_memorystore_experiments/" title="Google Cloud Memorystore Experiments" class="md-nav__link">
+      Google Cloud Memorystore Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/kubernetes_experiments/" title="Kubernetes Module" class="md-nav__link">
+      Kubernetes Module
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/pcf_experiments/" title="PCF Experiments" class="md-nav__link">
+      PCF Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/ssh_based_experiments/" title="SSH Based Experiments" class="md-nav__link">
+      SSH Based Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-7-10" type="checkbox" id="nav-7-10">
+    
+    <label class="md-nav__link" for="nav-7-10">
+      Script Experiments
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-7-10">
+        Script Experiments
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/Script_Experiments/included_script_experiments/" title="Included Script Experiments" class="md-nav__link">
+      Included Script Experiments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Experiment_Modules/Script_Experiments/script_header/" title="Script Header" class="md-nav__link">
+      Script Header
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8" type="checkbox" id="nav-8">
+    
+    <label class="md-nav__link" for="nav-8">
+      Logging and Reporting
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-8">
+        Logging and Reporting
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-8-1" type="checkbox" id="nav-8-1">
+    
+    <label class="md-nav__link" for="nav-8-1">
+      Notifications
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-8-1">
+        Notifications
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/datadog_events/" title="Datatog Events" class="md-nav__link">
+      Datatog Events
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/slack/" title="Slack Notifications" class="md-nav__link">
+      Slack Notifications
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../Logging_and_Reporting/Notifications/xmpp/" title="XMPP Notifications" class="md-nav__link">
+      XMPP Notifications
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9" checked>
+    
+    <label class="md-nav__link" for="nav-9">
+      Quick Start Guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Quick Start Guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../" title="Quick Start Guide" class="md-nav__link">
+      Quick Start Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../config_examples/" title="Configuration Examples" class="md-nav__link">
+      Configuration Examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-nav__link">
+      Run Chaos Engine On Kubernetes
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9-4" type="checkbox" id="nav-9-4" checked>
+    
+    <label class="md-nav__link" for="nav-9-4">
+      Experiments On AWS
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-9-4">
+        Experiments On AWS
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Chaos Engine experiments with AWS
+      </label>
+    
+    <a href="./" title="Chaos Engine experiments with AWS" class="md-nav__link md-nav__link--active">
+      Chaos Engine experiments with AWS
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chaos-engine-host-configuration-on-aws-ec2-instance" title="Chaos engine host configuration on AWS EC2 instance." class="md-nav__link">
+    Chaos engine host configuration on AWS EC2 instance.
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pre-requisites" title="Pre-requisites." class="md-nav__link">
+    Pre-requisites.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-docker-installation" title="Step 1: Docker Installation" class="md-nav__link">
+    Step 1: Docker Installation
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-docker-installation" title="Verify Docker Installation" class="md-nav__link">
+    Verify Docker Installation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-install-docker-compose" title="Step 2: Install Docker Compose" class="md-nav__link">
+    Step 2: Install Docker Compose
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-docker-compose-installation" title="Verify Docker Compose Installation" class="md-nav__link">
+    Verify Docker Compose Installation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-download-the-latest-chaos-engine-sources" title="Step 3: Download The Latest Chaos Engine Sources" class="md-nav__link">
+    Step 3: Download The Latest Chaos Engine Sources
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-pull-chaos-engine-image" title="Step 4: Pull Chaos Engine Image" class="md-nav__link">
+    Step 4: Pull Chaos Engine Image
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-configure" title="Step 5: Configure" class="md-nav__link">
+    Step 5: Configure
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-framework-setup" title="Basic Framework Setup" class="md-nav__link">
+    Basic Framework Setup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-experiment-modules" title="Configure Experiment Modules" class="md-nav__link">
+    Configure Experiment Modules
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importance-note" title="Importance Note:" class="md-nav__link">
+    Importance Note:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-datadog-integration" title="Configure DataDog Integration" class="md-nav__link">
+    Configure DataDog Integration
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-datadog" title="Enable DataDog" class="md-nav__link">
+    Enable DataDog
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-datadog" title="Disable DataDog" class="md-nav__link">
+    Disable DataDog
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-start-chaos-engine-host" title="Step 6: Start chaos engine host" class="md-nav__link">
+    Step 6: Start chaos engine host
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+       Developer Documentation
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+         Developer Documentation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/" title="Developer Documentation" class="md-nav__link">
+      Developer Documentation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/API/" title="OpenAPI Specification" class="md-nav__link">
+      OpenAPI Specification
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/annotations/" title="Chaos Engine Annotations" class="md-nav__link">
+      Chaos Engine Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/coding_conventions/" title="Coding Conventions" class="md-nav__link">
+      Coding Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/error_codes_numbering_convention/" title="Error Codes Numbering Convention" class="md-nav__link">
+      Error Codes Numbering Convention
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/multi_module/" title="Multi Module Structure" class="md-nav__link">
+      Multi Module Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/notable_issues/" title="Notable Issues" class="md-nav__link">
+      Notable Issues
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10-8" type="checkbox" id="nav-10-8">
+    
+    <label class="md-nav__link" for="nav-10-8">
+      Design Philosophy
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-10-8">
+        Design Philosophy
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../_Developer_Documentation/Design_Philosophy/pipeline_design/" title="Pipeline Design Philosophy" class="md-nav__link">
+      Pipeline Design Philosophy
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chaos-engine-host-configuration-on-aws-ec2-instance" title="Chaos engine host configuration on AWS EC2 instance." class="md-nav__link">
+    Chaos engine host configuration on AWS EC2 instance.
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pre-requisites" title="Pre-requisites." class="md-nav__link">
+    Pre-requisites.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-docker-installation" title="Step 1: Docker Installation" class="md-nav__link">
+    Step 1: Docker Installation
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-docker-installation" title="Verify Docker Installation" class="md-nav__link">
+    Verify Docker Installation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-install-docker-compose" title="Step 2: Install Docker Compose" class="md-nav__link">
+    Step 2: Install Docker Compose
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-docker-compose-installation" title="Verify Docker Compose Installation" class="md-nav__link">
+    Verify Docker Compose Installation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-download-the-latest-chaos-engine-sources" title="Step 3: Download The Latest Chaos Engine Sources" class="md-nav__link">
+    Step 3: Download The Latest Chaos Engine Sources
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-pull-chaos-engine-image" title="Step 4: Pull Chaos Engine Image" class="md-nav__link">
+    Step 4: Pull Chaos Engine Image
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-configure" title="Step 5: Configure" class="md-nav__link">
+    Step 5: Configure
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-framework-setup" title="Basic Framework Setup" class="md-nav__link">
+    Basic Framework Setup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-experiment-modules" title="Configure Experiment Modules" class="md-nav__link">
+    Configure Experiment Modules
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importance-note" title="Importance Note:" class="md-nav__link">
+    Importance Note:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-datadog-integration" title="Configure DataDog Integration" class="md-nav__link">
+    Configure DataDog Integration
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-datadog" title="Enable DataDog" class="md-nav__link">
+    Enable DataDog
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-datadog" title="Disable DataDog" class="md-nav__link">
+    Disable DataDog
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-start-chaos-engine-host" title="Step 6: Start chaos engine host" class="md-nav__link">
+    Step 6: Start chaos engine host
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/thalesgroup/chaos-engine/edit/master/docs/Quick_Start_Guide/Experiments_On_AWS/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="chaos-engine-experiments-with-aws">Chaos Engine experiments with AWS</h1>
+<p>In this quick start guide we will be demonstrating experiments with the AWS cloud platform.</p>
+<h2 id="chaos-engine-host-configuration-on-aws-ec2-instance">Chaos engine host configuration on AWS EC2 instance.</h2>
+<p>The Chaos Engine is a container based service. Please use the Linux OS to configure the Chaos Engine host. 
+When you complete the setup of the Chaos Engine host and run it successfully. It will create three containers.</p>
+<ol>
+<li>Chaos engine</li>
+<li>HCL Vault</li>
+<li>HCL vault loader</li>
+</ol>
+<h3 id="pre-requisites">Pre-requisites.</h3>
+<p>Please provision EC2 linux instance. In this scenario we will be provisioning an Ubuntu 18.04 EC2 instance on which you 
+need to install Docker and Docker compose. Which will used as the Chaos Engine host machine. </p>
+<ul>
+<li>We will have to first create an AWS EC2 instance. </li>
+<li>If you have an AWS Account login to AWS management console. If not, set up a free tier instance in Amazon’s * EC2. From the link, click Try Amazon EC2 for Free and enter the requested details to create your account.
+Once you have signed up, log in to your account.</li>
+<li>Spin up/provision couple of Linux (Ubuntu) EC2 instance for the Chaos Engine. </li>
+<li>Follow the EC2 instance creation <a href="https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html">instructions here</a>. </li>
+<li>In this scenario we will have total 3 AWS EC2 instance one is for host purpose and remaining 2 are target instance. </li>
+<li>Open the Amazon EC2 dashboard. Find your new running instance in the list and click to highlight it. Click Connect for information on how to connect to this instance using SSH.</li>
+</ul>
+<p>Following is the snippet from AWS console on EC2 instance. </p>
+<p><img src=instance_list.JPG></p>
+<div class="codehilite"><pre><span></span>$ ssh -i <span class="s2">&quot;YourKeyName.pem&quot;</span> ubuntu@publicDNSname
+</pre></div>
+<p>After successful login please start installation of the Chaos Engine host. </p>
+<h2 id="step-1-docker-installation">Step 1: Docker Installation</h2>
+<p>Follow the Docker installation <a href="https://docs.docker.com/install/">instructions here</a></p>
+<h3 id="verify-docker-installation">Verify Docker Installation</h3>
+<p>To verify Docker installation run <code>docker ps</code>.</p>
+<p>Expected output is:
+<div class="codehilite"><pre><span></span>user@host:~$ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+</pre></div></p>
+<p>If the output looks similar to following example open new terminal session or simply logout and login again.</p>
+<div class="codehilite"><pre><span></span>user@host:~$ docker ps
+Got permission denied <span class="k">while</span> trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/containers/json: dial unix /var/run/docker.sock: connect: permission denied
+</pre></div>
+<h2 id="step-2-install-docker-compose">Step 2: Install Docker Compose</h2>
+<p>For detailed instructions on how to install the docker compose <a href="https://docs.docker.com/compose/install/">see official Docker documentation.</a></p>
+<h3 id="verify-docker-compose-installation">Verify Docker Compose Installation</h3>
+<div class="codehilite"><pre><span></span>user@host:~$ docker-compose -v
+docker-compose version <span class="m">1</span>.25.0, build 0a186604
+</pre></div>
+<p>If the command <code>docker-compose</code> fails after installation, check your path. 
+You can also create a symbolic link to <code>/usr/bin</code> or any other directory in your <code>path</code>.</p>
+<h2 id="step-3-download-the-latest-chaos-engine-sources">Step 3: Download The Latest Chaos Engine Sources</h2>
+<div class="codehilite"><pre><span></span>user@host:~$ git clone https://github.com/thalesgroup/chaos-engine
+Cloning into <span class="s1">&#39;chaos-engine&#39;</span>...
+...
+Checking connectivity... <span class="k">done</span>.
+</pre></div>
+<h2 id="step-4-pull-chaos-engine-image">Step 4: Pull Chaos Engine Image</h2>
+<p>Pull the latest Chaos Engine image from DockerHub.</p>
+<div class="codehilite"><pre><span></span>user@host:~$ <span class="nb">cd</span> chaos-engine/
+user@host:~/chaos-engine$ docker pull thalesgroup/chaos-engine:latest
+</pre></div>
+<h2 id="step-5-configure">Step 5: Configure</h2>
+<h3 id="basic-framework-setup">Basic Framework Setup</h3>
+<div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ <span class="nb">echo</span> <span class="s2">&quot;holidays=NONSTOP</span>
+<span class="s2">VAULT_TOKEN=00000000-0000-0000-0000-000000000000</span>
+<span class="s2">VAULT_SCHEME=http</span>
+<span class="s2">VAULT_HOST=vault</span>
+<span class="s2">VAULT_PORT=8200</span>
+<span class="s2">VAULT_10=true</span>
+<span class="s2">SPRING_PROFILES_ACTIVE=DEVELOPMENT</span>
+
+<span class="s2">automatedMode=false</span>
+<span class="s2">CHAOS_SECURITY_ENABLED=false&quot;</span> &gt; .env
+</pre></div>
+<h3 id="configure-experiment-modules">Configure Experiment Modules</h3>
+<p>Let's say you want to execute experiments targeting a Kubernetes cluster.
+First check <a href="../../Experiment_Modules/kubernetes_experiments/">experiment modules documentation</a> to see what config options are available then add all configuration properties into <code>vault-secrets.json</code> file located in <code>~/developer-tools/vault-loader</code>.
+Example content of <code>vault-secrets.json</code>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;kubernetes&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://127.127.127.127&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.token&quot;</span><span class="p">:</span> <span class="s2">&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.averageMillisPerExperiment&quot;</span><span class="p">:</span> <span class="s2">&quot;30000&quot;</span>
+<span class="p">}</span>
+</pre></div>
+Example content of EC2 instance for <code>vault-secrets.json</code>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+<span class="nt">&quot;aws.ec2&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span><span class="p">,</span>  
+<span class="nt">&quot;aws.accessKeyId&quot;</span><span class="p">:</span><span class="s2">&quot;&lt;access_key_id&gt;&quot;</span><span class="p">,</span>  
+<span class="nt">&quot;aws.secretAccessKey&quot;</span><span class="p">:</span><span class="s2">&quot;&lt;Secrate_access_String&gt;&quot;</span><span class="p">,</span> 
+<span class="nt">&quot;aws.region&quot;</span><span class="p">:</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">,</span>  
+<span class="nt">&quot;aws.ec2.filter.tag.ChaosVictim&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> 
+<span class="nt">&quot;aws.ec2.averageMillisPerExperiment&quot;</span><span class="p">:</span><span class="s2">&quot;30000&quot;</span><span class="p">,</span>
+<span class="nt">&quot;aws.ec2.sshprivatekeys.&lt;your_Key_Name&gt;&quot;</span><span class="p">:</span><span class="err">&quot;&lt;private_key&gt;”</span>  
+<span class="p">}</span>
+</pre></div></p>
+<h3 id="importance-note">Importance Note:</h3>
+<ul>
+<li>Please make sure you grant access to your IAM user to have <strong>FullEC2access</strong></li>
+<li>The <strong>“ChaosVictim”</strong> = “true” tag must be existing in the target EC2 instances</li>
+<li>Please allow all the required ports <strong>80, 8080, 8200 and 22</strong> on the Chaos Engine host machine. </li>
+</ul>
+<h3 id="configure-datadog-integration">Configure DataDog Integration</h3>
+<h4 id="enable-datadog">Enable DataDog</h4>
+<p>First of all, you have to sign up with Datadog to enable the integration with chaos-engine. </p>
+<p>Kindly go to the below URL to create your account in Datadog. 
+<a href="https://www.datadoghq.com/">Datadog sign up</a>
+You will get 14 days free trial account. Please sign up for free account for now to test it. </p>
+<p>Once you have account setup you, login to datadog portal -&gt; API’s -&gt; hover the mouse on the key, and your API Key will be displayed. </p>
+<p><img src=datadog_apikey.JPG></p>
+<p>If you are going to ship data to DataDog run following command where <code>$YOUR_API_KEY</code> will be replaced by your real DataDog API key.</p>
+<div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ <span class="nb">echo</span> <span class="s2">&quot;DD_API_KEY=</span><span class="nv">$YOUR_API_KEY</span><span class="s2">&quot;</span> &gt; .datadog_api_key 
+</pre></div>
+<h4 id="disable-datadog">Disable DataDog</h4>
+<p>If you don't need DataDog integration keep <code>.datadog_api_key</code> empty 
+<div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ touch .datadog_api_key 
+</pre></div></p>
+<h2 id="step-6-start-chaos-engine-host">Step 6: Start chaos engine host</h2>
+<p>Start the Engine by running <code>docker-compose up</code>
+<div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ docker-compose up
+</pre></div>
+When you see <code>Experiments total count: 0</code> your Chaos Engine instance is up and ready
+<div class="codehilite"><pre><span></span><span class="err">chaosengine_</span><span class="mi">1</span>   <span class="err">|</span> <span class="p">{</span><span class="nt">&quot;@timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2019-11-28T18:07:36.491Z&quot;</span><span class="p">,</span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;Experiments total count: 0&quot;</span><span class="p">,</span><span class="nt">&quot;logger_name&quot;</span><span class="p">:</span><span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span><span class="p">,</span><span class="nt">&quot;thread_name&quot;</span><span class="p">:</span><span class="s2">&quot;chaos-10&quot;</span><span class="p">,</span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span><span class="nt">&quot;level_value&quot;</span><span class="p">:</span><span class="mi">20000</span><span class="p">,</span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="s2">&quot;DEVELOPMENT&quot;</span><span class="p">,</span><span class="nt">&quot;chaos-host&quot;</span><span class="p">:</span><span class="s2">&quot;b4bd5f0829d6@172.18.0.4&quot;</span><span class="p">}</span>
+</pre></div>
+Once you are able to see the above logs in chaos host that means you are ready for chaos experiments. You can look for the logs related to the Chaos Engine host in Datadog as well. Following is snippet from the Datadog. </p>
+<p><img src=log_datadog.JPG></p>
+<h1 id="chaos-engine-experiments">Chaos Engine Experiments</h1>
+<p>Each Experiment Module is responsible for interacting with the API endpoint of its appropriate Cloud Platform or Orchestration tool. The Experiment Modules discover nodes that can be experimented upon, ensuring experiments keep a minimum blast radius, and performing the API calls necessary to create an experiment. Kindly refer the below URL for the same. </p>
+<p><a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/">Experiment Modules</a></p>
+<p>There are two modes of experiments in the Chaos Engine. </p>
+<p>1 <strong>Automated mode</strong></p>
+<p>In automated mode experiment selection as well as platform is done randomly.</p>
+<p>2 <strong>User defined mode</strong></p>
+<p>In user defined experiment you can run shell and API experiments. You can choose platform as well as the experiment type. In order to run the user defined experiments you need to provide an input to experiments.</p>
+<p><strong>Note:</strong> Shell experiments require Cattle resources, that means your target resource must be backed by some kind of auto scaling mechanism. E.g. in EC2 resource case the instance must be backed by AutoScalingGroup. 
+In AWS EKS resource case the pod must have a deployment with more than one replicas etc.</p>
+<p><a href="https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments">User define experiments</a>
+The parameter for a User Defined Experiment is a single object with two variables. The platformType variable should be the name of the Platform you wish to experiment on. The experimentCriteria variable requires an object of <strong>containerIdentifier, experimentMethods[], and optional specificContainerTargets[]</strong>, to identify the aggregate container group, the type of experiments to run, and any specific targets which may not be identical (i.e., a MongoDB Primary node).</p>
+<p>The Experiment Structure object can be sent as the data stream of a POST request to /experiment/build to create the experiments. The server expects a Content-Type of application/json. See the REST API for more information.
+Following is the sample JSON for user defined experiments. You may find more information about this at </p>
+<h2 id="example-of-user-define-api-experiments">Example of user define API experiments</h2>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;platformType&quot;</span><span class="p">:</span> <span class="s2">&quot;KubernetesPlatform&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;experimentCriteria&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;containerIdentifier&quot;</span><span class="p">:</span> <span class="s2">&quot;nginx-deployment-574b87c764&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;experimentMethods&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;deletePod&quot;</span>
+            <span class="p">],</span>
+            <span class="nt">&quot;specificContainerTargets&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+<h2 id="example-of-user-defined-shell-experiments">Example of user defined Shell experiments</h2>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;platformType&quot;</span><span class="p">:</span> <span class="s2">&quot;KubernetesPlatform&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;experimentCriteria&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;containerIdentifier&quot;</span><span class="p">:</span> <span class="s2">&quot;nginx-deployment-574b87c764&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;experimentMethods&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;forkBomb.sh&quot;</span>
+            <span class="p">],</span>
+            <span class="nt">&quot;specificContainerTargets&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+<h1 id="experiment-modules">Experiment Modules</h1>
+<p>Following are the list of experiments are available in the Chaos Engine. Kindly refer the below url for list of available experiments.</p>
+<p><a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/">Experiments Moudle</a></p>
+<table>
+<thead>
+<tr>
+<th>AWS EC2 instance</th>
+<th>Kubernetes</th>
+<th>AWS RDS</th>
+<th>Pivotal Cloud foundry</th>
+<th>Shell Experiments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop</td>
+<td>Delete at POD layer</td>
+<td>Take a snapshot</td>
+<td>Restart</td>
+<td>BurnIO</td>
+</tr>
+<tr>
+<td>Restart</td>
+<td>Shell experiment at Container layer</td>
+<td>Restart</td>
+<td>Rescale</td>
+<td>CPUBurn</td>
+</tr>
+<tr>
+<td>Deletion of Security Group</td>
+<td></td>
+<td>Deletion of Security Group</td>
+<td>Restage</td>
+<td>DNS Block</td>
+</tr>
+<tr>
+<td>Instance termination only in Auto Scaling Group</td>
+<td></td>
+<td>Random restart of cluster nodes</td>
+<td>Shell Experiments</td>
+<td>Fill Disk</td>
+</tr>
+<tr>
+<td>Shell experiments</td>
+<td></td>
+<td>Failover</td>
+<td></td>
+<td>Forkbomb</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Ram consumer</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Null route</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Generator starvation</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Process killer</td>
+</tr>
+</tbody>
+</table>
+<h1 id="run-experiments">Run Experiments</h1>
+<p>In order to run the experiments, make sure that docker-compose is up and running on the Chaos Engine host. 
+After that you can login to Swagger UI to run the experiments.</p>
+<p>Following is the URL for swagger UI you need to replace IP address of you host.</p>
+<p>http://yourpublicIP:8080/swagger-ui.html#/</p>
+<p><img src=swaggerui.JPG> </p>
+<p>To check the available targets/platform for the experiments you can execute following from swagger UI. 
+Look for the platform section and click on Get /Platform. </p>
+<p><img src=getplatform.JPG></p>
+<p>Click on execute. </p>
+<p><img src=execute.JPG></p>
+<p>Refer the response body section. In the below screen shot you can see instance details such as name, id and tags, which we have created as a targets to perform the experiments. There are total 2 instance or targets are available for experiments. </p>
+<p><img src=response.JPG></p>
+<p><img src=response1.JPG> </p>
+<p>Next go the Experiments section and run the experiments. <strong>POST /experiments/start</strong>. </p>
+<p><img src=experiment.JPG></p>
+<p>Now we are going to start the experiment by clicking on /experiment/start (Start Random Experiment)
+Click on /experiment/start -&gt; try it out -&gt; Execute. </p>
+<p><img src=experiment1.JPG></p>
+<p><img src=responsecode.JPG></p>
+<p>The Chaos Engine has chosen <strong>“removeSecurityGroups”</strong> experiment randomly.  It will remove the security group for an EC2 instance. Kindly refer the below screen shot from the AWS console. </p>
+<p><img src=removsg.JPG></p>
+<p>Logs from the Chaos Engine host. 
+<div class="codehilite"><pre><span></span>chaosengine_1   <span class="p">|</span> <span class="o">{</span><span class="s2">&quot;@timestamp&quot;</span>:<span class="s2">&quot;2020-09-09T06:36:24.124Z&quot;</span>,<span class="s2">&quot;@version&quot;</span>:<span class="s2">&quot;1&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Evaluated experiment: Experiment of removeSecurityGroups against chaosengtarget2 (Sabilchaos) [i-06963df97e880ef98]&quot;</span>,<span class="s2">&quot;logger_name&quot;</span>:<span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span>,<span class="s2">&quot;thread_name&quot;</span>:<span class="s2">&quot;ForkJoinPool-4-worker-3&quot;</span>,<span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;INFO&quot;</span>,<span class="s2">&quot;level_value&quot;</span>:20000,<span class="s2">&quot;experimentMethod&quot;</span>:<span class="s2">&quot;removeSecurityGroups&quot;</span>,<span class="s2">&quot;host&quot;</span>:<span class="s2">&quot;i-06963df97e880ef98&quot;</span>,<span class="s2">&quot;experimentid&quot;</span>:<span class="s2">&quot;880f3119-a86e-4420-adbf-dee8bdfdd21f&quot;</span>,<span class="s2">&quot;platform&quot;</span>:<span class="s2">&quot;AwsEC2Platform&quot;</span>,<span class="s2">&quot;experiment&quot;</span>:<span class="o">{</span><span class="s2">&quot;id&quot;</span>:<span class="s2">&quot;880f3119-a86e-4420-adbf-dee8bdfdd21f&quot;</span>,<span class="s2">&quot;experimentState&quot;</span>:<span class="s2">&quot;STARTED&quot;</span>,<span class="s2">&quot;container&quot;</span>:<span class="o">{</span><span class="s2">&quot;shellCapabilities&quot;</span>:<span class="o">{}</span>,<span class="s2">&quot;availabilityZone&quot;</span>:<span class="s2">&quot;us-east-1a&quot;</span>,<span class="s2">&quot;instanceId&quot;</span>:<span class="s2">&quot;i-06963df97e880ef98&quot;</span>,<span class="s2">&quot;keyName&quot;</span>:<span class="s2">&quot;Sabilchaos&quot;</span>,<span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;chaosengtarget2&quot;</span>,<span class="s2">&quot;publicAddress&quot;</span>:<span class="s2">&quot;54.227.31.237&quot;</span>,<span class="s2">&quot;imageId&quot;</span>:<span class="s2">&quot;ami-0761dd91277e34178&quot;</span>,<span class="s2">&quot;groupIdentifier&quot;</span>:<span class="s2">&quot;No Grouping Identifier Found&quot;</span>,<span class="s2">&quot;simpleName&quot;</span>:<span class="s2">&quot;chaosengtarget2 (Sabilchaos) [i-06963df97e880ef98]&quot;</span>,<span class="s2">&quot;routableAddress&quot;</span>:<span class="s2">&quot;54.227.31.237&quot;</span>,<span class="s2">&quot;aggregationIdentifier&quot;</span>:<span class="s2">&quot;chaosengtarget2&quot;</span>,<span class="s2">&quot;cattle&quot;</span>:false,<span class="s2">&quot;sshcapable&quot;</span>:false,<span class="s2">&quot;containerType&quot;</span>:<span class="s2">&quot;AwsEC2Container&quot;</span>,<span class="s2">&quot;experimentStartTime&quot;</span>:1599633339.884297000,<span class="s2">&quot;identity&quot;</span>:3165379631,<span class="s2">&quot;knownMissingCapabilities&quot;</span>:<span class="o">[]}</span>,<span class="s2">&quot;experimentType&quot;</span>:<span class="s2">&quot;NETWORK&quot;</span>,<span class="s2">&quot;selfHealingMethod&quot;</span>:<span class="o">{}</span>,<span class="s2">&quot;startTime&quot;</span>:1599633339.884297000,<span class="s2">&quot;lastSelfHealingTime&quot;</span>:null,<span class="s2">&quot;selfHealingCounter&quot;</span>:0,<span class="s2">&quot;experimentMethodName&quot;</span>:<span class="s2">&quot;removeSecurityGroups&quot;</span>,<span class="s2">&quot;experimentLayerName&quot;</span>:<span class="s2">&quot;AwsEC2Container&quot;</span>,<span class="s2">&quot;wasSelfHealingRequired&quot;</span>:null<span class="o">}</span>,<span class="s2">&quot;env&quot;</span>:<span class="s2">&quot;PROD&quot;</span>,<span class="s2">&quot;chaos-host&quot;</span>:<span class="s2">&quot;bb8c3770c057@aws:i-086601e7b0a84aa54:257969174391:us-east-1&quot;</span><span class="o">}</span>
+</pre></div>
+Logs from Datadog. </p>
+<p><img src=datadaoglog.JPG></p>
+<p><img src=datadaoglog1.JPG></p>
+<p>After completion of experiment you can see Chaos Engine has reverted Security Group as part of the experiment. Below is the snippet for the same. </p>
+<p><img src=revertsg.JPG></p>
+<p><b> Note: </b> - you can configure/enable monitoring tool to get the real time analysis of a targets. </p>
+<h1 id="vault-secret-modification">Vault Secret modification.</h1>
+<p>In the Chaos Engine experiments we are using a HCL Valut to store the crednatils. As you see that we need to update the <strong>"vault-secerets.json"</strong> file to maintain the AWS Access and Secret key to access the AWS resources. 
+If you would to to add new experiments or update the extisting information of a valut you can make those changs. </p>
+<p>There are two ways to do the modifications in vault secerets. </p>
+<p>1 Updating the <strong>vault-secrets.json</strong> file</p>
+<p>Once you update the vault-secret.json you need to run the following command to take the changes effect.</p>
+<p><div class="codehilite"><pre><span></span>$ docker-compose build vault vault-loader
+</pre></div>
+2 Update using Valut GUI.</p>
+<p>To login to the vault GUI please use the following URL and just update the IP address of the Chaos Engine Host. </p>
+<p>http://yourpublicIP:8200/ui</p>
+<p>Once you hit the above URL you will be ask for credentials. You can choose method is “Token” and token value is <strong>“00000000-0000-0000-0000-00000000000”</strong></p>
+<p><img src=vaultlogin.JPG></p>
+<p>Go to secret update the changes and save it.</p>
+<p><img src=seceret.JPG></p>
+<p><img src=seceret1.JPG></p>
+<p>Make the changes/modification to the above parameters and then run the Refresh from Swagger UI.  To take the changes affect. </p>
+<p><img src=swagger.JPG></p>
+<h1 id="experiments-on-aws-elastic-kubernetes-services-eks">Experiments on AWS Elastic Kubernetes Services EKS.</h1>
+<p>We will performing an experiment on AWS EKS cluster. As part of the pre-requisite please create an AWS EKS. 
+Kindly refer <a href="https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html">Kubernetes configuration</a></p>
+<p>In this scenario we have created a EKS with 2 nodes and 1 Nginx deployment. Following the is the screenshot for EKS from AWS. </p>
+<p><img src=k8.JPG></p>
+<p>Once you have EKS cluster ready. Proceed with Nginx deployement.</p>
+<div class="codehilite"><pre><span></span>kubectl apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+
+$ kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-574b87c764-jlgwr   <span class="m">1</span>/1     Running   <span class="m">0</span>          19h
+nginx-deployment-574b87c764-kbmqh   <span class="m">1</span>/1     Running   <span class="m">0</span>          3h18m
+nginx-deployment-574b87c764-rlv6f   <span class="m">1</span>/1     Running   <span class="m">0</span>          19h
+
+$ kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   <span class="m">3</span>/3     <span class="m">3</span>            <span class="m">3</span>           19h
+
+$ kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-574b87c764   <span class="m">3</span>         <span class="m">3</span>         <span class="m">3</span>       19h
+</pre></div>
+<p>Now, get the secret information by executing the following command to connect using Chaos Engine. You need to have token, namespace values to update the secrets. </p>
+<div class="codehilite"><pre><span></span>$ kubectl describe secret
+Name:         chaos-engine-serviceaccount-token-r6ptr
+Namespace:    default
+Labels:       &lt;none&gt;
+Annotations:  kubernetes.io/service-account.name: chaos-engine-serviceaccount
+              kubernetes.io/service-account.uid: 7ec6da4a-a006-49e3-ac5e-16735be3853c
+
+Type:  kubernetes.io/service-account-token
+
+<span class="nv">Data</span>
+<span class="o">====</span>
+ca.crt:     <span class="m">1025</span> bytes
+namespace:  <span class="m">7</span> bytes
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ
+</pre></div>
+<p>Once you have the above information. Now you need to update vault-secrets.json or update the same information in vault. </p>
+<p>Please make sure that updated information should take effect. Kindly refer Vault Secret modification. </p>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+<span class="nt">&quot;kubernetes&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://F14806126C9620A678A237F7C4AFE7AF.gr7.us-east-2.eks.amazonaws.com&quot;</span><span class="p">,</span> <span class="err">-&gt;</span> <span class="err">you</span> <span class="err">can</span> <span class="err">get</span> <span class="err">this</span> <span class="err">from</span> <span class="err">AWS</span> <span class="err">EKS</span> <span class="err">console</span> <span class="err">API</span> <span class="err">server</span> <span class="err">endpoint.</span> 
+  <span class="nt">&quot;kubernetes.token&quot;</span><span class="p">:</span>  <span class="err">-&gt;</span> <span class="err">can</span> <span class="err">be</span> <span class="err">taken</span> <span class="err">from</span> <span class="err">kubectl</span> <span class="err">describe</span> <span class="err">secrets</span> <span class="err">command.</span> <span class="s2">&quot;eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.averageMillisPerExperiment&quot;</span><span class="p">:</span> <span class="s2">&quot;30000&quot;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Then create a file called chaos-engine-service-account.yaml for role binding and make the modification in your file. Replace {{namespace}} with actual namespace and then execute it. </p>
+<p>You may refer following for EKS cluster configuration for Chaos Engine. 
+<a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration">EKS configuration for the Chaos Engine</a></p>
+<div class="codehilite"><pre><span></span><span class="err">apiVersion:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
+<span class="err">kind:</span> <span class="err">Role</span>
+<span class="err">metadata:</span>
+  <span class="err">name:</span> <span class="err">chaos-engine-role</span>
+  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+<span class="err">rules:</span>
+<span class="err">-</span> <span class="err">apiGroups:</span>
+  <span class="err">-</span> <span class="err">apps</span>
+  <span class="err">resources:</span>
+  <span class="err">-</span> <span class="err">daemonsets</span>
+  <span class="err">-</span> <span class="err">daemonsets/status</span>
+  <span class="err">-</span> <span class="err">deployments</span>
+  <span class="err">-</span> <span class="err">deployments/status</span>
+  <span class="err">-</span> <span class="err">replicasets</span>
+  <span class="err">-</span> <span class="err">replicasets/status</span>
+  <span class="err">-</span> <span class="err">statefulsets</span>
+  <span class="err">-</span> <span class="err">statefulsets/status</span>
+  <span class="err">verbs:</span>
+  <span class="err">-</span> <span class="err">get</span>
+  <span class="err">-</span> <span class="err">list</span>
+<span class="err">-</span> <span class="err">apiGroups:</span>
+  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources:</span>
+  <span class="err">-</span> <span class="err">pods</span>
+  <span class="err">verbs:</span>
+  <span class="err">-</span> <span class="err">delete</span>
+
+
+<span class="err">-</span> <span class="err">apiGroups:</span>
+  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources:</span>
+  <span class="err">-</span> <span class="err">pods</span>
+  <span class="err">-</span> <span class="err">pods/status</span>
+  <span class="err">-</span> <span class="err">replicationcontrollers/status</span>
+  <span class="err">verbs:</span>
+  <span class="err">-</span> <span class="err">get</span>
+  <span class="err">-</span> <span class="err">list</span>
+
+<span class="err">-</span> <span class="err">apiGroups:</span>
+  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources:</span>
+  <span class="err">-</span> <span class="err">pods/exec</span>
+  <span class="err">verbs:</span>
+  <span class="err">-</span> <span class="err">create</span>
+  <span class="err">-</span> <span class="err">get</span>
+
+<span class="err">---</span>
+
+<span class="err">apiVersion:</span> <span class="err">v</span><span class="mi">1</span>
+<span class="err">kind:</span> <span class="err">ServiceAccount</span>
+<span class="err">metadata:</span>
+  <span class="err">name:</span> <span class="err">chaos-engine-serviceaccount</span>
+  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+
+<span class="err">---</span>
+
+<span class="err">apiVersion:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
+<span class="err">kind:</span> <span class="err">RoleBinding</span>
+<span class="err">metadata:</span>
+  <span class="err">name:</span> <span class="err">chaos-engine-rolebinding</span>
+  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+<span class="err">roleRef:</span>
+  <span class="err">apiGroup:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io</span>
+  <span class="err">kind:</span> <span class="err">Role</span>
+  <span class="err">name:</span> <span class="err">chaos-engine-role</span>
+<span class="err">subjects:</span>
+<span class="err">-</span> <span class="err">kind:</span> <span class="err">ServiceAccount</span>
+  <span class="err">name:</span> <span class="err">chaos-engine-serviceaccount</span>
+  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+</pre></div>
+<p>Execute the YMAL file. </p>
+<div class="codehilite"><pre><span></span>kubectl apply -f chaos-engine-service-account.yaml
+</pre></div>
+<p>Once you update the secrets go ahead and run get platform from Swagger UI. </p>
+<p><img src=k8response.JPG></p>
+<p>Now you can initiate the experiments using Automated or user defined method. 
+After running the experiments, you should have a monitoring configured or enable for your K8 nodes so that you will be able to get the real data. </p>
+<p>We are going to run the experiments on AWS EKS cluster. Once we executed the run experiment API from Swagger UI you will see the following response. </p>
+<p><img src=experimentk8response.JPG></p>
+<p>You can see in the above experiment response code output that the Chaos Engine is going to run the experiments on AWS EKS. Please see the above highlight section of a response code, where in you can see experiment platform as a <b> EKS pods </b> and experiment name is <b> memoryConsumer.sh </b>. </p>
+<p>Logs captured from the Datadog for this experiment. Here are the logs from the Chaos Engine host which says that experiments started. </p>
+<div class="codehilite"><pre><span></span>chaosengine_1   <span class="p">|</span> <span class="o">{</span><span class="s2">&quot;@timestamp&quot;</span>:<span class="s2">&quot;2020-09-09T06:57:12.614Z&quot;</span>,<span class="s2">&quot;@version&quot;</span>:<span class="s2">&quot;1&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Evaluated experiment: Experiment of memoryConsumer.sh against nginx-deployment-574b87c764-7wp8h (default)&quot;</span>,<span class="s2">&quot;logger_name&quot;</span>:<span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span>,<span class="s2">&quot;thread_name&quot;</span>:<span class="s2">&quot;ForkJoinPool-42-worker-3&quot;</span>,<span class="s2">&quot;level&quot;</span>:<span class="s2">&quot;INFO&quot;</span>,<span class="s2">&quot;level_value&quot;</span>:20000,<span class="s2">&quot;experimentMethod&quot;</span>:<span class="s2">&quot;memoryConsumer.sh&quot;</span>,<span class="s2">&quot;host&quot;</span>:<span class="s2">&quot;nginx-deployment-574b87c764-7wp8h&quot;</span>,<span class="s2">&quot;experimentid&quot;</span>:<span class="s2">&quot;df244f9a-85f6-4bad-80b5-5787c64a43ec&quot;</span>,<span class="s2">&quot;platform&quot;</span>:<span class="s2">&quot;KubernetesPlatform&quot;</span>,<span class="s2">&quot;experiment&quot;</span>:<span class="o">{</span><span class="s2">&quot;id&quot;</span>:<span class="s2">&quot;df244f9a-85f6-4bad-80b5-5787c64a43ec&quot;</span>,<span class="s2">&quot;experimentState&quot;</span>:<span class="s2">&quot;STARTED&quot;</span>,<span class="s2">&quot;container&quot;</span>:<span class="o">{</span><span class="s2">&quot;shellCapabilities&quot;</span>:<span class="o">{</span><span class="s2">&quot;sleep&quot;</span>:true,<span class="s2">&quot;dd&quot;</span>:true,<span class="s2">&quot;awk&quot;</span>:true,<span class="s2">&quot;/bin/sh&quot;</span>:true,<span class="s2">&quot;grep&quot;</span>:true,<span class="s2">&quot;cat&quot;</span>:true<span class="o">}</span>,<span class="s2">&quot;uuid&quot;</span>:<span class="s2">&quot;a6eb617c-39e9-4fc3-a333-e400f335f95c&quot;</span>,<span class="s2">&quot;podName&quot;</span>:<span class="s2">&quot;nginx-deployment-574b87c764-7wp8h&quot;</span>,<span class="s2">&quot;namespace&quot;</span>:<span class="s2">&quot;default&quot;</span>,<span class="s2">&quot;ownerKind&quot;</span>:<span class="s2">&quot;REPLICA_SET&quot;</span>,<span class="s2">&quot;ownerName&quot;</span>:<span class="s2">&quot;nginx-deployment-574b87c764&quot;</span>,<span class="s2">&quot;targetedSubcontainer&quot;</span>:<span class="s2">&quot;nginx&quot;</span>,<span class="s2">&quot;simpleName&quot;</span>:<span class="s2">&quot;nginx-deployment-574b87c764-7wp8h (default)&quot;</span>,<span class="s2">&quot;aggregationIdentifier&quot;</span>:<span class="s2">&quot;nginx-deployment-574b87c764&quot;</span>,<span class="s2">&quot;cattle&quot;</span>:true,<span class="s2">&quot;containerType&quot;</span>:<span class="s2">&quot;KubernetesPodContainer&quot;</span>,<span class="s2">&quot;experimentStartTime&quot;</span>:1599634333.020662000,<span class="s2">&quot;identity&quot;</span>:3504227930,<span class="s2">&quot;knownMissingCapabilities&quot;</span>:<span class="o">[]}</span>,<span class="s2">&quot;experimentType&quot;</span>:<span class="s2">&quot;STATE&quot;</span>,<span class="s2">&quot;selfHealingMethod&quot;</span>:<span class="o">{}</span>,<span class="s2">&quot;startTime&quot;</span>:1599634333.020662000,<span class="s2">&quot;lastSelfHealingTime&quot;</span>:null,<span class="s2">&quot;selfHealingCounter&quot;</span>:0,<span class="s2">&quot;experimentMethodName&quot;</span>:<span class="s2">&quot;memoryConsumer.sh&quot;</span>,<span class="s2">&quot;experimentLayerName&quot;</span>:<span class="s2">&quot;KubernetesPodContainer&quot;</span>,<span class="s2">&quot;wasSelfHealingRequired&quot;</span>:null<span class="o">}</span>,<span class="s2">&quot;env&quot;</span>:<span class="s2">&quot;PROD&quot;</span>,<span class="s2">&quot;chaos-host&quot;</span>:<span class="s2">&quot;bb8c3770c057@aws:i-086601e7b0a84aa54:257969174391:us-east-1&quot;</span><span class="o">}</span>
+</pre></div>
+<p>This experiment will spike up the memory on the container. You can check the memory utilization in monitoring tool or in the nodes using the following.</p>
+<div class="codehilite"><pre><span></span>kubectl top nodes
+</pre></div>
+<p>Or else, you can SSH to the EKS nods and run TOP command see the memory useage. </p>
+<p>Here I can see the experiment has been finishd in the Datadog logs. </p>
+<p><img src=k8datadog.JPG></p>
+<h1 id="summary">Summary</h1>
+<p>Congratulations, you just ran your first Chaos Engine experiment! Feel free to run the experiment many times, varying parameters and seeing how that impacts your instance. Next steps could be to add a full monitoring solution to the instance for better data. (we recommend doing that with a non-production, non-vital server at this stage, should you go this route).</p>
+<p>When you are done testing using the Amazon instance created for this article, don’t forget to terminate the Amazon instance. </p>
+<p>Best wishes and have fun unleashing the Chaos Engine! :)</p>
+<h1 id="references">References</h1>
+<ul>
+<li><a href="https://thalesgroup.github.io/chaos-engine/">Chaos Engine</a></li>
+<li><a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/">Experiment Module</a></li>
+<li><a href="https://www.datadoghq.com/">Datadog</a></li>
+<li><a href="https://docs.aws.amazon.com/efs/latest/ug/gs-step-one-create-ec2-resources.html">Ec2 Resource creation</a></li>
+<li><a href="https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html">Kubernetes Cluster setup</a></li>
+<li><a href="https://thalesgroup.github.io/chaos-engine/Core_Modules/experiment_manager/#user-defined-experiments">User defined experiments</a></li>
+<li><a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration">Kubernetes Experiments</a></li>
+<li><a href="https://app.slack.com/client/TFJUJDNN9/CFJ10E27J">Chaos Engines slack support forum</a></li>
+</ul>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../kubernetes/" title="Run Chaos Engine On Kubernetes" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Run Chaos Engine On Kubernetes
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../../_Developer_Documentation/" title="Developer Documentation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Developer Documentation
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            &copy; 2018 - 2020 Thales Group<br />
+2020-11-27-20:24:13
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
+    
+      <a href="https://github.com/gemalto/chaos-engine/issues" class="md-footer-social__link fa fa-tags"></a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.245445c6.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+    
+  </body>
+</html>
