@@ -43,7 +43,7 @@ public class KubernetesPodContainer extends Container {
     private String podName;
     @Identifier(order = 2)
     private String namespace;
-    private Map<String, String> labels = new HashMap<>();
+    private final Map<String, String> labels = new HashMap<>();
     private boolean isBackedByController = false;
     private KubernetesPlatform kubernetesPlatform;
     @Identifier(order = 3)
@@ -52,7 +52,8 @@ public class KubernetesPodContainer extends Container {
     private String ownerName;
     private Collection<String> subcontainers = new HashSet<>();
     private String targetedSubcontainer;
-    private Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
+    private final Callable<ContainerHealth> replicaSetRecovered = () -> kubernetesPlatform.replicaSetRecovered(this);
+    private String parentNode;
 
     private KubernetesPodContainer () {
         super();
@@ -80,6 +81,10 @@ public class KubernetesPodContainer extends Container {
 
     public String getOwnerName () {
         return ownerName;
+    }
+
+    public String getParentNode () {
+        return parentNode;
     }
 
     @Override
@@ -153,6 +158,7 @@ public class KubernetesPodContainer extends Container {
         private String ownerKind;
         private String ownerName;
         private Collection<String> subcontainers;
+        private String parentNode;
 
         private KubernetesPodContainerBuilder () {
         }
@@ -211,6 +217,11 @@ public class KubernetesPodContainer extends Container {
             return this;
         }
 
+        public KubernetesPodContainerBuilder withParentNode (String parentNode) {
+            this.parentNode = parentNode;
+            return this;
+        }
+
         public KubernetesPodContainer build () {
             KubernetesPodContainer kubernetesPodContainer = new KubernetesPodContainer();
             kubernetesPodContainer.uuid = this.uuid;
@@ -223,6 +234,7 @@ public class KubernetesPodContainer extends Container {
             kubernetesPodContainer.ownerKind = ControllerKind.mapFromString(this.ownerKind);
             kubernetesPodContainer.ownerName = ownerName;
             kubernetesPodContainer.subcontainers = this.subcontainers;
+            kubernetesPodContainer.parentNode = this.parentNode;
             try {
                 kubernetesPodContainer.setMappedDiagnosticContext();
                 kubernetesPodContainer.log.info("Created new Kubernetes Pod Container object");

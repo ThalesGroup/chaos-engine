@@ -29,14 +29,17 @@ import com.thales.chaos.container.ContainerManager;
 import com.thales.chaos.container.enums.ContainerHealth;
 import com.thales.chaos.container.impl.GcpComputeInstanceContainer;
 import com.thales.chaos.exception.ChaosException;
+import com.thales.chaos.platform.enums.PlatformHealth;
 import com.thales.chaos.platform.enums.PlatformLevel;
 import com.thales.chaos.selfawareness.GcpComputeSelfAwareness;
+import com.thales.chaos.services.impl.GcpCredentialsMetadata;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.thales.chaos.constants.GcpComputeConstants.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -61,6 +65,7 @@ import static org.mockito.Mockito.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GcpComputePlatformTest {
     private static final String MY_AWESOME_PROJECT = "my-awesome-project";
+    private static final String EMAIL = "user@example.com";
     private static final ProjectName projectName = ProjectName.of(MY_AWESOME_PROJECT);
     @Mock
     private InstanceClient instanceClient;
@@ -85,7 +90,6 @@ public class GcpComputePlatformTest {
 
     @Before
     public void setUp () {
-        gcpComputePlatform.setProjectId(MY_AWESOME_PROJECT);
         doReturn(instanceClient).when(gcpComputePlatform).getInstanceClient();
         doReturn(instanceGroupClient).when(gcpComputePlatform).getInstanceGroupClient();
         doReturn(instanceGroupManagerClient).when(gcpComputePlatform).getInstanceGroupManagerClient();
@@ -116,6 +120,15 @@ public class GcpComputePlatformTest {
         assertSame(gcpComputePlatform.createContainerFromInstance(instance), container);
         assertEquals("my-id", captor.getValue());
         verify(gcpComputePlatform, never()).createContainerFromInstanceInner(any());
+    }
+
+    @Test
+    public void createContainerFromInstanceWithNoInternetAccess () {
+        NetworkInterface networkInterface = Mockito.spy(NetworkInterface.newBuilder().build());
+        doReturn(null).when(networkInterface).getAccessConfigsList();
+        Instance instance = Instance.newBuilder().addNetworkInterfaces(networkInterface).build();
+        GcpComputeInstanceContainer container = GcpComputeInstanceContainer.builder().build();
+        assertEquals(container, gcpComputePlatform.createContainerFromInstanceInner(instance));
     }
 
     @Test
@@ -162,7 +175,7 @@ public class GcpComputePlatformTest {
                                                                                      .addInstances(instance)
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
         verify(gcpComputePlatform).isNotFiltered(instance);
     }
@@ -180,7 +193,7 @@ public class GcpComputePlatformTest {
                                                                                      .addInstances(chaosEngineHost)
                                                                                      .build());
         doReturn(iterableInstances).when(response).iterateAll();
-        doReturn(response).when(instanceClient).aggregatedListInstances(projectName);
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
         doReturn(true).when(selfAwareness).isMe(31415926535897L);
         assertThat(gcpComputePlatform.generateRoster(), containsInAnyOrder(expected));
         verify(gcpComputePlatform).isNotFiltered(instance);
@@ -585,7 +598,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("TERMINATED").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_TERMINATED).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
     }
@@ -604,7 +617,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("STOPPED").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_STOPPED).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, gcpComputePlatform.isContainerRunning(container));
     }
@@ -623,7 +636,7 @@ public class GcpComputePlatformTest {
                                                                       .setInstance(uniqueId)
                                                                       .build();
         Instance instance = mock(Instance.class);
-        doReturn("RUNNING").when(instance).getStatus();
+        doReturn(GCP_COMPUTE_INSTANCE_RUNNING).when(instance).getStatus();
         doReturn(instance).when(instanceClient).getInstance(instanceName);
         assertEquals(ContainerHealth.NORMAL, gcpComputePlatform.isContainerRunning(container));
     }
@@ -956,6 +969,33 @@ public class GcpComputePlatformTest {
         gcpComputePlatform.isContainerRecycled(container);
     }
 
+    @Test
+    public void getPlatformHealth () {
+        InstanceClient.AggregatedListInstancesPagedResponse response = mock(InstanceClient.AggregatedListInstancesPagedResponse.class);
+        Instance runningInstance = Instance.newBuilder()
+                                           .setStatus(GCP_COMPUTE_INSTANCE_RUNNING)
+                                           .setId("12345678901234567890")
+                                           .build();
+        Instance stoppedInstance = Instance.newBuilder()
+                                           .setStatus(GCP_COMPUTE_INSTANCE_STOPPED)
+                                           .setId("23456789123456789123")
+                                           .build();
+        Iterable<InstancesScopedList> iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                                                     .addInstances(runningInstance)
+                                                                                     .build());
+        doReturn(List.of()).when(response).iterateAll();
+        doReturn(response).when(instanceClient).aggregatedListInstances(true, projectName);
+        assertEquals(PlatformHealth.FAILED, gcpComputePlatform.getPlatformHealth());
+        doReturn(iterableInstances).when(response).iterateAll();
+        assertEquals(PlatformHealth.OK, gcpComputePlatform.getPlatformHealth());
+        iterableInstances = List.of(InstancesScopedList.newBuilder()
+                                                       .addInstances(runningInstance)
+                                                       .addInstances(stoppedInstance)
+                                                       .build());
+        doReturn(iterableInstances).when(response).iterateAll();
+        assertEquals(PlatformHealth.DEGRADED, gcpComputePlatform.getPlatformHealth());
+    }
+
     @Configuration
     public static class GcpComputePlatformTestConfiguration {
         @Autowired
@@ -968,6 +1008,11 @@ public class GcpComputePlatformTest {
         @Bean
         public GcpComputePlatform gcpComputePlatform () {
             return spy(new GcpComputePlatform());
+        }
+
+        @Bean
+        public GcpCredentialsMetadata gcpCredentialsMetadata () {
+            return new GcpCredentialsMetadata(MY_AWESOME_PROJECT);
         }
     }
 }

@@ -1,6 +1,6 @@
 # Configuration Examples
 
-## Enable EC2 Module
+## Enable AWS EC2 Module
 This example will enable EC2 module targeting all machines in `eu-west-1` region with `ChaosVictim` tag set to true.
 
 !!! Note 
@@ -28,7 +28,7 @@ AWS_EC2_AVERAGEMILLISPEREXPERIMENT=30000
 AWS_EC2_SSHPRIVATEKEYS_YOUR_KEY_NAME="MIIEowIBABC ... EFQ="
 ```
 
-## Enable RDS Module
+## Enable AWS RDS Module
 
 Following example enables RDS module. Experiments will be executed in `eu-west-3` region on top all DB instances with `ChaosVictim` tag set to true.
 
@@ -46,7 +46,7 @@ Following example enables RDS module. Experiments will be executed in `eu-west-3
 ``` shell tab="ENV Vars"
 AWS_RDS="true"
 AWS_RDS_FILTER_CHAOSVICTIM="true"
-AWS_RDS_AVERAGEMILLISPEREXPERIMENT="300000"
+AWS_RDS_AVERAGEMILLISPEREXPERIMENT=300000
 AWS_ACCESSKEYID="ABCDEFGHIJKLMNOPQRST"
 AWS_SECRETACCESSKEY="AbCDeFGHI+Jklmnop12345678789+123456789AB"
 AWS_REGION="eu-west-3"
@@ -78,7 +78,7 @@ CF_SPACE="chaos"
 CF_PASSWORD="pa$$Word-ABCDefgAbc"
 CF_PORT="443"
 CF_USERNAME="admin"
-CF_AVERAGEMILLISPEREXPERIMENT="300000"
+CF_AVERAGEMILLISPEREXPERIMENT=300000
 CF_CONTAINERCHAOS="true"
 CF_APPLICATIONCHAOS="true"
 ```
@@ -100,9 +100,48 @@ Running Kubernetes experiments requires configuration on the server side please 
 KUBERNETES="TRUE"
 KUBERNETES_URL="HTTPS://77.77.77.77"
 KUBERNETES_TOKEN="EYJHBGCIOIJIUZI1NIISINR5CCI6IKPXVCJ9.EYJZDWIIOIIXMJM0NTY3ODKWIIWIBMFTZSI6IKPVAG4GRG9LIIWIAWF0IJOXNTE2MJM5MDIYFQ.SFLKXWRJSMEKKF2QT4FWPMEJF36POK6YJV_ADQSSW5C"
-KUBERNETES_AVERAGEMILLISPEREXPERIMENT="30000"
+KUBERNETES_AVERAGEMILLISPEREXPERIMENT=30000
 ```
 
+## Enable GCP Compute
+
+```json tab="Vault"
+{ 
+  "gcp.compute": "true",
+  "gcp.compute.include-filter.chaos": "yes",
+  "gcp.compute.averageMillisPerExperiment": "30000",
+  "gcp.project-id": "a-gcp-project",
+  "gcp.json-key": "{ \"type\": \"service_account\", \"project_id\": \"a-gcp-project\", \"private_key_id\": \"123456789123456789abcdef1234567894152636\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgk.....lBz6AkZpJIGTDuXSGSYxWIXMvR4lGzFHDepLVoYZhmlXStKruO1OkOXNdSkIIom/\\nXl/b4GWeSiv5zEjMdCgjyw==\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"example@a-gcp-project.iam.gserviceaccount.com\", \"client_id\": \"123456789123456789\", \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\", \"token_uri\": \"https://oauth2.googleapis.com/token\", \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\", \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/example%40a-gcp-project.iam.gserviceaccount.com\"}"
+}
+```
+
+``` shell tab="ENV Vars"
+GCP_COMPUTE="true"
+GCP_COMPUTE_INCLUDEFILTER_CHAOS="yes"
+GCP_COMPUTE_AVERAGEMILLISPEREXPERIMENT=30000
+GCP_PROJECT_ID="a-gcp-project"
+GCP_JSON_KEY='{ "type": "service_account", "project_id": "a-gcp-project", "private_key_id": "123456789123456789abcdef1234567894152636", "private_key": "-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgk.....lBz6AkZpJIGTDuXSGSYxWIXMvR4lGzFHDepLVoYZhmlXStKruO1OkOXNdSkIIom/\\nXl/b4GWeSiv5zEjMdCgjyw==\\n-----END PRIVATE KEY-----\\n", "client_email": "example@a-gcp-project.iam.gserviceaccount.com", "client_id": "123456789123456789", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs", "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/example%40a-gcp-project.iam.gserviceaccount.com"}'
+```
+
+## Enable GCP Memorystore
+
+```json tab="Vault"
+{ 
+  "gcp.memorystore": "true",
+  "gcp.memorystore.include-filter.chaos": "yes",
+  "gcp.memorystore.averageMillisPerExperiment": "30000",
+  "gcp.project-id": "gemalto-cspeng",
+  "gcp.json-key": "{ \"type\": \"service_account\", \"project_id\": \"a-gcp-project\", \"private_key_id\": \"123456789123456789abcdef1234567894152636\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgk.....lBz6AkZpJIGTDuXSGSYxWIXMvR4lGzFHDepLVoYZhmlXStKruO1OkOXNdSkIIom/\\nXl/b4GWeSiv5zEjMdCgjyw==\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"example@a-gcp-project.iam.gserviceaccount.com\", \"client_id\": \"123456789123456789\", \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\", \"token_uri\": \"https://oauth2.googleapis.com/token\", \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\", \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/example%40a-gcp-project.iam.gserviceaccount.com\"}"
+}
+```
+
+``` shell tab="ENV Vars"
+GCP_MEMORYSTORE="true"
+GCP_MEMORYSTORE_INCLUDEFILTER_CHAOS="yes"
+GCP_MEMORYSTORE_AVERAGEMILLISPEREXPERIMENT=30000
+GCP_PROJECT_ID="a-gcp-project"
+GCP_JSON_KEY='{ "type": "service_account", "project_id": "a-gcp-project", "private_key_id": "123456789123456789abcdef1234567894152636", "private_key": "-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgk.....lBz6AkZpJIGTDuXSGSYxWIXMvR4lGzFHDepLVoYZhmlXStKruO1OkOXNdSkIIom/\\nXl/b4GWeSiv5zEjMdCgjyw==\\n-----END PRIVATE KEY-----\\n", "client_email": "example@a-gcp-project.iam.gserviceaccount.com", "client_id": "123456789123456789", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs", "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/example%40a-gcp-project.iam.gserviceaccount.com"}'
+```
 
 ## Enable Chaos Engine REST Security
 

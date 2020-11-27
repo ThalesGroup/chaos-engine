@@ -1,6 +1,6 @@
 #!/bin/sh
 # Description: Gradually allocates remaining free space in system root partition
-# Dependencies: dd, df, grep, awk
+# Dependencies: dd, df, grep, awk, sleep
 
 TMP_FILESYSTEM=$(df /tmp -T | grep '/$' | awk '{print $2}')
 FILE_NAME=chaos-disk-fill-experiment
@@ -10,6 +10,9 @@ if [ "$TMP_FILESYSTEM" != "tmpfs" ]; then
 else
   FILE_PATH=$HOME/$FILE_NAME
 fi
+
+# This extra wait time is added in order to synchronize startup of parralel experiments
+sleep 5
 
 FREE_SPACE=$(($(df -amPk | grep '/$' | awk '{print $4}') * 1024))
 fallocate -l $(($FREE_SPACE * 99 / 100)) $FILE_PATH

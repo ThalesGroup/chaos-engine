@@ -15,8 +15,16 @@
  *
  */
 
-package com.thales.chaos.constants;
+package com.thales.chaos.services.impl;
 
-public class GcpConstants {
-    public static final String CREATED_BY_METADATA_KEY = "created-by";
+public class GcpCredentialsMetadata {
+    private String projectId;
+
+    public GcpCredentialsMetadata (String projectId) {
+        this.projectId = projectId;
+    }
+
+    public String getProjectId () {
+        return projectId;
+    }
 }

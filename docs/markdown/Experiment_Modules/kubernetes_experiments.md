@@ -14,7 +14,7 @@ The official Kubernetes Java Client is used to interact with the cluster.
 | | |
 | --- | --- |
 | Resource | <https://github.com/kubernetes-client/java> |
-| Version | 7.0.0 |
+| Version | 10.0.0 |
 |  Maven Repositories | <https://mvnrepository.com/artifact/io.kubernetes/client-java> |
 
 ## Configuration
@@ -26,18 +26,17 @@ Environment variables that control how the Chaos Engine interacts with Kubernete
 | kubernetes | The presence of this key enables Kubernetes module. | N/A |  Yes |
 | kubernetes.url | Kubernetes server API url e.g. | None | Yes |
 | kubernetes.token | JWT token assigned to service account. You can get the value by running `kubectl describe secret name_of_your_secret` | None | Yes |
-| kubernetes.namespace | K8S namespace where experiments should be performed | `default` | Yes |
+| kubernetes.namespaces | Comma-separated list of namespaces where experiments should be performed | `default` | Yes |
 | kubernetes.debug | Enables debug log of Kubernetes java client | `false` | No |
 | kubernetes.validateSSL | Enables validation of sever side certificates | `false` | No |
 
 ## Required Kubernetes Cluster Configuration
 
-A service account with a role binding needs to be created in order to access the specific API endpoints required for Kubernetes Experiments
+A service account with a role binding needs to be created in order to access specific API endpoints required for Kubernetes Experiments
 
 Please replace the {{namespace}} fillers with the appropriate values and apply to your cluster.
 
-You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
-
+### Experiments on single namespace
 **chaos-engine-service-account.yaml**
 
 ```yaml
@@ -110,6 +109,111 @@ subjects:
 - kind: ServiceAccount
   name: chaos-engine-serviceaccount
   namespace: {{namespace}}
+```
+
+You can retrieve the token by running `kubectl describe secret chaos-engine -n {{namespace}}`
+
+### Experiments on multiple namespaces
+
+When your experiment targets are located in multiple namespaces, 
+you need to bind roles allowing access to appropriate namespace to your service account.
+Or you can simply create a cluster role and binding by running below yaml.
+
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: chaos-engine-crole
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - daemonsets/status
+  - deployments
+  - deployments/status
+  - replicasets
+  - replicasets/status
+  - statefulsets
+  - statefulsets/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+
+
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  - replicationcontrollers/status
+  verbs:
+  - get
+  - list
+
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+  - get
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: chaos-engine-rolebinding
+roleRef:
+  kind: ClusterRole
+  name: chaos-engine-crole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chaos-engine-serviceaccount
+  namespace: {{namespace}}
+
+```
+
+
+### Verify Service Account Setting
+
+Run the following sequence of commands to verify service account permissions.
+
+```bash
+NAMESPACE={{namespace}}
+TOKEN=$(kubectl describe secret chaos-engine -n $NAMESPACE)
+SERVER_ENDPOINT=https//example.com
+kubectl config set-credentials chaos-engine-token --token="$TOKEN"
+kubectl config set-cluster chaos-engine-target-cluster --server=$SERVER_ENDPOINT --insecure-skip-tls-verify
+kubectl config set-context --cluster=chaos-engine-target-cluster --namespace=$NAMESPACE chaos-engine-context
+kubectl config use-context chaos-engine-context 
+kubectl --token="$TOKEN" get pods
+```
+
+If the output of the `get pods` is similar to what you see below. Your configuration is not valid.
+Please check role binding from the previous section was done properly.
+
+```bash
+Error from server (Forbidden): pods is forbidden: User "system:serviceaccount:{{SERVICE_ACCOUNT_NAME}}:{{NAMESPACE}}"
+ cannot list resource "pods" in API group "" in the namespace "{{NAMESPACE}}"
+
 ```
 
 ## Node Discovery

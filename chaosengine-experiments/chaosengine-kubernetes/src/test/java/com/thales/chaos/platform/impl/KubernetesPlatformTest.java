@@ -34,6 +34,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import junit.framework.TestCase;
 import org.apache.http.HttpStatus;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,22 +80,29 @@ public class KubernetesPlatformTest {
     @Mock
     private AppsV1Api appsV1Api;
 
-    @Before
-    public void setUp () {
-        doReturn(coreApi).when(platform).getCoreApi();
-        doReturn(coreV1Api).when(platform).getCoreV1Api();
-        doReturn(appsV1Api).when(platform).getAppsV1Api();
-        platform.setNamespace(NAMESPACE_NAME);
+    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
+        List<V1OwnerReference> ownerReferences = null;
+        if (isBackedByController) {
+            ownerReferences = new ArrayList<>();
+            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
+        }
+        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
+                                                         .withName(POD_NAME)
+                                                         .withNamespace(NAMESPACE_NAME)
+                                                         .withLabels(new HashMap<>())
+                                                         .withOwnerReferences(ownerReferences)
+                                                         .build();
+        V1Pod pod = new V1Pod();
+        pod.setMetadata(metadata);
+        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
+        V1PodList list = new V1PodList();
+        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
+        return list;
     }
 
     @Test
     public void testPodWithoutOwnerCannotBeTested () throws Exception {
-        when(coreV1Api.listNamespacedPod(anyString(),
-                anyString(),
-                anyBoolean(),
-                anyString(),
-                anyString(),
-                anyString(),
+        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString(),
                 anyInt(),
                 anyString(),
                 anyInt(),
@@ -139,31 +147,14 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenThrow(new ApiException());
-        assertEquals("Error while checking container presence",
-                ContainerHealth.RUNNING_EXPERIMENT,
-                platform.checkHealth((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
-    @Test
-    public void testPodExists () throws ApiException {
-        V1PodList v1PodList = getV1PodList(true);
-        V1Pod pod = v1PodList.getItems().get(0);
-        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pod);
-        when(coreV1Api.listNamespacedPod(anyString(),
-                anyString(),
-                anyBoolean(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyInt(),
-                anyString(),
-                anyInt(),
-                anyBoolean())).thenReturn(v1PodList)
-                              .thenReturn(new V1PodList())
-                              .thenThrow(new ApiException(new IOException()));
-        assertTrue("POD exists", platform.podExists(kubernetesPodContainer).orElseThrow());
-        assertFalse("POD does not exist", platform.podExists(kubernetesPodContainer).orElseThrow());
-        assertTrue("IO Exception", platform.podExists(kubernetesPodContainer).isEmpty());
+    @Before
+    public void setUp () {
+        doReturn(coreApi).when(platform).getCoreApi();
+        doReturn(coreV1Api).when(platform).getCoreV1Api();
+        doReturn(appsV1Api).when(platform).getAppsV1Api();
+        platform.setNamespaces(NAMESPACE_NAME);
     }
 
     @Test
@@ -195,6 +186,21 @@ public class KubernetesPlatformTest {
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         assertEquals(PlatformHealth.OK, platform.getPlatformHealth());
+    }
+
+    @Test
+    public void testPlatformHealthCannotListPods () throws ApiException {
+        when(coreV1Api.listNamespacedPod(anyString(),
+                anyString(),
+                anyBoolean(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyInt(),
+                anyString(),
+                anyInt(),
+                anyBoolean())).thenThrow(new ApiException());
+        assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
     }
 
     @Test
@@ -365,7 +371,10 @@ public class KubernetesPlatformTest {
     }
 
     @Test
-    public void testPlatformHealthNotAvailable () throws ApiException {
+    public void testPodExists () throws ApiException {
+        V1PodList v1PodList = getV1PodList(true);
+        V1Pod pod = v1PodList.getItems().get(0);
+        KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pod);
         when(coreV1Api.listNamespacedPod(anyString(),
                 anyString(),
                 anyBoolean(),
@@ -375,35 +384,12 @@ public class KubernetesPlatformTest {
                 anyInt(),
                 anyString(),
                 anyInt(),
-                anyBoolean())).thenThrow(new ApiException());
-        assertEquals(PlatformHealth.FAILED, platform.getPlatformHealth());
-    }
-
-    @Test
-    public void testContainerHealthDoesNotExist () throws ApiException {
-        V1PodList list = new V1PodList();
-        V1Pod pod = mock(V1Pod.class);
-        V1ObjectMeta metadata = mock(V1ObjectMeta.class);
-        V1PodSpec spec = mock(V1PodSpec.class);
-        when(metadata.getUid()).thenReturn(randomUUID().toString());
-        when(pod.getMetadata()).thenReturn(metadata);
-        when(pod.getSpec()).thenReturn(spec);
-        list.addItemsItem(pod);
-        KubernetesPodContainer kubernetesPodContainer = KubernetesPodContainer.builder()
-                                                                              .withUUID(randomUUID().toString())
-                                                                              .withOwnerKind("")
-                                                                              .build();
-        when(coreV1Api.listNamespacedPod(anyString(),
-                anyString(),
-                anyBoolean(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyInt(),
-                anyString(),
-                anyInt(),
-                anyBoolean())).thenReturn(list);
-        assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
+                anyBoolean())).thenReturn(v1PodList)
+                              .thenReturn(new V1PodList())
+                              .thenThrow(new ApiException(new IOException()));
+        assertTrue("POD exists", platform.podExists(kubernetesPodContainer));
+        assertFalse("POD does not exist", platform.podExists(kubernetesPodContainer));
+        assertFalse("IO Exception", platform.podExists(kubernetesPodContainer));
     }
 
     @Test
@@ -505,28 +491,32 @@ public class KubernetesPlatformTest {
                 platform.checkHealth((KubernetesPodContainer) platform.getRoster().get(0)));
     }
 
-    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
-        List<V1OwnerReference> ownerReferences = new ArrayList<>();
-        if (isBackedByController) {
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
-                                                         .withName(POD_NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
-        V1PodList list = new V1PodList();
-        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
-        return list;
-    }
-
     @Test
-    public void testGetNamespace () {
-        assertEquals("mynamespace", platform.getNamespace());
+    public void testContainerHealthDoesNotExist () throws ApiException {
+        V1PodList list = new V1PodList();
+        V1Pod pod = mock(V1Pod.class);
+        V1ObjectMeta metadata = mock(V1ObjectMeta.class);
+        V1PodSpec spec = mock(V1PodSpec.class);
+        when(metadata.getUid()).thenReturn(randomUUID().toString());
+        when(pod.getMetadata()).thenReturn(metadata);
+        when(pod.getSpec()).thenReturn(spec);
+        list.addItemsItem(pod);
+        KubernetesPodContainer kubernetesPodContainer = KubernetesPodContainer.builder()
+                                                                              .withNamespace(NAMESPACE_NAME)
+                                                                              .withUUID(randomUUID().toString())
+                                                                              .withOwnerKind("")
+                                                                              .build();
+        when(coreV1Api.listNamespacedPod(anyString(),
+                anyString(),
+                anyBoolean(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyInt(),
+                anyString(),
+                anyInt(),
+                anyBoolean())).thenReturn(list);
+        assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
     }
 
     private static V1PodList getV1PodList (boolean isBackedByController) {
@@ -847,6 +837,7 @@ public class KubernetesPlatformTest {
         String uid = randomUUID().toString();
         String containerName = randomUUID().toString();
         KubernetesPodContainer kubernetesPodContainer = spy(KubernetesPodContainer.builder()
+                                                                                  .withNamespace(NAMESPACE_NAME)
                                                                                   .withUUID(uid)
                                                                                   .withSubcontainers(List.of(
                                                                                           containerName))
@@ -922,7 +913,7 @@ public class KubernetesPlatformTest {
                                                                               .withOwnerKind(REPLICA_SET.toString())
                                                                               .withSubcontainers(Set.of(subContainer))
                                                                               .build();
-        doReturn(Optional.of(Boolean.TRUE)).when(platform).podExists(kubernetesPodContainer);
+        doReturn(true).when(platform).podExists(kubernetesPodContainer);
         doThrow(new ApiException()).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
         platform.isContainerRecycled(kubernetesPodContainer);
     }
@@ -948,7 +939,16 @@ public class KubernetesPlatformTest {
     public void testGetConnectedShellClient () throws IOException, ApiException {
         KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
         platform.getConnectedShellClient(kubernetesPodContainer);
+    }
 
+    @Test
+    public void testSetNamespaces () {
+        platform.setNamespaces("");
+        assertThat(platform.getNamespaces(),
+                IsIterableContainingInAnyOrder.containsInAnyOrder(KubernetesPlatform.DEFAULT_NAMESPACE));
+        platform.setNamespaces("default,application");
+        assertThat(platform.getNamespaces(),
+                IsIterableContainingInAnyOrder.containsInAnyOrder("default", "application"));
     }
 
     @Configuration
@@ -966,7 +966,7 @@ public class KubernetesPlatformTest {
     }
 
     private class TestProcess extends Process {
-        private InputStream is;
+        private final InputStream is;
 
         public TestProcess (InputStream is) {
             this.is = is;
