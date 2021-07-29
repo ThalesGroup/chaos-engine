@@ -1678,7 +1678,7 @@ kubectl --token<span class="o">=</span><span class="s2">&quot;</span><span class
 <p>If the output of the <code>get pods</code> is similar to what you see below. Your configuration is not valid.
 Please check role binding from the previous section was done properly.</p>
 <div class="codehilite"><pre><span></span>Error from server <span class="o">(</span>Forbidden<span class="o">)</span>: pods is forbidden: User <span class="s2">&quot;system:serviceaccount:{{SERVICE_ACCOUNT_NAME}}:{{NAMESPACE}}&quot;</span>
- cannot list resource <span class="s2">&quot;pods&quot;</span> in API group <span class="s2">&quot;&quot;</span> in the namespace <span class="s2">&quot;{{NAMESPACE}}&quot;</span>
+ cannot list resource <span class="s2">&quot;pods&quot;</span> <span class="k">in</span> API group <span class="s2">&quot;&quot;</span> <span class="k">in</span> the namespace <span class="s2">&quot;{{NAMESPACE}}&quot;</span>
 </pre></div>
 <h2 id="node-discovery">Node Discovery</h2>
 <h3 id="mechanism">Mechanism</h3>
@@ -1777,8 +1777,8 @@ existence is checked.</p>
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            &copy; 2018 - 2020 Thales Group<br />
-2020-11-27-20:24:13
+            &copy; 2018 - 2021 Thales Group<br />
+2021-07-29-09:23:55
           </div>
         
         powered by

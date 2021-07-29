@@ -1474,8 +1474,8 @@ Example content of EC2 instance for <code>vault-secrets.json</code>
 <span class="nt">&quot;aws.region&quot;</span><span class="p">:</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">,</span>  
 <span class="nt">&quot;aws.ec2.filter.tag.ChaosVictim&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> 
 <span class="nt">&quot;aws.ec2.averageMillisPerExperiment&quot;</span><span class="p">:</span><span class="s2">&quot;30000&quot;</span><span class="p">,</span>
-<span class="nt">&quot;aws.ec2.sshprivatekeys.&lt;your_Key_Name&gt;&quot;</span><span class="p">:</span><span class="err">&quot;&lt;private_key&gt;”</span>  
-<span class="p">}</span>
+<span class="nt">&quot;aws.ec2.sshprivatekeys.&lt;your_Key_Name&gt;&quot;</span><span class="p">:</span><span class="err">&quot;&lt;private_key&gt;”  </span>
+<span class="err">}</span>
 </pre></div></p>
 <h3 id="importance-note">Importance Note:</h3>
 <ul>
@@ -1503,7 +1503,7 @@ You will get 14 days free trial account. Please sign up for free account for now
 <div class="codehilite"><pre><span></span>user@host:~/chaos-engine$ docker-compose up
 </pre></div>
 When you see <code>Experiments total count: 0</code> your Chaos Engine instance is up and ready
-<div class="codehilite"><pre><span></span><span class="err">chaosengine_</span><span class="mi">1</span>   <span class="err">|</span> <span class="p">{</span><span class="nt">&quot;@timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2019-11-28T18:07:36.491Z&quot;</span><span class="p">,</span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;Experiments total count: 0&quot;</span><span class="p">,</span><span class="nt">&quot;logger_name&quot;</span><span class="p">:</span><span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span><span class="p">,</span><span class="nt">&quot;thread_name&quot;</span><span class="p">:</span><span class="s2">&quot;chaos-10&quot;</span><span class="p">,</span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span><span class="nt">&quot;level_value&quot;</span><span class="p">:</span><span class="mi">20000</span><span class="p">,</span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="s2">&quot;DEVELOPMENT&quot;</span><span class="p">,</span><span class="nt">&quot;chaos-host&quot;</span><span class="p">:</span><span class="s2">&quot;b4bd5f0829d6@172.18.0.4&quot;</span><span class="p">}</span>
+<div class="codehilite"><pre><span></span><span class="err">chaose</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="err">_</span><span class="mi">1</span>   <span class="err">|</span> <span class="p">{</span><span class="nt">&quot;@timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2019-11-28T18:07:36.491Z&quot;</span><span class="p">,</span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;Experiments total count: 0&quot;</span><span class="p">,</span><span class="nt">&quot;logger_name&quot;</span><span class="p">:</span><span class="s2">&quot;com.thales.chaos.experiment.ExperimentManager&quot;</span><span class="p">,</span><span class="nt">&quot;thread_name&quot;</span><span class="p">:</span><span class="s2">&quot;chaos-10&quot;</span><span class="p">,</span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span><span class="nt">&quot;level_value&quot;</span><span class="p">:</span><span class="mi">20000</span><span class="p">,</span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="s2">&quot;DEVELOPMENT&quot;</span><span class="p">,</span><span class="nt">&quot;chaos-host&quot;</span><span class="p">:</span><span class="s2">&quot;b4bd5f0829d6@172.18.0.4&quot;</span><span class="p">}</span>
 </pre></div>
 Once you are able to see the above logs in chaos host that means you are ready for chaos experiments. You can look for the logs related to the Chaos Engine host in Datadog as well. Following is snippet from the Datadog. </p>
 <p><img src=log_datadog.JPG></p>
@@ -1719,83 +1719,83 @@ token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9W
 <p>Please make sure that updated information should take effect. Kindly refer Vault Secret modification. </p>
 <div class="codehilite"><pre><span></span><span class="p">{</span>
 <span class="nt">&quot;kubernetes&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;kubernetes.url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://F14806126C9620A678A237F7C4AFE7AF.gr7.us-east-2.eks.amazonaws.com&quot;</span><span class="p">,</span> <span class="err">-&gt;</span> <span class="err">you</span> <span class="err">can</span> <span class="err">get</span> <span class="err">this</span> <span class="err">from</span> <span class="err">AWS</span> <span class="err">EKS</span> <span class="err">console</span> <span class="err">API</span> <span class="err">server</span> <span class="err">endpoint.</span> 
-  <span class="nt">&quot;kubernetes.token&quot;</span><span class="p">:</span>  <span class="err">-&gt;</span> <span class="err">can</span> <span class="err">be</span> <span class="err">taken</span> <span class="err">from</span> <span class="err">kubectl</span> <span class="err">describe</span> <span class="err">secrets</span> <span class="err">command.</span> <span class="s2">&quot;eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;kubernetes.url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://F14806126C9620A678A237F7C4AFE7AF.gr7.us-east-2.eks.amazonaws.com&quot;</span><span class="p">,</span> <span class="mi">-</span><span class="err">&gt;</span> <span class="err">you</span> <span class="err">ca</span><span class="kc">n</span> <span class="err">ge</span><span class="kc">t</span> <span class="kc">t</span><span class="err">his</span> <span class="kc">fr</span><span class="err">om</span> <span class="err">AWS</span> <span class="err">EKS</span> <span class="err">co</span><span class="kc">ns</span><span class="err">ole</span> <span class="err">API</span> <span class="err">server</span> <span class="err">e</span><span class="kc">n</span><span class="err">dpoi</span><span class="kc">nt</span><span class="err">.</span> 
+  <span class="nt">&quot;kubernetes.token&quot;</span><span class="p">:</span>  <span class="mi">-</span><span class="err">&gt;</span> <span class="err">ca</span><span class="kc">n</span> <span class="err">be</span> <span class="kc">ta</span><span class="err">ke</span><span class="kc">n</span> <span class="kc">fr</span><span class="err">om</span> <span class="err">kubec</span><span class="kc">tl</span> <span class="err">describe</span> <span class="err">secre</span><span class="kc">ts</span> <span class="err">comma</span><span class="kc">n</span><span class="err">d.</span> <span class="s2">&quot;eyJhbGciOiJSUzI1NiIsImtpZCI6IllIX2cyMGtaSjVsVTUzZmFHdTVRS3U2TTZCdU9Wc0dUSk9HUnByN2t1VXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImNoYW9zLWVuZ2luZS1zZXJ2aWNlYWNjb3VudC10b2tlbi1yNnB0ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3ZWM2ZGE0YS1hMDA2LTQ5ZTMtYWM1ZS0xNjczNWJlMzg1M2MiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpjaGFvcy1lbmdpbmUtc2VydmljZWFjY291bnQifQ.Spj9BlS3Fq1s7SOIE4o_ySRYD6G0yMY_hUzSkLenymUPNaUDNbI3B6w_6VIaYkOUu34_nx5yOOD1RJWktXHqMmmEb_qjl5HnjsP41ugQU_LSQfIraSLbozE4ZP92Yx9Leq2bVYQN6JSv71GBOQOHRE91OSFfW2ENjna_MHHkgfw5usDZw3vF6d8lBjJA0DVbhgeZlAL9PPpaGLj-QjB6p2gg-BXXCC5dUiJsWZ77w8SwLyBx4NdKaLldPUisck-c8PVmGqWIawpHFM_C6fAxVeJv0TiyVou8Y-_7DGJzxhEDvSZ5Wu01qt0gp0mFcADYHorhkyi80CYVOTp22HuQHQ&quot;</span><span class="p">,</span>
   <span class="nt">&quot;kubernetes.averageMillisPerExperiment&quot;</span><span class="p">:</span> <span class="s2">&quot;30000&quot;</span>
 <span class="p">}</span>
 </pre></div>
 <p>Then create a file called chaos-engine-service-account.yaml for role binding and make the modification in your file. Replace {{namespace}} with actual namespace and then execute it. </p>
 <p>You may refer following for EKS cluster configuration for Chaos Engine. 
 <a href="https://thalesgroup.github.io/chaos-engine/Experiment_Modules/kubernetes_experiments/#required-kubernetes-cluster-configuration">EKS configuration for the Chaos Engine</a></p>
-<div class="codehilite"><pre><span></span><span class="err">apiVersion:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
-<span class="err">kind:</span> <span class="err">Role</span>
-<span class="err">metadata:</span>
-  <span class="err">name:</span> <span class="err">chaos-engine-role</span>
-  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
-<span class="err">rules:</span>
-<span class="err">-</span> <span class="err">apiGroups:</span>
-  <span class="err">-</span> <span class="err">apps</span>
-  <span class="err">resources:</span>
-  <span class="err">-</span> <span class="err">daemonsets</span>
-  <span class="err">-</span> <span class="err">daemonsets/status</span>
-  <span class="err">-</span> <span class="err">deployments</span>
-  <span class="err">-</span> <span class="err">deployments/status</span>
-  <span class="err">-</span> <span class="err">replicasets</span>
-  <span class="err">-</span> <span class="err">replicasets/status</span>
-  <span class="err">-</span> <span class="err">statefulsets</span>
-  <span class="err">-</span> <span class="err">statefulsets/status</span>
-  <span class="err">verbs:</span>
-  <span class="err">-</span> <span class="err">get</span>
-  <span class="err">-</span> <span class="err">list</span>
-<span class="err">-</span> <span class="err">apiGroups:</span>
-  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
-  <span class="err">resources:</span>
-  <span class="err">-</span> <span class="err">pods</span>
-  <span class="err">verbs:</span>
-  <span class="err">-</span> <span class="err">delete</span>
+<div class="codehilite"><pre><span></span><span class="err">apiVersio</span><span class="kc">n</span><span class="p">:</span> <span class="err">rbac.au</span><span class="kc">t</span><span class="err">horiza</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
+<span class="err">ki</span><span class="kc">n</span><span class="err">d</span><span class="p">:</span> <span class="err">Role</span>
+<span class="err">me</span><span class="kc">ta</span><span class="err">da</span><span class="kc">ta</span><span class="p">:</span>
+  <span class="kc">na</span><span class="err">me</span><span class="p">:</span> <span class="err">chaos</span><span class="mf">-e</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="mi">-</span><span class="err">role</span>
+  <span class="kc">na</span><span class="err">mespace</span><span class="p">:</span> <span class="p">{{</span><span class="kc">na</span><span class="err">mespace</span><span class="p">}}</span>
+<span class="err">rules</span><span class="p">:</span>
+<span class="mi">-</span> <span class="err">apiGroups</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">apps</span>
+  <span class="err">resources</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">daemo</span><span class="kc">nsets</span>
+  <span class="mi">-</span> <span class="err">daemo</span><span class="kc">nsets</span><span class="err">/s</span><span class="kc">tatus</span>
+  <span class="mi">-</span> <span class="err">deployme</span><span class="kc">nts</span>
+  <span class="mi">-</span> <span class="err">deployme</span><span class="kc">nts</span><span class="err">/s</span><span class="kc">tatus</span>
+  <span class="mi">-</span> <span class="err">replicase</span><span class="kc">ts</span>
+  <span class="mi">-</span> <span class="err">replicase</span><span class="kc">ts</span><span class="err">/s</span><span class="kc">tatus</span>
+  <span class="mi">-</span> <span class="err">s</span><span class="kc">tatefulsets</span>
+  <span class="mi">-</span> <span class="err">s</span><span class="kc">tatefulsets</span><span class="err">/s</span><span class="kc">tatus</span>
+  <span class="err">verbs</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">ge</span><span class="kc">t</span>
+  <span class="mi">-</span> <span class="err">lis</span><span class="kc">t</span>
+<span class="mi">-</span> <span class="err">apiGroups</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">pods</span>
+  <span class="err">verbs</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">dele</span><span class="kc">te</span>
 
 
-<span class="err">-</span> <span class="err">apiGroups:</span>
-  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
-  <span class="err">resources:</span>
-  <span class="err">-</span> <span class="err">pods</span>
-  <span class="err">-</span> <span class="err">pods/status</span>
-  <span class="err">-</span> <span class="err">replicationcontrollers/status</span>
-  <span class="err">verbs:</span>
-  <span class="err">-</span> <span class="err">get</span>
-  <span class="err">-</span> <span class="err">list</span>
+<span class="mi">-</span> <span class="err">apiGroups</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">pods</span>
+  <span class="mi">-</span> <span class="err">pods/s</span><span class="kc">tatus</span>
+  <span class="mi">-</span> <span class="err">replica</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">co</span><span class="kc">ntr</span><span class="err">ollers/s</span><span class="kc">tatus</span>
+  <span class="err">verbs</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">ge</span><span class="kc">t</span>
+  <span class="mi">-</span> <span class="err">lis</span><span class="kc">t</span>
 
-<span class="err">-</span> <span class="err">apiGroups:</span>
-  <span class="err">-</span> <span class="s2">&quot;&quot;</span>
-  <span class="err">resources:</span>
-  <span class="err">-</span> <span class="err">pods/exec</span>
-  <span class="err">verbs:</span>
-  <span class="err">-</span> <span class="err">create</span>
-  <span class="err">-</span> <span class="err">get</span>
+<span class="mi">-</span> <span class="err">apiGroups</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="s2">&quot;&quot;</span>
+  <span class="err">resources</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">pods/exec</span>
+  <span class="err">verbs</span><span class="p">:</span>
+  <span class="mi">-</span> <span class="err">crea</span><span class="kc">te</span>
+  <span class="mi">-</span> <span class="err">ge</span><span class="kc">t</span>
 
-<span class="err">---</span>
+<span class="mi">---</span>
 
-<span class="err">apiVersion:</span> <span class="err">v</span><span class="mi">1</span>
-<span class="err">kind:</span> <span class="err">ServiceAccount</span>
-<span class="err">metadata:</span>
-  <span class="err">name:</span> <span class="err">chaos-engine-serviceaccount</span>
-  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+<span class="err">apiVersio</span><span class="kc">n</span><span class="p">:</span> <span class="err">v</span><span class="mi">1</span>
+<span class="err">ki</span><span class="kc">n</span><span class="err">d</span><span class="p">:</span> <span class="err">ServiceAccou</span><span class="kc">nt</span>
+<span class="err">me</span><span class="kc">ta</span><span class="err">da</span><span class="kc">ta</span><span class="p">:</span>
+  <span class="kc">na</span><span class="err">me</span><span class="p">:</span> <span class="err">chaos</span><span class="mf">-e</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="mi">-</span><span class="err">serviceaccou</span><span class="kc">nt</span>
+  <span class="kc">na</span><span class="err">mespace</span><span class="p">:</span> <span class="p">{{</span><span class="kc">na</span><span class="err">mespace</span><span class="p">}}</span>
 
-<span class="err">---</span>
+<span class="mi">---</span>
 
-<span class="err">apiVersion:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
-<span class="err">kind:</span> <span class="err">RoleBinding</span>
-<span class="err">metadata:</span>
-  <span class="err">name:</span> <span class="err">chaos-engine-rolebinding</span>
-  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
-<span class="err">roleRef:</span>
-  <span class="err">apiGroup:</span> <span class="err">rbac.authorization.k</span><span class="mi">8</span><span class="err">s.io</span>
-  <span class="err">kind:</span> <span class="err">Role</span>
-  <span class="err">name:</span> <span class="err">chaos-engine-role</span>
-<span class="err">subjects:</span>
-<span class="err">-</span> <span class="err">kind:</span> <span class="err">ServiceAccount</span>
-  <span class="err">name:</span> <span class="err">chaos-engine-serviceaccount</span>
-  <span class="err">namespace:</span> <span class="p">{</span><span class="err">{namespace</span><span class="p">}</span><span class="err">}</span>
+<span class="err">apiVersio</span><span class="kc">n</span><span class="p">:</span> <span class="err">rbac.au</span><span class="kc">t</span><span class="err">horiza</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">.k</span><span class="mi">8</span><span class="err">s.io/v</span><span class="mi">1</span>
+<span class="err">ki</span><span class="kc">n</span><span class="err">d</span><span class="p">:</span> <span class="err">RoleBi</span><span class="kc">n</span><span class="err">di</span><span class="kc">n</span><span class="err">g</span>
+<span class="err">me</span><span class="kc">ta</span><span class="err">da</span><span class="kc">ta</span><span class="p">:</span>
+  <span class="kc">na</span><span class="err">me</span><span class="p">:</span> <span class="err">chaos</span><span class="mf">-e</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="mi">-</span><span class="err">rolebi</span><span class="kc">n</span><span class="err">di</span><span class="kc">n</span><span class="err">g</span>
+  <span class="kc">na</span><span class="err">mespace</span><span class="p">:</span> <span class="p">{{</span><span class="kc">na</span><span class="err">mespace</span><span class="p">}}</span>
+<span class="err">roleRe</span><span class="kc">f</span><span class="p">:</span>
+  <span class="err">apiGroup</span><span class="p">:</span> <span class="err">rbac.au</span><span class="kc">t</span><span class="err">horiza</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">.k</span><span class="mi">8</span><span class="err">s.io</span>
+  <span class="err">ki</span><span class="kc">n</span><span class="err">d</span><span class="p">:</span> <span class="err">Role</span>
+  <span class="kc">na</span><span class="err">me</span><span class="p">:</span> <span class="err">chaos</span><span class="mf">-e</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="mi">-</span><span class="err">role</span>
+<span class="err">subjec</span><span class="kc">ts</span><span class="p">:</span>
+<span class="mi">-</span> <span class="err">ki</span><span class="kc">n</span><span class="err">d</span><span class="p">:</span> <span class="err">ServiceAccou</span><span class="kc">nt</span>
+  <span class="kc">na</span><span class="err">me</span><span class="p">:</span> <span class="err">chaos</span><span class="mf">-e</span><span class="kc">n</span><span class="err">gi</span><span class="kc">ne</span><span class="mi">-</span><span class="err">serviceaccou</span><span class="kc">nt</span>
+  <span class="kc">na</span><span class="err">mespace</span><span class="p">:</span> <span class="p">{{</span><span class="kc">na</span><span class="err">mespace</span><span class="p">}}</span>
 </pre></div>
 <p>Execute the YMAL file. </p>
 <div class="codehilite"><pre><span></span>kubectl apply -f chaos-engine-service-account.yaml
@@ -1888,8 +1888,8 @@ After running the experiments, you should have a monitoring configured or enable
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            &copy; 2018 - 2020 Thales Group<br />
-2020-11-27-20:24:13
+            &copy; 2018 - 2021 Thales Group<br />
+2021-07-29-09:23:55
           </div>
         
         powered by

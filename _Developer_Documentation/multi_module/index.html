@@ -1249,11 +1249,11 @@
                 <h1 id="multi-module-structure">Multi Module Structure</h1>
 <p>This page is intended to be a guide on how to create, maintain, and organize modules for components of the Chaos Engine.</p>
 <h2 id="module-structure">Module Structure</h2>
-<div class="codehilite"><pre><span></span><span class="err">`--pom.xml (Parent)</span>
-<span class="err"> `-Module-A+-src</span>
-<span class="err"> |         `-pom.xml (Module A)</span>
-<span class="err"> `-Module-B+-src</span>
-<span class="err">           `-pom.xml (Module B)</span>
+<div class="codehilite"><pre><span></span>`--pom.xml (Parent)
+ `-Module-A+-src
+ |         `-pom.xml (Module A)
+ `-Module-B+-src
+           `-pom.xml (Module B)
 </pre></div>
 <p>The parent project directory contains a single pom.xml file that manages the entire project. The packaging field of that file will be pom. Each module is listed as a module under a modules section.</p>
 <p><strong>Parent POM</strong>
@@ -1299,50 +1299,50 @@
 <p>The child pom may reference other modules as dependencies. If this is done, they should be set with scope of provided. This ensures that the build process does not include the dependent JAR inside the child JAR.</p>
 <h3 id="nested-modules">Nested Modules</h3>
 <p>To keep the root level clean, similar module types should be grouped together with a second level module. This prevents the need to regularly add updates to the project pom. This second level module will be of type <strong>packaging</strong> = <strong>pom</strong>, and be declared as a module of the parent.</p>
-<div class="codehilite"><pre><span></span><span class="err">chaosengine</span>
-<span class="err">|-- chaosengine-core</span>
-<span class="err">|   |-- pom.xml</span>
-<span class="err">|   `-- src</span>
-<span class="err">|       |-- main</span>
-<span class="err">|       `-- test</span>
-<span class="err">|-- chaosengine-experiments</span>
-<span class="err">|   |-- chaosengine-aws-ec2</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   |-- chaosengine-aws-rds</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   |-- chaosengine-kubernetes</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   |-- chaosengine-pcf</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   `-- pom.xml</span>
-<span class="err">|-- chaosengine-launcher</span>
-<span class="err">|   |-- pom.xml</span>
-<span class="err">|   `-- src</span>
-<span class="err">|       |-- main</span>
-<span class="err">|       `-- test</span>
-<span class="err">|-- chaosengine-notifications</span>
-<span class="err">|   |-- chaosengine-notif-datadog</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   |-- chaosengine-notif-slack</span>
-<span class="err">|   |   |-- pom.xml</span>
-<span class="err">|   |   `-- src</span>
-<span class="err">|   `-- pom.xml</span>
-<span class="err">`-- chaosengine-schedule</span>
-<span class="err">    |-- canada</span>
-<span class="err">    |   |-- pom.xml</span>
-<span class="err">    |   `-- src</span>
-<span class="err">    |-- czech-republic</span>
-<span class="err">    |   |-- pom.xml</span>
-<span class="err">    |   `-- src</span>
-<span class="err">    |-- france</span>
-<span class="err">    |   |-- pom.xml</span>
-<span class="err">    |   `-- src</span>
-<span class="err">    `-- pom.xml</span>
+<div class="codehilite"><pre><span></span>chaosengine
+|-- chaosengine-core
+|   |-- pom.xml
+|   `-- src
+|       |-- main
+|       `-- test
+|-- chaosengine-experiments
+|   |-- chaosengine-aws-ec2
+|   |   |-- pom.xml
+|   |   `-- src
+|   |-- chaosengine-aws-rds
+|   |   |-- pom.xml
+|   |   `-- src
+|   |-- chaosengine-kubernetes
+|   |   |-- pom.xml
+|   |   `-- src
+|   |-- chaosengine-pcf
+|   |   |-- pom.xml
+|   |   `-- src
+|   `-- pom.xml
+|-- chaosengine-launcher
+|   |-- pom.xml
+|   `-- src
+|       |-- main
+|       `-- test
+|-- chaosengine-notifications
+|   |-- chaosengine-notif-datadog
+|   |   |-- pom.xml
+|   |   `-- src
+|   |-- chaosengine-notif-slack
+|   |   |-- pom.xml
+|   |   `-- src
+|   `-- pom.xml
+`-- chaosengine-schedule
+    |-- canada
+    |   |-- pom.xml
+    |   `-- src
+    |-- czech-republic
+    |   |-- pom.xml
+    |   `-- src
+    |-- france
+    |   |-- pom.xml
+    |   `-- src
+    `-- pom.xml
 </pre></div>
 <h2 id="building-modules">Building Modules</h2>
 <p>A successful local build of the entire project will require running the command <strong>mvn install</strong>. This will trigger a few things.</p>
@@ -1440,8 +1440,8 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            &copy; 2018 - 2020 Thales Group<br />
-2020-11-27-20:24:13
+            &copy; 2018 - 2021 Thales Group<br />
+2021-07-29-09:23:55
           </div>
         
         powered by
