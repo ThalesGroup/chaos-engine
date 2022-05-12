@@ -176,7 +176,7 @@ jobs:
       - name: Extract Version
         run: mv variables/version version
       - name: Initialize version variable
-        run: echo "::set-env name=VERSION::$(cat version)"
+        run: echo "VERSION=$(cat version)" >> $GITHUB_EN
       - name: Docker login
         run: docker login $DOCKER_REPOSITORY -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Pull Chaos Engine Docker image
