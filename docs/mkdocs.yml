@@ -32,5 +32,5 @@ extra:
       link: 'https://github.com/gemalto/chaos-engine/issues'
 
 copyright: |
-  &copy; 2018 - <!-- year --> Thales Group<br />
-  <!-- version -->
+  &copy; 2018 - 2022 Thales Group<br />
+  Local Build
