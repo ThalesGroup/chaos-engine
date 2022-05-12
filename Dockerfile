@@ -1,7 +1,7 @@
 FROM python:3-alpine AS build-docs
 WORKDIR /mkdocs
 COPY ci/docs/mkdocs_requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 COPY docs/ docs/
 RUN mkdocs build --config-file docs/mkdocs.yml --site-dir help/
 
