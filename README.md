@@ -56,14 +56,18 @@ Chaos Engine is being actively developed, but we welcome public participation. P
 
 ## Demo Video
 
-[![Chaos Engine Introduction](https://img.youtube.com/vi/IX-gNYBLyDM/0.jpg)](https://www.youtube.com/watch?v=IX-gNYBLyDM) 
+[![Chaos Engine Introduction](https://img.youtube.com/vi/IX-gNYBLyDM/0.jpg)](https://www.youtube.com/watch?v=IX-gNYBLyDM)
 
 ## Contact
 
 You can [e-mail us], or find us on [Slack].
 
 [Principles of Chaos]: http://principlesofchaos.org/
+
 [documentation]: https://thalesgroup.github.io/chaos-engine/
+
 [experiment modules documentation]: https://thalesgroup.github.io/chaos-engine/Experiment_Modules
+
 [E-mail us]: mailto:dl_chaos_engine@gemalto.com
-[Slack]: https://join.slack.com/t/thaleschaosengine/shared_invite/enQtODY1MDk1OTY4OTgyLTZjOGI5NzM1YTA2OWE5MjgzMWYxMzkwZjIwYTE3NjBlNDM4ZTkzNzc5YmMyMTU2Zjc5ODhlMTVkZDJhMmEzMzc
+
+[Slack]: https://thalescploss.slack.com/
