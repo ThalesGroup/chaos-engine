@@ -19,11 +19,6 @@
             <scope>compile</scope>
         </dependency>
         <!-- Kubernetes Dependencies -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
-        </dependency>
 
     </dependencies>
 
