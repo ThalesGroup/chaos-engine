@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
+ *    Copyright (c) 2018 - 2022, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import io.kubernetes.client.openapi.models.*;
 import junit.framework.TestCase;
 import org.apache.http.HttpStatus;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.thales.chaos.platform.enums.ControllerKind.REPLICA_SET;
@@ -80,30 +80,16 @@ public class KubernetesPlatformTest {
     @Mock
     private AppsV1Api appsV1Api;
 
-    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
-        List<V1OwnerReference> ownerReferences = null;
-        if (isBackedByController) {
-            ownerReferences = new ArrayList<>();
-            ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        }
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(randomUUID().toString())
-                                                         .withName(POD_NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
-        V1Pod pod = new V1Pod();
-        pod.setMetadata(metadata);
-        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
-        V1PodList list = new V1PodList();
-        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
-        return list;
-    }
-
     @Test
     public void testPodWithoutOwnerCannotBeTested () throws Exception {
-        when(coreV1Api.listNamespacedPod(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString(),
+        when(coreV1Api.listNamespacedPod(anyString(),
+                anyString(),
+                anyBoolean(),
+                anyString(),
+                anyString(),
+                anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(false));
@@ -113,10 +99,7 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testContainerHealthWithException () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(false)
-                                                     .endContainerStatus()
-                                                     .build();
+        V1PodStatus status = getPodStatus(false);
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
         when(coreV1Api.listNamespacedPod(anyString(),
@@ -126,6 +109,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -145,8 +129,20 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenThrow(new ApiException());
+    }
+
+    private static V1PodStatus getPodStatus (boolean ready) {
+        return new V1PodStatus().addContainerStatusesItem(new V1ContainerStatus().ready(ready));
+    }
+
+    @Test
+    public void testApiStatus () throws ApiException {
+        V1APIVersions v1APIVersions = new V1APIVersions().addVersionsItem("1").apiVersion("apiVersion").kind("kind");
+        doReturn(v1APIVersions).when(coreApi).getAPIVersions();
+        Assert.assertEquals(ApiStatus.OK, platform.getApiStatus());
     }
 
     @Before
@@ -155,22 +151,6 @@ public class KubernetesPlatformTest {
         doReturn(coreV1Api).when(platform).getCoreV1Api();
         doReturn(appsV1Api).when(platform).getAppsV1Api();
         platform.setNamespaces(NAMESPACE_NAME);
-    }
-
-    @Test
-    public void testApiStatus () throws ApiException {
-        V1APIVersions v1APIVersions = new V1APIVersionsBuilder().addToVersions("1")
-                                                                .withApiVersion("apiVersion")
-                                                                .withKind("kind")
-                                                                .build();
-        doReturn(v1APIVersions).when(coreApi).getAPIVersions();
-        Assert.assertEquals(ApiStatus.OK, platform.getApiStatus());
-    }
-
-    @Test
-    public void testApiStatusNotAvailable () throws ApiException {
-        when(coreApi.getAPIVersions()).thenThrow(new ApiException());
-        Assert.assertEquals(ApiStatus.ERROR, platform.getApiStatus());
     }
 
     @Test
@@ -183,9 +163,16 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         assertEquals(PlatformHealth.OK, platform.getPlatformHealth());
+    }
+
+    @Test
+    public void testApiStatusNotAvailable () throws ApiException {
+        when(coreApi.getAPIVersions()).thenThrow(new ApiException());
+        Assert.assertEquals(ApiStatus.ERROR, platform.getApiStatus());
     }
 
     @Test
@@ -197,6 +184,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenThrow(new ApiException());
@@ -213,6 +201,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         when(platform.getDestructionProbability()).thenReturn(1D);
@@ -222,10 +211,8 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testContainerHealthWithOneContainerHealthy () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .build();
+        V1ContainerStatus containerStatus = new V1ContainerStatus().ready(true);
+        V1PodStatus status = new V1PodStatus().addContainerStatusesItem(containerStatus);
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
         when(coreV1Api.listNamespacedPod(anyString(),
@@ -235,6 +222,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -253,6 +241,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         boolean result = platform.deletePod((KubernetesPodContainer) platform.getRoster().get(0));
@@ -269,6 +258,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -295,6 +285,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         when(coreV1Api.deleteNamespacedPod(any(),
@@ -320,6 +311,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenThrow(new ApiException());
         assertEquals(0, platform.getRoster().size());
@@ -335,9 +327,29 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true, 0));
         assertEquals(PlatformHealth.DEGRADED, platform.getPlatformHealth());
+    }
+
+    private static V1PodList getV1PodList (boolean isBackedByController, int numberOfPods) {
+        List<V1OwnerReference> ownerReferences = null;
+        if (isBackedByController) {
+            ownerReferences = new ArrayList<>();
+            ownerReferences.add(new V1OwnerReference().name("mycontroller"));
+        }
+        V1ObjectMeta metadata = new V1ObjectMeta().uid(randomUUID().toString())
+                                                  .name(POD_NAME)
+                                                  .namespace(NAMESPACE_NAME)
+                                                  .labels(new HashMap<>())
+                                                  .ownerReferences(ownerReferences);
+        V1Pod pod = new V1Pod();
+        pod.setMetadata(metadata);
+        pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
+        V1PodList list = new V1PodList();
+        for (int i = 0; i < numberOfPods; i++) list.addItemsItem(pod);
+        return list;
     }
 
     @Test
@@ -351,6 +363,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         //Test ReplicationController
@@ -358,14 +371,10 @@ public class KubernetesPlatformTest {
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                .withReplicas(1)
-                .withReadyReplicas(0)
-                .build()).build())
-                            .thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                                    .withReplicas(1)
-                                    .withReadyReplicas(1)
-                                    .build()).build());
+                eq("true"))).thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                                    1).readyReplicas(0)))
+                            .thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                                    1).readyReplicas(1)));
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
         assertTrue(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -382,6 +391,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(v1PodList)
@@ -405,10 +415,7 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testContainerHealthWithOneContainerUnHealthy () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(false)
-                                                     .endContainerStatus()
-                                                     .build();
+        V1PodStatus status = getPodStatus(false);
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
         when(coreV1Api.listNamespacedPod(anyString(),
@@ -418,6 +425,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -433,16 +441,9 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testContainerHealthWithSeveralContainerAllHealthy () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .build();
+        V1PodStatus status = new V1PodStatus().addContainerStatusesItem(new V1ContainerStatus().ready(true))
+                                              .addContainerStatusesItem(new V1ContainerStatus().ready(true))
+                                              .addContainerStatusesItem(new V1ContainerStatus().ready(true));
         assertEquals(3, status.getContainerStatuses().size());
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
@@ -453,6 +454,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -463,16 +465,9 @@ public class KubernetesPlatformTest {
 
     @Test
     public void testContainerHealthWithSeveralContainerOneUnhealthy () throws ApiException {
-        V1PodStatus status = new V1PodStatusBuilder().addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .addNewContainerStatus()
-                                                     .withReady(false)
-                                                     .endContainerStatus()
-                                                     .addNewContainerStatus()
-                                                     .withReady(true)
-                                                     .endContainerStatus()
-                                                     .build();
+        V1PodStatus status = new V1PodStatus().addContainerStatusesItem(new V1ContainerStatus().ready(true))
+                                              .addContainerStatusesItem(new V1ContainerStatus().ready(false))
+                                              .addContainerStatusesItem(new V1ContainerStatus().ready(true));
         assertEquals(3, status.getContainerStatuses().size());
         V1Pod pod = getV1PodList(true).getItems().get(0);
         pod.setStatus(status);
@@ -483,6 +478,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
@@ -514,6 +510,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(list);
         assertEquals(ContainerHealth.DOES_NOT_EXIST, platform.checkHealth(kubernetesPodContainer));
@@ -534,16 +531,17 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicaSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedReplicaSetStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(
-                1).withReadyReplicas(0).build()).build())
-                            .thenReturn(new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(
-                                    1).withReadyReplicas(1).build()).build());
+                eq("true"))).thenReturn(new V1ReplicaSet().status(new V1ReplicaSetStatus().replicas(1)
+                                                                                          .readyReplicas(0)))
+                            .thenReturn(new V1ReplicaSet().status(new V1ReplicaSetStatus().replicas(1)
+                                                                                          .readyReplicas(1)));
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
         assertTrue(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -559,16 +557,17 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("StatefulSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedStatefulSetStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1StatefulSetBuilder().withStatus(new V1StatefulSetStatusBuilder().withReplicas(
-                1).withReadyReplicas(0).build()).build())
-                            .thenReturn(new V1StatefulSetBuilder().withStatus(new V1StatefulSetStatusBuilder().withReplicas(
-                                    1).withReadyReplicas(1).build()).build());
+                eq("true"))).thenReturn(new V1StatefulSet().status(new V1StatefulSetStatus().replicas(1)
+                                                                                            .readyReplicas(0)))
+                            .thenReturn(new V1StatefulSet().status(new V1StatefulSetStatus().replicas(1)
+                                                                                            .readyReplicas(1)));
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
         assertTrue(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -584,16 +583,17 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("Deployment");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedDeploymentStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1DeploymentBuilder().withStatus(new V1DeploymentStatusBuilder().withReplicas(
-                1).withReadyReplicas(0).build()).build())
-                            .thenReturn(new V1DeploymentBuilder().withStatus(new V1DeploymentStatusBuilder().withReplicas(
-                                    1).withReadyReplicas(1).build()).build());
+                eq("true"))).thenReturn(new V1Deployment().status(new V1DeploymentStatus().replicas(1)
+                                                                                          .readyReplicas(0)))
+                            .thenReturn(new V1Deployment().status(new V1DeploymentStatus().replicas(1)
+                                                                                          .readyReplicas(1)));
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
         assertTrue(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -609,16 +609,17 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("DaemonSet");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(appsV1Api.readNamespacedDaemonSetStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1DaemonSetBuilder().withStatus(new V1DaemonSetStatusBuilder().withDesiredNumberScheduled(
-                1).withCurrentNumberScheduled(0).build()).build())
-                            .thenReturn(new V1DaemonSetBuilder().withStatus(new V1DaemonSetStatusBuilder().withDesiredNumberScheduled(
-                                    1).withCurrentNumberScheduled(1).build()).build());
+                eq("true"))).thenReturn(new V1DaemonSet().status(new V1DaemonSetStatus().desiredNumberScheduled(1)
+                                                                                        .currentNumberScheduled(0)))
+                            .thenReturn(new V1DaemonSet().status(new V1DaemonSetStatus().desiredNumberScheduled(1)
+                                                                                        .currentNumberScheduled(1)));
         assertFalse(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
         assertTrue(platform.isDesiredReplicas((KubernetesPodContainer) platform.getRoster().get(0)));
     }
@@ -633,6 +634,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
@@ -651,6 +653,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
@@ -673,6 +676,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("CronJob");
@@ -689,6 +693,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
@@ -708,29 +713,27 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicationController");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                .withReplicas(1)
-                .withReadyReplicas(1)
-                .build()).build());
+                eq("true"))).thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                1).readyReplicas(1)));
         KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
         assertEquals(ContainerHealth.NORMAL, platform.replicaSetRecovered(kubernetesPodContainer));
     }
 
     private static V1PodList getV1PodList (String UUID) {
         List<V1OwnerReference> ownerReferences = new ArrayList<>();
-        ownerReferences.add(new V1OwnerReferenceBuilder().withNewController("mycontroller").build());
-        V1ObjectMeta metadata = new V1ObjectMetaBuilder().withUid(UUID)
-                                                         .withName(POD_NAME)
-                                                         .withNamespace(NAMESPACE_NAME)
-                                                         .withLabels(new HashMap<>())
-                                                         .withOwnerReferences(ownerReferences)
-                                                         .build();
+        ownerReferences.add(new V1OwnerReference().name("mycontroller"));
+        V1ObjectMeta metadata = new V1ObjectMeta().uid(UUID)
+                                                  .name(POD_NAME)
+                                                  .namespace(NAMESPACE_NAME)
+                                                  .labels(new HashMap<>())
+                                                  .ownerReferences(ownerReferences);
         V1Pod pod = new V1Pod();
         pod.setMetadata(metadata);
         pod.setSpec(new V1PodSpec().containers(Collections.singletonList(new V1Container().name(randomUUID().toString()))));
@@ -750,16 +753,15 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicationController");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                .withReplicas(1)
-                .withReadyReplicas(1)
-                .build()).build());
+                eq("true"))).thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                1).readyReplicas(1)));
         KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
     }
@@ -775,24 +777,21 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyInt(),
                 anyString(),
+                anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(pods);
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setKind("ReplicationController");
         pods.getItems().get(0).getMetadata().getOwnerReferences().get(0).setName("dummy");
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                .withReplicas(1)
-                .withReadyReplicas(0)
-                .build()).build());
+                eq("true"))).thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                1).readyReplicas(0)));
         KubernetesPodContainer kubernetesPodContainer = platform.fromKubernetesAPIPod(pods.getItems().get(0));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
         when(coreV1Api.readNamespacedReplicationControllerStatus(eq("dummy"),
                 eq(pods.getItems().get(0).getMetadata().getNamespace()),
-                eq("true"))).thenReturn(new V1ReplicationControllerBuilder().withStatus(new V1ReplicationControllerStatusBuilder()
-                .withReplicas(2)
-                .withReadyReplicas(1)
-                .build()).build());
+                eq("true"))).thenReturn(new V1ReplicationController().status(new V1ReplicationControllerStatus().replicas(
+                2).readyReplicas(1)));
         assertEquals(ContainerHealth.RUNNING_EXPERIMENT, platform.replicaSetRecovered(kubernetesPodContainer));
     }
 
@@ -814,6 +813,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(UUID));
@@ -843,9 +843,9 @@ public class KubernetesPlatformTest {
                                                                                           containerName))
                                                                                   .build());
         V1ObjectMeta podMetadata = new V1ObjectMeta().uid(uid);
-        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now()
-                                                                                                                .minusMinutes(
-                                                                                                                        1)));
+        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(OffsetDateTime.now()
+                                                                                                                      .minusMinutes(
+                                                                                                                              1)));
         V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName)
                                                                                                    .state(state)));
         V1Pod pod = new V1Pod().metadata(podMetadata).status(podStatus);
@@ -857,6 +857,7 @@ public class KubernetesPlatformTest {
                                                              "",
                                                              "",
                                                              0,
+                                                             "",
                                                              "",
                                                              0,
                                                              false);
@@ -873,8 +874,11 @@ public class KubernetesPlatformTest {
                                                                                   .withSubcontainers(List.of(containerName))
                                                                                   .build());
         V1ObjectMeta podMetadata = new V1ObjectMeta().uid(uid);
-        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(DateTime.now().minusMinutes(10)));
-        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName).state(state)));
+        V1ContainerState state = new V1ContainerState().running(new V1ContainerStateRunning().startedAt(OffsetDateTime.now()
+                                                                                                                      .minusMinutes(
+                                                                                                                              10)));
+        V1PodStatus podStatus = new V1PodStatus().containerStatuses(List.of(new V1ContainerStatus().name(containerName)
+                                                                                                   .state(state)));
         V1Pod pod = new V1Pod().metadata(podMetadata).status(podStatus);
         doReturn(pod).when(coreV1Api).readNamespacedPodStatus(any(), any(), any());
         doReturn(Instant.now().minusSeconds(60)).when(kubernetesPodContainer).getExperimentStartTime();
@@ -884,10 +888,7 @@ public class KubernetesPlatformTest {
     @Test
     public void testIsContainerRecycledNotFound () throws ApiException {
         KubernetesPodContainer kubernetesPodContainer = mock(KubernetesPodContainer.class);
-        V1ReplicaSet replicaSet = new V1ReplicaSetBuilder().withStatus(new V1ReplicaSetStatusBuilder().withReplicas(1)
-                                                                                                      .withReadyReplicas(
-                                                                                                              1)
-                                                                                                      .build()).build();
+        V1ReplicaSet replicaSet = new V1ReplicaSet().status(new V1ReplicaSetStatus().replicas(1).readyReplicas(1));
         when(coreV1Api.listNamespacedPod(anyString(),
                 anyString(),
                 anyBoolean(),
@@ -895,6 +896,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(new V1PodList());
@@ -927,6 +929,7 @@ public class KubernetesPlatformTest {
                 anyString(),
                 anyString(),
                 anyInt(),
+                anyString(),
                 anyString(),
                 anyInt(),
                 anyBoolean())).thenReturn(getV1PodList(true));

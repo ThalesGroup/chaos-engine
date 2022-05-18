@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
+ *    Copyright (c) 2018 - 2022, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 package com.thales.chaos.notification.services;
 
-import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.NonBlockingStatsDClientBuilder;
 import com.timgroup.statsd.StatsDClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 public class DataDogNotificationService {
     private int statsdPort = 8125;
     private String statsdHost = "datadog";
-    private static final String[] STATIC_TAGS = { "service:chaosengine" };
+    private static final String[] STATIC_TAGS = { "service:chaosengine, source:ChaosEngineNotification" };
 
     public void setStatsdPort (int statsdPort) {
         this.statsdPort = statsdPort;
@@ -41,7 +41,11 @@ public class DataDogNotificationService {
     }
 
     @Bean
-    StatsDClient statsDClient(){
-        return new NonBlockingStatsDClient("", statsdHost, statsdPort, STATIC_TAGS);
+    StatsDClient statsDClient() {
+        return new NonBlockingStatsDClientBuilder().prefix("")
+                                                   .hostname(statsdHost)
+                                                   .port(statsdPort)
+                                                   .constantTags(STATIC_TAGS)
+                                                   .build();
     }
 }

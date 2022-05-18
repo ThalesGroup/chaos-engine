@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2018 - 2020, Thales DIS CPL Canada, Inc
+ *    Copyright (c) 2018 - 2022, Thales DIS CPL Canada, Inc
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,13 +37,15 @@ import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreApi;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -130,7 +132,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     private V1PodList listAllPodsInNamespace (String namespace) {
         try {
-            return getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
+            return getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", "", 0, false);
         } catch (ApiException e) {
             log.error("Cannot list pods in namespace {}: {} ", namespace, e.getMessage(), e);
             return new V1PodList();
@@ -177,7 +179,7 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
 
     private boolean canListPodsInNamespace (String namespace) {
         try {
-            getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", 0, false);
+            getCoreV1Api().listNamespacedPod(namespace, "true", false, "", "", "", 0, "", "", 0, false);
         } catch (Exception e) {
             log.error("Cannot list pods in namespace {}: {} ", namespace, e.getMessage(), e);
             return false;
@@ -272,7 +274,8 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
                                v("v1ContainerStateRunning", v1ContainerStateRunning)))
                        .map(V1ContainerStateRunning::getStartedAt)
                        .filter(Objects::nonNull)
-                       .anyMatch(dateTime -> dateTime.isAfter(container.getExperimentStartTime().toEpochMilli()));
+                       .anyMatch(dateTime -> dateTime.isAfter(OffsetDateTime.ofInstant(container.getExperimentStartTime(),
+                               ZoneId.systemDefault())));
     }
 
     public ContainerHealth replicaSetRecovered (KubernetesPodContainer kubernetesPodContainer) {
@@ -357,7 +360,8 @@ public class KubernetesPlatform extends Platform implements ShellBasedExperiment
     public boolean deletePod (KubernetesPodContainer instance) {
         log.debug("Deleting pod {}", v(DATADOG_CONTAINER_KEY, instance));
         try {
-            V1DeleteOptions deleteOptions = new V1DeleteOptionsBuilder().withGracePeriodSeconds(0L).build();
+            V1DeleteOptions deleteOptions = new V1DeleteOptions();
+            deleteOptions.setGracePeriodSeconds(0L);
             getCoreV1Api().deleteNamespacedPod(instance.getPodName(),
                     instance.getNamespace(),
                     "false",
