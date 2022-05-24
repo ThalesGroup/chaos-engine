@@ -163,6 +163,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: echo
+        run: echo "${{ steps.meta.outputs }}"
 
   zap_scan:
     runs-on: [ubuntu-latest]
@@ -188,7 +190,8 @@ jobs:
       - name: Run Chaos Engine
         env:
           CHAOS_SECURITY_ENABLED: "false"
-        run: docker run --rm --name chaos-engine --network chaos-engine-network -e CHAOS_SECURITY_ENABLED -d "$DOCKER_REPOSITORY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
+        #docker pull ghcr.io/thalesgroup/chaos-engine:feature-correct-ci
+        run: docker run --rm --name chaos-engine --network chaos-engine-network -e CHAOS_SECURITY_ENABLED -d "$REGISTRY/$ORGANIZATION/$CHAOS_ENGINE_REPO/$CHAOS_ENGINE_IMAGE_NAME:$VERSION"
       - name: Create report directory
         run: mkdir report; chmod 777 report
       - name: Run Scan
