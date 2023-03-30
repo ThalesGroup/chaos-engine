@@ -115,7 +115,7 @@ jobs:
   #      - name: Initialize version variable
   #        run: echo "VERSION=$(cat version)" >> $GITHUB_ENV
   #      - name: Build and push to registry
-  #        uses: elgohr/Publish-Docker-Github-Action@master
+  #        uses: elgohr/Publish-Docker-Github-Action@v5
   #        with:
   #          name: ${{ env.ORGANIZATION }}/${{ env.CHAOS_ENGINE_REPO }}/${{ env.CHAOS_ENGINE_IMAGE_NAME }}
   #          username: ${{ secrets.DOCKER_USERNAME }}
